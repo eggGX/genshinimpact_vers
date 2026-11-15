@@ -2847,7 +2847,9 @@ test('C049 ディオナ：スキルは選択した敵＋もう1体へ氷2、シ�
   const b=place(state,1,'test-mage',1,6)
   state.players[0].pp=2
   assert.equal(engine.needsAbilityTarget(engine.getCard('C049'),'skill'),true)
-  state=engine.activateAbility(state,diona.instanceId,'skill',b.instanceId)
+  assert.equal(engine.activateAbility(state,diona.instanceId,'skill',b.instanceId),state)
+  state=engine.activateAbility(state,diona.instanceId,'skill',
+    b.instanceId + '|' + a.instanceId)
   assert.equal(state.players[0].pp,0)
   assert.equal(state.players[0].energy,1)
   assert.deepEqual(state.players[1].field.map(f=>f.health),[5,4])
@@ -3008,4 +3010,18 @@ test('リーダーシールドは最大10で止まり、ダメージで通常シ
   p=damageLeader(p,12)
   assert.equal(p.leaderShield.normal,0)
   assert.equal(p.leaderHealth,18)
+})
+
+test('C049 ディオナ：同じ敵を2回選択できず、敵1体なら1体を選択できる',()=>{
+  let state=startedGame()
+  const diona=place(state,0,'C049',2,4)
+  state.players[0].pp=2
+  const a=place(state,1,'test-mage',1,8)
+  const b=place(state,1,'test-mage',1,8)
+  assert.equal(engine.activateAbility(state,diona.instanceId,'skill',
+    a.instanceId + '|' + a.instanceId),state)
+  assert.equal(engine.activateAbility(state,diona.instanceId,'skill',a.instanceId),state)
+  state.players[1].field=state.players[1].field.filter(f=>f.instanceId!==b.instanceId)
+  const next=engine.activateAbility(state,diona.instanceId,'skill',a.instanceId)
+  assert.equal(next.players[1].field[0].health,6)
 })
