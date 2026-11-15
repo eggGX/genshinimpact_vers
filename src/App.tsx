@@ -32,6 +32,7 @@ function App() {
   const [selectedAbility, setSelectedAbility] = useState<{
     followerId: string
     kind: AbilityKind
+    firstTargetId?: string
   } | null>(null)
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
@@ -150,8 +151,23 @@ function App() {
     }
 
     if (selectedAbility) {
-      const { followerId, kind } = selectedAbility
-      setGame(previous => activateAbility(previous, followerId, kind, targetId))
+      const { followerId, kind, firstTargetId } = selectedAbility
+      const cardId = currentPlayer.field.find(f => f.instanceId === followerId)?.cardId
+      if (cardId === 'C049' && kind === 'skill') {
+        const candidates = opponent.field.filter(f => f.health > 0 &&
+          !f.keywords.includes('stealth') && !f.keywords.includes('aura'))
+        if (candidates.length >= 2 && !firstTargetId) {
+          setSelectedAbility({ followerId, kind, firstTargetId: targetId })
+          return
+        }
+        if (firstTargetId === targetId) return
+        setGame(previous => activateAbility(
+          previous, followerId, kind,
+          firstTargetId ? `${firstTargetId}|${targetId}` : targetId
+        ))
+      } else {
+        setGame(previous => activateAbility(previous, followerId, kind, targetId))
+      }
       resetSelection()
       return
     }
@@ -594,7 +610,9 @@ function App() {
         {winner
           ? 'ゲーム終了'
           : selectedAbility !== null
-            ? '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
+            ? selectedAbility.firstTargetId
+              ? 'ディオナのスキル：2体目の敵フォロワーを選択してください'
+              : '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
             ? ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex])
               ? '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
