@@ -19,6 +19,7 @@ import type { Follower } from './game/types'
 import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
+import { isGuarded } from './game/neutralRules'
 
 function App() {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
@@ -191,6 +192,8 @@ function App() {
     const isTarget =
       isOpponent &&
       game.winnerId === null &&
+      (selectedAttacker === undefined || !isGuarded(opponent) ||
+        follower.keywords.includes('guard')) &&
       (selectedAttacker !== undefined
         ? !follower.keywords.includes('intimidate')
         : selectedHandIndex !== null || selectedAbility !== null
@@ -228,6 +231,15 @@ function App() {
           <small style={{ color: '#9fe7ff' }}>
             付着：{follower.aura.map(a => a.element).join('・')}
           </small>
+        )}
+        {follower.keywords.includes('guard') && (
+          <small>【守護】他の味方とリーダーを守る</small>
+        )}
+        {follower.keywords.includes('rush') && (
+          <small>【突進】登場ターンはフォロワーのみ攻撃可能</small>
+        )}
+        {follower.keywords.includes('storm') && (
+          <small>【疾走】登場ターンから攻撃可能</small>
         )}
         {follower.keywords.includes('aura') && (
           <small>【オーラ】効果の対象に選べない</small>
@@ -383,7 +395,9 @@ function App() {
                   <span>コスト {card.cost}</span>
                   <strong>{card.name}</strong>
                   <span>
-                    {card.attack} / {card.health}
+                    {card.type === 'follower'
+                      ? `${card.attack} / ${card.health}`
+                      : card.type === 'spell' ? 'スペル' : 'アミュレット'}
                   </span>
                   <span>
                     {selected ? '交換する ✓' : 'キープ'}
@@ -446,7 +460,9 @@ function App() {
           ].filter(Boolean).join(' ')}
           disabled={
             !selectedAttacker ||
-            game.winnerId !== null
+            game.winnerId !== null ||
+            isGuarded(opponent) ||
+            selectedAttacker.keywords.includes('rush_only')
           }
           onClick={handleAttackLeader}
         >
@@ -497,6 +513,12 @@ function App() {
         <div>デッキ：{currentPlayer.deck.length}枚</div>
         <div>手札：{currentPlayer.hand.length}枚</div>
         <div>墓場：{currentPlayer.graveyard.length}枚</div>
+        {(currentPlayer.crests ?? []).map((crest, index) => (
+          <div key={index}>
+            クレスト【第四降臨者の力】残り{crest.turnsRemaining}ターン
+            （発動済み：{crest.usedElements.join('・') || 'なし'}）
+          </div>
+        ))}
         {(currentPlayer.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{currentPlayer.leaderBurningTurns}ターン</div>
         )}
@@ -556,7 +578,9 @@ function App() {
               </span>
               <strong>{card.name}</strong>
               <span>
-                {card.attack} / {card.health}
+                {card.type === 'follower'
+                  ? `${card.attack} / ${card.health}`
+                  : card.type === 'spell' ? 'スペル' : 'アミュレット'}
               </span>
             </button>
           )
