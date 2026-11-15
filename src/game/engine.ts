@@ -6,6 +6,7 @@ import type {
   Player,
 } from './types'
 import { testCards } from '../data/testCards'
+import { resolveEffects } from './effects'
 
 const cardDatabase = new Map<string, Card>(
   testCards.map(card => [card.id, card])
@@ -20,16 +21,14 @@ const MAX_PP = 10
 let nextInstanceId = 1
 
 /**
- * 配列をシャッフル（元の配列は変更しない）
+ * 配列シャッフル
  */
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
 
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    const temp = result[i]
-    result[i] = result[j]
-    result[j] = temp
+    ;[result[i], result[j]] = [result[j], result[i]]
   }
 
   return result
@@ -48,9 +47,12 @@ function createTestDeck(): string[] {
 }
 
 /**
- * プレイヤーを作成
+ * プレイヤー初期化
  */
-function createPlayer(id: string, name: string): Player {
+function createPlayer(
+  id: string,
+  name: string
+): Player {
   const deck = createTestDeck()
   const hand = deck.splice(0, INITIAL_HAND_SIZE)
 
@@ -69,7 +71,7 @@ function createPlayer(id: string, name: string): Player {
 }
 
 /**
- * ゲーム初期化
+ * ゲーム開始
  */
 export function createInitialGameState(): GameState {
   const player1 = createPlayer(
@@ -92,7 +94,7 @@ export function createInitialGameState(): GameState {
 }
 
 /**
- * カード情報の取得
+ * カード情報取得
  */
 export function getCard(
   cardId: string
@@ -102,9 +104,6 @@ export function getCard(
 
 /**
  * マリガン確定
- *
- * selectedIndices:
- * 交換する手札のインデックス
  */
 export function confirmMulligan(
   state: GameState,
@@ -130,23 +129,19 @@ export function confirmMulligan(
     )
   )
 
-  // 交換するカード
   const returnedCards = player.hand.filter(
     (_, index) => indices.has(index)
   )
 
-  // 残すカード
   const keptCards = player.hand.filter(
     (_, index) => !indices.has(index)
   )
 
-  // 交換カードをデッキに戻してシャッフル
   const shuffledDeck = shuffle([
     ...player.deck,
     ...returnedCards,
   ])
 
-  // 同じ枚数を引き直す
   const replacementCards = shuffledDeck.slice(
     0,
     returnedCards.length
@@ -158,10 +153,7 @@ export function confirmMulligan(
 
   const updatedPlayer: Player = {
     ...player,
-    hand: [
-      ...keptCards,
-      ...replacementCards,
-    ],
+    hand: [...keptCards, ...replacementCards],
     deck: remainingDeck,
   }
 
@@ -172,7 +164,7 @@ export function confirmMulligan(
 
   nextPlayers[playerIndex] = updatedPlayer
 
-  // プレイヤー1が確定したらプレイヤー2へ
+  // プレイヤー1のマリガン完了
   if (playerIndex === 0) {
     return {
       ...state,
@@ -182,10 +174,8 @@ export function confirmMulligan(
   }
 
   // 両者のマリガン完了
-  const firstPlayer = nextPlayers[0]
-
   nextPlayers[0] = {
-    ...firstPlayer,
+    ...nextPlayers[0],
     pp: 1,
     maxPp: 1,
   }
@@ -200,7 +190,7 @@ export function confirmMulligan(
 }
 
 /**
- * フォロワーをプレイ
+ * フォロワーをプレイする
  */
 export function playCard(
   state: GameState,
@@ -209,9 +199,7 @@ export function playCard(
 ): GameState {
   if (state.winnerId !== null) return state
   if (state.phase !== 'main') return state
-  if (state.currentPlayerId !== playerId) {
-    return state
-  }
+  if (state.currentPlayerId !== playerId) return state
 
   const playerIndex = state.players.findIndex(
     player => player.id === playerId
@@ -243,7 +231,7 @@ export function playCard(
     health: card.health ?? 1,
     maxHealth: card.health ?? 1,
 
-    // 元素ENは暫定データ
+    // 元素ENは現段階では暫定
     energy: 0,
     maxEnergy: 5,
 
@@ -257,7 +245,7 @@ export function playCard(
     keywords: [],
   }
 
-  const nextPlayer: Player = {
+  const updatedPlayer: Player = {
     ...player,
     pp: player.pp - card.cost,
     hand: player.hand.filter(
@@ -271,12 +259,20 @@ export function playCard(
     Player,
   ]
 
-  nextPlayers[playerIndex] = nextPlayer
+  nextPlayers[playerIndex] = updatedPlayer
 
-  return {
+  const nextState: GameState = {
     ...state,
     players: nextPlayers,
   }
+
+  // ファンファーレなどの登場時効果
+  return resolveEffects(
+    nextState,
+    playerId,
+    card.effects ?? [],
+    'on_play'
+  )
 }
 
 /**
@@ -293,7 +289,7 @@ export function canFollowerAttack(
 }
 
 /**
- * 破壊フォロワーを墓場へ移動
+ * 破壊されたフォロワーを墓場へ
  */
 function removeDestroyedFollowers(
   player: Player
@@ -350,12 +346,9 @@ export function attackFollower(
   )
 
   if (!attacker || !defender) return state
+  if (!canFollowerAttack(attacker)) return state
 
-  if (!canFollowerAttack(attacker)) {
-    return state
-  }
-
-  // 同時攻撃ダメージ
+  // 同時ダメージ
   const attackerDamage = Math.max(
     0,
     attacker.attack
@@ -399,14 +392,10 @@ export function attackFollower(
   ]
 
   nextPlayers[attackerIndex] =
-    removeDestroyedFollowers(
-      updatedAttackerPlayer
-    )
+    removeDestroyedFollowers(updatedAttackerPlayer)
 
   nextPlayers[defenderIndex] =
-    removeDestroyedFollowers(
-      updatedDefenderPlayer
-    )
+    removeDestroyedFollowers(updatedDefenderPlayer)
 
   return {
     ...state,
@@ -504,8 +493,8 @@ function drawCard(player: Player): {
   const [drawnCard, ...remainingDeck] =
     player.deck
 
-  // 手札上限9枚
   if (player.hand.length >= MAX_HAND_SIZE) {
+    // 手札上限超過時は消滅（暫定）
     return {
       player: {
         ...player,
@@ -519,17 +508,14 @@ function drawCard(player: Player): {
     player: {
       ...player,
       deck: remainingDeck,
-      hand: [
-        ...player.hand,
-        drawnCard,
-      ],
+      hand: [...player.hand, drawnCard],
     },
     deckOut: false,
   }
 }
 
 /**
- * ターン終了と次ターン開始
+ * ターン終了・次のプレイヤーへ
  */
 export function endTurn(
   state: GameState
@@ -555,15 +541,12 @@ export function endTurn(
 
   const nextPlayer = nextPlayers[nextIndex]
 
-  // PP回復
   nextPlayer.maxPp = Math.min(
     MAX_PP,
     nextPlayer.maxPp + 1
   )
-
   nextPlayer.pp = nextPlayer.maxPp
 
-  // 攻撃状態をリセット
   nextPlayer.field = nextPlayer.field.map(
     follower => ({
       ...follower,
@@ -572,12 +555,10 @@ export function endTurn(
     })
   )
 
-  // ターン開始時ドロー
+  // 次ターンのドロー
   const drawResult = drawCard(nextPlayer)
-
   nextPlayers[nextIndex] = drawResult.player
 
-  // デッキ切れ敗北
   const winnerId = drawResult.deckOut
     ? nextPlayers[currentIndex].id
     : null

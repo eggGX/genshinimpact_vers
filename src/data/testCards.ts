@@ -33,6 +33,15 @@ export const testCards: Card[] = [
     cost: 3,
     attack: 2,
     health: 4,
-    description: 'テスト用フォロワー',
+    description:
+      'ファンファーレ：相手リーダーに2ダメージ。',
+    effects: [
+      {
+        type: 'damage',
+        trigger: 'on_play',
+        target: 'enemy_leader',
+        value: 2,
+      },
+    ],
   },
 ]
