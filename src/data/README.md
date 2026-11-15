@@ -13,7 +13,7 @@
 - `cards/geo.ts`: 岩15枚（B4/S4/G4/L3）
 - `cards/dendro.ts`: 草15枚（B4/S4/G4/L3）
 - `productionCards.ts`: 上記8ファイルを統合
-- `testCards.ts`: 動作確認専用カード。正式115枚には含まない
+- テスト専用カードデータは削除済み。対戦台帳は正式115枚と公式トークン24種のみ
 - `cardRegistry.ts`: 全カード検索・重複ID検出・トークンのデッキ除外
 - `cardValidation.ts`: 正式115枚の枠数・カード情報の検証
 - `cardFilters.ts`: 一覧画面の検索・フィルタ
@@ -38,7 +38,7 @@ B=ブロンズ、S=シルバー、G=ゴールド、L=レジェンド。
 - 登録ファイルが空の間は「登録準備中（未完成）」と表示します。開発中であること自体はエラーではありません。
 - 重複ID、空ID、空の名前、枠数超過、無効な数値、不正なスキルや爆発を検出します。
 - `token: true` は正式115枚に数えません。
-- テストカードと正式カードを統合した際の重複IDは `createCardRegistry` が検出します。
+- 正式カード・公式トークンの重複IDは `createCardRegistry` が検出します。
 - `npm run build`、`npm run lint`、`npm test` はGitHub Actionsで実行されます。
 
 ## 実装状況（STEP 42：Ver.1.0.1データ照合済み）
