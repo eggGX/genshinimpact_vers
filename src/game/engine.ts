@@ -949,7 +949,7 @@ export function endTurn(state: GameState): GameState {
   result = geoNaviaCrestsTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
-  result = geoAmuletsTurnEnd(result, currentId)
+  result = geoAmuletsTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
   result = dendroAmuletsTurnEnd(result, currentId)
