@@ -137,5 +137,15 @@ export const productionTokens: Card[] = [
     token: true,
     description: '【自分のターン終了時】ランダムな敵フォロワー1体に雷元素3ダメージ。',
   },
+  {
+    id: 'token-sesshou-sakura',
+    name: '殺生櫻',
+    type: 'amulet',
+    rarity: 'bronze',
+    element: 'electro',
+    cost: 1,
+    token: true,
+    description: '【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に雷元素2ダメージ。',
+  },
 
 ]
