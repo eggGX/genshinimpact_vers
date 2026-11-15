@@ -1,7 +1,7 @@
 import type { Card } from '../../game/types'
 
 /** 初期セットVer.1.0／炎元素15枚（C011–C025）。原本: genshin_cards_v1.csv
- * C011–C022 はプレイ可能。C023以降は特殊能力が未実装のため data_only。
+ * C011–C025まで炎元素15枚すべて対戦対応済み。
  */
 export const pyroCards: Card[] = [
   {
@@ -233,7 +233,11 @@ export const pyroCards: Card[] = [
       "モンド"
     ],
     "description": "【元素スキル：逆焔の刃】PP1：敵フォロワー1体に炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。【元素爆発：黎明】エネルギー3：敵フォロワーすべてと相手リーダーに炎元素3ダメージ。",
-    "implementationStatus": "data_only"
+        "elementalSkill": { "name": "逆焔の刃", "ppCost": 1, "effects": [
+      { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 3, "element": "pyro" }
+    ] },
+    "elementalBurst": { "name": "黎明", "energyCost": 3, "effects": [] },
+"implementationStatus": "playable"
   },
   {
     "id": "C024",
@@ -251,7 +255,12 @@ export const pyroCards: Card[] = [
       "ファデュイ"
     ],
     "description": "【疾走】【攻撃時】自分の場に炎元素カード3枚以上なら自身を+1/+0。【元素スキル：ビウィルダー・ライト】PP1：敵フォロワー1体に炎元素2ダメージ。【元素爆発：大魔術・ミラクルパレード】エネルギー2：自身を「ファニーハット・キャット」に変身。",
-    "implementationStatus": "data_only"
+        "keywords": ["storm"],
+    "elementalSkill": { "name": "ビウィルダー・ライト", "ppCost": 1, "effects": [
+      { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }
+    ] },
+    "elementalBurst": { "name": "大魔術・ミラクルパレード", "energyCost": 2, "effects": [] },
+"implementationStatus": "playable"
   },
   {
     "id": "C025",
@@ -269,6 +278,15 @@ export const pyroCards: Card[] = [
       "往生堂"
     ],
     "description": "【疾走】自分のリーダーHPが10以下なら自身攻撃力+2（条件付き）。【元素スキル：蝶導来世】PP1：自分のリーダーに3ダメージ、自身+2/+0、【元素攻撃：炎】付与。【元素爆発：安神秘法】エネルギー3：相手リーダーに炎元素4ダメージ、自分のリーダーを3回復。",
-    "implementationStatus": "data_only"
+        "keywords": ["storm"],
+    "elementalSkill": { "name": "蝶導来世", "ppCost": 1, "effects": [
+      { "type": "damage", "trigger": "skill", "target": "own_leader", "value": 3 },
+      { "type": "modify_stats", "trigger": "skill", "target": "self_follower", "attackChange": 2, "healthChange": 0 }
+    ] },
+    "elementalBurst": { "name": "安神秘法", "energyCost": 3, "effects": [
+      { "type": "damage", "trigger": "burst", "target": "enemy_leader", "value": 4, "element": "pyro" },
+      { "type": "heal", "trigger": "burst", "target": "own_leader", "value": 3 }
+    ] },
+"implementationStatus": "playable"
   },
 ]
