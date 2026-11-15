@@ -25,8 +25,8 @@ function place(state, ownerIndex, cardId, attack = 2, health = 2) {
     attack,
     health,
     maxHealth: health,
-    energy: 0,
-    maxEnergy: 5,
+    skillUsed: false,
+    burstUsed: false,
     aura: [],
     shield: { normal: 0, crystallize: 0 },
     canAttack: true,
@@ -686,4 +686,135 @@ test('草原核トークンは通常のランダムデッキに含まれない',
       assert.equal([...player.hand, ...player.deck].includes('dendro-core'), false)
     }
   }
+})
+
+test('共有ENはプレイヤーごとに0で始まりフォロワーにENを持たない', () => {
+  const state = startedGame()
+  assert.equal(state.players[0].energy, 0)
+  assert.equal(state.players[1].energy, 0)
+  const follower = place(state, 0, 'test-elemental-caster', 1, 4)
+  assert.equal('energy' in follower, false)
+})
+
+test('元素スキルは登場ターンに使用できEN+1と能力効果を適用する', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-elemental-caster']
+  const placed = engine.playCard(state, 'player1', 0)
+  const source = placed.players[0].field[0]
+  assert.equal(source.canAttack, false)
+  assert.equal(engine.canUseAbility(placed, source.instanceId, 'skill'), true)
+  const next = engine.useAbility(placed, source.instanceId, 'skill')
+  assert.equal(next.players[0].energy, 1)
+  assert.equal(next.players[0].field[0].shield.normal, 1)
+  assert.equal(next.players[0].field[0].skillUsed, true)
+  assert.equal(next.players[1].energy, 0)
+})
+
+test('スキルは同じフォロワーで1ターン1回しか使えない', () => {
+  const state = startedGame()
+  const f = place(state, 0, 'test-elemental-caster', 1, 4)
+  const next = engine.useAbility(state, f.instanceId, 'skill')
+  assert.equal(engine.canUseAbility(next, f.instanceId, 'skill'), false)
+  const again = engine.useAbility(next, f.instanceId, 'skill')
+  assert.equal(again, next)
+  assert.equal(next.players[0].energy, 1)
+})
+
+test('異なるフォロワーのスキルで共通ENを最大5まで貯める', () => {
+  let state = startedGame()
+  state.players[0].energy = 4
+  const a = place(state, 0, 'test-elemental-caster', 1, 4)
+  const b = place(state, 0, 'test-electro-caster', 1, 4)
+  state = engine.useAbility(state, a.instanceId, 'skill')
+  state = engine.useAbility(state, b.instanceId, 'skill')
+  assert.equal(state.players[0].energy, 5)
+  assert.equal(state.players[0].field[0].skillUsed, true)
+  assert.equal(state.players[0].field[1].skillUsed, true)
+})
+
+test('元素爆発は共有EN不足では使用不可かつ状態を変更しない', () => {
+  const state = startedGame()
+  const f = place(state, 0, 'test-electro-caster', 1, 4)
+  assert.equal(engine.canUseAbility(state, f.instanceId, 'burst'), false)
+  assert.equal(engine.useAbility(state, f.instanceId, 'burst'), state)
+})
+
+test('元素爆発はEN2を消費しリーダーへ3ダメージを与える', () => {
+  const state = startedGame()
+  const f = place(state, 0, 'test-electro-caster', 1, 4)
+  state.players[0].energy = 3
+  const next = engine.useAbility(state, f.instanceId, 'burst')
+  assert.equal(next.players[0].energy, 1)
+  assert.equal(next.players[1].leaderHealth, 17)
+  assert.equal(next.players[0].field[0].burstUsed, true)
+  assert.equal(engine.canUseAbility(next, f.instanceId, 'burst'), false)
+})
+
+test('元素爆発の対象指定は必須で、無効対象ならENを消費しない', () => {
+  const state = startedGame()
+  state.players[0].energy = 2
+  const f = place(state, 0, 'test-elemental-caster', 1, 4)
+  const enemy = place(state, 1, 'test-hilichurl', 1, 6)
+  assert.equal(engine.canUseAbility(state, f.instanceId, 'burst'), true)
+  assert.equal(engine.useAbility(state, f.instanceId, 'burst'), state)
+  assert.equal(engine.useAbility(state, f.instanceId, 'burst', 'missing'), state)
+  const next = engine.useAbility(state, f.instanceId, 'burst', enemy.instanceId)
+  assert.equal(next.players[0].energy, 0)
+  assert.equal(next.players[1].field[0].health, 3)
+  assert.equal(next.players[0].field[0].burstUsed, true)
+})
+
+test('元素爆発は同じターン1回、スキルとは別枠', () => {
+  const state = startedGame()
+  state.players[0].energy = 2
+  const f = place(state, 0, 'test-electro-caster', 1, 4)
+  const burst = engine.useAbility(state, f.instanceId, 'burst')
+  assert.equal(engine.canUseAbility(burst, f.instanceId, 'skill'), true)
+  const skill = engine.useAbility(burst, f.instanceId, 'skill')
+  assert.equal(skill.players[0].energy, 1)
+  assert.equal(skill.players[1].leaderHealth, 16)
+  assert.equal(engine.canUseAbility(skill, f.instanceId, 'burst'), false)
+})
+
+test('凍結中はスキルも爆発も使用できない', () => {
+  const state = startedGame()
+  state.players[0].energy = 5
+  const f = place(state, 0, 'test-electro-caster', 1, 4)
+  f.keywords = ['frozen']
+  assert.equal(engine.canUseAbility(state, f.instanceId, 'skill'), false)
+  assert.equal(engine.canUseAbility(state, f.instanceId, 'burst'), false)
+  assert.equal(engine.useAbility(state, f.instanceId, 'skill'), state)
+})
+
+test('能力使用回数は自分の次ターン開始時にリセットされる', () => {
+  let state = startedGame()
+  const f = place(state, 0, 'test-electro-caster', 1, 4)
+  state.players[0].energy = 2
+  state = engine.useAbility(state, f.instanceId, 'skill')
+  state = engine.useAbility(state, f.instanceId, 'burst')
+  assert.equal(state.players[0].field[0].skillUsed, true)
+  assert.equal(state.players[0].field[0].burstUsed, true)
+  state = engine.endTurn(state)
+  assert.equal(state.players[0].field[0].skillUsed, true)
+  state = engine.endTurn(state)
+  assert.equal(state.currentPlayerId, 'player1')
+  assert.equal(state.players[0].field[0].skillUsed, false)
+  assert.equal(state.players[0].field[0].burstUsed, false)
+})
+
+test('相手フォロワーの能力は手動で使用できない', () => {
+  const state = startedGame()
+  const enemy = place(state, 1, 'test-electro-caster', 1, 4)
+  assert.equal(engine.canUseAbility(state, enemy.instanceId, 'skill'), false)
+  assert.equal(engine.useAbility(state, enemy.instanceId, 'skill'), state)
+})
+
+test('使用可能な効果なし・ゲーム終了後は能力使用不可', () => {
+  const state = startedGame()
+  const ordinary = place(state, 0, 'test-hilichurl', 2, 2)
+  const caster = place(state, 0, 'test-electro-caster', 1, 4)
+  assert.equal(engine.canUseAbility(state, ordinary.instanceId, 'skill'), false)
+  state.winnerId = 'player1'
+  assert.equal(engine.canUseAbility(state, caster.instanceId, 'skill'), false)
 })
