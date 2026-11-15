@@ -214,9 +214,6 @@ export const anemoCards: Card[] = [
     ],
     "description": "【突進】【ファンファーレ】デッキからランダムな風元素スペル1枚を手札に加える。【元素スキル：エニグマティック・フェイント】PP1：敵フォロワー1体に風元素2ダメージ。自身を1回復。",
     "implementationStatus": "playable",
-    "keywords": [
-      "rush"
-    ],
     "elementalSkill": {
       "name": "エニグマティック・フェイント",
       "ppCost": 1,
@@ -271,10 +268,7 @@ export const anemoCards: Card[] = [
     "keywords": ["rush"],
     "elementalSkill": {"name":"風輪両立","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "elementalBurst": {"name":"靖妖儺舞","energyCost":4,"effects":[]},
-    "implementationStatus": "playable",
-    "keywords": [
-      "rush"
-    ]
+    "implementationStatus": "playable"
   },
   {
     "id": "C085",
