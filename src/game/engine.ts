@@ -461,6 +461,10 @@ export function playCard(
 
 export type AbilityKind = 'skill' | 'burst'
 
+export function needsFriendlyAbilityTarget(card: Card, kind: AbilityKind): boolean {
+  return card.id === 'C066' && kind === 'skill'
+}
+
 export function needsAbilityTarget(card: Card, kind: AbilityKind): boolean {
   const ability = kind === 'skill' ? card.elementalSkill : card.elementalBurst
   return (card.id === 'C049' && kind === 'skill') || (ability?.effects ?? []).some(effect =>
@@ -494,6 +498,8 @@ export function canUseAbility(
   if (kind === 'skill' && card?.id === 'C066' &&
       !owner.field.some(f => f.health > 0 && getCard(f.cardId)?.element === 'electro')) return false
   if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
+  if (card && needsFriendlyAbilityTarget(card, kind) &&
+      !owner.field.some(f => f.health > 0 && getCard(f.cardId)?.element === 'electro')) return false
   if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))) {
     return false
   }
@@ -628,7 +634,8 @@ export function attackFollower(
       defender.keywords.includes('stealth')) return state
   if (!canFollowerAttack(attacker)) return state
   if (isGuarded(enemy) && !defender.keywords.includes('guard') &&
-      !attacker.keywords.includes('ignore_guard')) return state
+      !attacker.keywords.includes('ignore_guard') &&
+      !attacker.keywords.includes('plunge_attack')) return state
 
   const declared: GameState = {
     ...state,
@@ -724,7 +731,8 @@ export function attackLeader(
   )
 
   if (!attacker || !canFollowerAttack(attacker) ||
-      attacker.keywords.includes('rush_only') || isGuarded(enemy)) {
+      attacker.keywords.includes('rush_only') ||
+      (isGuarded(enemy) && !attacker.keywords.includes('plunge_attack'))) {
     return state
   }
 
