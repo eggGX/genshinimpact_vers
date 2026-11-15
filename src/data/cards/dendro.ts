@@ -138,7 +138,7 @@ export const dendroCards: Card[] = [
       "璃月"
     ],
     "description": "【自分のターン終了時】自リーダー1回復。【元素スキル：雲閣団々降清白】PP1：「月桂・投擲型」1体召喚。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "elementalSkill": {
       "name": "雲閣団々降清白",
       "ppCost": 1,
@@ -158,7 +158,7 @@ export const dendroCards: Card[] = [
       "稲妻"
     ],
     "description": "【守護】【ファンファーレ】自リーダーに通常シールド2。【元素スキル：にゃんにゃん町飛脚】PP1：自身に通常シールド3。ランダム敵フォロワー1体に草元素1ダメージ。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "keywords": [
       "guard"
     ],
@@ -184,7 +184,7 @@ export const dendroCards: Card[] = [
       "レンジャー"
     ],
     "description": "【ファンファーレ】デッキからランダムな草元素スペル1枚を手札に加える。【元素スキル：花触葉讃】PP1：敵フォロワー1体に草元素2ダメージ。別の敵フォロワー1体に草元素1ダメージ。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "elementalSkill": {
       "name": "花触葉讃",
       "ppCost": 1,
@@ -207,7 +207,7 @@ export const dendroCards: Card[] = [
       "教令院"
     ],
     "description": "【ファンファーレ】相手の場に草原核があるなら、その草原核+0/+1。【元素スキル：精緻なる絵図】PP1：敵フォロワー1体に草元素2ダメージ。相手の場に草原核があるなら、相手リーダーに草原核の体力と同じダメージ（最大3）。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "elementalSkill": {
       "name": "精緻なる絵図",
       "ppCost": 1,
