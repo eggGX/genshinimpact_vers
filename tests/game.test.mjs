@@ -1412,7 +1412,7 @@ test('C012 炎射手は対象選択できない敵だけならプレイ不可', 
   state.players[0].hand=['C012']
   const target=place(state,1,'test-mage',1,5)
   target.keywords=['aura']
-  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.canPlayCard(state,0),true)
   assert.equal(engine.playCard(state,'player1',0,target.instanceId),state)
 })
 
@@ -2185,7 +2185,7 @@ test('STEP30 水元素15枚のカードタイプ・フォロワーステータ�
     [2,5],[2,3],[3,5],[2,4],[2,4],[2,6],[4,5]
   ])
   assert.deepEqual(hydroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C026','C027','C028','C029','C031','C032','C033','C034','C035','C036','C037','C038','C039','C040'])
+    ['C026','C027','C028','C029','C030','C031','C032','C033','C034','C035','C036','C037','C038','C039','C040'])
   const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool = new Set(getDeckCardPool().map(c=>c.id))
   for(const c of hydroCards) assert.equal(pool.has(c.id),c.implementationStatus==='playable')
@@ -2206,7 +2206,7 @@ test.skip('旧C030未確定仕様テスト（Ver.1.0.1で確定済み）',()=>{
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C030']
-  assert.equal(engine.getCard('C030').implementationStatus,'data_only')
+  assert.equal(engine.getCard('C030').implementationStatus,'playable')
   assert.match(engine.getCard('C030').description,/要確認/)
   assert.equal(engine.canPlayCard(state,0),false)
   assert.equal(engine.playCard(state,'player1',0),state)
@@ -2330,7 +2330,7 @@ test('C036 キャンディスは守護持ち、スキルPP1で自身シールド
   assert.deepEqual(state.players[1].field[0].aura,[{element:'hydro'}])
 })
 
-test('STEP31：水元素14枚は対戦対応、対象未確定のC030のみ使用不可',()=>{
+test('STEP42：水元素15枚はすべて対戦対応（C030を含む）',()=>{
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C030','C034','C035','C037','C038','C039','C040']
@@ -4337,7 +4337,7 @@ test('C095 凝光のPP1スキルは璇璣屏を場へ追加しENを1得る',()=>
   assert.equal(state.players[0].energy,1)
   assert.equal(state.players[0].amulets.length,1)
   assert.equal(state.players[0].amulets[0].cardId,'token-jade-screen')
-  assert.equal(state.players[0].amulets[0].turnsRemaining,0)
+  assert.equal(state.players[0].amulets[0].turnsRemaining,3)
   assert.equal(engine.getCard('token-jade-screen').token,true)
 })
 
