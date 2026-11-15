@@ -1,7 +1,7 @@
 import type { Card } from '../../game/types'
 
 /** 初期セットVer.1.0／炎元素15枚（C011–C025）。原本: genshin_cards_v1.csv
- * C011–C018 はプレイ可能。C019以降は特殊能力が未実装のため data_only。
+ * C011–C022 はプレイ可能。C023以降は特殊能力が未実装のため data_only。
  */
 export const pyroCards: Card[] = [
   {
@@ -156,7 +156,9 @@ export const pyroCards: Card[] = [
       "西風騎士団"
     ],
     "description": "【ファンファーレ】敵フォロワー1体に炎元素2ダメージ。【元素スキル：爆弾人形】PP1：「ウサギ伯爵」1体を召喚。",
-    "implementationStatus": "data_only"
+    "effects": [{ "type": "damage", "trigger": "on_play", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }],
+    "elementalSkill": { "name": "爆弾人形", "ppCost": 1, "effects": [] },
+    "implementationStatus": "playable"
   },
   {
     "id": "C020",
@@ -171,7 +173,8 @@ export const pyroCards: Card[] = [
       "璃月"
     ],
     "description": "【自分のターン終了時】自分の場に「グゥオパァー」があるなら自身を+1/+1する。【元素スキル：グゥオパァー出撃】PP2：「グゥオパァー」1体を召喚。",
-    "implementationStatus": "data_only"
+    "elementalSkill": { "name": "グゥオパァー出撃", "ppCost": 2, "effects": [] },
+    "implementationStatus": "playable"
   },
   {
     "id": "C021",
@@ -189,7 +192,11 @@ export const pyroCards: Card[] = [
       "冒険者協会"
     ],
     "description": "【ファンファーレ】自分のフォロワー1体を+1/+0する（自身可）。【元素スキル：溢れる情熱】PP1：敵フォロワー1体に炎元素4ダメージ。このフォロワー自身に非元素1ダメージ。",
-    "implementationStatus": "data_only"
+    "elementalSkill": { "name": "溢れる情熱", "ppCost": 1, "effects": [
+      { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 4, "element": "pyro" },
+      { "type": "damage", "trigger": "skill", "target": "self_follower", "value": 1 }
+    ] },
+    "implementationStatus": "playable"
   },
   {
     "id": "C022",
@@ -207,7 +214,11 @@ export const pyroCards: Card[] = [
       "特巡隊"
     ],
     "description": "【自分のターン中】自分が過負荷を起こすたび、自分のフォロワーすべてを+1/+0する（発動回数制限なし）。【元素スキル：近迫阻止射撃・速】PP1：敵フォロワー1体に炎元素2ダメージ。自分のリーダーを2回復。",
-    "implementationStatus": "data_only"
+    "elementalSkill": { "name": "近迫阻止射撃・速", "ppCost": 1, "effects": [
+      { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" },
+      { "type": "heal", "trigger": "skill", "target": "own_leader", "value": 2 }
+    ] },
+    "implementationStatus": "playable"
   },
   {
     "id": "C023",
