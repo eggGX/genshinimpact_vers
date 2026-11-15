@@ -369,3 +369,92 @@ test('通常攻撃中の反応はダメージの同時処理を維持する', ()
   assert.equal(next.players[1].field.length, 0)
   assert.equal(next.players[1].hand.at(-1), 'test-hilichurl')
 })
+
+test('超電導：氷＋雷で次の物理ダメージが+2になり一度で消費される', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const f = place(state, 1, 'test-mage', 1, 10)
+  f.aura = [{element:'cryo'}]
+  const reaction = resolveElementalDamage(f, 1, 'electro')
+  assert.equal(reaction.reaction, 'superconduct')
+  assert.ok(reaction.follower.keywords.includes('superconduct'))
+  assert.deepEqual(reaction.follower.aura, [])
+  const hit = resolveElementalDamage(reaction.follower, 1)
+  assert.equal(hit.damage, 3)
+  assert.equal(hit.follower.keywords.includes('superconduct'), false)
+  assert.equal(resolveElementalDamage(hit.follower, 1).damage, 1)
+})
+
+test('原激化：草＋雷で2回分の状態を作り雷・草の命中で消費する', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const f = place(state, 1, 'test-mage', 1, 12)
+  f.aura = [{element:'dendro'}]
+  const first = resolveElementalDamage(f, 1, 'electro')
+  assert.equal(first.reaction,'quicken')
+  assert.ok(first.follower.keywords.includes('quicken:2'))
+  const second = resolveElementalDamage(first.follower, 1, 'electro')
+  assert.ok(second.follower.keywords.includes('quicken:1'))
+  const third = resolveElementalDamage(second.follower, 1, 'dendro')
+  assert.equal(third.follower.keywords.some(k => k.startsWith('quicken:')),false)
+})
+
+test('燃焼：炎＋草でターン数1が付き、ターン終了に1ダメージで解除', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const f = place(state, 0, 'test-mage', 1, 10)
+  f.aura = [{element:'dendro'}]
+  const reaction = resolveElementalDamage(f, 1, 'pyro')
+  assert.equal(reaction.reaction,'burning')
+  assert.ok(reaction.follower.keywords.includes('burning:1'))
+  state.players[0].field[0] = reaction.follower
+  const next = engine.endTurn(state)
+  assert.equal(next.players[0].field[0].health, 8)
+  assert.equal(next.players[0].field[0].keywords.some(k => k.startsWith('burning:')),false)
+})
+
+test('拡散：風＋炎は別の敵にも1ダメージと炎付着', async () => {
+  const { resolveElementalDamage,resolveReactionConsequence } =
+    await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const primary = place(state,1,'test-mage',1,8)
+  const other = place(state,1,'test-hilichurl',1,8)
+  primary.aura=[{element:'pyro'}]
+  const effect=resolveElementalDamage(primary,1,'anemo')
+  assert.equal(effect.reaction,'swirl')
+  state.players[1].field[0]=effect.follower
+  const result=resolveReactionConsequence(state,1,primary.instanceId,effect.reaction,effect.reactedElement)
+  assert.equal(result.players[1].field[1].health,7)
+  assert.deepEqual(result.players[1].field[1].aura,[{element:'pyro'}])
+  assert.equal(result.players[1].field[0].health,7)
+  assert.deepEqual(result.players[1].field[0].aura,[])
+  assert.equal(other.health,8)
+})
+
+test('拡散の飛び火は別の元素と反応できる', async () => {
+  const {resolveElementalDamage,resolveReactionConsequence} = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state=startedGame()
+  const primary=place(state,1,'test-mage',1,8)
+  const secondary=place(state,1,'test-hilichurl',1,8)
+  primary.aura=[{element:'pyro'}]
+  secondary.aura=[{element:'hydro'}]
+  const reaction=resolveElementalDamage(primary,1,'anemo')
+  state.players[1].field[0]=reaction.follower
+  const next=resolveReactionConsequence(state,1,primary.instanceId,reaction.reaction,reaction.reactedElement)
+  assert.equal(next.players[1].field[1].health,5)
+  assert.deepEqual(next.players[1].field[1].aura,[])
+})
+
+test('結晶：岩で反応すると攻撃側の結晶シールドが1増加する', async () => {
+  const {resolveElementalDamage,resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state=startedGame()
+  const caster=place(state,0,'test-hilichurl',1,8)
+  const target=place(state,1,'test-mage',1,8)
+  target.aura=[{element:'hydro'}]
+  const r=resolveElementalDamage(target,1,'geo')
+  assert.equal(r.reaction,'crystallize')
+  state.players[1].field[0]=r.follower
+  const next=resolveReactionConsequence(state,1,target.instanceId,r.reaction,r.reactedElement)
+  assert.equal(next.players[0].field[0].shield.crystallize,1)
+  assert.equal(next.players[0].field[0].instanceId,caster.instanceId)
+})
