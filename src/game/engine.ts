@@ -448,10 +448,10 @@ export function attackFollower(
 
   let result = { ...state, players }
   result = resolveReactionConsequence(
-    result, enemyIndex, targetId, toDefender.reaction
+    result, enemyIndex, targetId, toDefender.reaction, toDefender.reactedElement
   )
   result = resolveReactionConsequence(
-    result, index, attackerId, toAttacker.reaction
+    result, index, attackerId, toAttacker.reaction, toAttacker.reactedElement
   )
   return resolveDeaths(result)
 }
@@ -563,6 +563,27 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) {
     return result
   }
+
+  // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
+  // ダメージ・持続時間は暫定のテスト仕様。
+  const burnPlayers = result.players.map(p => p.id !== currentId ? p : ({
+    ...p,
+    field: p.field.map(f => {
+      const status = f.keywords.find(k => k.startsWith('burning:'))
+      if (!status) return f
+      const count = Number(status.slice(8)) || 0
+      return {
+        ...f,
+        health: f.health - 1,
+        keywords: [
+          ...f.keywords.filter(k => !k.startsWith('burning:')),
+          ...(count > 1 ? [`burning:${count - 1}`] : []),
+        ],
+      }
+    }),
+  })) as [Player, Player]
+  result = resolveDeaths({ ...result, players: burnPlayers })
+  if (result.winnerId !== null) return result
 
   // 凍結は持ち主のターン終了時に解除（次の自分のターン1回を行動不可）。
   // 将来の元素スキル・元素爆発も同じ frozen キーワードを参照する。
