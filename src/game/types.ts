@@ -130,6 +130,12 @@ export interface CrestState {
   usedElements: ElementType[]
 }
 
+export interface AmuletState {
+  instanceId: string
+  cardId: string
+  turnsRemaining: number
+}
+
 export interface Player {
   id: string
   name: string
@@ -143,6 +149,7 @@ export interface Player {
   /** Shared elemental energy, 0 to 5. */
   energy: number
   crests?: CrestState[]
+  amulets?: AmuletState[]
 
   deck: string[]
   hand: string[]
