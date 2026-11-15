@@ -1,5 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
+import { damageLeader } from './leaderShield'
 import { createSummonedFollower, summonFollowers } from './neutralRules'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 import { hitAllEnemyFollowers } from './pyroRules'
@@ -49,11 +50,11 @@ export function resolveDilucBurst(
   if (result.winnerId !== null) return result
   const enemyIndex = 1 - ownerIndex
   const enemy = result.players[enemyIndex]
-  const hp = Math.max(0, enemy.leaderHealth - 3)
+  const damaged = damageLeader(enemy, 3)
   return updateOwner({
     ...result,
-    winnerId: hp === 0 ? ownerId : result.winnerId,
-  }, enemyIndex, p => ({ ...p, leaderHealth: hp }))
+    winnerId: damaged.leaderHealth === 0 ? ownerId : result.winnerId,
+  }, enemyIndex, () => damaged)
 }
 
 /**
