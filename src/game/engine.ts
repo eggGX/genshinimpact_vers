@@ -320,7 +320,7 @@ function resolveTurnEffects(
       result = resolveCryoTurnEnd(result, playerId, sourceId)
       result = cryoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = electroTurnEnd(result, playerId, sourceId, resolveDeaths)
-      result = advancedElectroTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = advancedElectroTurnEnd(result, playerId, sourceId)
       result = resolveDeaths(result)
     }
   }
