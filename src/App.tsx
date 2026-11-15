@@ -243,6 +243,18 @@ function App() {
             付着：{follower.aura.map(a => a.element).join('・')}
           </small>
         )}
+        {follower.keywords.includes('double_attack') && (
+          <small>【2回攻撃】このターンの攻撃：{follower.attacksThisTurn ?? (follower.hasAttacked ? 1 : 0)}/2回</small>
+        )}
+        {follower.keywords.includes('next_damage_plus_2') && (
+          <small>次の被ダメージ+2（モナの星命定軌）</small>
+        )}
+        {follower.keywords.includes('normal_attack_hydro') && (
+          <small>【元素攻撃：水】</small>
+        )}
+        {follower.keywords.includes('attack_heal_2') && (
+          <small>【攻撃時】自分のリーダーを2回復</small>
+        )}
         {follower.keywords.includes('guard') && (
           <small>【守護】他の味方とリーダーを守る</small>
         )}
@@ -550,7 +562,7 @@ function App() {
         ))}
         {(currentPlayer.crests ?? []).map((crest, index) => (
           <div key={index}>
-            クレスト【{getCard(crest.id)?.name ?? crest.id}】
+            クレスト【{crest.id === 'C034' ? '歌声の環' : getCard(crest.id)?.name ?? crest.id}】
             残り{crest.turnsRemaining}ターン
             {crest.id === 'C010' && `（発動済み：${crest.usedElements.join('・') || 'なし'}）`}
           </div>
