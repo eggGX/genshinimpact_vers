@@ -964,7 +964,7 @@ test('正式カードとテストカードの登録元が分離されている',
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
   const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(productionCards.length, 85)
+  assert.equal(productionCards.length, 100)
   const { productionTokens } = await vite.ssrLoadModule('/src/data/productionTokens.ts')
   assert.equal(getAllCards().length,
     testCards.length + productionCards.length + productionTokens.length)
@@ -4066,4 +4066,215 @@ test('風元素専用トークン猫ボックスはデッキの初期候補か�
   assert.deepEqual([card.attack,card.health],[0,8])
   assert.equal(card.token,true)
   assert.equal(getDeckCardPool().some(c=>c.id===card.id),false)
+})
+
+test('STEP38 岩元素15枚のID・カード名・コスト・レアリティは確定資料どおり',async()=>{
+  const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
+  assert.deepEqual(geoCards.map(c=>c.id),
+    Array.from({length:15},(_,i)=>'C'+String(i+86).padStart(3,'0')))
+  assert.deepEqual(geoCards.map(c=>c.name),[
+    '岩スライム','璃月港','テペトル仔竜','ベビーヴィシャップ',
+    '天権崩玉','大掃除','獣域ハウンド・岩','ヴィシャップ・岩',
+    '騎士を夢見るメイド・ノエル','月を覆う天権・凝光',
+    '海祇軍の大将・ゴロー','不屈の勇士・カチーナ',
+    '千織屋の店主・千織','棘薔薇の会会長・ナヴィア','白亜の申し子・アルベド'
+  ])
+  assert.deepEqual(geoCards.map(c=>c.cost),[1,2,2,4,4,3,4,7,4,4,3,3,5,5,5])
+  assert.deepEqual(geoCards.map(c=>c.rarity),[
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')])
+  assert.ok(geoCards.every(c=>c.element==='geo'))
+})
+
+test('STEP38 岩15枚のタイプ・ステータス・地域と対戦実装区分',async()=>{
+  const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
+  assert.deepEqual(geoCards.map(c=>c.type),[
+    'follower','amulet','follower','follower','spell','spell',
+    'follower','follower','follower','follower','follower','follower',
+    'follower','follower','follower'])
+  assert.deepEqual(geoCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
+    [2,2],[2,2],[3,4],[3,3],[6,7],[2,5],[3,4],[2,4],[2,4],[3,5],[4,5],[3,5]])
+  assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
+  assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
+  assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    ['C086','C087','C088','C089','C092','C093','C094','C096'])
+})
+
+test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
+  const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const report=validateProductionCards(productionCards)
+  assert.deepEqual(report.errors,[])
+  assert.equal(report.total,100)
+  assert.equal(report.slots.filter(s=>s.element==='geo').reduce((n,s)=>n+s.remaining,0),0)
+  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
+})
+
+test('STEP38 岩元素8枚がデッキ候補、未実装7枚はデッキに入らない',async()=>{
+  const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const pool=new Set(getDeckCardPool().map(c=>c.id))
+  for(const c of geoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=['C090','C091','C095','C097','C098','C099','C100']
+  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+})
+
+test('C086 岩スライムは岩元素生物として岩を常時付着',()=>{
+  let state=startedGame()
+  state.players[0].pp=1;state.players[0].hand=['C086']
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].field[0].aura,[{element:'geo'}])
+  assert.equal(state.players[0].field[0].health,2)
+})
+
+test('C087 璃月港は2PP・カウント3のアミュレット',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C087'];state.players[0].pp=2
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].amulets[0].cardId,'C087')
+  assert.equal(state.players[0].amulets[0].turnsRemaining,3)
+  assert.equal(state.players[0].amulets.length,1)
+})
+
+test('C087 璃月港は自ターン終了時にデッキから璃月地域の1枚を探索',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C087'];state.players[0].pp=2
+  state.players[0].deck=['C001','C019','C089','C080']
+  state=engine.playCard(state,'player1',0)
+  state=engine.endTurn(state)
+  assert.deepEqual(state.players[0].hand,['C089'])
+  assert.deepEqual(state.players[0].deck,['C001','C019','C080'])
+  assert.equal(state.players[0].amulets[0].turnsRemaining,2)
+})
+
+test('C087 璃月港の探索候補無しでもカウントダウンし3回で消滅',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C087'];state.players[0].pp=2
+  state.players[0].deck=Array(10).fill('C001')
+  state=engine.playCard(state,'player1',0)
+  for(let i=0;i<5;i++)state=engine.endTurn(state)
+  assert.deepEqual(state.players[0].amulets,[])
+  assert.equal(state.players[0].deck.length,8)
+})
+
+test('C087 璃月港は場の5枠が埋まっていると使用できない',()=>{
+  const state=startedGame()
+  state.players[0].hand=['C087'];state.players[0].pp=2
+  for(let i=0;i<5;i++)place(state,0,'C001',1,2)
+  assert.equal(engine.canPlayCard(state,0),false)
+})
+
+test('C088 テペトル仔竜は突進で登場ターンは敵フォロワーのみ攻撃可能',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C088'];state.players[0].pp=2
+  state=engine.playCard(state,'player1',0)
+  const dragon=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,dragon.instanceId),state)
+  const foe=place(state,1,'test-mage',0,7)
+  state=engine.attackFollower(state,dragon.instanceId,foe.instanceId)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C089 ベビーヴィシャップは突進、攻撃時に自リーダー結晶シールド1',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C089'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  const baby=state.players[0].field[0]
+  const foe=place(state,1,'test-mage',0,8)
+  state=engine.attackFollower(state,baby.instanceId,foe.instanceId)
+  assert.equal(state.players[0].leaderShield.crystallize,1)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C092 岩ハウンドは岩元素通常攻撃＋敵リーダーへの追加非元素1',()=>{
+  let state=startedGame()
+  const hound=place(state,0,'C092',3,3)
+  const foe=place(state,1,'test-mage',0,10)
+  state=engine.attackFollower(state,hound.instanceId,foe.instanceId)
+  assert.equal(state.players[1].leaderHealth,19)
+  assert.equal(state.players[1].field[0].health,7)
+  assert.deepEqual(state.players[1].field[0].aura,[])
+  assert.equal(engine.getCard('C092').normalAttackElement,'geo')
+})
+
+test('C092 岩ハウンドがリーダーを攻撃すると本体3＋追加1ダメージ',()=>{
+  let state=startedGame()
+  const hound=place(state,0,'C092',3,3)
+  state=engine.attackLeader(state,hound.instanceId)
+  assert.equal(state.players[1].leaderHealth,16)
+})
+
+test('C093 岩ヴィシャップは守護、交戦時に自リーダー結晶シールド2',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C093'];state.players[0].pp=7
+  state=engine.playCard(state,'player1',0)
+  assert.ok(state.players[0].field[0].keywords.includes('guard'))
+  const vishap=state.players[0].field[0]
+  const foe=place(state,1,'test-mage',2,9)
+  state=engine.attackFollower(state,vishap.instanceId,foe.instanceId)
+  assert.equal(state.players[0].leaderShield.crystallize,2)
+})
+
+test('C093 岩ヴィシャップは敵に攻撃されても交戦時シールド2',()=>{
+  let state=startedGame()
+  const vishap=place(state,0,'C093',6,7)
+  vishap.keywords=['guard']
+  const enemy=place(state,1,'test-mage',2,9)
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},enemy.instanceId,vishap.instanceId)
+  assert.equal(state.players[0].leaderShield.crystallize,2)
+})
+
+test('C094 ノエルは守護、PP1スキルで自身とリーダーへ通常シールド3',()=>{
+  let state=startedGame()
+  const noelle=place(state,0,'C094',2,5)
+  noelle.keywords=['guard']
+  state.players[0].pp=1
+  state=engine.activateAbility(state,noelle.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].leaderShield.normal,3)
+  assert.equal(state.players[0].field[0].shield.normal,3)
+})
+
+test('C094 ノエルは攻撃時リーダーを2回復',()=>{
+  let state=startedGame()
+  const noelle=place(state,0,'C094',2,5)
+  state.players[0].leaderHealth=15
+  const enemy=place(state,1,'test-mage',0,8)
+  state=engine.attackFollower(state,noelle.instanceId,enemy.instanceId)
+  assert.equal(state.players[0].leaderHealth,17)
+})
+
+test('C094 ノエルの回復は命の契約を先に吸収する',()=>{
+  let state=startedGame()
+  const noelle=place(state,0,'C094',2,5)
+  state.players[0].leaderHealth=10
+  state.players[0].bondOfLife=2
+  const enemy=place(state,1,'test-mage',0,8)
+  state=engine.attackFollower(state,noelle.instanceId,enemy.instanceId)
+  assert.equal(state.players[0].leaderHealth,10)
+  assert.equal(state.players[0].bondOfLife,0)
+})
+
+test('C096 ゴローのファンファーレは自身を含む味方岩フォロワー全体+0/+1',()=>{
+  let state=startedGame()
+  place(state,0,'C086',2,2)
+  place(state,0,'C001',1,3)
+  state.players[0].hand=['C096'];state.players[0].pp=3
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].field.map(f=>[f.health,f.maxHealth]),[[3,3],[3,3],[5,5]])
+})
+
+test('C096 ゴローのPP1スキルは自分の岩フォロワーすべて+1/+1',()=>{
+  let state=startedGame()
+  const gorou=place(state,0,'C096',2,4)
+  place(state,0,'C086',2,2)
+  place(state,0,'C001',1,3)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,gorou.instanceId,'skill')
+  assert.deepEqual(state.players[0].field.map(f=>[f.attack,f.health]),[[3,5],[3,3],[1,3]])
+  assert.equal(state.players[0].energy,1)
 })
