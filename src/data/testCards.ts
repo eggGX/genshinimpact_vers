@@ -223,4 +223,56 @@ export const testCards: Card[] = [
     health: 1,
     description: '攻撃不可。炎で烈開花、雷で超開花。',
   },
+  {
+    id: 'test-elemental-caster',
+    name: '水の修練者',
+    type: 'follower',
+    rarity: 'legendary',
+    element: 'hydro',
+    cost: 2,
+    attack: 1,
+    health: 4,
+    description: 'スキル：自身に通常シールド1。爆発（EN2）：敵1体に水元素3ダメージ。',
+    elementalSkill: {
+      name: '水護の術',
+      effects: [{
+        type: 'grant_shield', trigger: 'skill',
+        target: 'self_follower', shieldType: 'normal', value: 1,
+      }],
+    },
+    elementalBurst: {
+      name: '大潮の一撃',
+      energyCost: 2,
+      effects: [{
+        type: 'damage', trigger: 'burst',
+        target: 'selected_enemy_follower', value: 3, element: 'hydro',
+      }],
+    },
+  },
+  {
+    id: 'test-electro-caster',
+    name: '雷の修練者',
+    type: 'follower',
+    rarity: 'legendary',
+    element: 'electro',
+    cost: 2,
+    attack: 1,
+    health: 4,
+    description: 'スキル：敵リーダーに1ダメージ。爆発（EN2）：敵リーダーに3ダメージ。',
+    elementalSkill: {
+      name: '雷の一閃',
+      effects: [{
+        type: 'damage', trigger: 'skill',
+        target: 'enemy_leader', value: 1, element: 'electro',
+      }],
+    },
+    elementalBurst: {
+      name: '雷鳴',
+      energyCost: 2,
+      effects: [{
+        type: 'damage', trigger: 'burst',
+        target: 'enemy_leader', value: 3, element: 'electro',
+      }],
+    },
+  },
 ]
