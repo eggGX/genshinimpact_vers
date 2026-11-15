@@ -1664,6 +1664,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['たもと', 2, 1, 3],
     ['月桂・跳躍型', 2, 0, 3],
     ['コレアンバー', 0, undefined, undefined],
+    ['草霊', 2, 2, 2],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -4507,10 +4508,10 @@ test('STEP40 草元素15枚は原本どおりB4/S4/G4/L3の構成', async()=>{
   assert.deepEqual(report.errors,[])
   assert.equal(report.ready,true)
 })
-test('STEP40 草元素7枚が対戦対応、残り8枚は正式データのみ',async()=>{
+test('STEP40 草元素8枚が対戦対応、残り7枚は正式データのみ',async()=>{
   const {dendroCards}=await vite.ssrLoadModule('/src/data/cards/dendro.ts')
   assert.deepEqual(dendroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C101','C102','C103','C104','C105','C106','C107'])
+    ['C101','C102','C103','C104','C105','C106','C107','C108'])
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of dendroCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
@@ -4603,4 +4604,28 @@ test('C106 ニャンコトレジャーは敵全体草1と2ターンのコレア�
   s=engine.endTurn(s)
   assert.equal(s.players[1].field.find(x=>x.instanceId===e.instanceId).health,5)
   assert.equal(s.players[0].amulets.length,0)
+})
+
+test('C108 フローラルリングダンサーは登場時草霊を1体召喚',()=>{
+  let s=startedGame()
+  s.players[0].pp=5;s.players[0].hand=['C108']
+  s=engine.playCard(s,'player1',0)
+  assert.deepEqual(s.players[0].field.map(f=>f.cardId),['C108','token-dendro-spirit'])
+  assert.equal(engine.getCard('token-dendro-spirit').normalAttackElement,'dendro')
+})
+test('C108 フローラルリングダンサーは草霊がいれば攻撃時+2/+0',()=>{
+  let s=startedGame()
+  const attacker=place(s,0,'C108',3,4)
+  place(s,0,'token-dendro-spirit',2,2)
+  const foe=place(s,1,'test-mage',0,9)
+  s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
+  assert.equal(s.players[0].field[0].attack,5)
+  assert.equal(s.players[1].field[0].health,4)
+})
+test('C108 フローラルリングダンサーは草霊がなければ攻撃力そのまま',()=>{
+  let s=startedGame()
+  const attacker=place(s,0,'C108',3,4)
+  const foe=place(s,1,'test-mage',0,9)
+  s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
+  assert.equal(s.players[0].field[0].attack,3)
 })
