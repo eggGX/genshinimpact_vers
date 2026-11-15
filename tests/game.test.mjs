@@ -3233,3 +3233,242 @@ test('雷蛍とオズは正式15枚に含まずデッキに入らない',async()
   assert.equal(engine.getCard('token-oz').token,true)
   assert.equal(getDeckCardPool().some(c=>c.id==='token-oz' || c.id==='token-electro-cicin'),false)
 })
+
+test('STEP35 雷元素全15枚がplayable・ゴールドとレジェンドのPP/ENは確定値',async()=>{
+  const {electroCards}=await vite.ssrLoadModule('/src/data/cards/electro.ts')
+  assert.equal(electroCards.length,15)
+  assert.ok(electroCards.every(c=>c.implementationStatus==='playable'))
+  const ids=['C064','C065','C066','C067','C068','C069','C070']
+  assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.ppCost),[2,1,1,1,1,1,1])
+  assert.deepEqual(['C068','C069','C070'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,3,3])
+})
+
+test('C061 御詠鳴神刈山祭：リーダーHP11ならランダム雷1を3回',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C061'];state.players[0].pp=3
+  state.players[0].leaderHealth=11
+  place(state,1,'test-mage',0,10)
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].field[0].health,7)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
+  assert.ok(state.players[0].graveyard.includes('C061'))
+})
+
+test('C061 御詠鳴神刈山祭：リーダーHP10以下なら雷1を5回',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C061'];state.players[0].pp=3
+  state.players[0].leaderHealth=10
+  place(state,1,'test-mage',0,12)
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].field[0].health,7)
+})
+
+test('C061 御詠鳴神刈山祭：敵が存在しない場合は相手リーダーを傷つけない',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C061'];state.players[0].pp=3
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].leaderHealth,20)
+  assert.deepEqual(state.players[0].graveyard,['C061'])
+})
+
+test('C064 フィッシュル：スキルPP2でオズを召喚、EN1獲得',()=>{
+  let state=startedGame()
+  const fischl=place(state,0,'C064',2,3)
+  state.players[0].pp=2
+  state=engine.activateAbility(state,fischl.instanceId,'skill')
+  assert.deepEqual(state.players[0].field.map(f=>f.cardId),['C064','token-oz'])
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C064 フィッシュル：終了時にオズへ潜伏を付ける',()=>{
+  let state=startedGame()
+  place(state,0,'C064',2,3)
+  place(state,0,'token-oz',3,3)
+  state=engine.endTurn(state)
+  assert.ok(state.players[0].field[1].keywords.includes('stealth'))
+})
+
+test('C065 久岐忍：ターン終了時リーダーを1回復',()=>{
+  let state=startedGame()
+  state.players[0].leaderHealth=16
+  place(state,0,'C065',2,4)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth,17)
+})
+
+test('C065 久岐忍：スキルPP1で自身1ダメージ・リーダー2回復・敵雷1',()=>{
+  let state=startedGame()
+  const kuki=place(state,0,'C065',2,4)
+  state.players[0].pp=1;state.players[0].leaderHealth=10
+  place(state,1,'test-mage',0,7)
+  state=engine.activateAbility(state,kuki.instanceId,'skill')
+  assert.equal(state.players[0].field[0].health,3)
+  assert.equal(state.players[0].leaderHealth,12)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].pp,0)
+})
+
+test('C066 九条裟羅：ファンファーレは他の雷フォロワー+1攻撃',()=>{
+  let state=startedGame()
+  const other=place(state,0,'C056',2,2)
+  const unrelated=place(state,0,'C001',1,2)
+  state.players[0].hand=['C066'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0,other.instanceId)
+  assert.equal(state.players[0].field[0].attack,3)
+  assert.equal(state.players[0].field[1].attack,1)
+  assert.equal(state.players[0].field[2].attack,3)
+  assert.equal(state.players[0].field[1].instanceId,unrelated.instanceId)
+})
+
+test('C066 九条裟羅：スキル対象の雷フォロワー+2攻撃、敵ランダム雷1',()=>{
+  let state=startedGame()
+  const sara=place(state,0,'C066',3,4)
+  const ally=place(state,0,'C056',2,2)
+  place(state,1,'test-mage',0,6)
+  state.players[0].pp=1
+  assert.equal(engine.activateAbility(state,sara.instanceId,'skill','invalid'),state)
+  state=engine.activateAbility(state,sara.instanceId,'skill',ally.instanceId)
+  assert.equal(state.players[0].field[1].attack,4)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C067 オロルン：スキルで指定敵雷2、別の敵に雷1',()=>{
+  let state=startedGame()
+  const ororon=place(state,0,'C067',2,4)
+  const one=place(state,1,'test-mage',0,9)
+  const two=place(state,1,'test-mage',0,9)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,ororon.instanceId,'skill',one.instanceId)
+  assert.equal(state.players[1].field[0].health,7)
+  assert.equal(state.players[1].field[1].health,8)
+  assert.equal(state.players[1].field[1].instanceId,two.instanceId)
+})
+
+test('C067 オロルン：別対象がいなければ指定敵のみ雷2',()=>{
+  let state=startedGame()
+  const ororon=place(state,0,'C067',2,4)
+  const one=place(state,1,'test-mage',0,9)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,ororon.instanceId,'skill',one.instanceId)
+  assert.equal(state.players[1].field[0].health,7)
+})
+
+test('C067 オロルン：自ターン感電で追加雷1、回数は最大2',async()=>{
+  const {resolveElementalDamage,resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
+  let state=startedGame()
+  const ororon=place(state,0,'C067',2,4)
+  const enemy=place(state,1,'test-mage',0,15)
+  const other=place(state,1,'test-mage',0,12)
+  for(let n=0;n<3;n++){
+    state.players[1].field.find(f=>f.instanceId===enemy.instanceId).aura=[{element:'hydro'}]
+    const victim=state.players[1].field.find(f=>f.instanceId===enemy.instanceId)
+    const r=resolveElementalDamage(victim,1,'electro')
+    state.players[1].field=state.players[1].field.map(f=>f.instanceId===enemy.instanceId?r.follower:f)
+    state=resolveReactionConsequence(state,1,enemy.instanceId,r.reaction,r.reactedElement,0)
+  }
+  assert.equal(state.players[0].field.find(f=>f.instanceId===ororon.instanceId).electroChargedTriggersThisTurn,2)
+  assert.ok(state.players[1].field.find(f=>f.instanceId===other.instanceId).health<=9)
+})
+
+test('C068 セノ：スキル敵雷2、爆発EN3で自身+2/+2と2回攻撃・雷攻撃',()=>{
+  let state=startedGame()
+  const cyno=place(state,0,'C068',4,5)
+  const enemy=place(state,1,'test-mage',0,12)
+  state.players[0].pp=1;state.players[0].energy=3
+  state=engine.activateAbility(state,cyno.instanceId,'skill',enemy.instanceId)
+  assert.equal(state.players[1].field[0].health,10)
+  state=engine.activateAbility(state,cyno.instanceId,'burst')
+  const result=state.players[0].field[0]
+  assert.deepEqual([result.attack,result.health,result.maxHealth],[6,7,7])
+  assert.ok(result.keywords.includes('double_attack'))
+  assert.ok(result.keywords.includes('normal_attack_electro'))
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C069 八重神子：PP1スキルを1ターン3回、殺生櫻を3個設置',()=>{
+  let state=startedGame()
+  const yae=place(state,0,'C069',3,5)
+  state.players[0].pp=3
+  for(let i=0;i<3;i++){
+    assert.equal(engine.canUseAbility(state,yae.instanceId,'skill'),true)
+    state=engine.activateAbility(state,yae.instanceId,'skill')
+  }
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,3)
+  assert.equal(state.players[0].field[0].skillUsesThisTurn,3)
+  assert.equal(state.players[0].amulets.length,3)
+  assert.equal(engine.canUseAbility(state,yae.instanceId,'skill'),false)
+})
+
+test('殺生櫻：ターン終了でランダム雷2、カウント3から0で消滅',()=>{
+  let state=startedGame()
+  state.players[0].amulets=[{instanceId:'sakura-1',cardId:'token-sesshou-sakura',turnsRemaining:3}]
+  place(state,1,'test-mage',0,12)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,10)
+  assert.equal(state.players[0].amulets[0].turnsRemaining,2)
+  for(let i=0;i<4;i++)state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.deepEqual(state.players[0].amulets,[])
+})
+
+test('C069 八重神子：爆発で敵全体雷3後、殺生櫻を破壊して雷2を個数分',()=>{
+  let state=startedGame()
+  const yae=place(state,0,'C069',3,5)
+  state.players[0].energy=3
+  state.players[0].amulets=[
+    {instanceId:'a',cardId:'token-sesshou-sakura',turnsRemaining:3},
+    {instanceId:'b',cardId:'token-sesshou-sakura',turnsRemaining:2},
+  ]
+  state=engine.activateAbility(state,yae.instanceId,'burst')
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[0].amulets.length,0)
+  assert.equal(state.players[1].leaderHealth,16)
+})
+
+test('C070 ヴァレサ：攻撃時自身+1、スキルPP1で雷攻撃・落下攻撃を付与',()=>{
+  let state=startedGame()
+  const varesa=place(state,0,'C070',5,5)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,varesa.instanceId,'skill')
+  assert.ok(state.players[0].field[0].keywords.includes('plunge_attack'))
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_electro'))
+  place(state,1,'test-mage',0,12)
+  state=engine.attackFollower(state,varesa.instanceId,state.players[1].field[0].instanceId)
+  assert.equal(state.players[0].field[0].attack,6)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C070 ヴァレサ：落下攻撃は守護を無視して攻撃し攻撃後に敵全体へ雷1',()=>{
+  let state=startedGame()
+  const varesa=place(state,0,'C070',5,5)
+  varesa.keywords=['normal_attack_electro','plunge_attack']
+  const guard=place(state,1,'C003',0,9)
+  guard.keywords=['guard']
+  const other=place(state,1,'test-mage',0,10)
+  state=engine.attackFollower(state,varesa.instanceId,other.instanceId)
+  assert.equal(state.players[1].field.find(f=>f.instanceId===guard.instanceId).health,8)
+  assert.equal(state.players[1].field.find(f=>f.instanceId===other.instanceId).health,3)
+})
+
+test('C070 ヴァレサ：爆発EN3で敵全体雷3＋自身攻撃+2',()=>{
+  let state=startedGame()
+  const varesa=place(state,0,'C070',5,5)
+  state.players[0].energy=3
+  place(state,1,'test-mage',0,9)
+  state=engine.activateAbility(state,varesa.instanceId,'burst')
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[0].field[0].attack,7)
+  assert.equal(state.players[0].energy,0)
+})
+
+test('殺生櫻はトークンであり通常デッキへ混入しない',async()=>{
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const sakura=engine.getCard('token-sesshou-sakura')
+  assert.equal(sakura.type,'amulet')
+  assert.equal(sakura.token,true)
+  assert.equal(getDeckCardPool().some(c=>c.id===sakura.id),false)
+})
