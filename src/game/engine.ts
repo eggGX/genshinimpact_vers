@@ -647,8 +647,8 @@ export function attackFollower(
     ),
   }
   players[enemyIndex] = {
-    ...enemy,
-    field: enemy.field.map(f =>
+    ...buffed.players[enemyIndex],
+    field: buffed.players[enemyIndex].field.map(f =>
       f.instanceId === targetId ? toDefender.follower : f
     ),
   }
