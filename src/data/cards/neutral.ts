@@ -10,6 +10,7 @@ import type { Card } from '../../game/types'
 export const neutralCards: Card[] = [
   {
     id: 'C001',
+    implementationStatus: 'data_only',
     name: 'ヒルチャール',
     type: 'follower',
     rarity: 'bronze',
@@ -22,6 +23,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C002',
+    implementationStatus: 'data_only',
     name: '宝盗団・雑夫',
     type: 'follower',
     rarity: 'bronze',
@@ -34,6 +36,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C003',
+    implementationStatus: 'data_only',
     name: '遺跡守衛',
     type: 'follower',
     rarity: 'bronze',
@@ -46,6 +49,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C004',
+    implementationStatus: 'data_only',
     name: 'ワイルドハント',
     type: 'follower',
     rarity: 'bronze',
@@ -59,6 +63,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C005',
+    implementationStatus: 'data_only',
     name: 'ヒルチャール強襲',
     type: 'spell',
     rarity: 'silver',
@@ -68,6 +73,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C006',
+    implementationStatus: 'data_only',
     name: 'エラ・マスク',
     type: 'follower',
     rarity: 'silver',
@@ -80,6 +86,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C007',
+    implementationStatus: 'data_only',
     name: 'ティミー',
     type: 'follower',
     rarity: 'silver',
@@ -92,6 +99,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C008',
+    implementationStatus: 'data_only',
     name: 'ヒルチャール暴徒',
     type: 'follower',
     rarity: 'silver',
@@ -104,6 +112,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C009',
+    implementationStatus: 'data_only',
     name: 'パイモンのへそくり',
     type: 'spell',
     rarity: 'gold',
@@ -113,6 +122,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C010',
+    implementationStatus: 'data_only',
     name: '第四降臨者の力',
     type: 'spell',
     rarity: 'gold',
