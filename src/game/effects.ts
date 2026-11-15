@@ -131,6 +131,10 @@ function applyEffect(
           return modifyFollower(follower, effect)
         }
 
+        if (effect.type === 'grant_shield') {
+          return grantShield(follower, effect.shieldType, effect.value)
+        }
+
         const value = Number.isFinite(effect.value)
           ? Math.max(0, Math.floor(effect.value))
           : 0
@@ -166,7 +170,7 @@ function applyEffect(
   }
 
   // リーダー対象の効果
-  if (effect.type === 'modify_stats') {
+  if (effect.type === 'modify_stats' || effect.type === 'grant_shield') {
     return state
   }
 
