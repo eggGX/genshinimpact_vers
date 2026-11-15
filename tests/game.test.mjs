@@ -272,3 +272,100 @@ test('同時戦闘で片方に反応が発生しても双方の攻撃を処理�
   assert.deepEqual(next.players[0].graveyard, ['test-slime'])
   assert.deepEqual(next.players[1].graveyard, ['test-slime'])
 })
+
+test('感電は水＋雷で反応し、攻撃対象の付着を解除する', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  for (const [aura, incoming] of [['hydro', 'electro'], ['electro', 'hydro']]) {
+    const state = startedGame()
+    const target = place(state, 1, 'test-mage', 1, 8)
+    target.aura = [{ element: aura }]
+    const result = resolveElementalDamage(target, 2, incoming)
+    assert.equal(result.reaction, 'electro_charged')
+    assert.equal(result.follower.health, 6)
+    assert.deepEqual(result.follower.aura, [])
+  }
+})
+
+test('感電の追加1ダメージは別の敵フォロワーへ与える', async () => {
+  const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-mage', 1, 8)
+  place(state, 1, 'test-hilichurl', 1, 3)
+  const next = resolveReactionConsequence(state, 1, target.instanceId, 'electro_charged')
+  assert.equal(next.players[1].field[0].health, 8)
+  assert.equal(next.players[1].field[1].health, 2)
+  assert.equal(next.players[1].leaderHealth, 20)
+})
+
+test('感電で別の敵がいないときはリーダーに1ダメージ', async () => {
+  const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-mage', 1, 8)
+  const next = resolveReactionConsequence(state, 1, target.instanceId, 'electro_charged')
+  assert.equal(next.players[1].leaderHealth, 19)
+})
+
+test('過負荷は炎＋雷で反応しコスト5以下の敵を手札に戻す', async () => {
+  const { resolveReactionConsequence, resolveElementalDamage } =
+    await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-hilichurl', 1, 8)
+  target.aura = [{ element: 'pyro' }]
+  const outcome = resolveElementalDamage(target, 1, 'electro')
+  assert.equal(outcome.reaction, 'overloaded')
+  state.players[1].field[0] = outcome.follower
+  const before = state.players[1].hand.length
+  const next = resolveReactionConsequence(state, 1, target.instanceId, outcome.reaction)
+  assert.equal(next.players[1].field.length, 0)
+  assert.equal(next.players[1].hand.length, before + 1)
+  assert.equal(next.players[1].hand.at(-1), 'test-hilichurl')
+  assert.equal(next.players[1].graveyard.length, 0)
+})
+
+test('凍結は水＋氷で発生し、反応後は付着を解除する', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-mage', 1, 8)
+  target.aura = [{ element: 'hydro' }]
+  const outcome = resolveElementalDamage(target, 1, 'cryo')
+  assert.equal(outcome.reaction, 'frozen')
+  assert.deepEqual(outcome.follower.aura, [])
+  assert.equal(outcome.follower.health, 7)
+  assert.equal(outcome.follower.keywords.includes('frozen'), true)
+  assert.equal(engine.canFollowerAttack(outcome.follower), false)
+})
+
+test('凍結したフォロワーは持ち主のターン終了まで攻撃不可', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-hilichurl', 2, 5)
+  attacker.keywords = ['frozen']
+  const blocked = engine.attackLeader(state, attacker.instanceId)
+  assert.equal(blocked.players[1].leaderHealth, 20)
+  const switched = engine.endTurn(state)
+  assert.equal(switched.players[0].field[0].keywords.includes('frozen'), false)
+  assert.equal(switched.currentPlayerId, 'player2')
+})
+
+test('氷の射手の効果で凍結し、解除前は攻撃できない', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-archer']
+  const target = place(state, 1, 'test-mage', 1, 8)
+  target.aura = [{ element: 'hydro' }]
+  const next = engine.playCard(state, 'player1', 0, target.instanceId)
+  const enemy = next.players[1].field[0]
+  assert.equal(enemy.health, 6)
+  assert.equal(enemy.keywords.includes('frozen'), true)
+  assert.equal(engine.canFollowerAttack(enemy), false)
+})
+
+test('通常攻撃中の反応はダメージの同時処理を維持する', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-slime', 1, 5)
+  const target = place(state, 1, 'test-hilichurl', 1, 5)
+  target.aura = [{ element: 'electro' }]
+  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
+  assert.equal(next.players[0].field[0].health, 4)
+  assert.equal(next.players[1].field.length, 0)
+  assert.equal(next.players[1].hand.at(-1), 'test-hilichurl')
+})
