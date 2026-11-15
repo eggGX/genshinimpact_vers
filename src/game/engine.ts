@@ -511,7 +511,7 @@ export function canUseAbility(
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
   if (kind === 'skill' && card?.id === 'C083' && !owner.hand.some(id =>
       ['pyro', 'hydro', 'cryo', 'electro'].includes(getCard(id)?.element ?? ''))) return false
-  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064'].includes(card?.id ?? '') &&
+  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'skill' && card?.id === 'C069' &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
