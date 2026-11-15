@@ -4369,3 +4369,54 @@ test('テスト用カードデータは正式台帳から完全削除されて�
       assert.ok([...player.hand,...player.deck].every(id=>/^C\d{3}$/.test(id)))
   }
 })
+
+test('構築ルール: 40枚・同名最大3枚・元素は最大3種類・無元素自由',async()=>{
+  const {createStarterDeck,validateDeck,getDeckCard}=await vite.ssrLoadModule('/src/data/deckRules.ts')
+  for(const selected of [['pyro'],['pyro','hydro'],['pyro','hydro','cryo']]){
+    const deck=createStarterDeck(selected)
+    assert.equal(deck.cards.length,40)
+    assert.deepEqual(validateDeck(deck),[])
+    assert.ok(deck.cards.every(id=>{
+      const card=getDeckCard(id)
+      return card && (card.element==='none'||selected.includes(card.element))
+    }))
+    const counts=new Map()
+    for(const id of deck.cards)counts.set(id,(counts.get(id)||0)+1)
+    assert.ok([...counts.values()].every(n=>n<=3))
+  }
+})
+test('構築ルール: 同名4枚・40枚未満・4元素・トークン・不正IDは拒否',async()=>{
+  const {createStarterDeck,validateDeck}=await vite.ssrLoadModule('/src/data/deckRules.ts')
+  const base=createStarterDeck(['pyro','hydro','cryo'])
+  assert.ok(validateDeck({...base,cards:base.cards.slice(1)}).some(x=>x.includes('40枚')))
+  assert.ok(validateDeck({...base,cards:[...Array(4).fill('C011'),...base.cards.slice(4)]})
+    .some(x=>x.includes('最大3枚')))
+  assert.ok(validateDeck({...base,elements:['pyro','hydro','cryo','geo']})
+    .some(x=>x.includes('最大3種類')))
+  assert.ok(validateDeck({...base,cards:['token-baron-bunny',...base.cards.slice(1)]})
+    .some(x=>x.includes('正式カードではありません')))
+  assert.ok(validateDeck({...base,cards:['test-elemental-caster',...base.cards.slice(1)]})
+    .some(x=>x.includes('正式カードではありません')))
+  assert.ok(validateDeck({...base,elements:['pyro','hydro']})
+    .some(x=>x.includes('元素が選択されていません')))
+})
+test('対戦開始: 2人分の別々の正式40枚デッキをシャッフルして4枚ドロー',async()=>{
+  const {createStarterDeck}=await vite.ssrLoadModule('/src/data/deckRules.ts')
+  const decks=[createStarterDeck(['pyro']),createStarterDeck(['geo','anemo'])]
+  const game=engine.createInitialGameState(decks)
+  assert.equal(game.phase,'mulligan')
+  for(let i=0;i<2;i++){
+    const expected=[...decks[i].cards].sort()
+    const actual=[...game.players[i].deck,...game.players[i].hand].sort()
+    assert.deepEqual(actual,expected)
+    assert.equal(game.players[i].hand.length,4)
+    assert.equal(game.players[i].deck.length,36)
+  }
+  assert.notDeepEqual(decks[0].cards,decks[1].cards)
+})
+test('不正デッキを渡した対戦開始は拒否され、ランダムデッキにすり替わらない',async()=>{
+  const {createStarterDeck}=await vite.ssrLoadModule('/src/data/deckRules.ts')
+  const first=createStarterDeck(['pyro'])
+  const second=createStarterDeck(['hydro'])
+  assert.throws(()=>engine.createInitialGameState([{...first,cards:first.cards.slice(1)},second]),/不正/)
+})
