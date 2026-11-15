@@ -280,3 +280,98 @@ export function dendroGoldTurnEnd(state: GameState, ownerId: string, sourceId: s
   }
   return state
 }
+
+/** One random elemental strike with the opponent leader as an eligible target. */
+function dendroRandomEnemy(state: GameState, ownerId: string, amount: number,
+  deaths: (s: GameState)=>GameState): GameState {
+  if (state.winnerId!==null) return state
+  const index=state.players.findIndex(p=>p.id===ownerId)
+  if(index<0)return state
+  const foe=state.players[1-index]
+  const choices=foe.field.filter(f=>f.health>0)
+  const selected=Math.floor(Math.random()*(choices.length+1))
+  if(selected===0){
+    const hit=damageLeader(foe,amount)
+    return {...edit(state,foe.id,()=>hit),
+      winnerId:hit.leaderHealth===0?ownerId:state.winnerId}
+  }
+  return deaths(dendroHitTarget(state,ownerId,choices[selected-1].instanceId,amount))
+}
+
+export function dendroLegendarySkill(state: GameState, ownerId: string,
+  sourceId: string, cardId: string, targetId?: string): GameState {
+  if(state.winnerId!==null)return state
+  if(cardId==='C113'&&targetId){
+    let result=dendroHitTarget(state,ownerId,targetId,2)
+    const enemy=result.players.find(p=>p.id!==ownerId)!
+    result=edit(result,enemy.id,p=>({...p,field:p.field.map(f=>
+      f.instanceId===targetId&&f.health>0?{...f,attack:Math.max(0,f.attack-1)}:f)}))
+    return result
+  }
+  if(cardId==='C114'){
+    return edit(state,ownerId,p=>p.field.length+(p.amulets?.length??0)>=5?p:{
+      ...p,amulets:[...(p.amulets??[]),{
+        instanceId:`lumidouce-${nextDendroAmuletId++}`,
+        cardId:'token-lumidouce-vial',turnsRemaining:3,
+      }],
+    })
+  }
+  if(cardId==='C115'&&targetId)return dendroHitTarget(state,ownerId,targetId,3)
+  return state
+}
+
+export function dendroLegendaryBurst(state: GameState, ownerId: string, cardId: string,
+  deaths: (s: GameState)=>GameState): GameState {
+  if(state.winnerId!==null)return state
+  if(cardId==='C113'){
+    let result=state
+    for(let i=0;i<4&&result.winnerId===null;i++)
+      result=dendroRandomEnemy(result,ownerId,2,deaths)
+    return result
+  }
+  if(cardId==='C114'){
+    const enemy=state.players.find(p=>p.id!==ownerId)
+    const burning=enemy?.field.some(f=>f.health>0&&
+      f.keywords.some(k=>k.startsWith('burning:')))??false
+    let result=dendroHitAll(state,ownerId,2,deaths)
+    if(burning&&result.winnerId===null) result=dendroHitAll(result,ownerId,2,deaths)
+    return result
+  }
+  if(cardId==='C115'){
+    const result=dendroHitAll(state,ownerId,2,deaths)
+    if(result.winnerId!==null)return result
+    const enemy=result.players.find(p=>p.id!==ownerId)!
+    const hit=damageLeader(enemy,3)
+    return {...edit(result,enemy.id,()=>hit),
+      winnerId:hit.leaderHealth===0?ownerId:result.winnerId}
+  }
+  return state
+}
+
+/** Tighnari: one random Dendro 1 strike at attack declaration. */
+export function dendroLegendaryAttack(state: GameState, ownerId: string, attackerId: string,
+  deaths: (s: GameState)=>GameState): GameState {
+  const own=state.players.find(p=>p.id===ownerId)
+  if(own?.field.find(f=>f.instanceId===attackerId&&f.health>0)?.cardId!=='C113')return state
+  return deaths(dendroRandomFollower(state,ownerId,1))
+}
+
+/** Lumidouce vial: 1 Dendro damage or 3 when any enemy is burning; countdown 3. */
+export function dendroLumidouceTurnEnd(state: GameState, ownerId: string,
+  deaths: (s: GameState)=>GameState): GameState {
+  const ids=(state.players.find(p=>p.id===ownerId)?.amulets??[])
+    .filter(a=>a.cardId==='token-lumidouce-vial').map(a=>a.instanceId)
+  let result=state
+  for(const id of ids){
+    if(result.winnerId!==null)break
+    const owner=result.players.find(p=>p.id===ownerId)!
+    if(!owner.amulets?.some(a=>a.instanceId===id))continue
+    const enemy=result.players.find(p=>p.id!==ownerId)!
+    const burning=enemy.field.some(f=>f.health>0&&f.keywords.some(k=>k.startsWith('burning:')))
+    result=deaths(dendroRandomFollower(result,ownerId,burning?3:1))
+    result=edit(result,ownerId,p=>({...p,amulets:(p.amulets??[]).map(a=>
+      a.instanceId===id?{...a,turnsRemaining:a.turnsRemaining-1}:a)
+      .filter(a=>a.turnsRemaining>0)}))
+  }
+  return result
+}
