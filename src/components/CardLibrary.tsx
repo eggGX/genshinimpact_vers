@@ -139,7 +139,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
               <strong>{card.name}</strong>
               <span>{RARITY_LABELS[card.rarity]}</span>
               {card.type === 'follower' && <span>{card.attack} / {card.health}</span>}
-              <small>{originIds.has(card.id) ? '正式' : 'テスト用'}</small>
+              <small>{card.token ? 'トークン（デッキ不可）' : originIds.has(card.id) ? '正式' : 'テスト用'}</small>
               {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
             </button>
           ))}
@@ -155,7 +155,8 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
             {selected.implementationStatus === 'data_only' && (
               <p>このカードはデータ登録済みですが、効果はまだ実装されておらず対戦では使用できません。</p>
             )}
-            {selected.elementalSkill && <p>元素スキル：{selected.elementalSkill.name}</p>}
+            {selected.token && <p>トークンカード：通常のデッキには含まれません。</p>}
+            {selected.elementalSkill && <p>元素スキル：{selected.elementalSkill.name}{selected.elementalSkill.ppCost !== undefined ? `（PP${selected.elementalSkill.ppCost}）` : ''}</p>}}
             {selected.elementalBurst && <p>元素爆発：{selected.elementalBurst.name}（EN{selected.elementalBurst.energyCost ?? 0}）</p>}
           </article>
         )}
