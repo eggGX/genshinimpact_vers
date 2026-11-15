@@ -1,5 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
+import { summonFollowers } from './neutralRules'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 function updateOwner(state: GameState, ownerId: string, update: (player: Player) => Player): GameState {
@@ -185,11 +186,109 @@ export function resolvePyroAttackAfter(state: GameState, ownerId: string, attack
   }))
 }
 
+
+/** Bennett's fanfare chooses one allied follower, including Bennett himself. */
+export function resolvePyroGoldPlay(
+  state: GameState, ownerId: string, cardId: string,
+  sourceId: string, targetId?: string
+): GameState {
+  if (cardId !== 'C021') return state
+  const recipient = targetId === 'self' ? sourceId : targetId
+  if (!recipient) return state
+  return updateOwner(state, ownerId, player => ({
+    ...player,
+    field: player.field.map(f => f.instanceId === recipient && f.health > 0
+      ? { ...f, attack: f.attack + 1 } : f),
+  }))
+}
+
+/** C019 and C020 summon their unique tokens. */
+export function resolvePyroGoldSkill(
+  state: GameState, ownerId: string, cardId: string
+): GameState {
+  if (cardId === 'C019') return summonFollowers(state, ownerId, 'token-baron-bunny', 1)
+  if (cardId === 'C020') return summonFollowers(state, ownerId, 'token-guoba', 1)
+  return state
+}
+
+/** Resolve on-turn-end effects in field order. */
+export function resolvePyroGoldTurnEnd(
+  state: GameState, ownerId: string, sourceId: string,
+  resolveDeaths: (state: GameState) => GameState
+): GameState {
+  const ownerIndex = state.players.findIndex(p => p.id === ownerId)
+  if (ownerIndex < 0 || state.winnerId !== null) return state
+  const owner = state.players[ownerIndex]
+  const source = owner.field.find(f => f.instanceId === sourceId && f.health > 0)
+  if (!source) return state
+  if (source.cardId === 'C020') {
+    const hasGuoba = owner.field.some(f => f.cardId === 'token-guoba' && f.health > 0)
+    if (!hasGuoba) return state
+    return updateOwner(state, ownerId, p => ({
+      ...p,
+      field: p.field.map(f => f.instanceId === sourceId
+        ? { ...f, attack: f.attack + 1, health: f.health + 1, maxHealth: f.maxHealth + 1 }
+        : f),
+    }))
+  }
+  if (source.cardId !== 'token-guoba') return state
+  let result = state
+  const enemyIndex = 1 - ownerIndex
+  for (let i = 0; i < 2; i++) {
+    if (result.winnerId !== null) break
+    const enemy = result.players[enemyIndex]
+    const targets = enemy.field.filter(f => f.health > 0)
+    const selection = Math.floor(Math.random() * (targets.length + 1))
+    const victim = targets[selection]
+    if (!victim) {
+      result = dealLeaderDamage(result, enemyIndex, 2)
+      continue
+    }
+    const outcome = resolveElementalDamage(victim, 2, 'pyro')
+    const players = [...result.players] as [Player, Player]
+    players[enemyIndex] = {
+      ...enemy,
+      field: enemy.field.map(f => f.instanceId === victim.instanceId ? outcome.follower : f),
+    }
+    result = resolveReactionConsequence(
+      { ...result, players }, enemyIndex, victim.instanceId,
+      outcome.reaction, outcome.reactedElement, ownerIndex
+    )
+    result = resolveDeaths(result)
+  }
+  return result
+}
+
 /** Dodoco last word: a random enemy follower takes pyro 2. */
 export function resolvePyroDestroy(
   state: GameState, ownerId: string, destroyed: Follower
 ): GameState {
-  if (destroyed.cardId !== 'C013' || state.winnerId !== null) return state
+  if (state.winnerId !== null) return state
+  if (destroyed.cardId === 'token-baron-bunny') {
+    const ownerIndex = state.players.findIndex(p => p.id === ownerId)
+    if (ownerIndex < 0) return state
+    // The death dispatcher processes further casualties after this last word.
+    const enemyIndex = 1 - ownerIndex
+    const enemy = state.players[enemyIndex]
+    let result = state
+    for (const id of enemy.field.map(f => f.instanceId)) {
+      if (result.winnerId !== null) break
+      const current = result.players[enemyIndex]
+      const target = current.field.find(f => f.instanceId === id && f.health > 0)
+      if (!target) continue
+      const hit = resolveElementalDamage(target, 1, 'pyro')
+      const players = [...result.players] as [Player, Player]
+      players[enemyIndex] = {
+        ...current,
+        field: current.field.map(f => f.instanceId === id ? hit.follower : f),
+      }
+      result = resolveReactionConsequence(
+        { ...result, players }, enemyIndex, id, hit.reaction, hit.reactedElement, ownerIndex
+      )
+    }
+    return dealLeaderDamage(result, enemyIndex, 1)
+  }
+  if (destroyed.cardId !== 'C013') return state
   const ownerIndex = state.players.findIndex(p => p.id === ownerId)
   if (ownerIndex < 0) return state
   const enemyIndex = 1 - ownerIndex
