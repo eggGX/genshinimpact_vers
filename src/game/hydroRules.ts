@@ -1,5 +1,6 @@
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
+import { healLeader } from './leaderShield'
 import { grantShield } from './elemental'
 import { summonFollowers } from './neutralRules'
 
@@ -20,7 +21,7 @@ export function resolveHydroSpell(state: GameState, ownerId: string, cardId: str
   if (index < 0) return state
   let result = updatePlayer(state, ownerId, player => ({
     ...player,
-    leaderHealth: Math.min(player.leaderMaxHealth, player.leaderHealth + 2),
+    ...healLeader(player, 2),
     field: player.field.map(f => f.health > 0
       ? { ...f, health: Math.min(f.maxHealth, f.health + 2) } : f),
   }))
