@@ -2117,3 +2117,18 @@ test('変身トークンは登録済みだがデッキに入らない', async ()
   assert.deepEqual(card.keywords,['rush','aura','intimidate'])
   assert.equal(getDeckCardPool().some(c=>c.id===card.id),false)
 })
+
+test('C025 胡桃：HP10以下の攻撃力+2は反撃時にも適用され、HP回復で解除される', () => {
+  const state = startedGame()
+  const attacker = place(state,0,'C001',2,10)
+  const hutao = place(state,1,'C025',3,4)
+  state.players[1].leaderHealth = 10
+  let next = engine.attackFollower(state,attacker.instanceId,hutao.instanceId)
+  assert.equal(next.players[0].field[0].health,5)
+  const healthy = startedGame()
+  healthy.players[1].leaderHealth = 11
+  const attacker2 = place(healthy,0,'C001',2,10)
+  place(healthy,1,'C025',3,4)
+  next = engine.attackFollower(healthy,attacker2.instanceId,healthy.players[1].field[0].instanceId)
+  assert.equal(next.players[0].field[0].health,7)
+})
