@@ -409,7 +409,7 @@ export function canUseAbility(
   return true
 }
 
-export function useAbility(
+export function activateAbility(
   state: GameState,
   followerId: string,
   kind: AbilityKind,
