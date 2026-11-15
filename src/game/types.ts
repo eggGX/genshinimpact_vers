@@ -43,7 +43,14 @@ export type CardEffect =
       value: number
       element?: ElementType
     }
-  | { 
+  | {
+      type: 'grant_shield'
+      trigger: EffectTrigger
+      target: 'self_follower' | 'selected_enemy_follower'
+      shieldType: 'normal' | 'crystallize'
+      value: number
+    }
+  | {
       type: 'modify_stats'
       trigger: EffectTrigger
       target: 'self_follower' | 'selected_enemy_follower'
@@ -54,6 +61,8 @@ export type CardEffect =
 export interface Card {
   /** 通常攻撃の属性。省略時は物理（無元素） */
   normalAttackElement?: ElementType
+  /** 元素生物は自身の元素が常時付着する（風・岩も含む） */
+  elementalCreature?: boolean
   id: string
   name: string
   type: CardType
