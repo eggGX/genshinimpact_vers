@@ -49,10 +49,7 @@ export const anemoCards: Card[] = [
       "竜"
     ],
     "description": "【突進】",
-    "implementationStatus": "playable",
-    "keywords": [
-      "rush"
-    ]
+    "implementationStatus": "playable"
   },
   {
     "id": "C074",
@@ -128,8 +125,7 @@ export const anemoCards: Card[] = [
     ],
     "description": "【元素攻撃：風】【ファンファーレ】相手リーダーに【命の契約3】を付与。【ターン終了時】相手リーダーに命の契約が残るなら、相手リーダーに非元素1ダメージ（双方のターン終了時）。",
     "normalAttackElement": "anemo",
-    "implementationStatus": "playable",
-    "normalAttackElement": "anemo"
+    "implementationStatus": "playable"
   },
   {
     "id": "C079",
