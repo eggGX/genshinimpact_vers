@@ -497,9 +497,18 @@ export function activateAbility(
   const follower = owner.field.find(f => f.instanceId === followerId)!
   const card = getCard(follower.cardId)!
   const ability = kind === 'skill' ? card.elementalSkill! : card.elementalBurst!
-  if (needsAbilityTarget(card, kind) &&
-      (!targetId || !state.players[1 - index].field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth')))) {
-    return state
+  if (needsAbilityTarget(card, kind)) {
+    const choices = state.players[1 - index].field.filter(f => f.health > 0 &&
+      !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
+    const targets = targetId?.split('|') ?? []
+    if (card.id === 'C049' && kind === 'skill') {
+      const required = Math.min(2, choices.length)
+      if (targets.length !== required || new Set(targets).size !== required ||
+          !targets.every(id => choices.some(f => f.instanceId === id))) return state
+    } else if (!targetId || targets.length !== 1 ||
+        !choices.some(f => f.instanceId === targetId)) {
+      return state
+    }
   }
   const players = [...state.players] as [Player, Player]
   players[index] = {
