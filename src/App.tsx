@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -21,10 +21,58 @@ import type { Follower } from './game/types'
 import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
+import { DeckBuilder } from './components/DeckBuilder'
+import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
+
+type BothDecks = [DeckDefinition, DeckDefinition]
+const STORAGE_KEY = 'genshin-decks-v1'
+
+function loadDecks(): BothDecks {
+  const defaults: BothDecks = [
+    createStarterDeck(['pyro', 'hydro', 'cryo']),
+    createStarterDeck(['electro', 'anemo', 'dendro']),
+  ]
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY)
+    if (!saved) return defaults
+    const parsed: unknown = JSON.parse(saved)
+    if (!Array.isArray(parsed) || parsed.length !== 2) return defaults
+    const normalize = (value: unknown, fallback: DeckDefinition): DeckDefinition => {
+      if (!value || typeof value !== 'object') return fallback
+      const input = value as Partial<DeckDefinition>
+      if (!Array.isArray(input.cards) || !Array.isArray(input.elements) ||
+          !input.cards.every(id => typeof id === 'string') ||
+          !input.elements.every(id => typeof id === 'string')) return fallback
+      // Preserve incomplete drafts for editing; rejected decks cannot start a game.
+      return { cards: input.cards, elements: input.elements }
+    }
+    return [normalize(parsed[0], defaults[0]), normalize(parsed[1], defaults[1])]
+  } catch {
+    return defaults
+  }
+}
 
 function App() {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
+  const [decks, setDecks] = useState<BothDecks>(loadDecks)
+  const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
+  const [matchStarted, setMatchStarted] = useState(false)
+
+  useEffect(() => {
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)) } catch { /* storage may be disabled */ }
+  }, [decks])
+
+  const updateDeck = (index: 0 | 1, deck: DeckDefinition) => {
+    setDecks(previous => index === 0 ? [deck, previous[1]] : [previous[0], deck])
+  }
+  const beginMatch = () => {
+    if (decks.some(deck => validateDeck(deck).length > 0)) return
+    setGame(createInitialGameState(decks))
+    setMatchStarted(true)
+    setMulliganSelection([])
+    resetSelection()
+  }
   const [game, setGame] = useState(createInitialGameState)
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
@@ -59,7 +107,7 @@ function App() {
   }
 
   const handleReset = () => {
-    setGame(createInitialGameState())
+    setGame(createInitialGameState(decks))
     resetSelection()
     setMulliganSelection([])
   }
@@ -406,6 +454,47 @@ function App() {
     return <CardLibrary onBack={() => setShowCardLibrary(false)} />
   }
 
+  if (editingPlayer !== null) {
+    return <DeckBuilder title={editingPlayer === 0 ? 'プレイヤー1（自分）' : 'プレイヤー2（相手）'}
+      deck={decks[editingPlayer]} onChange={deck => updateDeck(editingPlayer, deck)}
+      onBack={() => setEditingPlayer(null)} />
+  }
+
+  if (!matchStarted) {
+    const errors = decks.map(validateDeck)
+    return <div className="game">
+      <header className="game-header">
+        <h1>原神カードゲーム</h1><span>対戦準備</span>
+        <button type="button" onClick={() => setShowCardLibrary(true)}>カード一覧</button>
+      </header>
+      <main className="deck-setup">
+        <h2>デッキを選択</h2>
+        <p>各プレイヤーの40枚デッキを編集できます。使用元素は最大3種類、無元素は自由に採用可能、同じカードは3枚までです。</p>
+        <div className="deck-setup-grid">
+          {decks.map((deck, index) => <section key={index} className="deck-setup-card">
+            <h3>プレイヤー{index + 1}（{index === 0 ? '自分' : '相手'}）</h3>
+            <strong>{deck.cards.length} / 40枚</strong>
+            <p>元素：{deck.elements.length ? deck.elements.map(e => ({
+              pyro:'炎', hydro:'水', cryo:'氷', electro:'雷',
+              anemo:'風', geo:'岩', dendro:'草',
+            }[e])).join('・') : '未選択'} ＋ 無元素</p>
+            {errors[index].length === 0
+              ? <p className="deck-setup-valid">構築完了</p>
+              : <p className="deck-setup-warning">{errors[index][0]}</p>}
+            <button type="button" onClick={() => setEditingPlayer(index as 0 | 1)}>
+              デッキを編集
+            </button>
+          </section>)}
+        </div>
+        <button type="button" className="end-turn deck-start"
+          disabled={errors.some(items => items.length > 0)} onClick={beginMatch}>
+          この2つのデッキで対戦開始
+        </button>
+        <p className="deck-setup-note">編集内容はこのブラウザに保存されます。対戦開始後は再度デッキ選択画面に戻れます。</p>
+      </main>
+    </div>
+  }
+
   if (game.phase === 'mulligan') {
     return (
       <div className="game">
@@ -415,6 +504,9 @@ function App() {
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="button" onClick={() => setShowCardLibrary(true)}>
               カード一覧
+            </button>
+            <button type="button" onClick={() => { setMatchStarted(false); resetSelection() }}>
+              デッキ選択へ戻る
             </button>
             <button type="button" onClick={handleReset}>
               ゲームリセット
@@ -523,6 +615,9 @@ function App() {
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
+          </button>
+          <button type="button" onClick={() => { setMatchStarted(false); resetSelection() }}>
+            デッキ選択へ戻る
           </button>
           <button type="button" onClick={handleReset}>
             ゲームリセット
