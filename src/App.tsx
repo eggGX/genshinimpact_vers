@@ -189,8 +189,11 @@ function App() {
     const isTarget =
       isOpponent &&
       game.winnerId === null &&
-      (selectedAttacker !== undefined ||
-        selectedHandIndex !== null || selectedAbility !== null)
+      (selectedAttacker !== undefined
+        ? !follower.keywords.includes('intimidate')
+        : selectedHandIndex !== null || selectedAbility !== null
+          ? !follower.keywords.includes('aura')
+          : false)
 
     return (
       <div key={follower.instanceId} style={{ display: 'inline-flex', flexDirection: 'column', gap: 4 }}>
@@ -223,6 +226,12 @@ function App() {
           <small style={{ color: '#9fe7ff' }}>
             付着：{follower.aura.map(a => a.element).join('・')}
           </small>
+        )}
+        {follower.keywords.includes('aura') && (
+          <small>【オーラ】効果の対象に選べない</small>
+        )}
+        {follower.keywords.includes('intimidate') && (
+          <small>【威圧】フォロワーから攻撃されない</small>
         )}
         {follower.keywords.includes('frozen') && (
           <small style={{ color: '#aee1ff', fontWeight: 'bold' }}>
