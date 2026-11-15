@@ -1,0 +1,31 @@
+import type { Card } from '../game/types'
+import { testCards } from './testCards'
+import { productionCards } from './productionCards'
+
+/** Data-driven card catalogue shared by the game engine and elemental rules. */
+export function createCardRegistry(cards: readonly Card[]): ReadonlyMap<string, Card> {
+  const registry = new Map<string, Card>()
+  for (const card of cards) {
+    if (!card.id.trim()) throw new Error('Card ID must not be blank')
+    if (registry.has(card.id)) throw new Error(`Duplicate card ID: ${card.id}`)
+    registry.set(card.id, card)
+  }
+  return registry
+}
+
+const cards = [...testCards, ...productionCards]
+export const cardRegistry = createCardRegistry(cards)
+
+export function getCard(cardId: string): Card | undefined {
+  return cardRegistry.get(cardId)
+}
+
+/** Tokens can be resolved from the catalogue but never enter starting decks. */
+export function getDeckCardPool(): Card[] {
+  return [...cardRegistry.values()].filter(card => !card.token)
+}
+
+/** Stable copy for listing, validation, and future deck building UIs. */
+export function getAllCards(): Card[] {
+  return [...cardRegistry.values()]
+}
