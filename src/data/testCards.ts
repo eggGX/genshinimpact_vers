@@ -22,8 +22,7 @@ export const testCards: Card[] = [
     cost: 2,
     attack: 2,
     health: 2,
-    description:
-      'ラストワード：自分のリーダーを2回復。',
+    description: 'ラストワード：自分のリーダーを2回復。',
     effects: [
       {
         type: 'heal',
@@ -90,6 +89,48 @@ export const testCards: Card[] = [
         trigger: 'turn_end',
         target: 'own_leader',
         value: 1,
+      },
+    ],
+  },
+  {
+    id: 'test-trainee',
+    name: '訓練兵',
+    type: 'follower',
+    rarity: 'bronze',
+    element: 'none',
+    cost: 2,
+    attack: 2,
+    health: 2,
+    description:
+      'ファンファーレ：自身を+1/+2する。',
+    effects: [
+      {
+        type: 'modify_stats',
+        trigger: 'on_play',
+        target: 'self_follower',
+        attackChange: 1,
+        healthChange: 2,
+      },
+    ],
+  },
+  {
+    id: 'test-electro-mage',
+    name: '雷の術師',
+    type: 'follower',
+    rarity: 'silver',
+    element: 'electro',
+    cost: 3,
+    attack: 2,
+    health: 3,
+    description:
+      'ファンファーレ：選択した敵フォロワーの攻撃力を1下げる。',
+    effects: [
+      {
+        type: 'modify_stats',
+        trigger: 'on_play',
+        target: 'selected_enemy_follower',
+        attackChange: -1,
+        healthChange: 0,
       },
     ],
   },

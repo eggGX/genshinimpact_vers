@@ -15,10 +15,7 @@ export type Rarity =
   | 'gold'
   | 'legendary'
 
-export type CardType =
-  | 'follower'
-  | 'spell'
-  | 'amulet'
+export type CardType = 'follower' | 'spell' | 'amulet'
 
 export type EffectTrigger =
   | 'on_play'
@@ -30,13 +27,22 @@ export type EffectTarget =
   | 'own_leader'
   | 'enemy_leader'
   | 'selected_enemy_follower'
+  | 'self_follower'
 
-export type CardEffect = {
-  type: 'damage' | 'heal'
-  trigger: EffectTrigger
-  target: EffectTarget
-  value: number
-}
+export type CardEffect =
+  | {
+      type: 'damage' | 'heal'
+      trigger: EffectTrigger
+      target: EffectTarget
+      value: number
+    }
+  | {
+      type: 'modify_stats'
+      trigger: EffectTrigger
+      target: 'self_follower' | 'selected_enemy_follower'
+      attackChange: number
+      healthChange: number
+    }
 
 export interface Card {
   id: string
@@ -48,7 +54,6 @@ export interface Card {
   cost: number
   attack?: number
   health?: number
-
   region?: string[]
   traits?: string[]
   description?: string
@@ -74,7 +79,7 @@ export interface Follower {
   health: number
   maxHealth: number
 
-  // 暫定データ。正式な元素ENは後で再設計
+  // 暫定。元素エネルギーは正式仕様に合わせて変更予定
   energy: number
   maxEnergy: number
 
@@ -89,7 +94,6 @@ export interface Follower {
 export interface Player {
   id: string
   name: string
-
   leaderHealth: number
   leaderMaxHealth: number
 

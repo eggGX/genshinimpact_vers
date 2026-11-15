@@ -2,16 +2,23 @@
 import type {
   CardEffect,
   EffectTrigger,
+  Follower,
   GameState,
   Player,
 } from './types'
 
+/**
+ * 効果を順番に実行する。
+ * targetId: 選択した敵フォロワー
+ * sourceId: 効果の発動元フォロワー
+ */
 export function resolveEffects(
   state: GameState,
   ownerId: string,
   effects: CardEffect[],
   trigger: EffectTrigger,
-  targetId?: string
+  targetId?: string,
+  sourceId?: string
 ): GameState {
   let result = state
 
@@ -23,70 +30,133 @@ export function resolveEffects(
       result,
       ownerId,
       effect,
-      targetId
+      targetId,
+      sourceId
     )
   }
 
   return result
 }
 
+/**
+ * ステータス変更処理
+ */
+function modifyFollower(
+  follower: Follower,
+  effect: Extract<CardEffect, { type: 'modify_stats' }>
+): Follower {
+  const attackDelta = Number.isFinite(effect.attackChange)
+    ? Math.trunc(effect.attackChange)
+    : 0
+
+  const healthDelta = Number.isFinite(effect.healthChange)
+    ? Math.trunc(effect.healthChange)
+    : 0
+
+  const maxHealth = Math.max(
+    0,
+    follower.maxHealth + healthDelta
+  )
+
+  // 体力の増減を現在体力にも反映する。
+  const health = Math.min(
+    maxHealth,
+    follower.health + healthDelta
+  )
+
+  return {
+    ...follower,
+    attack: Math.max(0, follower.attack + attackDelta),
+    maxHealth,
+    health,
+  }
+}
+
 function applyEffect(
   state: GameState,
   ownerId: string,
   effect: CardEffect,
-  targetId?: string
+  targetId?: string,
+  sourceId?: string
 ): GameState {
   const ownerIndex = state.players.findIndex(
-    player => player.id === ownerId
+    p => p.id === ownerId
   )
 
-  if (ownerIndex === -1) return state
+  if (ownerIndex < 0) return state
 
-  const enemyIndex = ownerIndex === 0 ? 1 : 0
+  const enemyIndex = 1 - ownerIndex
 
-  const value = Number.isFinite(effect.value)
-    ? Math.max(0, Math.floor(effect.value))
-    : 0
+  const players = [...state.players] as [Player, Player]
 
-  const nextPlayers = [...state.players] as [
-    Player,
-    Player,
-  ]
+  // フォロワーを対象とする効果
+  if (
+    effect.target === 'self_follower' ||
+    effect.target === 'selected_enemy_follower'
+  ) {
+    const targetIndex =
+      effect.target === 'self_follower'
+        ? ownerIndex
+        : enemyIndex
 
-  if (effect.target === 'selected_enemy_follower') {
-    if (!targetId) return state
+    const instanceId =
+      effect.target === 'self_follower'
+        ? sourceId
+        : targetId
 
-    const enemy = nextPlayers[enemyIndex]
+    if (!instanceId) return state
 
-    if (!enemy.field.some(
-      follower => follower.instanceId === targetId
-    )) {
+    const targetPlayer = players[targetIndex]
+
+    if (
+      !targetPlayer.field.some(
+        f => f.instanceId === instanceId
+      )
+    ) {
       return state
     }
 
-    nextPlayers[enemyIndex] = {
-      ...enemy,
-      field: enemy.field.map(follower => {
-        if (follower.instanceId !== targetId) {
+    players[targetIndex] = {
+      ...targetPlayer,
+      field: targetPlayer.field.map(follower => {
+        if (follower.instanceId !== instanceId) {
           return follower
         }
 
-        const health =
-          effect.type === 'damage'
-            ? follower.health - value
-            : Math.min(
-                follower.maxHealth,
-                follower.health + value
-              )
+        if (effect.type === 'modify_stats') {
+          return modifyFollower(follower, effect)
+        }
 
-        return { ...follower, health }
+        const value = Number.isFinite(effect.value)
+          ? Math.max(0, Math.floor(effect.value))
+          : 0
+
+        if (effect.type === 'damage') {
+          return {
+            ...follower,
+            health: follower.health - value,
+          }
+        }
+
+        return {
+          ...follower,
+          health: Math.min(
+            follower.maxHealth,
+            follower.health + value
+          ),
+        }
       }),
     }
 
     return {
       ...state,
-      players: nextPlayers,
+      players,
     }
+  }
+
+  // リーダー対象の効果
+  if (effect.type === 'modify_stats') {
+    return state
   }
 
   const targetIndex =
@@ -94,32 +164,31 @@ function applyEffect(
       ? ownerIndex
       : enemyIndex
 
-  const targetPlayer = nextPlayers[targetIndex]
+  const targetPlayer = players[targetIndex]
 
-  const nextHealth =
+  const value = Number.isFinite(effect.value)
+    ? Math.max(0, Math.floor(effect.value))
+    : 0
+
+  const health =
     effect.type === 'damage'
-      ? Math.max(
-          0,
-          targetPlayer.leaderHealth - value
-        )
+      ? Math.max(0, targetPlayer.leaderHealth - value)
       : Math.min(
           targetPlayer.leaderMaxHealth,
           targetPlayer.leaderHealth + value
         )
 
-  nextPlayers[targetIndex] = {
+  players[targetIndex] = {
     ...targetPlayer,
-    leaderHealth: nextHealth,
+    leaderHealth: health,
   }
 
   return {
     ...state,
-    players: nextPlayers,
+    players,
     winnerId:
-      nextHealth <= 0 && effect.type === 'damage'
-        ? nextPlayers[
-            targetIndex === 0 ? 1 : 0
-          ].id
+      effect.type === 'damage' && health <= 0
+        ? players[1 - targetIndex].id
         : state.winnerId,
   }
 }

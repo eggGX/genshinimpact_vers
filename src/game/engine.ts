@@ -75,6 +75,9 @@ export function getCard(cardId: string): Card | undefined {
   return cardDatabase.get(cardId)
 }
 
+/**
+ * マリガン
+ */
 export function confirmMulligan(
   state: GameState,
   selectedIndices: number[]
@@ -137,6 +140,9 @@ export function confirmMulligan(
   }
 }
 
+/**
+ * プレイ時の対象選択判定
+ */
 export function needsPlayTarget(card: Card): boolean {
   return (card.effects ?? []).some(
     effect =>
@@ -181,8 +187,8 @@ export function canPlayCard(
 /**
  * 破壊処理とラストワード
  *
- * 同時破壊はターンプレイヤー優先、
- * 同じプレイヤー内では配置順で処理する。
+ * 同時破壊はターンプレイヤー優先。
+ * 同じプレイヤー内では配置順。
  */
 function resolveDeaths(state: GameState): GameState {
   let result = state
@@ -219,10 +225,7 @@ function resolveDeaths(state: GameState): GameState {
       }
     }) as [Player, Player]
 
-    result = {
-      ...result,
-      players,
-    }
+    result = { ...result, players }
 
     for (const { ownerId, follower } of destroyed) {
       if (result.winnerId !== null) break
@@ -233,7 +236,9 @@ function resolveDeaths(state: GameState): GameState {
         result,
         ownerId,
         card?.effects ?? [],
-        'on_destroy'
+        'on_destroy',
+        undefined,
+        follower.instanceId
       )
     }
 
@@ -244,10 +249,7 @@ function resolveDeaths(state: GameState): GameState {
 }
 
 /**
- * ターン開始・終了時の自動効果
- *
- * まず発動対象を配置順で確定する。
- * その後、順番に効果を解決する。
+ * ターン開始・終了時効果
  */
 function resolveTurnEffects(
   state: GameState,
@@ -272,10 +274,8 @@ function resolveTurnEffects(
     const currentOwner = result.players.find(
       p => p.id === playerId
     )
-
-    // 効果解決前に場を離れたカードは発動しない
     const source = currentOwner?.field.find(
-      follower => follower.instanceId === sourceId
+      f => f.instanceId === sourceId
     )
 
     if (!source || source.health <= 0) continue
@@ -286,7 +286,9 @@ function resolveTurnEffects(
       result,
       playerId,
       card?.effects ?? [],
-      trigger
+      trigger,
+      undefined,
+      sourceId
     )
 
     result = resolveDeaths(result)
@@ -296,7 +298,7 @@ function resolveTurnEffects(
 }
 
 /**
- * フォロワーをプレイする
+ * フォロワーをプレイ
  */
 export function playCard(
   state: GameState,
@@ -334,7 +336,7 @@ export function playCard(
     health: card.health ?? 1,
     maxHealth: card.health ?? 1,
 
-    // 暫定。正式な元素EN管理は後で修正する。
+    // 暫定。正式な元素エネルギー管理は後で変更
     energy: 0,
     maxEnergy: 5,
 
@@ -367,7 +369,8 @@ export function playCard(
     playerId,
     card.effects ?? [],
     'on_play',
-    targetId
+    targetId,
+    follower.instanceId
   )
 
   return resolveDeaths(result)
@@ -505,7 +508,7 @@ export function attackLeader(
 }
 
 /**
- * 1枚ドロー
+ * デッキから1枚ドロー
  */
 function drawCard(player: Player): {
   player: Player
@@ -546,19 +549,18 @@ export function endTurn(state: GameState): GameState {
   const currentId = state.players[currentIndex].id
   const nextId = state.players[nextIndex].id
 
-  // 1. 現在のプレイヤーのターン終了時効果
+  // 1. ターン終了時効果
   let result = resolveTurnEffects(
     state,
     currentId,
     'turn_end'
   )
 
-  // 終了時効果で勝負が決まったらターンを進めない
   if (result.winnerId !== null) {
     return result
   }
 
-  // 2. 次のプレイヤーへ交代
+  // 2. 次のプレイヤーへ
   const players = result.players.map(p => ({
     ...p,
     field: p.field.map(f => ({ ...f })),
@@ -591,7 +593,7 @@ export function endTurn(state: GameState): GameState {
     return result
   }
 
-  // 3. 次のプレイヤーのターン開始時効果
+  // 3. ターン開始時効果
   return resolveTurnEffects(
     result,
     nextId,
