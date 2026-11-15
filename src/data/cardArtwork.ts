@@ -10,6 +10,13 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C019: '/card-art/C019.webp', // アンバー
+  C020: '/card-art/C020.webp', // 香菱
+  C021: '/card-art/C021.webp', // ベネット
+  C022: '/card-art/C022.webp', // シュヴルーズ
+  C023: '/card-art/C023.webp', // ディルック
+  C024: '/card-art/C024.webp', // リネ
+  C025: '/card-art/C025.webp', // 胡桃
 }
 
 export function getCardArtwork(cardId: string): string | undefined {
