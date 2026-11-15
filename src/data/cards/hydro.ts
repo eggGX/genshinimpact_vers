@@ -197,7 +197,14 @@ export const hydroCards: Card[] = [
       "スメール"
     ],
     "description": "【守護】【元素スキル：聖儀・蒼鷺による庇護】PP1：自身に通常シールド3。敵フォロワー1体に水元素2ダメージ。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
+    "elementalSkill": {
+      "name": "聖儀・蒼鷺による庇護", "ppCost": 1,
+      "effects": [
+        { "type": "grant_shield", "trigger": "skill", "target": "self_follower", "shieldType": "normal", "value": 3 },
+        { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "hydro" }
+      ]
+    },
     "keywords": [
       "guard"
     ]
