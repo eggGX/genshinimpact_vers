@@ -214,5 +214,10 @@ export const productionTokens: Card[] = [
     type:'follower',rarity:'bronze',element:'dendro',
     cost:2,attack:0,health:3,token:true,
     description:'【自分のターン終了時】ランダムな敵フォロワー1体に草元素1ダメージ。自リーダー1回復。',
+  },  {
+    id:'token-lumidouce-vial',name:'ルミドゥースの瓶',
+    type:'amulet',rarity:'bronze',element:'dendro',
+    cost:2,token:true,
+    description:'【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に草元素1ダメージ。相手の場に燃焼状態フォロワーがいれば代わりに3ダメージ。',
   },
 ]
