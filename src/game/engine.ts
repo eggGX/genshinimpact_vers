@@ -591,7 +591,7 @@ export function attackFollower(
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
-  const counterDamage = Math.max(0, defender.attack)
+  const counterDamage = effectiveAttack(state, enemy.id, defender)
   const attackerElement = boostedAttacker.keywords.includes('normal_attack_pyro')
     ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
