@@ -3719,3 +3719,258 @@ test('C082 リネットはデッキに風スペルが無くてもプレイ可能
   assert.equal(state.winnerId,null)
   assert.equal(state.players[0].field[0].cardId,'C082')
 })
+
+test('STEP37 風15枚の対戦実装とレジェンドのスキル・爆発コスト',async()=>{
+  const {anemoCards}=await vite.ssrLoadModule('/src/data/cards/anemo.ts')
+  assert.equal(anemoCards.length,15)
+  assert.ok(anemoCards.every(c=>c.implementationStatus==='playable'))
+  assert.deepEqual(['C079','C081','C083','C084','C085'].map(id=>engine.getCard(id).elementalSkill.ppCost),[1,1,0,1,1])
+  assert.deepEqual(['C083','C084','C085'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,4,3])
+})
+
+test('C075 魔術・アストニシングシフトは守護0/8の猫ボックストークンを召喚',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C075'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].field.map(f=>[f.cardId,f.attack,f.health]),
+    [['token-surprising-cat-box',0,8]])
+  assert.ok(state.players[0].field[0].keywords.includes('guard'))
+  assert.ok(state.players[0].graveyard.includes('C075'))
+})
+
+test('ビックラキャット・ボックスは自ターン終了時にランダムな敵に風2',()=>{
+  let state=startedGame()
+  place(state,0,'token-surprising-cat-box',0,8)
+  place(state,1,'test-mage',1,9)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,7)
+})
+
+test('C076 禁・風霊作成・七五同構弐型は4PP、カウント3の風アミュレット',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C076'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].amulets.length,1)
+  assert.equal(state.players[0].amulets[0].cardId,'C076')
+  assert.equal(state.players[0].amulets[0].turnsRemaining,3)
+  assert.equal(state.players[0].pp,0)
+})
+
+test('C076 初回拡散元素を記録し、風1と記録元素1の全体ダメージ',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C076'];state.players[0].pp=4
+  const enemy=place(state,1,'test-mage',0,12)
+  enemy.aura=[{element:'pyro'}]
+  state=engine.playCard(state,'player1',0)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].amulets[0].recordedElement,'pyro')
+  assert.equal(state.players[1].field[0].health,10)
+})
+
+test('C076 初回拡散が無い場合は付加元素を記録しない',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C076'];state.players[0].pp=4
+  place(state,1,'test-mage',0,12)
+  state=engine.playCard(state,'player1',0)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].amulets[0].recordedElement,undefined)
+  assert.equal(state.players[1].field[0].health,11)
+})
+
+test('C078 ファデュイ烈風の従者は登場時に敵リーダー命の契約3',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C078'];state.players[0].pp=6
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].bondOfLife,3)
+  assert.equal(engine.getCard('C078').normalAttackElement,'anemo')
+})
+
+test('命の契約3は回復を先に吸収し、残りでリーダー回復',async()=>{
+  const {healLeader}=await vite.ssrLoadModule('/src/game/leaderShield.ts')
+  let player=startedGame().players[0]
+  player.leaderHealth=10
+  player.bondOfLife=3
+  player=healLeader(player,2)
+  assert.equal(player.leaderHealth,10)
+  assert.equal(player.bondOfLife,1)
+  player=healLeader(player,3)
+  assert.equal(player.bondOfLife,0)
+  assert.equal(player.leaderHealth,12)
+})
+
+test('C078 烈風の従者：双方ターン終了時に契約が残る敵リーダーへ1',()=>{
+  let state=startedGame()
+  place(state,0,'C078',5,5)
+  state.players[1].bondOfLife=3
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth,19)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth,18)
+})
+
+test('C079 スクロース：スキルPP1で敵全体に風1',()=>{
+  let state=startedGame()
+  const sucrose=place(state,0,'C079',2,3)
+  state.players[0].pp=1
+  place(state,1,'test-mage',0,9)
+  place(state,1,'test-mage',0,8)
+  state=engine.activateAbility(state,sucrose.instanceId,'skill')
+  assert.deepEqual(state.players[1].field.map(f=>f.health),[8,7])
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C079 スクロース：拡散時に自ターン1回ドロー',()=>{
+  let state=startedGame()
+  const sucrose=place(state,0,'C079',2,3)
+  const enemy=place(state,1,'test-mage',0,12)
+  enemy.aura=[{element:'pyro'}]
+  state.players[0].deck=['C001','C071']
+  state.players[0].pp=1
+  state=engine.activateAbility(state,sucrose.instanceId,'skill')
+  assert.deepEqual(state.players[0].hand,['C001'])
+  assert.equal(state.players[0].field[0].swirlDrawsThisTurn,1)
+  assert.deepEqual(state.players[0].deck,['C071'])
+})
+
+test('C081 ファルザンのファンファーレは他の風元素味方を+1攻撃',()=>{
+  let state=startedGame()
+  const other=place(state,0,'C071',2,2)
+  state.players[0].hand=['C081'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0,other.instanceId)
+  assert.equal(state.players[0].field[0].attack,3)
+  assert.equal(state.players[0].field[1].attack,2)
+})
+
+test('C081 ファルザンは他の風元素味方がいなければファンファーレ無しで召喚',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C081'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field[0].cardId,'C081')
+})
+
+test('C081 ファルザンのスキルは風2＋味方風元素全体攻撃+1',()=>{
+  let state=startedGame()
+  const faruzan=place(state,0,'C081',2,4)
+  place(state,0,'C071',2,2)
+  place(state,0,'C001',1,2)
+  state.players[0].pp=1
+  const foe=place(state,1,'test-mage',0,10)
+  state=engine.activateAbility(state,faruzan.instanceId,'skill',foe.instanceId)
+  assert.deepEqual(state.players[0].field.map(f=>f.attack),[3,3,1])
+  assert.equal(state.players[1].field[0].health,8)
+})
+
+test('C083 ファルカは疾走・2回攻撃・登場時に西風騎士団フォロワー探索',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C083'];state.players[0].pp=8
+  state.players[0].deck=['C001','C079']
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field[0].cardId,'C083')
+  assert.ok(state.players[0].field[0].keywords.includes('double_attack'))
+  assert.equal(state.players[0].field[0].canAttack,true)
+  assert.deepEqual(state.players[0].hand,['C079'])
+})
+
+test('C083 ファルカのスキルは指定した手札の炎カードを捨て通常攻撃属性を炎に',()=>{
+  let state=startedGame()
+  const varka=place(state,0,'C083',4,7)
+  state.players[0].pp=0
+  state.players[0].hand=['C012','C001']
+  state=engine.activateAbility(state,varka.instanceId,'skill','hand:0')
+  assert.deepEqual(state.players[0].hand,['C001'])
+  assert.ok(state.players[0].graveyard.includes('C012'))
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_pyro'))
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C083 ファルカは攻撃時に西風騎士団全体を+1/+1、攻撃後に風へ属性変更',()=>{
+  let state=startedGame()
+  const varka=place(state,0,'C083',4,7)
+  const knight=place(state,0,'C079',2,3)
+  state.players[0].hand=['C012']
+  state=engine.activateAbility(state,varka.instanceId,'skill','hand:0')
+  const foe=place(state,1,'test-mage',0,15)
+  state=engine.attackFollower(state,varka.instanceId,foe.instanceId)
+  assert.equal(state.players[0].field[0].attack,5)
+  assert.deepEqual([state.players[0].field[0].health,state.players[0].field[0].maxHealth],[8,8])
+  assert.equal(state.players[0].field.find(f=>f.instanceId===knight.instanceId).attack,3)
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_anemo'))
+  assert.equal(state.players[1].field[0].health,10)
+})
+
+test('C083 ファルカの爆発EN3は敵フォロワー全体風2',()=>{
+  let state=startedGame()
+  const varka=place(state,0,'C083',4,7)
+  state.players[0].energy=3
+  place(state,1,'test-mage',0,8)
+  state=engine.activateAbility(state,varka.instanceId,'burst')
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C084 魈のスキルはPP1で1ターン2回まで、敵に風2',()=>{
+  let state=startedGame()
+  const xiao=place(state,0,'C084',4,5)
+  state.players[0].pp=3
+  place(state,1,'test-mage',0,12)
+  for(let i=0;i<2;i++)state=engine.activateAbility(state,xiao.instanceId,'skill',state.players[1].field[0].instanceId)
+  assert.equal(state.players[1].field[0].health,8)
+  assert.equal(state.players[0].field[0].skillUsesThisTurn,2)
+  assert.equal(engine.canUseAbility(state,xiao.instanceId,'skill'),false)
+})
+
+test('C084 魈の爆発はEN4で+2/+2・疾走・落下攻撃・風元素攻撃',()=>{
+  let state=startedGame()
+  const xiao=place(state,0,'C084',4,5)
+  state.players[0].energy=4
+  state=engine.activateAbility(state,xiao.instanceId,'burst')
+  const x=state.players[0].field[0]
+  assert.deepEqual([x.attack,x.health,x.maxHealth],[6,7,7])
+  assert.ok(x.keywords.includes('storm'))
+  assert.ok(x.keywords.includes('plunge_attack'))
+  assert.ok(x.keywords.includes('normal_attack_anemo'))
+  assert.equal(state.players[0].energy,0)
+})
+
+test('C084 魈の爆発後は自ターン終了時に自身とリーダーへ1ダメージ',()=>{
+  let state=startedGame()
+  const xiao=place(state,0,'C084',4,5)
+  state.players[0].energy=4
+  state=engine.activateAbility(state,xiao.instanceId,'burst')
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].health,6)
+  assert.equal(state.players[0].leaderHealth,19)
+})
+
+test('C085 放浪者は元素攻撃風とオーラを持つ',()=>{
+  const card=engine.getCard('C085')
+  assert.equal(card.normalAttackElement,'anemo')
+  assert.ok(card.keywords.includes('aura'))
+})
+
+test('C085 放浪者：PP1スキルは自身+2攻撃とそのターン疾走を付与',()=>{
+  let state=startedGame()
+  const wanderer=place(state,0,'C085',3,5)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,wanderer.instanceId,'skill')
+  assert.equal(state.players[0].field[0].attack,5)
+  assert.ok(state.players[0].field[0].keywords.includes('storm'))
+})
+
+test('C085 放浪者：爆発EN3でランダム敵フォロワーまたはリーダーへ風2を5回',()=>{
+  let state=startedGame()
+  const wanderer=place(state,0,'C085',3,5)
+  state.players[0].energy=3
+  state=engine.activateAbility(state,wanderer.instanceId,'burst')
+  assert.equal(state.players[1].leaderHealth,10)
+  assert.equal(state.players[0].energy,0)
+})
+
+test('C085 放浪者のスキル疾走はターン終了時に消える',()=>{
+  let state=startedGame()
+  const wanderer=place(state,0,'C085',3,5)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,wanderer.instanceId,'skill')
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].keywords.includes('storm'),false)
+})
