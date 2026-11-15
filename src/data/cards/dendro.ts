@@ -123,7 +123,7 @@ export const dendroCards: Card[] = [
       "エルマイト旅団"
     ],
     "description": "【ファンファーレ】「草霊」1体召喚。【攻撃時】自分の場に草霊がいれば自身+2/+0。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C109",
