@@ -1,5 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { summonFollowers } from './neutralRules'
+import { damageLeader } from './leaderShield'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 let nextHydroAmuletId = 1
@@ -18,8 +19,9 @@ function dealLeaderDamage(state: GameState, targetIndex: number, amount: number)
   if (state.winnerId !== null) return state
   const players = [...state.players] as [Player, Player]
   const target = players[targetIndex]
-  const hp = Math.max(0, target.leaderHealth - amount)
-  players[targetIndex] = { ...target, leaderHealth: hp }
+  const damaged = damageLeader(target, amount)
+  const hp = damaged.leaderHealth
+  players[targetIndex] = damaged
   return {
     ...state, players,
     winnerId: hp === 0 ? players[1 - targetIndex].id : state.winnerId,
