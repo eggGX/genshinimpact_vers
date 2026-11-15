@@ -224,7 +224,7 @@ export function resolveReactionConsequence(
     players[ownerIndex] = {
       ...owner,
       field: owner.field.map(f => f.instanceId === source.instanceId
-        ? { ...f, shield: { ...f.shield, crystallize: Math.min(10, f.shield.crystallize + 1) } }
+        ? grantShield(f, 'crystallize', 1)
         : f),
     }
     return { ...state, players }
