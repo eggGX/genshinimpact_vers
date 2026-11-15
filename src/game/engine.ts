@@ -16,7 +16,7 @@ import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advance
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
-import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd } from './dendroRules'
+import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
@@ -329,6 +329,7 @@ function resolveTurnEffects(
       result = advancedElectroTurnEnd(result, playerId, sourceId)
       result = advancedAnemoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = geoTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = dendroTokenTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
   }
@@ -402,6 +403,7 @@ export function playCard(
     next = advancedAnemoSpell(next, playerId, card.id)
     next = geoSpell(next, playerId, card.id, resolveDeaths, targetId)
     next = dendroSpell(next, playerId, card.id)
+    next = dendroSilverSpell(next, playerId, card.id, resolveDeaths)
     return resolveDeaths(next)
   }
 
@@ -939,6 +941,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = dendroAmuletsTurnEnd(result, currentId)
+  if (result.winnerId !== null) return result
+
+  result = dendroColleiAmberTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
   result = advancedAnemoAmuletsTurnEnd(result, currentId, resolveDeaths)
