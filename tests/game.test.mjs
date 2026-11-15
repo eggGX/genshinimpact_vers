@@ -4490,3 +4490,81 @@ test('C091 攻撃時全体岩ダメージで攻撃対象を倒しても攻撃回
   assert.equal(s.players[0].field[0].hasAttacked,true)
   assert.equal(engine.canFollowerAttack(s.players[0].field[0]),false)
 })
+
+test('STEP40 草元素15枚は原本どおりB4/S4/G4/L3の構成', async()=>{
+  const {dendroCards}=await vite.ssrLoadModule('/src/data/cards/dendro.ts')
+  const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  assert.equal(dendroCards.length,15)
+  assert.deepEqual(dendroCards.map(c=>c.id),Array.from({length:15},(_,i)=>'C'+String(i+101)))
+  assert.deepEqual(dendroCards.map(c=>c.rarity),[
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')])
+  const report=validateProductionCards(productionCards)
+  assert.equal(report.total,115)
+  assert.deepEqual(report.errors,[])
+  assert.equal(report.ready,true)
+})
+test('STEP40 草元素5枚が対戦対応、残り10枚は正式データのみ',async()=>{
+  const {dendroCards}=await vite.ssrLoadModule('/src/data/cards/dendro.ts')
+  assert.deepEqual(dendroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    ['C101','C102','C103','C104','C107'])
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const pool=new Set(getDeckCardPool().map(c=>c.id))
+  for(const c of dendroCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
+})
+test('C101 草スライムは常時草付着の2/2',()=>{
+  let s=startedGame();s.players[0].hand=['C101'];s.players[0].pp=1
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[0].field[0].health,2)
+  assert.deepEqual(s.players[0].field[0].aura,[{element:'dendro'}])
+})
+test('C103 ユムカ仔竜は突進し登場ターンにリーダーへ攻撃不可',()=>{
+  let s=startedGame();s.players[0].hand=['C103'];s.players[0].pp=2
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[0].field[0].canAttack,true)
+  assert.equal(s.players[0].field[0].keywords.includes('rush_only'),true)
+  assert.equal(engine.attackLeader(s,s.players[0].field[0].instanceId),s)
+})
+test('C102 スメールの知恵は草カードを探索してから1枚引く',()=>{
+  let s=startedGame()
+  s.players[0].hand=['C102'];s.players[0].pp=2
+  s.players[0].deck=['C001','C101','C003']
+  s=engine.playCard(s,'player1',0)
+  assert.deepEqual(s.players[0].hand,['C101','C001'])
+  assert.deepEqual(s.players[0].deck,['C003'])
+  assert.deepEqual(s.players[0].graveyard.slice(-1),['C102'])
+})
+test('C102 スメールの知恵で探索後にデッキ切れドローなら即敗北',()=>{
+  let s=startedGame();s.players[0].hand=['C102'];s.players[0].pp=2;s.players[0].deck=['C101']
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.winnerId,'player2')
+})
+test('C104 草フライムのラストワードは相手リーダーへ草2',()=>{
+  let s=startedGame();const a=place(s,0,'C104',2,1)
+  const foe=place(s,1,'test-mage',2,5)
+  s=engine.attackFollower(s,a.instanceId,foe.instanceId)
+  assert.equal(s.players[1].leaderHealth,18)
+  assert.equal(s.players[0].graveyard.includes('C104'),true)
+})
+test('C107 ヴァナラーナは3ターン終了時回復とドローして消滅',()=>{
+  let s=startedGame();s.players[0].hand=['C107'];s.players[0].pp=2
+  s.players[0].leaderHealth=15
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[0].amulets[0].turnsRemaining,3)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].leaderHealth,16)
+  assert.equal(s.players[0].amulets[0].turnsRemaining,2)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].amulets?.length??0,0)
+  assert.equal(s.players[0].leaderHealth,18)
+})
+test('C107 ヴァナラーナのドローはデッキ切れ即敗北',()=>{
+  let s=startedGame();s.players[0].hand=['C107'];s.players[0].pp=2;s.players[0].deck=[]
+  s=engine.playCard(s,'player1',0)
+  s=engine.endTurn(s)
+  assert.equal(s.winnerId,'player2')
+})
