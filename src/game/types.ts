@@ -123,6 +123,12 @@ export interface Follower {
   keywords: string[]
 }
 
+export interface CrestState {
+  id: string
+  turnsRemaining: number
+  usedElements: ElementType[]
+}
+
 export interface Player {
   id: string
   name: string
@@ -135,6 +141,7 @@ export interface Player {
   maxPp: number
   /** Shared elemental energy, 0 to 5. */
   energy: number
+  crests?: CrestState[]
 
   deck: string[]
   hand: string[]
