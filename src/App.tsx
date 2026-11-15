@@ -261,6 +261,12 @@ function App() {
         {follower.keywords.includes('intimidate') && (
           <small>【威圧】フォロワーから攻撃されない</small>
         )}
+        {follower.cardId === 'C025' && (
+          <small>
+            HP10以下：攻撃力+2
+            （{(isOpponent ? opponent : currentPlayer).leaderHealth <= 10 ? '有効' : '無効'}）
+          </small>
+        )}
         {follower.keywords.includes('frozen') && (
           <small style={{ color: '#aee1ff', fontWeight: 'bold' }}>
             凍結中（攻撃不可）
@@ -300,7 +306,10 @@ function App() {
               disabled={!canUseAbility(game, follower.instanceId, 'skill')}
               onClick={() => handleUseAbility(follower, 'skill')}
               title={card.elementalSkill.name}>
-              スキル PP{card.elementalSkill.ppCost ?? 0}{follower.skillUsed ? ' 済' : ''}
+              スキル PP{card.elementalSkill.ppCost ?? 0}
+              {card.id === 'C023'
+                ? ` ${follower.skillUsesThisTurn ?? (follower.skillUsed ? 1 : 0)}/3回`
+                : follower.skillUsed ? ' 済' : ''}
             </button>
           )}
           {card.elementalBurst && (
