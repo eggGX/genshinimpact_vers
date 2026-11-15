@@ -7,6 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
+import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
@@ -305,6 +306,7 @@ function resolveTurnEffects(
     result = resolveDeaths(result)
     if (result.winnerId === null && trigger === 'turn_end') {
       result = resolvePyroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = resolveHydroTurnEnd(result, playerId, sourceId)
       result = resolveDeaths(result)
     }
   }
@@ -365,6 +367,7 @@ export function playCard(
     next = resolveNeutralPlay(next, playerId, card)
     if (next.winnerId !== null) return next
     next = resolvePyroSpell(next, playerId, card.id, targetId, resolveDeaths)
+    next = resolveHydroSpell(next, playerId, card.id)
     return resolveDeaths(next)
   }
 
@@ -585,8 +588,10 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = resolveLegendaryAttack(
-    applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  const buffed = resolveHydroAttack(
+    resolveLegendaryAttack(
+      applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+    ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
@@ -667,8 +672,10 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = resolveLegendaryAttack(
-    applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  const buffed = resolveHydroAttack(
+    resolveLegendaryAttack(
+      applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+    ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
