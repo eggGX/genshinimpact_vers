@@ -1,6 +1,6 @@
 import type { ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader, healLeader } from './leaderShield'
+import { damageLeader } from './leaderShield'
 import { absorbDamage, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 import { summonFollowers } from './neutralRules'
 
@@ -115,7 +115,7 @@ export function advancedAnemoSkill(
     if (!element || !selectable.includes(element as Element)) return state
     return edit(state, ownerId, p => ({
       ...p, hand: p.hand.filter((_, i) => i !== handIndex),
-      graveyard: [...p.graveyard, chosen],
+      graveyard: [...p.graveyard, chosen!],
       field: p.field.map(f => f.instanceId === sourceId
         ? { ...f, keywords: [...f.keywords.filter(k => !k.startsWith('normal_attack_') &&
             !k.startsWith('varka_element_')), `normal_attack_${element}`, `varka_element_${element}`] }
