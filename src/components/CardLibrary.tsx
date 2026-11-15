@@ -156,7 +156,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
               <p>このカードはデータ登録済みですが、効果はまだ実装されておらず対戦では使用できません。</p>
             )}
             {selected.token && <p>トークンカード：通常のデッキには含まれません。</p>}
-            {selected.elementalSkill && <p>元素スキル：{selected.elementalSkill.name}{selected.elementalSkill.ppCost !== undefined ? `（PP${selected.elementalSkill.ppCost}）` : ''}</p>}}
+            {selected.elementalSkill && <p>元素スキル：{selected.elementalSkill.name}{selected.elementalSkill.ppCost !== undefined ? `（PP${selected.elementalSkill.ppCost}）` : ''}</p>}
             {selected.elementalBurst && <p>元素爆発：{selected.elementalBurst.name}（EN{selected.elementalBurst.energyCost ?? 0}）</p>}
           </article>
         )}
