@@ -1665,6 +1665,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['月桂・跳躍型', 2, 0, 3],
     ['コレアンバー', 0, undefined, undefined],
     ['草霊', 2, 2, 2],
+    ['月桂・投擲型', 2, 0, 3],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -4508,10 +4509,10 @@ test('STEP40 草元素15枚は原本どおりB4/S4/G4/L3の構成', async()=>{
   assert.deepEqual(report.errors,[])
   assert.equal(report.ready,true)
 })
-test('STEP40 草元素8枚が対戦対応、残り7枚は正式データのみ',async()=>{
+test('STEP41 草元素12枚が対戦対応、残り3枚は正式データのみ',async()=>{
   const {dendroCards}=await vite.ssrLoadModule('/src/data/cards/dendro.ts')
   assert.deepEqual(dendroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C101','C102','C103','C104','C105','C106','C107','C108'])
+    ['C101','C102','C103','C104','C105','C106','C107','C108','C109','C110','C111','C112'])
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of dendroCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
@@ -4628,4 +4629,42 @@ test('C108 フローラルリングダンサーは草霊がなければ攻撃力
   const foe=place(s,1,'test-mage',0,9)
   s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
   assert.equal(s.players[0].field[0].attack,3)
+})
+
+test('C109 ヨォーヨのスキルは月桂・投擲型を召喚し終了時回復',()=>{
+ let s=startedGame(); const y=place(s,0,'C109',2,4);s.players[0].pp=1;s.players[0].leaderHealth=10
+ s=engine.activateAbility(s,y.instanceId,'skill')
+ assert.equal(s.players[0].field[1].cardId,'token-yuegui-throwing')
+ s=engine.endTurn(s)
+ assert.equal(s.players[0].leaderHealth,12)
+})
+test('C110 綺良々の登場時シールド2とスキルの自盾3＋敵草1',()=>{
+ let s=startedGame();s.players[0].pp=3;s.players[0].hand=['C110']
+ const e=place(s,1,'test-mage',0,6)
+ s=engine.playCard(s,'player1',0)
+ assert.equal(s.players[0].leaderShield.normal,2)
+ s.players[0].pp=1
+ s=engine.activateAbility(s,s.players[0].field[0].instanceId,'skill')
+ assert.equal(s.players[0].field[0].shield.normal,3)
+ assert.equal(s.players[1].field.find(f=>f.instanceId===e.instanceId).health,5)
+})
+test('C111 コレイは草元素スペルを探索し敵1体草2と別体草1',()=>{
+ let s=startedGame();s.players[0].pp=3;s.players[0].hand=['C111'];s.players[0].deck=['C001','C105']
+ const e=place(s,1,'test-mage',0,6),other=place(s,1,'test-mage',0,6)
+ s=engine.playCard(s,'player1',0)
+ assert.ok(s.players[0].hand.includes('C105'))
+ s.players[0].pp=1
+ s=engine.activateAbility(s,s.players[0].field[0].instanceId,'skill',e.instanceId)
+ assert.equal(s.players[1].field.find(f=>f.instanceId===e.instanceId).health,4)
+ assert.equal(s.players[1].field.find(f=>f.instanceId===other.instanceId).health,5)
+})
+test('C112 カーヴェは敵草原核+0/+1、スキル草2とHP準拠リーダーダメージ',()=>{
+ let s=startedGame();s.players[0].pp=4;s.players[0].hand=['C112']
+ const core=place(s,1,'dendro-core',0,1),enemy=place(s,1,'test-mage',0,6)
+ s=engine.playCard(s,'player1',0)
+ assert.equal(s.players[1].field.find(f=>f.instanceId===core.instanceId).health,2)
+ s.players[0].pp=1
+ s=engine.activateAbility(s,s.players[0].field[0].instanceId,'skill',enemy.instanceId)
+ assert.equal(s.players[1].field.find(f=>f.instanceId===enemy.instanceId).health,4)
+ assert.equal(s.players[1].leaderHealth,18)
 })
