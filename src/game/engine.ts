@@ -11,7 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
-import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell, geoBurst, geoTurnEnd, geoSweepAttack } from './geoRules'
+import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell, geoBurst, geoTurnEnd, geoSweepAttack, geoNaviaSkill, geoNaviaBurst, geoNaviaCrestsTurnEnd } from './geoRules'
 import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
@@ -486,7 +486,7 @@ export function needsFriendlyAbilityTarget(card: Card, kind: AbilityKind): boole
 
 export function needsAbilityTarget(card: Card, kind: AbilityKind): boolean {
   const ability = kind === 'skill' ? card.elementalSkill : card.elementalBurst
-  return (card.id === 'C049' && kind === 'skill') || (ability?.effects ?? []).some(effect =>
+  return ((card.id === 'C049' || card.id === 'C099') && kind === 'skill') || (ability?.effects ?? []).some(effect =>
     effect.target === 'selected_enemy_follower')
 }
 
@@ -608,6 +608,7 @@ export function activateAbility(
     result = resolveAnemoSkill(result, owner.id, followerId, card.id)
     result = advancedAnemoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
     result = geoSkill(result, owner.id, followerId, card.id)
+    if (card.id === 'C099') result = geoNaviaSkill(result, owner.id, targetId)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
@@ -616,6 +617,7 @@ export function activateAbility(
     result = advancedElectroBurst(result, owner.id, followerId, card.id, resolveDeaths)
     result = advancedAnemoBurst(result, owner.id, card.id, followerId, resolveDeaths)
     result = geoBurst(result, owner.id, card.id, resolveDeaths)
+    if (card.id === 'C099') result = geoNaviaBurst(result, owner.id, resolveDeaths)
   }
   return resolveDeaths(result)
 }
@@ -918,6 +920,9 @@ export function endTurn(state: GameState): GameState {
   result = resolveAnemoAmuletsTurnEnd(result, currentId)
   if (result.winnerId !== null) return result
 
+  result = geoNaviaCrestsTurnEnd(result, currentId, resolveDeaths)
+  if (result.winnerId !== null) return result
+
   result = geoAmuletsTurnEnd(result, currentId)
   if (result.winnerId !== null) return result
 
@@ -1025,6 +1030,7 @@ export function endTurn(state: GameState): GameState {
     skillUsesThisTurn: 0,
     electroChargedTriggersThisTurn: 0,
     swirlDrawsThisTurn: 0,
+    geoShieldTriggersThisTurn: 0,
     keywords: f.keywords.filter(keyword => keyword !== 'rush_only'),
   }))
 
