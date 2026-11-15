@@ -1372,16 +1372,16 @@ test('炎元素15枚は原本どおり種類・地域・二つ名・効果説明
   assert.equal(pyroCards.find(c=>c.id==='C025').region[0],'璃月')
 })
 
-test('炎元素は基本4枚のみ対戦可能、未実装11枚はデッキ候補から除外', async () => {
+test('炎元素はシルバーまで8枚対戦可能、未実装7枚はデッキ候補から除外', async () => {
   const { pyroCards }=await vite.ssrLoadModule('/src/data/cards/pyro.ts')
   const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.deepEqual(pyroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C011','C012','C013','C014'])
+    ['C011','C012','C013','C014','C015','C016','C017','C018'])
   const pool=getDeckCardPool().map(c=>c.id)
   for(const c of pyroCards) assert.equal(pool.includes(c.id), c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C015']
+  state.players[0].hand=['C019']
   assert.equal(engine.canPlayCard(state,0),false)
 })
 
@@ -1440,4 +1440,163 @@ test('C014 炎アビスの魔術師は登場時通常シールド3・通常攻�
   const next=engine.playCard(state,'player1',0)
   assert.equal(next.players[0].field[0].shield.normal,3)
   assert.equal(engine.getCard('C014').normalAttackElement,'pyro')
+})
+
+test('C015 旋火輪：全敵フォロワーに炎1ダメージ、クレスト2ターンを付与', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C015']
+  state.players[0].pp = 4
+  const a = place(state, 1, 'test-mage', 1, 6)
+  const b = place(state, 1, 'test-hilichurl', 1, 4)
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].pp, 0)
+  assert.deepEqual(next.players[0].graveyard, ['C015'])
+  assert.equal(next.players[1].field.find(f => f.instanceId === a.instanceId).health, 5)
+  assert.equal(next.players[1].field.find(f => f.instanceId === b.instanceId).health, 3)
+  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'pyro' }])
+  assert.equal(next.players[0].crests[0].id, 'C015')
+  assert.equal(next.players[0].crests[0].turnsRemaining, 2)
+})
+
+test('C015 旋火輪：全体ダメージは蒸発反応とシールド吸収に対応', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C015']
+  state.players[0].pp = 4
+  const hydro = place(state, 1, 'test-mage', 1, 8)
+  hydro.aura = [{ element: 'hydro' }]
+  const shielded = place(state, 1, 'test-hilichurl', 1, 5)
+  shielded.shield = { normal: 2, crystallize: 0 }
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[1].field[0].health, 5)
+  assert.equal(next.players[1].field[0].aura.length, 0)
+  assert.equal(next.players[1].field[1].health, 5)
+  assert.equal(next.players[1].field[1].shield.normal, 1)
+})
+
+test('C015 旋火輪：自分のターン終了時に敵全体とリーダーへ炎1を2回発動', () => {
+  let state = startedGame()
+  state.players[0].hand = ['C015']
+  state.players[0].pp = 4
+  place(state, 1, 'test-mage', 1, 10)
+  state = engine.playCard(state, 'player1', 0)
+  state = engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth, 19)
+  assert.equal(state.players[1].field[0].health, 8)
+  assert.equal(state.players[0].crests[0].turnsRemaining, 1)
+  state = engine.endTurn(state)
+  state = engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth, 18)
+  assert.equal(state.players[1].field[0].health, 7)
+  assert.deepEqual(state.players[0].crests, [])
+})
+
+test('C015 と C010 のクレストは別処理で発動する', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C015']
+  state.players[0].pp = 4
+  state.players[0].crests = [{
+    id: 'C010', turnsRemaining: 7, usedElements: [],
+  }]
+  const played = engine.playCard(state, 'player1', 0)
+  const next = engine.endTurn(played)
+  assert.equal(next.players[1].leaderHealth, 18)
+  assert.equal(next.players[0].crests.find(c => c.id === 'C010').turnsRemaining, 6)
+  assert.equal(next.players[0].crests.find(c => c.id === 'C015').turnsRemaining, 1)
+})
+
+test('C016 素晴らしい旅：アミュレットとして場を使いターン終了時にHP2回復＋攻撃1', () => {
+  let state = startedGame()
+  state.players[0].hand = ['C016']
+  state.players[0].pp = 3
+  state.players[0].leaderHealth = 15
+  place(state, 0, 'C001', 2, 4)
+  state = engine.playCard(state, 'player1', 0)
+  assert.equal(state.players[0].field.length, 1)
+  assert.equal(state.players[0].amulets.length, 1)
+  assert.equal(state.players[0].amulets[0].turnsRemaining, 3)
+  assert.equal(state.players[0].graveyard.includes('C016'), false)
+  state = engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth, 17)
+  assert.equal(state.players[0].field[0].attack, 3)
+  assert.equal(state.players[0].amulets[0].turnsRemaining, 2)
+})
+
+test('C016 素晴らしい旅：カウントダウン3で消滅し墓場には送らない', () => {
+  let state = startedGame()
+  state.players[0].hand = ['C016']
+  state.players[0].pp = 3
+  state = engine.playCard(state, 'player1', 0)
+  for(let i = 0; i < 5; i++) state = engine.endTurn(state)
+  assert.equal(state.players[0].amulets.length, 0)
+  assert.equal(state.players[0].leaderHealth, 20)
+})
+
+test('C016 素晴らしい旅：フィールド合計5枠なら新規アミュレット不可', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C016']
+  state.players[0].pp = 3
+  for(let i = 0; i < 5; i++) place(state, 0, 'C001', 1, 2)
+  assert.equal(engine.canPlayCard(state, 0), false)
+  assert.equal(engine.playCard(state, 'player1', 0), state)
+})
+
+test('C017 デットエージェント：潜伏と炎通常攻撃を所持し対象指定を回避', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C017']
+  state.players[0].pp = 4
+  const agentState = engine.playCard(state, 'player1', 0)
+  const agent = agentState.players[0].field[0]
+  assert.ok(agent.keywords.includes('stealth'))
+  assert.equal(engine.getCard('C017').normalAttackElement, 'pyro')
+  const enemyAttacker = place(agentState, 1, 'test-mage', 3, 5)
+  const enemyTurn = { ...agentState, currentPlayerId: 'player2' }
+  assert.equal(engine.attackFollower(enemyTurn, enemyAttacker.instanceId, agent.instanceId), enemyTurn)
+})
+
+test('C017 デットエージェント：通常攻撃で潜伏解除、他のファデュイがいれば再潜伏', () => {
+  const state = startedGame()
+  const agent = place(state, 0, 'C017', 3, 5)
+  agent.keywords = ['stealth']
+  const enemy = place(state, 1, 'test-mage', 0, 10)
+  let next = engine.attackFollower(state, agent.instanceId, enemy.instanceId)
+  assert.equal(next.players[0].field[0].keywords.includes('stealth'), false)
+  const withFatui = startedGame()
+  const agent2 = place(withFatui, 0, 'C017', 3, 5)
+  agent2.keywords = ['stealth']
+  place(withFatui, 0, 'C017', 3, 2)
+  const enemy2 = place(withFatui, 1, 'test-mage', 0, 10)
+  next = engine.attackFollower(withFatui, agent2.instanceId, enemy2.instanceId)
+  assert.equal(next.players[0].field[0].keywords.includes('stealth'), true)
+})
+
+test('C018 双界の炎：指定した敵をシールド無視で破壊し両リーダーへ2ダメージ', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C018']
+  state.players[0].pp = 4
+  const enemy = place(state, 1, 'C003', 4, 9)
+  enemy.keywords = ['guard']
+  enemy.shield = { normal: 10, crystallize: 10 }
+  const next = engine.playCard(state, 'player1', 0, enemy.instanceId)
+  assert.equal(next.players[1].field.length, 0)
+  assert.deepEqual(next.players[1].graveyard, ['C003'])
+  assert.equal(next.players[0].leaderHealth, 18)
+  assert.equal(next.players[1].leaderHealth, 18)
+  assert.deepEqual(next.players[0].graveyard, ['C018'])
+})
+
+test('C018 双界の炎：対象無し・潜伏・オーラには使用不可', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C018']
+  state.players[0].pp = 4
+  assert.equal(engine.canPlayCard(state, 0), false)
+  const hidden = place(state, 1, 'C017', 3, 4)
+  hidden.keywords = ['stealth']
+  assert.equal(engine.canPlayCard(state, 0), false)
+  assert.equal(engine.playCard(state, 'player1', 0, hidden.instanceId), state)
+  const ordinary = place(state, 1, 'C001', 1, 2)
+  assert.equal(engine.canPlayCard(state, 0), true)
+  assert.equal(engine.playCard(state, 'player1', 0, hidden.instanceId), state)
+  const next = engine.playCard(state, 'player1', 0, ordinary.instanceId)
+  assert.equal(next.players[1].field.some(f => f.instanceId === hidden.instanceId), true)
+  assert.equal(next.players[0].leaderHealth, 18)
 })
