@@ -327,9 +327,23 @@ export function resolveReactionConsequence(
   }
 
   if (reaction === 'overloaded') {
+    // Chevreuse: every overload caused on her owner's turn permanently buffs
+    // all friendly followers (including Chevreuse), with no trigger limit.
+    const actorIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
+    const actor = players[actorIndex]
+    if (actor && actor.id === state.currentPlayerId &&
+        actor.field.some(f => f.cardId === 'C022' && f.health > 0)) {
+      players[actorIndex] = {
+        ...actor,
+        field: actor.field.map(f => f.health > 0
+          ? { ...f, attack: f.attack + 1 } : f),
+      }
+    }
     const target = affected.field.find(f => f.instanceId === affectedInstanceId)
     const card = target && getCard(target.cardId)
-    if (!target || !card || card.cost > 5 || target.health <= 0) return state
+    if (!target || !card || card.cost > 5 || target.health <= 0) {
+      return { ...state, players }
+    }
     players[affectedOwnerIndex] = {
       ...affected,
       field: affected.field.filter(f => f.instanceId !== affectedInstanceId),
