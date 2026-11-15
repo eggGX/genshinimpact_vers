@@ -17,7 +17,7 @@ const RARITY_LABELS: Record<Rarity, string> = {
 export function CardLibrary({ onBack }: { onBack: () => void }) {
   const [element, setElement] = useState<ElementType | 'all'>('all')
   const [rarity, setRarity] = useState<Rarity | 'all'>('all')
-  const [origin, setOrigin] = useState<'all' | 'test' | 'production'>('all')
+  const [origin, setOrigin] = useState<'all' | 'token' | 'production'>('all')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -31,7 +31,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
       <header className="library-header">
         <div>
           <h1>カード一覧</h1>
-          <p>正式カードの登録状況とテストカードを確認できます。</p>
+          <p>正式カード115枚とトークン24種を確認できます。</p>
         </div>
         <button type="button" onClick={onBack}>対戦画面へ戻る</button>
       </header>
@@ -43,7 +43,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
         </div>
         <div>
           <strong>登録データのエラー：{report.errors.length}件</strong>
-          <p>テスト用カードは115枚の集計に含みません。</p>
+          <p>トークン24種は正式カード115枚の集計には含みません。</p>
         </div>
       </section>
 
@@ -113,11 +113,11 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
           <label>
             登録区分
             <select value={origin} onChange={e => {
-              setOrigin(e.target.value as 'all' | 'test' | 'production')
+              setOrigin(e.target.value as 'all' | 'token' | 'production')
               setSelectedId(null)
             }}>
               <option value="all">すべて</option>
-              <option value="test">テスト用</option>
+              <option value="token">トークン</option>
               <option value="production">正式カード</option>
             </select>
           </label>
@@ -139,7 +139,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
               <strong>{card.name}</strong>
               <span>{RARITY_LABELS[card.rarity]}</span>
               {card.type === 'follower' && <span>{card.attack} / {card.health}</span>}
-              <small>{card.token ? 'トークン（デッキ不可）' : originIds.has(card.id) ? '正式' : 'テスト用'}</small>
+              <small>{card.token ? 'トークン（デッキ不可）' : '正式'}</small>
               {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
             </button>
           ))}
