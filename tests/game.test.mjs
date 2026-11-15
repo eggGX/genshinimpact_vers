@@ -131,3 +131,52 @@ test('攻撃したフォロワーは同じターンに再度攻撃できない',
   const again = engine.attackLeader(next, attacker.instanceId)
   assert.equal(again.players[1].leaderHealth, 19)
 })
+
+test('炎スライムの通常攻撃は生存した敵に炎元素を付着させる', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-slime', 1, 2)
+  const target = place(state, 1, 'test-mage', 1, 4)
+  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
+  assert.equal(next.players[1].field[0].health, 3)
+  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'pyro' }])
+})
+
+test('氷の射手のダメージは生存した敵に氷元素を付着させる', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-archer']
+  const target = place(state, 1, 'test-mage', 1, 4)
+  const next = engine.playCard(state, 'player1', 0, target.instanceId)
+  assert.equal(next.players[1].field[0].health, 2)
+  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'cryo' }])
+})
+
+test('物理通常攻撃は元素付着を生じない', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-hilichurl', 1, 4)
+  const target = place(state, 1, 'test-mage', 1, 4)
+  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
+  assert.deepEqual(next.players[1].field[0].aura, [])
+})
+
+test('風・岩・無元素の攻撃は付着せず、同元素は重複登録しない', async () => {
+  const { applyElementalAura } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-mage', 1, 4)
+  assert.deepEqual(applyElementalAura(target, 'anemo').aura, [])
+  assert.deepEqual(applyElementalAura(target, 'geo').aura, [])
+  assert.deepEqual(applyElementalAura(target, 'none').aura, [])
+  const once = applyElementalAura(target, 'hydro')
+  const twice = applyElementalAura(once, 'hydro')
+  assert.deepEqual(twice.aura, [{ element: 'hydro' }])
+})
+
+test('異なる元素の重なりは保持するが反応を起こさない（STEP14）', async () => {
+  const { applyElementalAura } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-mage', 1, 4)
+  const hydro = applyElementalAura(target, 'hydro')
+  const cryo = applyElementalAura(hydro, 'cryo')
+  assert.deepEqual(cryo.aura.map(a => a.element), ['hydro', 'cryo'])
+  assert.equal(cryo.health, 4)
+})
