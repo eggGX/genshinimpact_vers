@@ -1648,6 +1648,9 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
   assert.deepEqual(productionTokens.map(t => [t.name,t.cost,t.attack,t.health]), [
     ['ウサギ伯爵', 1, 0, 3], ['グゥオパァー', 2, 1, 3],
     ['ファニーハット・キャット', 5, 5, 5],
+    ['水圧装置', 1, undefined, undefined],
+    ['虚影', 1, 0, 2],
+    ['化海月', 2, 0, 4],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -2164,7 +2167,7 @@ test('STEP30 水元素15枚のカードタイプ・フォロワーステータ�
     [2,5],[2,3],[3,5],[2,4],[2,4],[2,6],[4,5]
   ])
   assert.deepEqual(hydroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C026','C027','C028','C029','C031','C032','C033','C036'])
+    ['C026','C027','C028','C029','C031','C032','C033','C034','C035','C036','C037','C038','C039','C040'])
   const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool = new Set(getDeckCardPool().map(c=>c.id))
   for(const c of hydroCards) assert.equal(pool.has(c.id),c.implementationStatus==='playable')
@@ -2309,12 +2312,13 @@ test('C036 キャンディスは守護持ち、スキルPP1で自身シールド
   assert.deepEqual(state.players[1].field[0].aura,[{element:'hydro'}])
 })
 
-test('水元素未対応のゴールド・レジェンドは登録データから参照できるが対戦使用不可',()=>{
+test('STEP31：水元素14枚は対戦対応、対象未確定のC030のみ使用不可',()=>{
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C034','C035','C037','C038','C039','C040']
-  for(let i=0;i<state.players[0].hand.length;i++){
+  state.players[0].hand=['C030','C034','C035','C037','C038','C039','C040']
+  assert.equal(engine.canPlayCard(state,0),false)
+  for(let i=1;i<state.players[0].hand.length;i++){
     assert.ok(engine.getCard(state.players[0].hand[i]).description.length>0)
-    assert.equal(engine.canPlayCard(state,i),false)
+    assert.equal(engine.canPlayCard(state,i),true)
   }
 })
