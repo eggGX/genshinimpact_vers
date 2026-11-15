@@ -91,9 +91,19 @@ function App() {
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
-    const saraWithoutAlly = card.id === 'C066' &&
-      !currentPlayer.field.some(f => f.health > 0 && getCard(f.cardId)?.element === 'electro')
-    if (!saraWithoutAlly && (needsPlayTarget(card) || needsFriendlyPlayTarget(card))) {
+    const noBuffAlly = ['C066', 'C081'].includes(card.id) &&
+      !currentPlayer.field.some(f => f.health > 0 &&
+        getCard(f.cardId)?.element === (card.id === 'C066' ? 'electro' : 'anemo'))
+    if (selectedAbility?.kind === 'skill' && currentPlayer.field.some(f =>
+      f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) {
+      if (['pyro', 'hydro', 'cryo', 'electro'].includes(card.element)) {
+        setGame(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`))
+        resetSelection()
+      }
+      return
+    }
+    if (!canPlayCard(game, handIndex)) return
+    if (!noBuffAlly && (needsPlayTarget(card) || needsFriendlyPlayTarget(card))) {
       setSelectedHandIndex(previous =>
         previous === handIndex ? null : handIndex
       )
@@ -115,7 +125,8 @@ function App() {
     if (!canUseAbility(game, follower.instanceId, kind)) return
     const card = getCard(follower.cardId)
     if (!card) return
-    if (needsAbilityTarget(card, kind) || needsFriendlyAbilityTarget(card, kind)) {
+    if ((card.id === 'C083' && kind === 'skill') ||
+        needsAbilityTarget(card, kind) || needsFriendlyAbilityTarget(card, kind)) {
       setSelectedAbility({ followerId: follower.instanceId, kind })
       setSelectedAttackerId(null)
       setSelectedHandIndex(null)
@@ -213,8 +224,9 @@ function App() {
       : undefined
     const isFriendlyTarget = !isOpponent &&
       ((selectedHandIndex !== null &&
-        ['C021', 'C044', 'C066'].includes(friendlyPlayId ?? '') &&
-        (friendlyPlayId !== 'C066' || card?.element === 'electro')) ||
+        ['C021', 'C044', 'C066', 'C081'].includes(friendlyPlayId ?? '') &&
+        (friendlyPlayId !== 'C066' || card?.element === 'electro') &&
+        (friendlyPlayId !== 'C081' || card?.element === 'anemo')) ||
        (selectedAbility?.kind === 'skill' && friendlySkillId === 'C066' &&
         card?.element === 'electro'))
 
@@ -561,6 +573,7 @@ function App() {
             残り{amulet.turnsRemaining}ターン
           </div>
         ))}
+        {(opponent.bondOfLife ?? 0) > 0 && <div>命の契約：{opponent.bondOfLife}</div>}
         {opponent.leaderShield && (
           <div>リーダーシールド：通常 {opponent.leaderShield.normal} ／ 結晶 {opponent.leaderShield.crystallize}</div>
         )}
@@ -611,6 +624,7 @@ function App() {
             {crest.id === 'C010' && `（発動済み：${crest.usedElements.join('・') || 'なし'}）`}
           </div>
         ))}
+        {(currentPlayer.bondOfLife ?? 0) > 0 && <div>命の契約：{currentPlayer.bondOfLife}</div>}
         {currentPlayer.leaderShield && (
           <div>リーダーシールド：通常 {currentPlayer.leaderShield.normal} ／ 結晶 {currentPlayer.leaderShield.crystallize}</div>
         )}
@@ -632,14 +646,18 @@ function App() {
         {winner
           ? 'ゲーム終了'
           : selectedAbility !== null
-            ? currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId === 'C066'
+            ? currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId === 'C083'
+              ? 'ファルカ：捨てる炎・水・氷・雷の手札カードを選択してください'
+              : currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId === 'C066'
               ? '九条裟羅：強化する味方雷元素フォロワーを選択してください'
               : selectedAbility.firstTargetId
               ? 'ディオナのスキル：2体目の敵フォロワーを選択してください'
               : '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
-            ? ['C021', 'C044', 'C066'].includes(currentPlayer.hand[selectedHandIndex])
-              ? currentPlayer.hand[selectedHandIndex] === 'C066'
+            ? ['C021', 'C044', 'C066', 'C081'].includes(currentPlayer.hand[selectedHandIndex])
+              ? currentPlayer.hand[selectedHandIndex] === 'C081'
+                ? 'ファルザン：他の味方風元素フォロワーを選択してください'
+                : currentPlayer.hand[selectedHandIndex] === 'C066'
                 ? '九条裟羅：他の味方雷元素フォロワーを選択してください'
                 : '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
               : 'ファンファーレの対象となる敵フォロワーを選択してください'
@@ -663,7 +681,11 @@ function App() {
           const card = getCard(cardId)
           if (!card) return null
 
-          const playable = canPlayCard(game, index)
+          const varkaChoice = selectedAbility?.kind === 'skill' &&
+            currentPlayer.field.some(f => f.instanceId === selectedAbility.followerId && f.cardId === 'C083')
+          const playable = varkaChoice
+            ? ['pyro','hydro','cryo','electro'].includes(card.element)
+            : canPlayCard(game, index)
           const selected = selectedHandIndex === index
 
           return (
