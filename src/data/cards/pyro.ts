@@ -1,7 +1,7 @@
 import type { Card } from '../../game/types'
 
 /** 初期セットVer.1.0／炎元素15枚（C011–C025）。原本: genshin_cards_v1.csv
- * C011–C014 はプレイ可能。残りの特殊能力は対戦実装前のため data_only。
+ * C011–C018 はプレイ可能。C019以降は特殊能力が未実装のため data_only。
  */
 export const pyroCards: Card[] = [
   {
@@ -95,7 +95,7 @@ export const pyroCards: Card[] = [
       "璃月"
     ],
     "description": "敵フォロワーすべてに炎元素1ダメージ。クレスト【旋火輪】（カウントダウン2）を得る：自分のターン終了時、敵フォロワーすべてと相手リーダーに炎元素1ダメージ。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C016",
@@ -108,10 +108,12 @@ export const pyroCards: Card[] = [
       "モンド"
     ],
     "description": "アミュレット。【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分のフォロワーすべてを+1/+0する。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C017",
+    "keywords": ["stealth"],
+    "normalAttackElement": "pyro",
     "name": "ファデュイ・デットエージェント・炎",
     "type": "follower",
     "rarity": "silver",
@@ -123,7 +125,7 @@ export const pyroCards: Card[] = [
       "ファデュイ"
     ],
     "description": "【潜伏】【元素攻撃：炎】【攻撃時】自分の場に他のファデュイがいれば、攻撃後に再度【潜伏】を得る。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C018",
@@ -136,7 +138,7 @@ export const pyroCards: Card[] = [
       "フォンテーヌ"
     ],
     "description": "敵フォロワー1体を破壊する。相手リーダーと自分のリーダーにそれぞれ炎元素2ダメージ。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C019",
