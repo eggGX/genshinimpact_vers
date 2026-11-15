@@ -1657,6 +1657,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['雷蛍', 1, 1, 1],
     ['オズ', 3, 3, 3],
     ['殺生櫻', 1, undefined, undefined],
+    ['ビックラキャット・ボックス', 3, 0, 8],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -3541,7 +3542,7 @@ test('STEP36 風15枚のカードタイプ・ステータス・地域・対戦�
   assert.deepEqual(anemoCards.find(c=>c.id==='C083').traits,['西風騎士団'])
   assert.deepEqual(anemoCards.find(c=>c.id==='C084').traits,['仙人'])
   assert.deepEqual(anemoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C071','C072','C073','C074','C077','C080','C082'])
+    anemoCards.map(c=>c.id))
 })
 
 test('STEP36 登録は85/115・風元素15枚の枠を充足・残り30枚',async()=>{
@@ -3554,7 +3555,7 @@ test('STEP36 登録は85/115・風元素15枚の枠を充足・残り30枚',asyn
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),30)
 })
 
-test('STEP36 風元素7枚だけデッキ候補へ、残る8枚はdata_only',async()=>{
+test('STEP37 風元素15枚すべてデッキ候補へ',async()=>{
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const {anemoCards}=await vite.ssrLoadModule('/src/data/cards/anemo.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
@@ -3562,7 +3563,7 @@ test('STEP36 風元素7枚だけデッキ候補へ、残る8枚はdata_only',asy
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C075','C076','C078','C079','C081','C083','C084','C085']
-  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+  assert.ok(state.players[0].hand.every(id=>engine.getCard(id).implementationStatus==='playable'))
 })
 
 test('C071 風スライムは風元素生物として常時付着状態で出る',()=>{
