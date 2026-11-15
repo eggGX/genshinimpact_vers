@@ -212,18 +212,6 @@ export const testCards: Card[] = [
     }],
   },
   {
-    id: 'dendro-core',
-    name: '草原核',
-    type: 'follower',
-    rarity: 'bronze',
-    element: 'dendro',
-    token: true,
-    cost: 0,
-    attack: 0,
-    health: 1,
-    description: '攻撃不可。炎で烈開花、雷で超開花。',
-  },
-  {
     id: 'test-elemental-caster',
     name: '水の修練者',
     type: 'follower',
