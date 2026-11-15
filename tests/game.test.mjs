@@ -4279,3 +4279,31 @@ test('C096 ゴローのPP1スキルは自分の岩フォロワーすべて+1/+1'
   assert.deepEqual(state.players[0].field.map(f=>[f.attack,f.health]),[[3,5],[3,3],[1,3]])
   assert.equal(state.players[0].energy,1)
 })
+
+
+test('C090 天権崩玉は敵リーダーのみなら岩元素1を4回与える',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C090']; state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].leaderHealth,16)
+  assert.equal(state.players[0].pp,0)
+  assert.deepEqual(state.players[0].graveyard.slice(-1),['C090'])
+})
+
+test('C090 天権崩玉は岩創造物があると8回攻撃する',()=>{
+  let state=startedGame()
+  const construct=place(state,0,'C086',2,2)
+  construct.cardId='token-jade-screen'
+  state.players[0].hand=['C090'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].leaderHealth,12)
+})
+
+test('C090 天権崩玉は相手リーダーのシールドを先に削る',()=>{
+  let state=startedGame()
+  state.players[1].leaderShield={normal:2,crystallize:1}
+  state.players[0].hand=['C090'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].leaderHealth,19)
+  assert.deepEqual(state.players[1].leaderShield,{normal:0,crystallize:0})
+})
