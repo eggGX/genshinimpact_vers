@@ -10,6 +10,7 @@ import { resolveEffects } from './effects'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
+import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
@@ -152,7 +153,7 @@ export function confirmMulligan(
  */
 /** A self-buff fanfare can choose an existing ally or the new follower itself. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044'].includes(card.id)
+  return ['C021', 'C044', 'C066'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
@@ -319,6 +320,7 @@ function resolveTurnEffects(
       result = resolveCryoTurnEnd(result, playerId, sourceId)
       result = cryoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = electroTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = advancedElectroTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
   }
@@ -347,7 +349,10 @@ export function playCard(
   const cardId = player.hand[handIndex]
   const card = getCard(cardId)!
 
-  if (needsFriendlyPlayTarget(card) &&
+  if (card.id === 'C066') {
+    if (!targetId || !player.field.some(f => f.instanceId === targetId &&
+      f.health > 0 && getCard(f.cardId)?.element === 'electro')) return state
+  } else if (needsFriendlyPlayTarget(card) &&
       (targetId !== 'self' && (!targetId ||
         !player.field.some(f => f.instanceId === targetId && f.health > 0)))) {
     return state
@@ -382,6 +387,7 @@ export function playCard(
     next = resolveHydroSpell(next, playerId, card.id)
     next = cryoSpell(next, playerId, card.id, resolveDeaths)
     next = electroSpell(next, playerId, card.id)
+    next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
     return resolveDeaths(next)
   }
 
@@ -448,6 +454,7 @@ export function playCard(
     result = resolveCryoPlay(result, playerId, card.id)
     result = cryoPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = electroPlay(result, playerId, card.id)
+    result = advancedElectroPlay(result, playerId, card.id, follower.instanceId, targetId)
   }
   return resolveDeaths(result)
 }
@@ -475,13 +482,17 @@ export function canUseAbility(
   const card = getCard(follower.cardId)
   const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
   if (!ability || (kind === 'skill'
-    ? (card?.id === 'C023'
+    ? (card?.id === 'C023' || card?.id === 'C069'
       ? (follower.skillUsesThisTurn ?? (follower.skillUsed ? 1 : 0)) >= 3
       : follower.skillUsed)
     : follower.burstUsed)) return false
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
-  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054'].includes(card?.id ?? '') &&
+  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
+  if (kind === 'skill' && card?.id === 'C069' &&
+      owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
+  if (kind === 'skill' && card?.id === 'C066' &&
+      !owner.field.some(f => f.health > 0 && getCard(f.cardId)?.element === 'electro')) return false
   if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
   if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))) {
     return false
@@ -515,6 +526,9 @@ export function activateAbility(
       return state
     }
   }
+  if (card.id === 'C066' && kind === 'skill' && (!targetId ||
+      !owner.field.some(f => f.instanceId === targetId && f.health > 0 &&
+        getCard(f.cardId)?.element === 'electro'))) return state
   const players = [...state.players] as [Player, Player]
   players[index] = {
     ...owner,
@@ -557,11 +571,13 @@ export function activateAbility(
   if (result.winnerId === null && kind === 'skill') {
     result = resolveHydroAdvancedSkill(result, owner.id, followerId, card.id)
     result = cryoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
+    result = advancedElectroSkill(result, owner.id, followerId, card.id, targetId, resolveDeaths)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
     result = resolveHydroAdvancedBurst(result, owner.id, followerId, card.id, resolveDeaths)
     result = cryoBurst(result, owner.id, card.id, resolveDeaths)
+    result = advancedElectroBurst(result, owner.id, followerId, card.id, resolveDeaths)
   }
   return resolveDeaths(result)
 }
@@ -623,7 +639,8 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = electroAttack(
+  const buffed = advancedElectroAttack(
+    electroAttack(
     cryoAttack(
       resolveHydroAdvancedAttack(
         resolveHydroAttack(
@@ -633,15 +650,17 @@ export function attackFollower(
         ), owner.id, attackerId
       ), owner.id, attackerId
     ), owner.id, attackerId
+    ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
   const counterDamage = effectiveAttack(state, enemy.id, defender)
-  const attackerElement = boostedAttacker.keywords.includes('normal_attack_cryo')
-    ? 'cryo' : boostedAttacker.keywords.includes('normal_attack_hydro')
-      ? 'hydro' : boostedAttacker.keywords.includes('normal_attack_pyro')
-        ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
+  const attackerElement = boostedAttacker.keywords.includes('normal_attack_electro')
+    ? 'electro' : boostedAttacker.keywords.includes('normal_attack_cryo')
+      ? 'cryo' : boostedAttacker.keywords.includes('normal_attack_hydro')
+        ? 'hydro' : boostedAttacker.keywords.includes('normal_attack_pyro')
+          ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
@@ -677,7 +696,8 @@ export function attackFollower(
     result, index, attackerId, toAttacker.reaction, toAttacker.reactedElement, enemyIndex
   )
   result = resolveDeaths(result)
-  return resolvePyroAttackAfter(result, owner.id, attackerId)
+  result = resolvePyroAttackAfter(result, owner.id, attackerId)
+  return advancedElectroAttackAfter(result, owner.id, attackerId, resolveDeaths)
 }
 
 /**
@@ -717,7 +737,8 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = electroAttack(
+  const buffed = advancedElectroAttack(
+    electroAttack(
     cryoAttack(
       resolveHydroAdvancedAttack(
         resolveHydroAttack(
@@ -726,6 +747,7 @@ export function attackLeader(
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
+    ), owner.id, attackerId
     ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
@@ -749,11 +771,13 @@ export function attackLeader(
 
   players[enemyIndex] = damagedLeader
 
-  return resolvePyroAttackAfter({
+  let result = resolvePyroAttackAfter({
     ...buffed,
     players,
     winnerId: hp === 0 ? owner.id : null,
   }, owner.id, attackerId)
+  result = advancedElectroAttackAfter(result, owner.id, attackerId, resolveDeaths)
+  return result
 }
 
 /**
@@ -819,6 +843,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = cryoCrestsEnd(result, currentId, resolveDeaths)
+  if (result.winnerId !== null) return result
+
+  result = electroAmuletsTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
   // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
@@ -917,6 +944,7 @@ export function endTurn(state: GameState): GameState {
     skillUsed: false,
     burstUsed: false,
     skillUsesThisTurn: 0,
+    electroChargedTriggersThisTurn: 0,
     keywords: f.keywords.filter(keyword => keyword !== 'rush_only'),
   }))
 
