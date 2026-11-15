@@ -43,9 +43,29 @@ export function absorbDamage(follower: Follower, amount: number): Follower {
   }
 }
 
+let nextCoreInstanceId = 1
+
+export function createDendroCore(): Follower {
+  return {
+    instanceId: `dendro-core-${nextCoreInstanceId++}`,
+    cardId: 'dendro-core',
+    attack: 0,
+    health: 1,
+    maxHealth: 1,
+    energy: 0,
+    maxEnergy: 5,
+    aura: [],
+    shield: { normal: 0, crystallize: 0 },
+    canAttack: false,
+    hasAttacked: false,
+    keywords: ['cannot_attack'],
+  }
+}
+
 export type ElementalReaction =
   | 'vaporize' | 'melt' | 'electro_charged' | 'overloaded' | 'frozen'
   | 'superconduct' | 'burning' | 'quicken' | 'swirl' | 'crystallize'
+  | 'bloom' | 'burgeon' | 'hyperbloom'
 
 export interface ElementalDamageResult {
   follower: Follower
@@ -90,6 +110,7 @@ function reactionFor(
   if (pair.includes('cryo') && pair.includes('electro')) return 'superconduct'
   if (pair.includes('pyro') && pair.includes('dendro')) return 'burning'
   if (pair.includes('dendro') && pair.includes('electro')) return 'quicken'
+  if (pair.includes('dendro') && pair.includes('hydro')) return 'bloom'
   if (incoming === 'anemo' && ['pyro', 'hydro', 'cryo', 'electro'].includes(attached)) return 'swirl'
   if (incoming === 'geo' && ['pyro', 'hydro', 'cryo', 'electro'].includes(attached)) return 'crystallize'
   return null
@@ -106,6 +127,17 @@ export function resolveElementalDamage(
   baseDamage: number,
   incomingElement?: ElementType
 ): ElementalDamageResult {
+  // Core detonation takes precedence over shield absorption and aura processing.
+  // Both pyro and electro destroy the core regardless of its shield.
+  if (follower.cardId === 'dendro-core' &&
+      (incomingElement === 'pyro' || incomingElement === 'electro')) {
+    return {
+      follower: { ...follower, health: 0 },
+      damage: 0,
+      reaction: incomingElement === 'pyro' ? 'burgeon' : 'hyperbloom',
+    }
+  }
+
   const base = Number.isFinite(baseDamage)
     ? Math.max(0, Math.trunc(baseDamage)) : 0
   const physicalBonus = (!incomingElement || incomingElement === 'none') &&
@@ -204,7 +236,8 @@ export function resolveReactionConsequence(
   affectedOwnerIndex: number,
   affectedInstanceId: string,
   reaction: ElementalReaction | null,
-  reactedElement?: ElementType
+  reactedElement?: ElementType,
+  sourceOwnerIndex?: number
 ): GameState {
   if (!reaction || ['vaporize', 'melt', 'frozen', 'superconduct', 'burning', 'quicken'].includes(reaction)) {
     // これらの状態変化は resolveElementalDamage 側で完了する
@@ -214,6 +247,55 @@ export function resolveReactionConsequence(
   const players = [...state.players] as [Player, Player]
   const affected = players[affectedOwnerIndex]
   if (!affected) return state
+
+  if (reaction === 'bloom') {
+    // Bloom belongs to the player who triggered the reaction.
+    // If a core already exists, rebloom strengthens that core by +1 health.
+    const ownerIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
+    const owner = players[ownerIndex]
+    const oldCore = owner.field.find(f => f.cardId === 'dendro-core')
+    if (oldCore) {
+      players[ownerIndex] = {
+        ...owner,
+        field: owner.field.map(f => f.instanceId === oldCore.instanceId
+          ? { ...f, health: f.health + 1, maxHealth: f.maxHealth + 1 } : f),
+      }
+    } else if (owner.field.length < 5) {
+      players[ownerIndex] = {
+        ...owner,
+        field: [...owner.field, createDendroCore()],
+      }
+    }
+    return { ...state, players }
+  }
+
+  if (reaction === 'burgeon' || reaction === 'hyperbloom') {
+    const core = affected.field.find(f => f.instanceId === affectedInstanceId)
+    if (!core || core.cardId !== 'dendro-core') return state
+    if (reaction === 'burgeon') {
+      players[affectedOwnerIndex] = {
+        ...affected,
+        field: affected.field.map(f => f.instanceId === core.instanceId
+          ? { ...f, health: 0 } : f),
+        leaderBurningTurns: 3,
+      }
+      return { ...state, players }
+    }
+    // Hyperbloom: one random allied follower takes 3 damage.
+    // Prefer other followers; if only the core exists, it remains the sole target.
+    const candidates = affected.field.filter(f =>
+      f.instanceId !== core.instanceId && f.health > 0)
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)]
+    players[affectedOwnerIndex] = {
+      ...affected,
+      field: affected.field.map(f => {
+        if (f.instanceId === core.instanceId) return { ...f, health: 0 }
+        return chosen && f.instanceId === chosen.instanceId
+          ? absorbDamage(f, 3) : f
+      }),
+    }
+    return { ...state, players }
+  }
 
   if (reaction === 'crystallize') {
     // 結晶シールドは反応を発生させた側に付与する（現段階では1ポイント）
