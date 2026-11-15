@@ -7,7 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
-import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
+import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack, grantRaincutter, raincutterAttackFollower, raincutterAttackLeader } from './hydroRules'
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
@@ -157,7 +157,7 @@ export function confirmMulligan(
  */
 /** A self-buff fanfare can choose an existing ally or the new follower itself. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044', 'C066', 'C081', 'C091'].includes(card.id)
+  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
@@ -405,6 +405,7 @@ export function playCard(
     next = geoSpell(next, playerId, card.id, resolveDeaths, targetId)
     next = dendroSpell(next, playerId, card.id)
     next = dendroSilverSpell(next, playerId, card.id, resolveDeaths)
+    if (card.id === 'C030') next = grantRaincutter(next, playerId, targetId)
     return resolveDeaths(next)
   }
 
@@ -702,7 +703,9 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const swept = dendroLegendaryAttack(geoSweepAttack(declared, owner.id, attackerId, resolveDeaths), owner.id, attackerId, resolveDeaths)
+  const swept = raincutterAttackFollower(
+    dendroLegendaryAttack(geoSweepAttack(declared, owner.id, attackerId, resolveDeaths), owner.id, attackerId, resolveDeaths),
+    owner.id, attackerId, targetId, resolveDeaths)
   if (swept.winnerId !== null || !swept.players[index].field.some(f => f.instanceId === attackerId && f.health > 0)) return swept
   // Attack declaration consumes the attack even if its triggered AoE destroys the target.
   if (!swept.players[enemyIndex].field.some(f => f.instanceId === targetId && f.health > 0)) {
@@ -821,7 +824,7 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const triggered = dendroLegendaryAttack(declared, owner.id, attackerId, resolveDeaths)
+  const triggered = raincutterAttackLeader(dendroLegendaryAttack(declared, owner.id, attackerId, resolveDeaths), owner.id, attackerId)
   if (triggered.winnerId !== null || !triggered.players[index].field.some(f=>f.instanceId===attackerId&&f.health>0)) return triggered
   const buffed = dendroAttack(geoAttack(
     advancedAnemoAttack(
