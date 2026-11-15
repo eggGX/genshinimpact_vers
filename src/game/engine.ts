@@ -437,7 +437,7 @@ export function canUseAbility(
   const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
   if (!ability || (kind === 'skill' ? follower.skillUsed : follower.burstUsed)) return false
   if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
-  if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura'))) {
+  if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))) {
     return false
   }
   return true
@@ -457,7 +457,7 @@ export function activateAbility(
   const card = getCard(follower.cardId)!
   const ability = kind === 'skill' ? card.elementalSkill! : card.elementalBurst!
   if (needsAbilityTarget(card, kind) &&
-      (!targetId || !state.players[1 - index].field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura')))) {
+      (!targetId || !state.players[1 - index].field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth')))) {
     return state
   }
   const players = [...state.players] as [Player, Player]
