@@ -172,3 +172,21 @@ export function dendroColleiAmberTurnEnd(state: GameState, ownerId: string,
   }
   return result
 }
+
+/** C108: summon a Dendro spirit on play; gaining attack checks the live spirit board. */
+export function dendroPlay(state: GameState, ownerId: string, cardId: string): GameState {
+  return cardId === 'C108' && state.winnerId === null
+    ? summonFollowers(state, ownerId, 'token-dendro-spirit', 1) : state
+}
+
+export function dendroAttack(state: GameState, ownerId: string, attackerId: string): GameState {
+  const owner = state.players.find(p => p.id === ownerId)
+  const source = owner?.field.find(f => f.instanceId === attackerId && f.health > 0)
+  if (source?.cardId !== 'C108' ||
+      !owner?.field.some(f => f.cardId === 'token-dendro-spirit' && f.health > 0)) return state
+  return edit(state, ownerId, p => ({
+    ...p, field: p.field.map(f => f.instanceId === attackerId ? {
+      ...f, attack: f.attack + 2,
+    } : f),
+  }))
+}
