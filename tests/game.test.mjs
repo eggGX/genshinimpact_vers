@@ -2595,9 +2595,6 @@ test('トークン3種とカードレジストリ：水圧装置はアミュレ�
   assert.deepEqual(status,[true,true,true])
 })
 
-test('STEP32 氷元素C041-C055は15枚・B4/S4/G4/L3で原本の名前とコストを保持',async()=>{
-  const {cry oCards}= {cry oCards:null}
-})
 
 test('STEP32 氷元素15枚のID、名前、コスト、レアリティは確定資料どおり',async()=>{
   const { cryoCards }=await vite.ssrLoadModule('/src/data/cards/cryo.ts')
