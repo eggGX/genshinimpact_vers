@@ -105,7 +105,7 @@ export const dendroCards: Card[] = [
       "スメール"
     ],
     "description": "アミュレット。【カウントダウン3】【自分のターン終了時】自リーダー1回復。カードを1枚引く。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C108",
