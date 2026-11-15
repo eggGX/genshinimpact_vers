@@ -403,9 +403,10 @@ export function playCard(
       pp: player.pp - card.cost,
       hand: player.hand.filter((_, i) => i !== handIndex),
     }
-    return resolveAnemoAmuletPlay(
-      resolvePyroAmuletPlay({ ...state, players }, playerId), playerId, card.id
-    )
+    const next = { ...state, players }
+    if (card.id === 'C016') return resolvePyroAmuletPlay(next, playerId)
+    if (card.id === 'C072') return resolveAnemoAmuletPlay(next, playerId, card.id)
+    return next
   }
 
   const follower: Follower = {
