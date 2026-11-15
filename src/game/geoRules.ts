@@ -6,6 +6,22 @@ import { grantShield, resolveElementalDamage, resolveReactionConsequence } from 
 let nextLiyueHarborId = 1
 let nextGeoConstructId = 1
 
+/** Only actual crystallize gains during Navia's own turn count, up to 3. */
+export function gainGeoCrystallize(state: GameState, ownerId: string, amount: number): GameState {
+  if (state.winnerId !== null) return state
+  return update(state, ownerId, p => {
+    const before = p.leaderShield?.crystallize ?? 0
+    const shielded = addLeaderShield(p, amount, 'crystallize')
+    if (state.currentPlayerId !== ownerId || (shielded.leaderShield?.crystallize ?? 0) <= before) return shielded
+    return { ...shielded, field: shielded.field.map(f => f.cardId === 'C099' && f.health > 0 &&
+      (f.geoShieldTriggersThisTurn ?? 0) < 3 ? {
+        ...f, attack: f.attack + 1,
+        geoShieldTriggersThisTurn: (f.geoShieldTriggersThisTurn ?? 0) + 1,
+      } : f) }
+  })
+}
+
+
 /** The initial Geo constructs occupy amulet slots with no countdown. */
 function createGeoConstruct(state: GameState, ownerId: string, cardId: string): GameState {
   return update(state, ownerId, p => {
@@ -64,7 +80,7 @@ export function geoAmuletsTurnEnd(state: GameState, ownerId: string): GameState 
 export function geoPlay(state: GameState, ownerId: string, cardId: string): GameState {
   if (state.winnerId !== null) return state
   if (cardId === 'C095' || cardId === 'C097') {
-    return update(state, ownerId, p => addLeaderShield(p, 2, 'crystallize'))
+    return gainGeoCrystallize(state, ownerId, 2)
   }
   if (cardId !== 'C096') return state
   return update(state, ownerId, p => ({
@@ -96,7 +112,7 @@ export function geoAttack(state: GameState, ownerId: string, attackerId: string)
   const owner = state.players.find(p => p.id === ownerId)
   const attacker = owner?.field.find(f => f.instanceId === attackerId && f.health > 0)
   if (!owner || !attacker) return state
-  if (attacker.cardId === 'C089') return update(state, ownerId, p => addLeaderShield(p, 1, 'crystallize'))
+  if (attacker.cardId === 'C089') return gainGeoCrystallize(state, ownerId, 1)
   if (attacker.cardId === 'C094') return update(state, ownerId, p => healLeader(p, 2))
   if (attacker.cardId === 'C092') {
     const opponent = state.players.find(p => p.id !== ownerId)
@@ -118,8 +134,8 @@ export function geoEngage(
   if (!own || !foe) return state
   const attacker = own.field.find(f => f.instanceId === attackerId)
   const defender = foe.field.find(f => f.instanceId === defenderId)
-  if (attacker?.cardId === 'C093') return update(state, own.id, p => addLeaderShield(p, 2, 'crystallize'))
-  if (defender?.cardId === 'C093') return update(state, foe.id, p => addLeaderShield(p, 2, 'crystallize'))
+  if (attacker?.cardId === 'C093') return gainGeoCrystallize(state, own.id, 2)
+  if (defender?.cardId === 'C093') return gainGeoCrystallize(state, foe.id, 2)
   return state
 }
 
@@ -221,7 +237,7 @@ export function geoTurnEnd(state: GameState, ownerId: string, sourceId: string):
   const source = state.players.find(p => p.id === ownerId)?.field.find(f =>
     f.instanceId === sourceId && f.health > 0)
   if (source?.cardId !== 'C100') return state
-  return update(state, ownerId, p => addLeaderShield(p, 1, 'crystallize'))
+  return gainGeoCrystallize(state, ownerId, 1)
 }
 
 /** Attack-declaration trigger granted by the Geo spell C091. */
@@ -229,4 +245,48 @@ export function geoSweepAttack(state: GameState, ownerId: string, attackerId: st
   deaths: (s: GameState) => GameState): GameState {
   const attacker = state.players.find(p => p.id === ownerId)?.field.find(f => f.instanceId === attackerId && f.health > 0)
   return attacker?.keywords.includes('geo_sweep') ? geoHitAll(state, ownerId, 1, deaths) : state
+}
+
+/** C099: consume up to 3 crystallize shields, then deal Geo 1 + 2x to the chosen foe. */
+export function geoNaviaSkill(state: GameState, ownerId: string, targetId?: string): GameState {
+  const ownerIndex = state.players.findIndex(p => p.id === ownerId)
+  if (ownerIndex < 0 || !targetId) return state
+  const p = state.players[ownerIndex]
+  const enemy = state.players[1 - ownerIndex]
+  const victim = enemy.field.find(f => f.instanceId === targetId && f.health > 0)
+  if (!victim) return state
+  const consumed = Math.min(3, p.leaderShield?.crystallize ?? 0)
+  const players = [...state.players] as [Player, Player]
+  const shield = p.leaderShield ?? { normal: 0, crystallize: 0 }
+  players[ownerIndex] = { ...p, leaderShield: { ...shield, crystallize: shield.crystallize - consumed } }
+  const hit = resolveElementalDamage(victim, 1 + consumed * 2, 'geo')
+  players[1 - ownerIndex] = { ...enemy, field: enemy.field.map(f => f.instanceId === targetId ? hit.follower : f) }
+  return resolveReactionConsequence({ ...state, players }, 1 - ownerIndex, targetId,
+    hit.reaction, hit.reactedElement, ownerIndex)
+}
+
+/** C099: Geo AoE one, crystallize one, then create a two-turn crest. */
+export function geoNaviaBurst(state: GameState, ownerId: string,
+  deaths: (s: GameState) => GameState): GameState {
+  let result = geoHitAll(state, ownerId, 1, deaths)
+  if (result.winnerId !== null) return result
+  result = gainGeoCrystallize(result, ownerId, 1)
+  return update(result, ownerId, p => ({ ...p,
+    crests: [...(p.crests ?? []), { id: 'C099', turnsRemaining: 2, usedElements: [] }],
+  }))
+}
+
+export function geoNaviaCrestsTurnEnd(state: GameState, ownerId: string,
+  deaths: (s: GameState) => GameState): GameState {
+  const count = (state.players.find(p => p.id === ownerId)?.crests ?? []).filter(c => c.id === 'C099').length
+  let result = state
+  for (let i = 0; i < count && result.winnerId === null; i++) {
+    result = geoHitAll(result, ownerId, 1, deaths)
+    if (result.winnerId !== null) break
+    result = gainGeoCrystallize(result, ownerId, 1)
+  }
+  if (result.winnerId !== null) return result
+  return update(result, ownerId, p => ({ ...p, crests: (p.crests ?? []).map(c =>
+    c.id === 'C099' ? { ...c, turnsRemaining: c.turnsRemaining - 1 } : c
+  ).filter(c => c.turnsRemaining > 0) }))
 }
