@@ -1850,3 +1850,13 @@ test('召喚系スキルは場5枠が埋まっていると発動不可・PPやEN
   assert.equal(state.players[0].pp, 5)
   assert.equal(state.players[0].energy, 0)
 })
+
+test('カード検証：元素スキルのPPコストは0以上の整数のみ', async () => {
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const card = engine.getCard('C019')
+  assert.deepEqual(validateProductionCards([card]).errors, [])
+  for (const invalid of [-1, 0.5, NaN]) {
+    const bad = { ...card, elementalSkill: { ...card.elementalSkill, ppCost: invalid } }
+    assert.ok(validateProductionCards([bad]).errors.some(e => e.includes('元素スキル')))
+  }
+})
