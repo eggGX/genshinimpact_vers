@@ -86,8 +86,6 @@ function App() {
   }
 
   const handlePlayCard = (handIndex: number) => {
-    if (!canPlayCard(game, handIndex)) return
-
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
