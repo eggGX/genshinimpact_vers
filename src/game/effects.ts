@@ -7,7 +7,7 @@ import type {
   Player,
 } from './types'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
-import { damageLeader } from './leaderShield'
+import { damageLeader, healLeader } from './leaderShield'
 
 /**
  * 効果を順番に実行する。
@@ -194,8 +194,7 @@ function applyEffect(
 
   const nextLeader = effect.type === 'damage'
     ? damageLeader(targetPlayer, value)
-    : { ...targetPlayer,
-        leaderHealth: Math.min(targetPlayer.leaderMaxHealth, targetPlayer.leaderHealth + value) }
+    : healLeader(targetPlayer, value)
   const health = nextLeader.leaderHealth
   players[targetIndex] = nextLeader
 
