@@ -45,7 +45,7 @@ export function resolveDilucBurst(
 ): GameState {
   const ownerIndex = state.players.findIndex(p => p.id === ownerId)
   if (ownerIndex < 0) return state
-  let result = hitAllEnemyFollowers(state, ownerId, 3, resolveDeaths)
+  const result = hitAllEnemyFollowers(state, ownerId, 3, resolveDeaths)
   if (result.winnerId !== null) return result
   const enemyIndex = 1 - ownerIndex
   const enemy = result.players[enemyIndex]
