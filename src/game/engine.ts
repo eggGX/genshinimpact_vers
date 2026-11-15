@@ -619,7 +619,7 @@ export function activateAbility(
     result = geoSkill(result, owner.id, followerId, card.id)
     if (card.id === 'C099') result = geoNaviaSkill(result, owner.id, targetId)
     result = dendroGoldSkill(result, owner.id, followerId, card.id, targetId)
-    result = dendroLegendarySkill(result, owner.id, followerId, card.id, targetId)
+    result = dendroLegendarySkill(result, owner.id, card.id, targetId)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
