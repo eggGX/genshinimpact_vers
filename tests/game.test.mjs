@@ -3472,3 +3472,41 @@ test('殺生櫻はトークンであり通常デッキへ混入しない',async(
   assert.equal(sakura.token,true)
   assert.equal(getDeckCardPool().some(c=>c.id===sakura.id),false)
 })
+
+test('C066 九条裟羅：他に雷フォロワーがいない場合はファンファーレをスキップして召喚可能',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C066'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field[0].cardId,'C066')
+  assert.equal(state.players[0].field[0].attack,3)
+})
+
+test('C069 八重神子：場が5枠埋まっている場合はスキル不発でPPとENを保持',()=>{
+  let state=startedGame()
+  const yae=place(state,0,'C069',3,5)
+  for(let i=0;i<4;i++)place(state,0,'C001',1,2)
+  state.players[0].pp=5
+  assert.equal(engine.canUseAbility(state,yae.instanceId,'skill'),false)
+  assert.equal(engine.activateAbility(state,yae.instanceId,'skill'),state)
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[0].pp,5)
+})
+
+test('C069 八重神子：次の自分のターンにはスキル使用回数がリセットされる',()=>{
+  let state=startedGame()
+  const yae=place(state,0,'C069',3,5)
+  state.players[0].pp=2
+  state=engine.activateAbility(state,yae.instanceId,'skill')
+  assert.equal(state.players[0].field[0].skillUsesThisTurn,1)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].skillUsesThisTurn,0)
+  assert.equal(engine.canUseAbility(state,yae.instanceId,'skill'),true)
+})
+
+test('C067 オロルン：次の自分ターンに感電回数制限がリセットされる',()=>{
+  let state=startedGame()
+  const ororon=place(state,0,'C067',2,4)
+  ororon.electroChargedTriggersThisTurn=2
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].electroChargedTriggersThisTurn,0)
+})
