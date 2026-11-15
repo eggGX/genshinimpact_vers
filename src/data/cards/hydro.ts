@@ -92,8 +92,8 @@ export const hydroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分のフォロワー1体に【攻撃時】水元素1ダメージを与える能力を付与する（攻撃時ダメージの対象は要確認）。",
-    "implementationStatus": "data_only"
+    "description": "自分のフォロワー1体を選ぶ。そのフォロワーは【攻撃時】今攻撃している対象に水元素1ダメージを与える能力を持つ。",
+    "implementationStatus": "playable"
   },
   {
     "id": "C031",
