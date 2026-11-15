@@ -420,9 +420,14 @@ function App() {
       <header className="game-header">
         <h1>原神カードゲーム</h1>
         <span>TURN {game.turn}</span>
-        <button type="button" onClick={handleReset}>
-          ゲームリセット
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button type="button" onClick={() => setShowCardLibrary(true)}>
+            カード一覧
+          </button>
+          <button type="button" onClick={handleReset}>
+            ゲームリセット
+          </button>
+        </div>
       </header>
 
       {winner && (
