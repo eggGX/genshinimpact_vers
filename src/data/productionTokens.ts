@@ -27,4 +27,18 @@ export const productionTokens: Card[] = [
     token: true,
     description: '【自分のターン終了時】ランダムな敵フォロワーまたはリーダーに炎元素2ダメージ。これを2回。',
   },
+  {
+    id: 'token-funny-hat-cat',
+    name: 'ファニーハット・キャット',
+    type: 'follower',
+    rarity: 'legendary',
+    element: 'pyro',
+    cost: 5,
+    attack: 5,
+    health: 5,
+    token: true,
+    normalAttackElement: 'pyro',
+    keywords: ['rush', 'aura', 'intimidate'],
+    description: '【突進】【オーラ】【威圧】【元素攻撃：炎】【自分のターン開始時】自身を破壊。【ラストワード】「幻惑のトリック・リネ」1体を召喚。',
+  },
 ]
