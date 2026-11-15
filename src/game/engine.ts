@@ -180,7 +180,7 @@ export function canPlayCard(
 
   if (
     needsPlayTarget(card) &&
-    enemy.field.length === 0
+    !enemy.field.some(f => f.health > 0 && !f.keywords.includes('aura'))
   ) {
     return false
   }
@@ -242,7 +242,8 @@ function resolveDeaths(state: GameState): GameState {
         card?.effects ?? [],
         'on_destroy',
         undefined,
-        follower.instanceId
+        follower.instanceId,
+        resolveDeaths
       )
     }
 
@@ -292,7 +293,8 @@ function resolveTurnEffects(
       card?.effects ?? [],
       trigger,
       undefined,
-      sourceId
+      sourceId,
+      resolveDeaths
     )
 
     result = resolveDeaths(result)
@@ -327,7 +329,7 @@ export function playCard(
 
     if (
       !targetId ||
-      !enemy.field.some(f => f.instanceId === targetId)
+      !enemy.field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura'))
     ) {
       return state
     }
@@ -373,7 +375,8 @@ export function playCard(
     card.effects ?? [],
     'on_play',
     targetId,
-    follower.instanceId
+    follower.instanceId,
+    resolveDeaths
   )
 
   return resolveDeaths(result)
@@ -403,7 +406,7 @@ export function canUseAbility(
   const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
   if (!ability || (kind === 'skill' ? follower.skillUsed : follower.burstUsed)) return false
   if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
-  if (card && needsAbilityTarget(card, kind) && state.players[1 - index].field.length === 0) {
+  if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura'))) {
     return false
   }
   return true
@@ -423,7 +426,7 @@ export function activateAbility(
   const card = getCard(follower.cardId)!
   const ability = kind === 'skill' ? card.elementalSkill! : card.elementalBurst!
   if (needsAbilityTarget(card, kind) &&
-      (!targetId || !state.players[1 - index].field.some(f => f.instanceId === targetId))) {
+      (!targetId || !state.players[1 - index].field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura')))) {
     return state
   }
   const players = [...state.players] as [Player, Player]
@@ -441,7 +444,8 @@ export function activateAbility(
   }
   let result: GameState = { ...state, players }
   result = resolveEffects(
-    result, owner.id, ability.effects, kind, targetId, followerId
+    result, owner.id, ability.effects, kind, targetId, followerId,
+    resolveDeaths
   )
   return resolveDeaths(result)
 }
@@ -485,7 +489,8 @@ export function attackFollower(
     f => f.instanceId === targetId
   )
 
-  if (!attacker || !defender) return state
+  if (!attacker || !defender || defender.health <= 0 ||
+      defender.keywords.includes('intimidate')) return state
   if (!canFollowerAttack(attacker)) return state
 
   const attackDamage = Math.max(0, attacker.attack)
