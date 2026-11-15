@@ -20,3 +20,14 @@ export function damageLeader(player: Player, amount: number): Player {
     leaderHealth: Math.max(0, player.leaderHealth - remaining),
   }
 }
+
+/** Bond of Life absorbs healing before it can restore the leader's HP. */
+export function healLeader(player: Player, amount: number): Player {
+  let heal = Math.max(0, Math.trunc(amount))
+  const absorbed = Math.min(player.bondOfLife ?? 0, heal)
+  heal -= absorbed
+  return { ...player,
+    bondOfLife: Math.max(0, (player.bondOfLife ?? 0) - absorbed),
+    leaderHealth: Math.min(player.leaderMaxHealth, player.leaderHealth + heal),
+  }
+}
