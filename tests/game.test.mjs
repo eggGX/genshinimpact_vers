@@ -991,10 +991,10 @@ test('正式70枚登録時はエラーなし・予定45枚が不足と判定', a
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 85)
+  assert.equal(report.total, 100)
   assert.equal(report.plannedTotal, 115)
   assert.equal(report.slots.length, 32)
-  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 30)
+  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 15)
   assert.equal(report.ready, false)
 })
 
@@ -1113,14 +1113,14 @@ test('無元素カードの説明には確定した能力を保持し未実装�
   assert.match(neutralCards[9].description, /カウントダウン7/)
 })
 
-test('無元素・炎・水の登録数は85/115で残り30枚', async () => {
+test('無元素・炎・水の登録数は100/115で残り15枚', async () => {
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 85)
+  assert.equal(report.total, 100)
   assert.equal(report.plannedTotal, 115)
-  assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),30)
+  assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),15)
   assert.equal(report.slots.filter(s => s.element === 'none').every(s => s.remaining === 0),true)
   assert.equal(report.ready,false)
 })
@@ -1347,13 +1347,13 @@ test('正式炎カードC011-C025は15枚・B4/S4/G4/L3で原本の名前とコ�
   assert.ok(pyroCards.every(c=>c.element==='pyro'))
 })
 
-test('炎元素15枚に水15枚を加え正式カードは85/115、残り30枚', async () => {
+test('炎元素15枚に水15枚を加え正式カードは100/115、残り15枚', async () => {
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const result=validateProductionCards(productionCards)
-  assert.equal(result.total,85)
+  assert.equal(result.total,100)
   assert.equal(result.slots.filter(s=>s.element==='pyro').reduce((n,s)=>n+s.remaining,0),0)
-  assert.equal(result.slots.reduce((n,s)=>n+s.remaining,0),30)
+  assert.equal(result.slots.reduce((n,s)=>n+s.remaining,0),15)
   assert.deepEqual(result.errors,[])
 })
 
@@ -2185,9 +2185,9 @@ test('STEP30 構築済み水元素15枚と正式登録総数を照合',async()=>
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,85)
+  assert.equal(report.total,100)
   assert.equal(report.slots.filter(s=>s.element==='hydro').reduce((n,s)=>n+s.remaining,0),0)
-  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),30)
+  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
   assert.equal(report.ready,false)
 })
 
@@ -2644,9 +2644,9 @@ test('STEP32 旧実装に加え雷・風15枚登録済み・残り30枚',async()
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const result=validateProductionCards(productionCards)
   assert.deepEqual(result.errors,[])
-  assert.equal(result.total,85)
+  assert.equal(result.total,100)
   assert.equal(result.slots.filter(x=>x.element==='cryo').reduce((n,x)=>n+x.remaining,0),0)
-  assert.equal(result.slots.reduce((n,x)=>n+x.remaining,0),30)
+  assert.equal(result.slots.reduce((n,x)=>n+x.remaining,0),15)
 })
 
 test('STEP33 氷15枚は全て登録済みかつデッキ候補として対戦可能',async()=>{
@@ -3069,9 +3069,9 @@ test('STEP34 正式85/115、雷15枚の予定枠充足、残り30枚',async()=>{
   const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const validation=validateProductionCards(productionCards)
   assert.deepEqual(validation.errors,[])
-  assert.equal(validation.total,85)
+  assert.equal(validation.total,100)
   assert.equal(validation.slots.filter(s=>s.element==='electro').reduce((n,s)=>n+s.remaining,0),0)
-  assert.equal(validation.slots.reduce((n,s)=>n+s.remaining,0),30)
+  assert.equal(validation.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
 test('STEP35 雷元素15枚すべて対戦対応しデッキに含める',async()=>{
@@ -3545,14 +3545,14 @@ test('STEP36 風15枚のカードタイプ・ステータス・地域・対戦�
     anemoCards.map(c=>c.id))
 })
 
-test('STEP36 登録は85/115・風元素15枚の枠を充足・残り30枚',async()=>{
+test('STEP36 登録は100/115・風元素15枚の枠を充足・残り15枚',async()=>{
   const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,85)
+  assert.equal(report.total,100)
   assert.equal(report.slots.filter(s=>s.element==='anemo').reduce((n,s)=>n+s.remaining,0),0)
-  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),30)
+  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
 test('STEP37 風元素15枚すべてデッキ候補へ',async()=>{
