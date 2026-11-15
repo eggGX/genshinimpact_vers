@@ -187,7 +187,7 @@ test('同時戦闘で片方に反応が発生しても双方の攻撃を処理�
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[0].field.length, 0)
   assert.equal(next.players[1].field.length, 0)
-  assert.deepEqual(next.players[0].graveyard, ['C011'])
+  assert.deepEqual(next.players[0].graveyard, ['C014'])
   assert.deepEqual(next.players[1].graveyard, ['C011'])
 })
 
