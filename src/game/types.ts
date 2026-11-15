@@ -74,6 +74,7 @@ export interface Card {
   elementalCreature?: boolean
   /** Tokens are not shuffled into the 40-card test deck. */
   token?: boolean
+  keywords?: string[]
   /** data_only cards are visible in the catalogue but not yet executable. */
   implementationStatus?: 'data_only' | 'playable'
   id: string
