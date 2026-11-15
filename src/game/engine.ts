@@ -11,6 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
+import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
@@ -154,7 +155,7 @@ export function confirmMulligan(
  */
 /** A self-buff fanfare can choose an existing ally or the new follower itself. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044', 'C066'].includes(card.id)
+  return ['C021', 'C044', 'C066', 'C081'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
@@ -323,6 +324,7 @@ function resolveTurnEffects(
       result = cryoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = electroTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = advancedElectroTurnEnd(result, playerId, sourceId)
+      result = advancedAnemoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
   }
@@ -351,9 +353,9 @@ export function playCard(
   const cardId = player.hand[handIndex]
   const card = getCard(cardId)!
 
-  if (card.id === 'C066') {
+  if (card.id === 'C066' || card.id === 'C081') {
     const choices = player.field.filter(f => f.health > 0 &&
-      getCard(f.cardId)?.element === 'electro')
+      getCard(f.cardId)?.element === (card.id === 'C081' ? 'anemo' : 'electro'))
     if (choices.length && (!targetId ||
         !choices.some(f => f.instanceId === targetId))) return state
     if (!choices.length && targetId) return state
@@ -393,6 +395,7 @@ export function playCard(
     next = cryoSpell(next, playerId, card.id, resolveDeaths)
     next = electroSpell(next, playerId, card.id)
     next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
+    next = advancedAnemoSpell(next, playerId, card.id)
     return resolveDeaths(next)
   }
 
@@ -406,6 +409,7 @@ export function playCard(
     const next = { ...state, players }
     if (card.id === 'C016') return resolvePyroAmuletPlay(next, playerId)
     if (card.id === 'C072') return resolveAnemoAmuletPlay(next, playerId, card.id)
+    if (card.id === 'C076') return advancedAnemoAmuletPlay(next, playerId, card.id)
     return next
   }
 
@@ -464,6 +468,7 @@ export function playCard(
     result = electroPlay(result, playerId, card.id)
     result = advancedElectroPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = resolveAnemoPlay(result, playerId, card.id)
+    result = advancedAnemoPlay(result, playerId, card.id, follower.instanceId, targetId)
   }
   return resolveDeaths(result)
 }
@@ -495,11 +500,13 @@ export function canUseAbility(
   const card = getCard(follower.cardId)
   const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
   if (!ability || (kind === 'skill'
-    ? (card?.id === 'C023' || card?.id === 'C069'
-      ? (follower.skillUsesThisTurn ?? (follower.skillUsed ? 1 : 0)) >= 3
+    ? (card?.id === 'C023' || card?.id === 'C069' || card?.id === 'C084'
+      ? (follower.skillUsesThisTurn ?? (follower.skillUsed ? 1 : 0)) >= (card?.id === 'C084' ? 2 : 3)
       : follower.skillUsed)
     : follower.burstUsed)) return false
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
+  if (kind === 'skill' && card?.id === 'C083' && !owner.hand.some(id =>
+      ['pyro', 'hydro', 'cryo', 'electro'].includes(getCard(id)?.element ?? ''))) return false
   if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'skill' && card?.id === 'C069' &&
@@ -540,6 +547,12 @@ export function activateAbility(
         !choices.some(f => f.instanceId === targetId)) {
       return state
     }
+  }
+  if (card.id === 'C083' && kind === 'skill') {
+    if (!targetId?.startsWith('hand:')) return state
+    const handIndex = Number(targetId.slice(5))
+    if (!Number.isInteger(handIndex) || handIndex < 0 || handIndex >= owner.hand.length ||
+        !['pyro','hydro','cryo','electro'].includes(getCard(owner.hand[handIndex])?.element ?? '')) return state
   }
   if (card.id === 'C066' && kind === 'skill' && (!targetId ||
       !owner.field.some(f => f.instanceId === targetId && f.health > 0 &&
@@ -588,12 +601,14 @@ export function activateAbility(
     result = cryoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
     result = advancedElectroSkill(result, owner.id, followerId, card.id, targetId, resolveDeaths)
     result = resolveAnemoSkill(result, owner.id, followerId, card.id)
+    result = advancedAnemoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
     result = resolveHydroAdvancedBurst(result, owner.id, followerId, card.id, resolveDeaths)
     result = cryoBurst(result, owner.id, card.id, resolveDeaths)
     result = advancedElectroBurst(result, owner.id, followerId, card.id, resolveDeaths)
+    result = advancedAnemoBurst(result, owner.id, card.id, followerId, resolveDeaths)
   }
   return resolveDeaths(result)
 }
@@ -656,7 +671,8 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = resolveAnemoAttack(
+  const buffed = advancedAnemoAttack(
+    resolveAnemoAttack(
     advancedElectroAttack(
     electroAttack(
     cryoAttack(
@@ -670,12 +686,14 @@ export function attackFollower(
     ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
+    ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
   const counterDamage = effectiveAttack(state, enemy.id, defender)
-  const attackerElement = boostedAttacker.keywords.includes('normal_attack_electro')
+  const attackerElement = boostedAttacker.keywords.includes('normal_attack_anemo')
+    ? 'anemo' : boostedAttacker.keywords.includes('normal_attack_electro')
     ? 'electro' : boostedAttacker.keywords.includes('normal_attack_cryo')
       ? 'cryo' : boostedAttacker.keywords.includes('normal_attack_hydro')
         ? 'hydro' : boostedAttacker.keywords.includes('normal_attack_pyro')
@@ -716,7 +734,8 @@ export function attackFollower(
   )
   result = resolveDeaths(result)
   result = resolvePyroAttackAfter(result, owner.id, attackerId)
-  return advancedElectroAttackAfter(result, owner.id, attackerId, resolveDeaths)
+  result = advancedElectroAttackAfter(result, owner.id, attackerId, resolveDeaths)
+  return advancedAnemoAttackAfter(result, owner.id, attackerId)
 }
 
 /**
@@ -757,7 +776,8 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = resolveAnemoAttack(
+  const buffed = advancedAnemoAttack(
+    resolveAnemoAttack(
     advancedElectroAttack(
     electroAttack(
     cryoAttack(
@@ -768,6 +788,7 @@ export function attackLeader(
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
+    ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
@@ -799,7 +820,7 @@ export function attackLeader(
     winnerId: hp === 0 ? owner.id : null,
   }, owner.id, attackerId)
   result = advancedElectroAttackAfter(result, owner.id, attackerId, resolveDeaths)
-  return result
+  return advancedAnemoAttackAfter(result, owner.id, attackerId)
 }
 
 /**
@@ -872,6 +893,12 @@ export function endTurn(state: GameState): GameState {
 
   result = resolveAnemoAmuletsTurnEnd(result, currentId)
   if (result.winnerId !== null) return result
+
+  result = advancedAnemoAmuletsTurnEnd(result, currentId, resolveDeaths)
+  if (result.winnerId !== null) return result
+  result = advancedAnemoBothTurnEnd(result, resolveDeaths)
+  if (result.winnerId !== null) return result
+  result = resetAnemoTurnStatuses(result, currentId)
 
   // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
   // ダメージ・持続時間は暫定のテスト仕様。
@@ -970,6 +997,7 @@ export function endTurn(state: GameState): GameState {
     burstUsed: false,
     skillUsesThisTurn: 0,
     electroChargedTriggersThisTurn: 0,
+    swirlDrawsThisTurn: 0,
     keywords: f.keywords.filter(keyword => keyword !== 'rush_only'),
   }))
 
