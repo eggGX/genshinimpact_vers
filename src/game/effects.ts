@@ -141,6 +141,7 @@ function applyEffect(
             effect.element
           )
           reaction = outcome.reaction
+          reactedElement = outcome.reactedElement
           return outcome.follower
         }
 
@@ -158,7 +159,8 @@ function applyEffect(
       { ...state, players },
       targetIndex,
       instanceId,
-      reaction
+      reaction,
+      reactedElement
     )
   }
 
