@@ -12,7 +12,7 @@ import {
   getCard,
   needsPlayTarget,
   needsAbilityTarget,
-  useAbility,
+  activateAbility,
   playCard,
 } from './game/engine'
 import type { Follower } from './game/types'
@@ -113,7 +113,7 @@ function App() {
       setSelectedHandIndex(null)
       return
     }
-    setGame(previous => useAbility(previous, follower.instanceId, kind))
+    setGame(previous => activateAbility(previous, follower.instanceId, kind))
     resetSelection()
   }
 
@@ -147,7 +147,7 @@ function App() {
 
     if (selectedAbility) {
       const { followerId, kind } = selectedAbility
-      setGame(previous => useAbility(previous, followerId, kind, targetId))
+      setGame(previous => activateAbility(previous, followerId, kind, targetId))
       resetSelection()
       return
     }
@@ -433,7 +433,7 @@ function App() {
         </button>
 
         <div className="pp">
-          PP {opponent.pp} / {opponent.maxPp}　EN {opponent.energy} / 5
+          PP {opponent.pp} / {opponent.maxPp} EN {opponent.energy} / 5
         </div>
         <div>デッキ：{opponent.deck.length}枚</div>
         <div>手札：{opponent.hand.length}枚</div>
@@ -467,7 +467,7 @@ function App() {
         </div>
 
         <div className="pp">
-          PP {currentPlayer.pp} / {currentPlayer.maxPp}　EN {currentPlayer.energy} / 5
+          PP {currentPlayer.pp} / {currentPlayer.maxPp} EN {currentPlayer.energy} / 5
         </div>
         <div>デッキ：{currentPlayer.deck.length}枚</div>
         <div>手札：{currentPlayer.hand.length}枚</div>
