@@ -71,6 +71,40 @@ export function resolveElementalDamage(
   const physicalKeywords = physicalBonus
     ? follower.keywords.filter(k => k !== 'superconduct') : follower.keywords
 
+  // 激化の残り回数を優先消費し、同じ攻撃で再度原激化しない。
+  if (base > 0 && (incomingElement === 'electro' || incomingElement === 'dendro')) {
+    const charge = physicalKeywords.find(k => k.startsWith('quicken:'))
+    if (charge) {
+      const rest = Math.max(0, (Number(charge.slice(8)) || 0) - 1)
+      return {
+        follower: {
+          ...follower,
+          health: follower.health - base - physicalBonus,
+          keywords: [
+            ...physicalKeywords.filter(k => !k.startsWith('quicken:')),
+            ...(rest ? [`quicken:${rest}`] : []),
+          ],
+        },
+        damage: base + physicalBonus,
+        reaction: null,
+      }
+    }
+  }
+
+  // 燃焼中への炎・草の追加攻撃は継続ターンを加算する。
+  if (base > 0 && (incomingElement === 'pyro' || incomingElement === 'dendro')) {
+    const burning = physicalKeywords.find(k => k.startsWith('burning:'))
+    if (burning) {
+      const turns = Number(burning.slice(8)) || 0
+      return {
+        follower: { ...follower, health: follower.health - base,
+          keywords: [...physicalKeywords.filter(k => !k.startsWith('burning:')), `burning:${turns + 1}`] },
+        damage: base,
+        reaction: 'burning',
+      }
+    }
+  }
+
   const index = incomingElement
     ? follower.aura.findIndex(aura =>
         reactionFor(aura.element, incomingElement) !== null)
