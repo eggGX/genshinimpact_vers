@@ -11,7 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
-import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses } from './anemoAdvancedRules'
+import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
@@ -644,13 +644,13 @@ export function attackFollower(
   if (index < 0) return state
 
   const enemyIndex = 1 - index
-  const owner = state.players[index]
-  const enemy = state.players[enemyIndex]
+  let owner = state.players[index]
+  let enemy = state.players[enemyIndex]
 
-  const attacker = owner.field.find(
+  let attacker = owner.field.find(
     f => f.instanceId === attackerId
   )
-  const defender = enemy.field.find(
+  let defender = enemy.field.find(
     f => f.instanceId === targetId
   )
 
@@ -661,6 +661,14 @@ export function attackFollower(
   if (isGuarded(enemy) && !defender.keywords.includes('guard') &&
       !attacker.keywords.includes('ignore_guard') &&
       !attacker.keywords.includes('plunge_attack')) return state
+
+  state = catBoxEngage(state, owner.id, attackerId, targetId, resolveDeaths)
+  if (state.winnerId !== null) return state
+  owner = state.players[index]
+  enemy = state.players[enemyIndex]
+  attacker = owner.field.find(f => f.instanceId === attackerId)
+  defender = enemy.field.find(f => f.instanceId === targetId)
+  if (!attacker || !defender || attacker.health <= 0 || defender.health <= 0) return state
 
   const declared: GameState = {
     ...state,
