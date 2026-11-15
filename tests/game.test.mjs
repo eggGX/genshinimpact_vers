@@ -818,3 +818,107 @@ test('使用可能な効果なし・ゲーム終了後は能力使用不可', ()
   state.winnerId = 'player1'
   assert.equal(engine.canUseAbility(state, caster.instanceId, 'skill'), false)
 })
+
+test('複数効果は順番に処理し破壊時のラストワードを次の効果より先に解決する', () => {
+  const state = startedGame()
+  const caster = place(state, 0, 'test-chain-caster', 1, 4)
+  const enemy = place(state, 1, 'test-hilichurl', 1, 2)
+  state.players[1].leaderHealth = 20
+  const next = engine.activateAbility(state, caster.instanceId, 'skill', enemy.instanceId)
+  assert.equal(next.players[1].field.length, 0)
+  assert.deepEqual(next.players[1].graveyard, ['test-hilichurl'])
+  // 敵ラストワードの+2は満タンで溢れ、続くリーダー2ダメージで18になる
+  assert.equal(next.players[1].leaderHealth, 18)
+  assert.equal(next.players[0].energy, 1)
+})
+
+test('途中で対象が破壊されても後続のリーダー効果は実行される', () => {
+  const state = startedGame()
+  const caster = place(state, 0, 'test-chain-caster', 1, 4)
+  const target = place(state, 1, 'test-mage', 1, 1)
+  const next = engine.activateAbility(state, caster.instanceId, 'skill', target.instanceId)
+  assert.equal(next.players[1].field.length, 0)
+  assert.equal(next.players[1].leaderHealth, 18)
+  assert.equal(next.players[0].field[0].skillUsed, true)
+})
+
+test('途中で勝敗が確定した場合は後続の回復効果を実行しない', () => {
+  const state = startedGame()
+  const caster = place(state, 0, 'test-chain-caster', 1, 4)
+  state.players[0].energy = 2
+  const next = engine.activateAbility(state, caster.instanceId, 'burst')
+  assert.equal(next.winnerId, 'player1')
+  assert.equal(next.players[1].leaderHealth, 0)
+  assert.equal(next.players[0].energy, 0)
+})
+
+test('オーラ：選択対象がオーラのみなら対象指定能力を使用できない', () => {
+  const state = startedGame()
+  const caster = place(state, 0, 'test-elemental-caster', 1, 4)
+  state.players[0].energy = 2
+  const protectedUnit = place(state, 1, 'test-mage', 1, 4)
+  protectedUnit.keywords = ['aura']
+  assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), false)
+  assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', protectedUnit.instanceId), state)
+})
+
+test('オーラ：別の選択可能な敵がいれば能力を発動できるがオーラは選べない', () => {
+  const state = startedGame()
+  const caster = place(state, 0, 'test-elemental-caster', 1, 4)
+  state.players[0].energy = 2
+  const protectedUnit = place(state, 1, 'test-mage', 1, 4)
+  protectedUnit.keywords = ['aura']
+  const ordinary = place(state, 1, 'test-mage', 1, 4)
+  assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), true)
+  assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', protectedUnit.instanceId), state)
+  const next = engine.activateAbility(state, caster.instanceId, 'burst', ordinary.instanceId)
+  assert.equal(next.players[1].field[0].health, 4)
+  assert.equal(next.players[1].field[1].health, 1)
+  assert.equal(next.players[0].energy, 0)
+})
+
+test('オーラ：ファンファーレで対象に選べずPPも手札も消費しない', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-archer']
+  const target = place(state, 1, 'test-mage', 1, 4)
+  target.keywords = ['aura']
+  assert.equal(engine.canPlayCard(state, 0), false)
+  assert.equal(engine.playCard(state, 'player1', 0, target.instanceId), state)
+  place(state, 1, 'test-mage', 1, 4)
+  assert.equal(engine.canPlayCard(state, 0), true)
+  assert.equal(engine.playCard(state, 'player1', 0, target.instanceId), state)
+})
+
+test('威圧：フォロワーからの攻撃だけ防ぎ効果の対象には選べる', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-hilichurl', 3, 5)
+  const intimidating = place(state, 1, 'test-mage', 1, 6)
+  intimidating.keywords = ['intimidate']
+  assert.equal(engine.attackFollower(state, attacker.instanceId, intimidating.instanceId), state)
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-archer']
+  const next = engine.playCard(state, 'player1', 0, intimidating.instanceId)
+  assert.equal(next.players[1].field[0].health, 4)
+})
+
+test('オーラのフォロワーは通常攻撃対象には選べる', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-hilichurl', 2, 5)
+  const target = place(state, 1, 'test-mage', 1, 6)
+  target.keywords = ['aura']
+  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
+  assert.equal(next.players[1].field[0].health, 4)
+})
+
+test('複数効果中の元素反応でも後続効果と使用済み状態が保持される', () => {
+  const state = startedGame()
+  const caster = place(state, 0, 'test-chain-caster', 1, 4)
+  const enemy = place(state, 1, 'test-hydro-elemental', 1, 9)
+  enemy.aura = [{ element: 'hydro' }]
+  const next = engine.activateAbility(state, caster.instanceId, 'skill', enemy.instanceId)
+  assert.equal(next.players[1].field[0].health, 1) // 2+2 then 2+2 reaction from inherent hydro
+  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'hydro' }])
+  assert.equal(next.players[1].leaderHealth, 18)
+  assert.equal(next.players[0].field[0].skillUsed, true)
+})
