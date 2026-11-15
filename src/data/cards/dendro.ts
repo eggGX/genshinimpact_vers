@@ -79,7 +79,7 @@ export const dendroCards: Card[] = [
       "璃月"
     ],
     "description": "「月桂・跳躍型」2体召喚。自分のフォロワーすべてとリーダーを2回復。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C106",
@@ -92,7 +92,7 @@ export const dendroCards: Card[] = [
       "スメール"
     ],
     "description": "敵フォロワーすべてに草元素1ダメージ。アミュレット「コレアンバー」を場に出す（カウントダウン2、自ターン終了時：敵フォロワーすべてに草元素1ダメージ）。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C107",
