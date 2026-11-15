@@ -8,6 +8,7 @@ import type {
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
+import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
@@ -310,6 +311,7 @@ function resolveTurnEffects(
       result = resolvePyroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveHydroTurnEnd(result, playerId, sourceId)
       result = resolveHydroAdvancedTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = resolveCryoTurnEnd(result, playerId, sourceId)
       result = resolveDeaths(result)
     }
   }
@@ -434,6 +436,7 @@ export function playCard(
     result = resolveNeutralPlay(result, playerId, card)
     result = resolvePyroGoldPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = resolveHydroAdvancedPlay(result, playerId, card.id)
+    result = resolveCryoPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
