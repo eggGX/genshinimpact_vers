@@ -1627,3 +1627,226 @@ test('潜伏中の敵フォロワーはスキルとファンファーレの選�
   assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), false)
   assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', hidden.instanceId), state)
 })
+
+test('STEP28 炎ゴールド4枚は対戦対応、PP消費型スキルと原本の能力文を保持', async () => {
+  const { pyroCards } = await vite.ssrLoadModule('/src/data/cards/pyro.ts')
+  const cards = pyroCards.filter(c => Number(c.id.slice(1)) >= 19 && Number(c.id.slice(1)) <= 22)
+  assert.deepEqual(cards.map(c => c.name), [
+    '偵察騎士・アンバー', '万民百味・香菱',
+    'ペニー冒険団・ベネット', '特巡隊隊長・シュヴルーズ',
+  ])
+  assert.deepEqual(cards.map(c => c.implementationStatus), Array(4).fill('playable'))
+  assert.deepEqual(cards.map(c => c.elementalSkill.ppCost), [1, 2, 1, 1])
+  assert.deepEqual(cards.map(c => c.elementalSkill.name), [
+    '爆弾人形', 'グゥオパァー出撃', '溢れる情熱', '近迫阻止射撃・速',
+  ])
+})
+
+test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステータスとデッキ除外', async () => {
+  const { productionTokens } = await vite.ssrLoadModule('/src/data/productionTokens.ts')
+  const { getDeckCardPool, getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.deepEqual(productionTokens.map(t => [t.name,t.cost,t.attack,t.health]), [
+    ['ウサギ伯爵', 1, 0, 3], ['グゥオパァー', 2, 1, 3],
+  ])
+  for(const card of productionTokens) {
+    assert.equal(card.token, true)
+    assert.equal(getCard(card.id).name, card.name)
+    assert.equal(getDeckCardPool().some(c => c.id === card.id), false)
+  }
+  assert.deepEqual(productionTokens[0].keywords, ['guard', 'damage_cap_1'])
+})
+
+test('C019 アンバー：ファンファーレで敵1体へ炎2ダメージと付着', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C019']
+  state.players[0].pp = 3
+  const enemy = place(state, 1, 'test-mage', 1, 6)
+  const next = engine.playCard(state, 'player1', 0, enemy.instanceId)
+  assert.equal(next.players[0].field[0].cardId, 'C019')
+  assert.equal(next.players[1].field[0].health, 4)
+  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'pyro' }])
+  assert.equal(next.players[0].pp, 0)
+})
+
+test('C019 アンバー：スキルPP1とEN+1でウサギ伯爵を召喚し1ターン1回', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C019']
+  state.players[0].pp = 4
+  const enemy = place(state, 1, 'test-mage', 1, 8)
+  let next = engine.playCard(state, 'player1', 0, enemy.instanceId)
+  const amber = next.players[0].field[0]
+  assert.equal(engine.canUseAbility(next, amber.instanceId, 'skill'), true)
+  next = engine.activateAbility(next, amber.instanceId, 'skill')
+  assert.equal(next.players[0].pp, 0)
+  assert.equal(next.players[0].energy, 1)
+  assert.deepEqual(next.players[0].field.map(f => f.cardId), ['C019', 'token-baron-bunny'])
+  assert.equal(next.players[0].field[1].health, 3)
+  assert.ok(next.players[0].field[1].keywords.includes('guard'))
+  assert.equal(engine.canUseAbility(next, amber.instanceId, 'skill'), false)
+})
+
+test('ウサギ伯爵：2以上の被ダメージを1にし守護が機能する', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const rabbit = place(state, 1, 'token-baron-bunny', 0, 3)
+  rabbit.keywords = ['guard', 'damage_cap_1']
+  const ally = place(state, 1, 'C001', 1, 2)
+  const enemy = place(state, 0, 'C001', 4, 4)
+  assert.equal(resolveElementalDamage(rabbit, 6, 'pyro').follower.health, 2)
+  assert.equal(engine.attackLeader(state, enemy.instanceId), state)
+  assert.equal(engine.attackFollower(state, enemy.instanceId, ally.instanceId), state)
+  const next = engine.attackFollower(state, enemy.instanceId, rabbit.instanceId)
+  assert.equal(next.players[1].field[0].health, 2)
+})
+
+test('ウサギ伯爵：破壊時に敵全体と相手リーダーに炎1ダメージ', () => {
+  const state = startedGame()
+  const rabbit = place(state, 0, 'token-baron-bunny', 0, 1)
+  rabbit.keywords = ['guard', 'damage_cap_1']
+  const attacker = place(state, 1, 'test-hilichurl', 3, 5)
+  const other = place(state, 1, 'C001', 1, 4)
+  const enemyTurn = {...state, currentPlayerId: 'player2'}
+  const next = engine.attackFollower(enemyTurn, attacker.instanceId, rabbit.instanceId)
+  assert.equal(next.players[0].field.length, 0)
+  assert.ok(next.players[0].graveyard.includes('token-baron-bunny'))
+  assert.equal(next.players[1].leaderHealth, 19)
+  assert.equal(next.players[1].field.find(f=>f.instanceId===attacker.instanceId).health, 4)
+  assert.equal(next.players[1].field.find(f=>f.instanceId===other.instanceId).health, 3)
+  assert.deepEqual(next.players[1].field[1].aura,[{element:'pyro'}])
+})
+
+test('C020 香菱：スキルPP2・EN+1でグゥオパァー召喚', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C020']
+  state.players[0].pp = 5
+  let next = engine.playCard(state, 'player1', 0)
+  const xiangling = next.players[0].field[0]
+  next = engine.activateAbility(next, xiangling.instanceId, 'skill')
+  assert.equal(next.players[0].pp, 0)
+  assert.equal(next.players[0].energy, 1)
+  assert.deepEqual(next.players[0].field.map(f=>f.cardId), ['C020', 'token-guoba'])
+  assert.deepEqual([next.players[0].field[1].attack, next.players[0].field[1].health], [1,3])
+})
+
+test('C020 香菱：グゥオパァーがいる自ターン終了時に自身+1/+1', () => {
+  const state = startedGame()
+  const xiangling = place(state, 0, 'C020', 2, 3)
+  place(state, 0, 'token-guoba', 1, 3)
+  const next = engine.endTurn(state)
+  const now = next.players[0].field.find(f=>f.instanceId===xiangling.instanceId)
+  assert.deepEqual([now.attack, now.health, now.maxHealth],[3,4,4])
+  assert.equal(next.players[1].leaderHealth, 16)
+})
+
+test('グゥオパァー：敵フォロワーがいなければ毎自ターン終了でリーダーへ炎2を2回', () => {
+  let state = startedGame()
+  place(state, 0, 'token-guoba', 1, 3)
+  state = engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth, 16)
+  state = engine.endTurn(state)
+  state = engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth, 12)
+})
+
+test('C021 ベネット：召喚時は味方一体か自身を指定して攻撃力+1', () => {
+  let state = startedGame()
+  state.players[0].hand = ['C021']
+  state.players[0].pp = 3
+  assert.equal(engine.needsFriendlyPlayTarget(engine.getCard('C021')), true)
+  assert.equal(engine.playCard(state, 'player1', 0), state)
+  state = engine.playCard(state, 'player1', 0, 'self')
+  assert.equal(state.players[0].field[0].attack, 3)
+  const withAlly = startedGame()
+  withAlly.players[0].hand = ['C021']
+  withAlly.players[0].pp = 3
+  const ally = place(withAlly, 0, 'C001', 1, 2)
+  const next = engine.playCard(withAlly, 'player1', 0, ally.instanceId)
+  assert.equal(next.players[0].field[0].attack, 2)
+  assert.equal(next.players[0].field[1].attack, 2)
+})
+
+test('C021 ベネット：スキルPP1で敵に炎4・自身に物理1、EN+1', () => {
+  const state = startedGame()
+  const bennett = place(state, 0, 'C021', 2, 4)
+  const target = place(state, 1, 'test-mage', 1, 8)
+  state.players[0].pp = 1
+  const next = engine.activateAbility(state, bennett.instanceId, 'skill', target.instanceId)
+  assert.equal(next.players[0].pp, 0)
+  assert.equal(next.players[0].energy, 1)
+  assert.equal(next.players[0].field[0].health, 3)
+  assert.equal(next.players[1].field[0].health, 4)
+  assert.deepEqual(next.players[1].field[0].aura,[{element:'pyro'}])
+  assert.equal(next.players[0].field[0].skillUsed, true)
+})
+
+test('PP不足では元素スキルを使えずターン中の制限も変わらない', () => {
+  const state = startedGame()
+  const amber = place(state, 0, 'C019', 2, 3)
+  state.players[0].pp = 0
+  assert.equal(engine.canUseAbility(state, amber.instanceId, 'skill'), false)
+  assert.equal(engine.activateAbility(state, amber.instanceId, 'skill'), state)
+  assert.equal(state.players[0].field[0].skillUsed, false)
+  assert.equal(state.players[0].energy, 0)
+})
+
+test('C022 シュヴルーズ：スキルPP1・炎2と自リーダーHP2回復・EN+1', () => {
+  const state = startedGame()
+  const cheval = place(state, 0, 'C022', 3, 4)
+  const enemy = place(state, 1, 'test-mage', 1, 8)
+  state.players[0].pp = 1
+  state.players[0].leaderHealth = 16
+  const next = engine.activateAbility(state, cheval.instanceId, 'skill', enemy.instanceId)
+  assert.equal(next.players[0].pp, 0)
+  assert.equal(next.players[0].energy, 1)
+  assert.equal(next.players[1].field[0].health, 6)
+  assert.equal(next.players[0].leaderHealth, 18)
+  assert.equal(next.players[0].field[0].skillUsed, true)
+})
+
+test('C022 シュヴルーズ：過負荷を起こすたびに自陣全員の攻撃力+1', () => {
+  const state = startedGame()
+  const cheval = place(state, 0, 'C022', 3, 4)
+  const ally = place(state, 0, 'C001', 1, 4)
+  const enemy = place(state, 1, 'test-mage', 1, 8)
+  enemy.aura = [{element:'electro'}]
+  state.players[0].pp = 1
+  const next = engine.activateAbility(state, cheval.instanceId, 'skill', enemy.instanceId)
+  assert.equal(next.players[0].field.find(f=>f.instanceId===cheval.instanceId).attack, 4)
+  assert.equal(next.players[0].field.find(f=>f.instanceId===ally.instanceId).attack, 2)
+  assert.equal(next.players[1].field.length, 0)
+  assert.equal(next.players[1].hand.at(-1), 'test-mage')
+})
+
+test('C022 シュヴルーズ：2体いれば過負荷1回につき+2攻撃力', async () => {
+  const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  place(state, 0, 'C022', 3, 4)
+  place(state, 0, 'C022', 3, 4)
+  const ally = place(state, 0, 'C001', 1, 4)
+  const enemy = place(state, 1, 'test-mage', 1, 6)
+  const next = resolveReactionConsequence(state, 1, enemy.instanceId, 'overloaded', 'electro', 0)
+  assert.equal(next.players[0].field[0].attack, 5)
+  assert.equal(next.players[0].field[1].attack, 5)
+  assert.equal(next.players[0].field.find(f=>f.instanceId===ally.instanceId).attack, 3)
+})
+
+test('相手のターン中に生じた過負荷ではシュヴルーズのバフは発生しない', async () => {
+  const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const cheval = place(state, 0, 'C022', 3, 4)
+  const enemy = place(state, 1, 'test-mage', 1, 6)
+  state.currentPlayerId = 'player2'
+  const next = resolveReactionConsequence(state, 1, enemy.instanceId, 'overloaded', 'electro', 0)
+  assert.equal(next.players[0].field.find(f=>f.instanceId===cheval.instanceId).attack, 3)
+})
+
+test('召喚系スキルは場5枠が埋まっていると発動不可・PPやENを消費しない', () => {
+  const state = startedGame()
+  const amber = place(state, 0, 'C019', 2, 3)
+  for(let i=0;i<4;i++) place(state, 0, 'C001', 1, 2)
+  state.players[0].pp = 5
+  assert.equal(engine.canUseAbility(state, amber.instanceId, 'skill'), false)
+  assert.equal(engine.activateAbility(state, amber.instanceId, 'skill'), state)
+  assert.equal(state.players[0].pp, 5)
+  assert.equal(state.players[0].energy, 0)
+})
