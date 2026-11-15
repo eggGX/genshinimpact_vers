@@ -208,6 +208,9 @@ function App() {
         {follower.keywords.filter(k => k.startsWith('quicken:')).map(k => (
           <small key={k}>原激化：残り{k.slice(8)}回</small>
         ))}
+        {follower.cardId === 'dendro-core' && (
+          <small style={{ color: '#b5ed91' }}>草原核（攻撃不可）</small>
+        )}
         {follower.shield.normal > 0 && (
           <small>通常シールド：{follower.shield.normal}</small>
         )}
@@ -384,6 +387,9 @@ function App() {
         <div>デッキ：{opponent.deck.length}枚</div>
         <div>手札：{opponent.hand.length}枚</div>
         <div>墓場：{opponent.graveyard.length}枚</div>
+        {(opponent.leaderBurningTurns ?? 0) > 0 && (
+          <div>リーダー燃焼：残り{opponent.leaderBurningTurns}ターン</div>
+        )}
       </section>
 
       <section className="field">
@@ -415,6 +421,9 @@ function App() {
         <div>デッキ：{currentPlayer.deck.length}枚</div>
         <div>手札：{currentPlayer.hand.length}枚</div>
         <div>墓場：{currentPlayer.graveyard.length}枚</div>
+        {(currentPlayer.leaderBurningTurns ?? 0) > 0 && (
+          <div>リーダー燃焼：残り{currentPlayer.leaderBurningTurns}ターン</div>
+        )}
 
         <button
           type="button"
