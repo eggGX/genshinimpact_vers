@@ -1,6 +1,6 @@
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader } from './leaderShield'
+import { damageLeader, healLeader } from './leaderShield'
 import { resolveElementalDamage, resolveReactionConsequence, absorbDamage } from './elemental'
 import { summonFollowers } from './neutralRules'
 
@@ -91,7 +91,7 @@ export function advancedElectroSkill(
     result = deaths(result)
     if (result.winnerId !== null) return result
     result = edit(result, ownerId, p => ({
-      ...p, leaderHealth: Math.min(p.leaderMaxHealth, p.leaderHealth + 2),
+      ...p, ...healLeader(p, 2),
     }))
     return randomHit(result, ownerId, 1, deaths)
   }
@@ -184,7 +184,7 @@ export function advancedElectroTurnEnd(
     }))
   }
   if (source.cardId === 'C065') return edit(state, ownerId, p => ({
-    ...p, leaderHealth: Math.min(p.leaderMaxHealth, p.leaderHealth + 1),
+    ...p, ...healLeader(p, 1),
   }))
   return state
 }
