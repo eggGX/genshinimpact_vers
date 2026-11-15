@@ -4479,3 +4479,14 @@ test('たもとの終了時効果は敵フォロワーに岩2',()=>{
   s=engine.endTurn(s)
   assert.equal(s.players[1].field[0].health,3)
 })
+
+test('C091 攻撃時全体岩ダメージで攻撃対象を倒しても攻撃回数を消費',()=>{
+  let s=startedGame(); const attacker=place(s,0,'C001',2,5)
+  s.players[0].pp=3;s.players[0].hand=['C091']
+  s=engine.playCard(s,'player1',0,attacker.instanceId)
+  const foe=place(s,1,'test-mage',0,1)
+  s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
+  assert.equal(s.players[1].field.length,0)
+  assert.equal(s.players[0].field[0].hasAttacked,true)
+  assert.equal(engine.canFollowerAttack(s.players[0].field[0]),false)
+})
