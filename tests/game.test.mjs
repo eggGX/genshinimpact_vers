@@ -1412,7 +1412,7 @@ test('C012 炎射手は対象選択できない敵だけならプレイ不可', 
   state.players[0].hand=['C012']
   const target=place(state,1,'test-mage',1,5)
   target.keywords=['aura']
-  assert.equal(engine.canPlayCard(state,0),true)
+  assert.equal(engine.canPlayCard(state,0),false)
   assert.equal(engine.playCard(state,'player1',0,target.instanceId),state)
 })
 
@@ -2334,7 +2334,7 @@ test('STEP42：水元素15枚はすべて対戦対応（C030を含む）',()=>{
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C030','C034','C035','C037','C038','C039','C040']
-  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.canPlayCard(state,0),true)
   for(let i=1;i<state.players[0].hand.length;i++){
     assert.ok(engine.getCard(state.players[0].hand[i]).description.length>0)
     assert.equal(engine.canPlayCard(state,i),true)
@@ -2347,7 +2347,7 @@ test('STEP31 6枚の水ゴールド・レジェンドに確定したスキル/�
   assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.name),[
     '公演、開始♪','古華剣・画雨籠山','名称未設定','水中幻願','海月の誓い','魔王武装・狂瀾'])
   assert.deepEqual(['C038','C039','C040'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,3,4])
-  assert.equal(engine.getCard('C030').implementationStatus,'data_only')
+  assert.equal(engine.getCard('C030').implementationStatus,'playable')
 })
 
 test('C034 バーバラ：ターン終了で味方全員1回復、本人の通常攻撃は水',()=>{
