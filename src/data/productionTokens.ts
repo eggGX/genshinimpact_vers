@@ -74,5 +74,18 @@ export const productionTokens: Card[] = [
     health: 4,
     token: true,
     description: '【自分のターン終了時】自リーダーと自分のフォロワーすべてを1回復。ランダムな敵フォロワー1体に水元素1ダメージ。',
+  },  {
+    id: 'token-cryo-cicin',
+    name: '氷蛍',
+    type: 'follower',
+    rarity: 'bronze',
+    element: 'cryo',
+    cost: 1,
+    attack: 1,
+    health: 1,
+    normalAttackElement: 'cryo',
+    token: true,
+    description: '【元素攻撃：氷】',
   },
+
 ]
