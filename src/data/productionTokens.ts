@@ -192,5 +192,16 @@ export const productionTokens: Card[] = [
   },  { id:'token-tamoto', name:'たもと', type:'follower', rarity:'bronze',
     element:'geo', cost:2, attack:1, health:3, token:true,
     description:'【自分のターン終了時】ランダムな敵フォロワー1体に岩元素2ダメージ。',
+  },  {
+    id: 'token-yuegui-jumping', name: '月桂・跳躍型',
+    type: 'follower', rarity: 'bronze', element: 'dendro',
+    cost: 2, attack: 0, health: 3, token: true,
+    description: '【自分のターン終了時】ランダムな敵フォロワー1体に草元素2ダメージ。自リーダー1回復。',
+  },
+  {
+    id: 'token-collei-amber', name: 'コレアンバー',
+    type: 'amulet', rarity: 'bronze', element: 'dendro',
+    cost: 0, token: true,
+    description: '【カウントダウン2】【自分のターン終了時】敵フォロワーすべてに草元素1ダメージ。',
   },
 ]
