@@ -1,9 +1,9 @@
 import type { ElementType, Follower, GameState, Player } from './types'
-import { testCards } from '../data/testCards'
+import { getCard } from '../data/cardRegistry'
 
 /** 元素生物の固有付着。風・岩も常時保持する。 */
 function inherentElement(follower: Follower): ElementType | undefined {
-  const card = testCards.find(c => c.id === follower.cardId)
+  const card = getCard(follower.cardId)
   return card?.elementalCreature ? card.element : undefined
 }
 
@@ -327,7 +327,7 @@ export function resolveReactionConsequence(
 
   if (reaction === 'overloaded') {
     const target = affected.field.find(f => f.instanceId === affectedInstanceId)
-    const card = target && testCards.find(c => c.id === target.cardId)
+    const card = target && getCard(target.cardId)
     if (!target || !card || card.cost > 5 || target.health <= 0) return state
     players[affectedOwnerIndex] = {
       ...affected,
