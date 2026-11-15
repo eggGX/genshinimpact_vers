@@ -115,7 +115,8 @@ function applyEffect(
     if (
       !targetPlayer.field.some(
         f => f.instanceId === instanceId && f.health > 0 &&
-          (effect.target !== 'selected_enemy_follower' || !f.keywords.includes('aura'))
+          (effect.target !== 'selected_enemy_follower' ||
+            (!f.keywords.includes('aura') && !f.keywords.includes('stealth')))
       )
     ) {
       return state
