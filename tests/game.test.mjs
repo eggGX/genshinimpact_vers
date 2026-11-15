@@ -1652,6 +1652,8 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['虚影', 1, 0, 2],
     ['化海月', 2, 0, 4],
     ['氷蛍', 1, 1, 1],
+    ['氷蓮', 1, 0, 3],
+    ['イツパパ', 2, 1, 3],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -2628,7 +2630,7 @@ test('STEP32 氷15枚のタイプ・ステータス・地域と対戦対応状�
     [2,4],[3,3],[1,5],[2,4],[3,5],[2,5],[4,5],
   ])
   assert.deepEqual(cryoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C041','C042','C043','C047','C048','C050'])
+    Array.from({length:15},(_,i)=>'C'+String(41+i).padStart(3,'0')))
   assert.deepEqual(cryoCards.find(c=>c.id==='C051').traits,['教令院'])
   assert.deepEqual(cryoCards.find(c=>c.id==='C054').traits,['謎煙の主'])
 })
@@ -2643,7 +2645,7 @@ test('STEP32 合計55/115・氷枠は全15枚登録・残り60枚',async()=>{
   assert.equal(result.slots.reduce((n,x)=>n+x.remaining,0),60)
 })
 
-test('氷未対応9枚はカード一覧で参照できるがデッキ候補から除外',async()=>{
+test('STEP33 氷15枚は全て登録済みかつデッキ候補として対戦可能',async()=>{
   const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const { cryoCards }=await vite.ssrLoadModule('/src/data/cards/cryo.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
@@ -2651,7 +2653,9 @@ test('氷未対応9枚はカード一覧で参照できるがデッキ候補か�
   const state=startedGame()
   state.players[0].pp=10;state.players[0].hand=['C044','C045','C046','C049','C051','C052','C053','C054','C055']
   assert.ok(state.players[0].hand.every(id=>engine.getCard(id)?.description?.length))
-  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+  assert.ok(state.players[0].hand.every(id=>engine.getCard(id).implementationStatus==='playable'))
+  assert.equal(engine.canPlayCard(state,1),true)
+  assert.equal(engine.canPlayCard(state,2),true)
 })
 
 test('C041 氷スライムは初期付着に氷元素を持ち、常時付着を維持',()=>{
