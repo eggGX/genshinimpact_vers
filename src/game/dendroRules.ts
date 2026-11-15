@@ -299,7 +299,7 @@ function dendroRandomEnemy(state: GameState, ownerId: string, amount: number,
 }
 
 export function dendroLegendarySkill(state: GameState, ownerId: string,
-  sourceId: string, cardId: string, targetId?: string): GameState {
+  cardId: string, targetId?: string): GameState {
   if(state.winnerId!==null)return state
   if(cardId==='C113'&&targetId){
     let result=dendroHitTarget(state,ownerId,targetId,2)
