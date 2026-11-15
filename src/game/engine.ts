@@ -6,6 +6,7 @@ import type {
   Player,
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
+import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { resolveEffects } from './effects'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack, grantRaincutter, raincutterAttackFollower, raincutterAttackLeader } from './hydroRules'
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
@@ -44,7 +45,7 @@ function shuffle<T>(items: T[]): T[] {
   return result
 }
 
-function createTestDeck(): string[] {
+function createSampleDeck(): string[] {
   return shuffle(
     Array.from(
       { length: DECK_SIZE },
@@ -53,8 +54,8 @@ function createTestDeck(): string[] {
   )
 }
 
-function createPlayer(id: string, name: string): Player {
-  const deck = createTestDeck()
+function createPlayer(id: string, name: string, selectedDeck?: readonly string[]): Player {
+  const deck = selectedDeck ? shuffle([...selectedDeck]) : createSampleDeck()
   const hand = deck.splice(0, INITIAL_HAND_SIZE)
 
   return {
@@ -72,9 +73,15 @@ function createPlayer(id: string, name: string): Player {
   }
 }
 
-export function createInitialGameState(): GameState {
-  const p1 = createPlayer('player1', 'プレイヤー1')
-  const p2 = createPlayer('player2', 'プレイヤー2')
+export function createInitialGameState(decks?: readonly [DeckDefinition, DeckDefinition]): GameState {
+  if (decks) {
+    for (const [index, deck] of decks.entries()) {
+      const errors = validateDeck(deck)
+      if (errors.length) throw new Error(`プレイヤー${index + 1}のデッキが不正です: ${errors.join(' / ')}`)
+    }
+  }
+  const p1 = createPlayer('player1', 'プレイヤー1', decks?.[0].cards)
+  const p2 = createPlayer('player2', 'プレイヤー2', decks?.[1].cards)
 
   return {
     turn: 1,
