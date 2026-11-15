@@ -11,6 +11,7 @@ import {
   endTurn,
   getCard,
   needsPlayTarget,
+  needsFriendlyPlayTarget,
   needsAbilityTarget,
   activateAbility,
   playCard,
@@ -88,7 +89,7 @@ function App() {
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
-    if (needsPlayTarget(card)) {
+    if (needsPlayTarget(card) || needsFriendlyPlayTarget(card)) {
       setSelectedHandIndex(previous =>
         previous === handIndex ? null : handIndex
       )
@@ -186,6 +187,10 @@ function App() {
       game.winnerId === null &&
       canFollowerAttack(follower)
 
+    const isFriendlyTarget = !isOpponent &&
+      selectedHandIndex !== null &&
+      currentPlayer.hand[selectedHandIndex] === 'C021'
+
     const isSelected =
       follower.instanceId === selectedAttackerId
 
@@ -210,10 +215,16 @@ function App() {
           isSelected ? 'selected-card' : '',
           isTarget ? 'attack-target' : '',
         ].filter(Boolean).join(' ')}
-        disabled={!canAttack && !isTarget}
+        disabled={!canAttack && !isTarget && !isFriendlyTarget}
         onClick={() => {
           if (isOpponent) {
             handleEnemyFollowerClick(follower.instanceId)
+          } else if (isFriendlyTarget && selectedHandIndex !== null) {
+            setGame(previous => playCard(
+              previous, previous.currentPlayerId,
+              selectedHandIndex, follower.instanceId
+            ))
+            resetSelection()
           } else {
             handleSelectAttacker(follower)
           }
@@ -289,7 +300,7 @@ function App() {
               disabled={!canUseAbility(game, follower.instanceId, 'skill')}
               onClick={() => handleUseAbility(follower, 'skill')}
               title={card.elementalSkill.name}>
-              スキル{follower.skillUsed ? '済' : ''}
+              スキル PP{card.elementalSkill.ppCost ?? 0}{follower.skillUsed ? ' 済' : ''}
             </button>
           )}
           {card.elementalBurst && (
@@ -555,11 +566,23 @@ function App() {
           : selectedAbility !== null
             ? '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
-            ? 'ファンファーレの対象となる敵フォロワーを選択してください'
+            ? currentPlayer.hand[selectedHandIndex] === 'C021'
+              ? 'ベネットのファンファーレ：味方フォロワーか「自身」を選択してください'
+              : 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
               ? '攻撃対象を選択してください'
               : 'カードをプレイするか、攻撃可能なフォロワーを選択してください'}
       </div>
+
+      {selectedHandIndex !== null && currentPlayer.hand[selectedHandIndex] === 'C021' && (
+        <button type="button" onClick={() => {
+          setGame(previous => playCard(previous, previous.currentPlayerId,
+            selectedHandIndex, 'self'))
+          resetSelection()
+        }}>
+          ベネット自身を強化して召喚
+        </button>
+      )}
 
       <footer className="hand">
         {currentPlayer.hand.map((cardId, index) => {
