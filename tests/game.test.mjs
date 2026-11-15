@@ -3825,6 +3825,7 @@ test('C079 スクロース：拡散時に自ターン1回ドロー',()=>{
   const enemy=place(state,1,'test-mage',0,12)
   enemy.aura=[{element:'pyro'}]
   state.players[0].deck=['C001','C071']
+  state.players[0].hand=[]
   state.players[0].pp=1
   state=engine.activateAbility(state,sucrose.instanceId,'skill')
   assert.deepEqual(state.players[0].hand,['C001'])
