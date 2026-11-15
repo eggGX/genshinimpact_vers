@@ -11,7 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
-import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell } from './geoRules'
+import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell, geoBurst, geoTurnEnd } from './geoRules'
 import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
@@ -326,6 +326,7 @@ function resolveTurnEffects(
       result = electroTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = advancedElectroTurnEnd(result, playerId, sourceId)
       result = advancedAnemoTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = geoTurnEnd(result, playerId, sourceId)
       result = resolveDeaths(result)
     }
   }
@@ -511,7 +512,7 @@ export function canUseAbility(
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
   if (kind === 'skill' && card?.id === 'C083' && !owner.hand.some(id =>
       ['pyro', 'hydro', 'cryo', 'electro'].includes(getCard(id)?.element ?? ''))) return false
-  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097'].includes(card?.id ?? '') &&
+  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097', 'C100'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'skill' && card?.id === 'C069' &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
@@ -614,6 +615,7 @@ export function activateAbility(
     result = cryoBurst(result, owner.id, card.id, resolveDeaths)
     result = advancedElectroBurst(result, owner.id, followerId, card.id, resolveDeaths)
     result = advancedAnemoBurst(result, owner.id, card.id, followerId, resolveDeaths)
+    result = geoBurst(result, owner.id, card.id, resolveDeaths)
   }
   return resolveDeaths(result)
 }
