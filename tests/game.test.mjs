@@ -3027,3 +3027,208 @@ test('C049 ディオナ：同じ敵を2回選択できず、敵1体なら1体を
   const next=engine.activateAbility(state,diona.instanceId,'skill',a.instanceId)
   assert.equal(next.players[1].field[0].health,6)
 })
+
+test('STEP34 雷元素15枚のカードID・二つ名・PP・レアリティを原本に照合',async()=>{
+  const {electroCards}=await vite.ssrLoadModule('/src/data/cards/electro.ts')
+  assert.deepEqual(electroCards.map(c=>c.id),
+    Array.from({length:15},(_,i)=>'C'+String(i+56).padStart(3,'0')))
+  assert.deepEqual(electroCards.map(c=>c.name),[
+    '雷スライム','グルグル雷キノコン','ライノ仔竜','雷フライム',
+    '夜の幻現','御詠鳴神刈山祭','ファデュイ・雷蛍術師','獣域ハウンド・雷',
+    '断罪の皇女・フィッシュル','荒瀧派の二番手・久岐忍',
+    '天領奉行の大将・九条裟羅','謎煙の主の青年・オロルン',
+    '大マハマトラ・セノ','鳴神大社の宮司・八重神子',
+    'のんびり屋の力自慢・ヴァレサ',
+  ])
+  assert.deepEqual(electroCards.map(c=>c.cost),[1,2,2,3,4,3,4,4,3,3,4,3,5,5,5])
+  assert.deepEqual(electroCards.map(c=>c.rarity),[
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')])
+  assert.ok(electroCards.every(c=>c.element==='electro'))
+})
+
+test('STEP34 雷15枚ステータス・地域・タイプ・対戦実装区分',async()=>{
+  const {electroCards}=await vite.ssrLoadModule('/src/data/cards/electro.ts')
+  assert.deepEqual(electroCards.map(c=>c.type),[
+    'follower','follower','follower','follower','spell','spell',
+    'follower','follower','follower','follower','follower','follower',
+    'follower','follower','follower'])
+  assert.deepEqual(electroCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
+    [2,2],[1,3],[2,2],[2,3],[2,4],[3,3],
+    [2,3],[2,4],[3,4],[2,4],[4,5],[3,5],[5,5]])
+  assert.deepEqual(electroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),[
+    'C056','C057','C058','C059','C060','C062','C063'])
+  assert.deepEqual(electroCards.find(c=>c.id==='C067').traits,['謎煙の主'])
+  assert.deepEqual(electroCards.find(c=>c.id==='C070').traits,['豊穣の邦'])
+})
+
+test('STEP34 正式70/115、雷15枚の予定枠充足、残り45枚',async()=>{
+  const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const validation=validateProductionCards(productionCards)
+  assert.deepEqual(validation.errors,[])
+  assert.equal(validation.total,70)
+  assert.equal(validation.slots.filter(s=>s.element==='electro').reduce((n,s)=>n+s.remaining,0),0)
+  assert.equal(validation.slots.reduce((n,s)=>n+s.remaining,0),45)
+})
+
+test('STEP34 雷元素は7枚のみ対戦対応、残る8枚はデッキから除外',async()=>{
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const pool=new Set(getDeckCardPool().map(c=>c.id))
+  for(let i=56;i<=70;i++){
+    const id='C'+String(i).padStart(3,'0')
+    assert.equal(pool.has(id),engine.getCard(id).implementationStatus==='playable')
+  }
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=['C061','C064','C065','C066','C067','C068','C069','C070']
+  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+})
+
+test('C056 雷スライムは元素生物として初期雷付着を維持',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C056'];state.players[0].pp=1
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field[0].health,2)
+  assert.deepEqual(state.players[0].field[0].aura,[{element:'electro'}])
+})
+
+test('C057 雷キノコン：ラストワードでランダムな敵1体へ雷2・付着',()=>{
+  let state=startedGame()
+  const mushroom=place(state,0,'C057',1,1)
+  const victim=place(state,1,'test-mage',2,8)
+  state=engine.attackFollower(state,mushroom.instanceId,victim.instanceId)
+  assert.ok(state.players[0].graveyard.includes('C057'))
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
+})
+
+test('C057 雷キノコン：相手フォロワー不在のラストワードはリーダーを攻撃しない',()=>{
+  let state=startedGame()
+  const mushroom=place(state,0,'C057',1,1)
+  const attacker=place(state,1,'test-mage',2,8)
+  const enemyTurn={...state,currentPlayerId:'player2'}
+  state=engine.attackFollower(enemyTurn,attacker.instanceId,mushroom.instanceId)
+  assert.equal(state.players[0].field.length,0)
+  assert.equal(state.players[1].leaderHealth,20)
+})
+
+test('C058 ライノ仔竜：突進で登場ターンはリーダーに攻撃不可',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C058'];state.players[0].pp=2
+  state=engine.playCard(state,'player1',0)
+  const rhino=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,rhino.instanceId),state)
+  const foe=place(state,1,'test-mage',1,8)
+  state=engine.attackFollower(state,rhino.instanceId,foe.instanceId)
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C059 雷フライム：常時雷付着、破壊時相手リーダーに雷2',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C059'];state.players[0].pp=3
+  state=engine.playCard(state,'player1',0)
+  const float=state.players[0].field[0]
+  assert.deepEqual(float.aura,[{element:'electro'}])
+  float.health=1
+  const attacker=place(state,1,'test-mage',3,8)
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},attacker.instanceId,float.instanceId)
+  assert.equal(state.players[1].leaderHealth,18)
+  assert.ok(state.players[0].graveyard.includes('C059'))
+})
+
+test('C059 雷フライムのラストワードはリーダーシールドを先に消費',()=>{
+  let state=startedGame()
+  const float=place(state,0,'C059',2,1)
+  const attacker=place(state,1,'test-mage',3,8)
+  state.players[1].leaderShield={normal:2,crystallize:0}
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},attacker.instanceId,float.instanceId)
+  assert.equal(state.players[1].leaderHealth,20)
+  assert.equal(state.players[1].leaderShield.normal,0)
+})
+
+test('C060 夜の幻現：選択した敵に雷3、その後オズ3/3召喚',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C060'];state.players[0].pp=4
+  const enemy=place(state,1,'test-mage',1,8)
+  assert.equal(engine.needsPlayTarget(engine.getCard('C060')),true)
+  state=engine.playCard(state,'player1',0,enemy.instanceId)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
+  assert.deepEqual(state.players[0].field.map(f=>[f.cardId,f.attack,f.health]),
+    [['token-oz',3,3]])
+  assert.deepEqual(state.players[0].graveyard,['C060'])
+})
+
+test('C060 夜の幻現：敵無しではプレイ不可、場満員ならオズ召喚なし',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C060'];state.players[0].pp=4
+  assert.equal(engine.canPlayCard(state,0),false)
+  for(let i=0;i<5;i++)place(state,0,'C001',1,2)
+  const enemy=place(state,1,'test-mage',1,8)
+  state=engine.playCard(state,'player1',0,enemy.instanceId)
+  assert.equal(state.players[0].field.length,5)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('オズは毎自ターン終了時にランダムな敵1体へ雷3',()=>{
+  let state=startedGame()
+  place(state,0,'token-oz',3,3)
+  place(state,1,'test-mage',1,10)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,7)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
+})
+
+test('C062 雷蛍術師：登場時に雷蛍1/1を2体召喚',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C062'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].field.map(f=>f.cardId),
+    ['C062','token-electro-cicin','token-electro-cicin'])
+  assert.deepEqual(state.players[0].field.slice(1).map(f=>[f.attack,f.health]),[[1,1],[1,1]])
+  assert.equal(engine.getCard('token-electro-cicin').normalAttackElement,'electro')
+})
+
+test('C062 雷蛍術師：雷蛍がいるターン終了時のみシールド2を得る',()=>{
+  let state=startedGame()
+  const mage=place(state,0,'C062',2,4)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].shield.normal,0)
+  place(state,0,'token-electro-cicin',1,1)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[0].field.find(f=>f.instanceId===mage.instanceId).shield.normal,2)
+})
+
+test('C062 雷蛍術師は最大5枠を超えて雷蛍を召喚しない',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C062'];state.players[0].pp=4
+  for(let i=0;i<3;i++)place(state,0,'C001',1,2)
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field.length,5)
+  assert.equal(state.players[0].field.filter(f=>f.cardId==='token-electro-cicin').length,1)
+})
+
+test('C063 雷ハウンド：通常攻撃は雷、攻撃宣言時に敵リーダーへ非元素1',()=>{
+  let state=startedGame()
+  const hound=place(state,0,'C063',3,3)
+  const enemy=place(state,1,'test-mage',0,10)
+  state=engine.attackFollower(state,hound.instanceId,enemy.instanceId)
+  assert.equal(state.players[1].leaderHealth,19)
+  assert.equal(state.players[1].field[0].health,7)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
+})
+
+test('C063 雷ハウンドは敵リーダー攻撃で本体3＋追加1ダメージ',()=>{
+  let state=startedGame()
+  const hound=place(state,0,'C063',3,3)
+  state=engine.attackLeader(state,hound.instanceId)
+  assert.equal(state.players[1].leaderHealth,16)
+})
+
+test('雷蛍とオズは正式15枚に含まずデッキに入らない',async()=>{
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.equal(engine.getCard('token-electro-cicin').token,true)
+  assert.equal(engine.getCard('token-oz').token,true)
+  assert.equal(getDeckCardPool().some(c=>c.id==='token-oz' || c.id==='token-electro-cicin'),false)
+})
