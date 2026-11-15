@@ -1,8 +1,8 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader, healLeader } from './leaderShield'
+import { damageLeader, healLeader, addLeaderShield } from './leaderShield'
 import { summonFollowers } from './neutralRules'
-import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { resolveElementalDamage, resolveReactionConsequence, grantShield } from './elemental'
 
 let nextDendroAmuletId = 1
 
@@ -189,4 +189,94 @@ export function dendroAttack(state: GameState, ownerId: string, attackerId: stri
       ...f, attack: f.attack + 2,
     } : f),
   }))
+}
+
+/** Single targeted elemental hit, respecting aura/reactions. Deaths are dispatched by caller. */
+export function dendroHitTarget(state: GameState, ownerId: string, targetId: string, amount: number): GameState {
+  const i = state.players.findIndex(p => p.id === ownerId)
+  if (i < 0 || state.winnerId !== null) return state
+  const foe = state.players[1-i]
+  const victim = foe.field.find(f => f.instanceId === targetId && f.health > 0)
+  if (!victim) return state
+  const hit = resolveElementalDamage(victim, amount, 'dendro')
+  const updated = edit(state, foe.id, p => ({
+    ...p, field: p.field.map(f => f.instanceId === targetId ? hit.follower : f),
+  }))
+  return resolveReactionConsequence(updated, 1-i, targetId, hit.reaction, hit.reactedElement, i)
+}
+
+/** One random enemy follower; unlike random follower-or-leader effects, no leader fallback. */
+function dendroRandomFollower(state: GameState, ownerId: string, amount: number): GameState {
+  const foe = state.players.find(p => p.id !== ownerId)
+  const choices = foe?.field.filter(f => f.health > 0) ?? []
+  if (!choices.length) return state
+  return dendroHitTarget(state, ownerId, choices[Math.floor(Math.random()*choices.length)].instanceId, amount)
+}
+
+function dendroTutor(state: GameState, ownerId: string, spellOnly: boolean): GameState {
+  return edit(state, ownerId, p => {
+    const options = p.deck.map((id,index)=>({id,index})).filter(c =>
+      getCard(c.id)?.element==='dendro' && (!spellOnly || getCard(c.id)?.type==='spell'))
+    if (!options.length) return p
+    const found=options[Math.floor(Math.random()*options.length)]
+    return {...p, deck:p.deck.filter((_,idx)=>idx!==found.index),
+      hand:p.hand.length<9?[...p.hand,found.id]:p.hand}
+  })
+}
+
+/** Gold cards: fanfares. */
+export function dendroGoldPlay(state: GameState, ownerId: string, cardId: string): GameState {
+  if (state.winnerId !== null) return state
+  if (cardId === 'C110') return edit(state, ownerId, p => addLeaderShield(p, 2))
+  if (cardId === 'C111') return dendroTutor(state,ownerId,true)
+  if (cardId === 'C112') {
+    const foe=state.players.find(p=>p.id!==ownerId)
+    const core=foe?.field.find(f=>f.cardId==='dendro-core'&&f.health>0)
+    if (!foe || !core) return state
+    return edit(state,foe.id,p=>({...p,field:p.field.map(f=>f.instanceId===core.instanceId?
+      {...f,health:f.health+1,maxHealth:f.maxHealth+1}:f)}))
+  }
+  return state
+}
+
+export function dendroGoldSkill(state: GameState, ownerId: string, sourceId: string,
+  cardId: string, targetId?: string): GameState {
+  if (state.winnerId !== null) return state
+  if (cardId === 'C109') return summonFollowers(state,ownerId,'token-yuegui-throwing',1)
+  if (cardId === 'C110') {
+    let result=edit(state,ownerId,p=>({...p,field:p.field.map(f=>f.instanceId===sourceId?
+      grantShield(f,'normal',3):f)}))
+    return dendroRandomFollower(result,ownerId,1)
+  }
+  if (cardId === 'C111' && targetId) {
+    let result=dendroHitTarget(state,ownerId,targetId,2)
+    const enemy=result.players.find(p=>p.id!==ownerId)
+    const choices=enemy?.field.filter(f=>f.health>0&&f.instanceId!==targetId)??[]
+    if (choices.length) result=dendroHitTarget(result,ownerId,choices[Math.floor(Math.random()*choices.length)].instanceId,1)
+    return result
+  }
+  if (cardId === 'C112' && targetId) {
+    const enemy=state.players.find(p=>p.id!==ownerId)
+    const core=enemy?.field.find(f=>f.health>0&&f.cardId==='dendro-core')
+    let result=dendroHitTarget(state,ownerId,targetId,2)
+    if (core && enemy) {
+      const foe=result.players.find(p=>p.id===enemy.id)!
+      const damaged=damageLeader(foe,Math.min(3,core.health))
+      result={...edit(result,foe.id,()=>damaged),
+        winnerId:damaged.leaderHealth===0?ownerId:result.winnerId}
+    }
+    return result
+  }
+  return state
+}
+
+export function dendroGoldTurnEnd(state: GameState, ownerId: string, sourceId: string,
+  deaths: (s: GameState)=>GameState): GameState {
+  const source=state.players.find(p=>p.id===ownerId)?.field.find(f=>f.instanceId===sourceId&&f.health>0)
+  if (source?.cardId==='C109')return edit(state,ownerId,p=>healLeader(p,1))
+  if (source?.cardId==='token-yuegui-throwing') {
+    const result=deaths(dendroRandomFollower(state,ownerId,1))
+    return result.winnerId===null?edit(result,ownerId,p=>healLeader(p,1)):result
+  }
+  return state
 }
