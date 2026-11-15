@@ -4086,7 +4086,7 @@ test('STEP38 岩元素15枚のID・カード名・コスト・レアリティは
   assert.ok(geoCards.every(c=>c.element==='geo'))
 })
 
-test('STEP38 岩15枚のタイプ・ステータス・地域と対戦実装区分',async()=>{
+test('STEP39 岩15枚のタイプ・ステータス・地域と対戦実装区分',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   assert.deepEqual(geoCards.map(c=>c.type),[
     'follower','amulet','follower','follower','spell','spell',
@@ -4097,7 +4097,7 @@ test('STEP38 岩15枚のタイプ・ステータス・地域と対戦実装区�
   assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
   assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
   assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C086','C087','C088','C089','C092','C093','C094','C096'])
+    ['C086','C087','C088','C089','C090','C092','C093','C094','C096'])
 })
 
 test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
@@ -4110,14 +4110,14 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
-test('STEP38 岩元素8枚がデッキ候補、未実装7枚はデッキに入らない',async()=>{
+test('STEP39 岩元素9枚がデッキ候補、未実装6枚はデッキに入らない',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of geoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C090','C091','C095','C097','C098','C099','C100']
+  state.players[0].hand=['C091','C095','C097','C098','C099','C100']
   assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
 })
 
