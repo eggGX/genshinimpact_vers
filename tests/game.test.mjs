@@ -3587,10 +3587,10 @@ test('C072 モンド城は2PPで場のアミュレット枠を1つ占有し、�
 test('C072 モンド城は自分のターン終了時に地域モンドのカードをランダム1枚サーチ',()=>{
   let state=startedGame()
   state.players[0].pp=2;state.players[0].hand=['C072']
-  state.players[0].deck=['C001','C027','C012','C073']
+  state.players[0].deck=['C001','C027','C019','C073']
   state=engine.playCard(state,'player1',0)
   state=engine.endTurn(state)
-  assert.deepEqual(state.players[0].hand,['C012'])
+  assert.deepEqual(state.players[0].hand,['C019'])
   assert.deepEqual(state.players[0].deck,['C001','C027','C073'])
   assert.equal(state.players[0].amulets[0].turnsRemaining,2)
 })
