@@ -199,6 +199,18 @@ function App() {
             凍結中（攻撃不可）
           </small>
         )}
+        {follower.keywords.includes('superconduct') && (
+          <small>超電導：次の物理被ダメージ+2</small>
+        )}
+        {follower.keywords.filter(k => k.startsWith('burning:')).map(k => (
+          <small key={k}>燃焼：残り{k.slice(8)}ターン</small>
+        ))}
+        {follower.keywords.filter(k => k.startsWith('quicken:')).map(k => (
+          <small key={k}>原激化：残り{k.slice(8)}回</small>
+        ))}
+        {follower.shield.crystallize > 0 && (
+          <small>結晶シールド：{follower.shield.crystallize}</small>
+        )}
 
         <small>
           {isOpponent
