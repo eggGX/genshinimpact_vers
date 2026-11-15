@@ -54,6 +54,7 @@ function createPlayer(id: string, name: string): Player {
     leaderMaxHealth: 20,
     pp: 0,
     maxPp: 0,
+    energy: 0,
     deck,
     hand,
     field: [],
@@ -339,9 +340,8 @@ export function playCard(
     health: card.health ?? 1,
     maxHealth: card.health ?? 1,
 
-    // 暫定。正式な元素エネルギー管理は後で変更
-    energy: 0,
-    maxEnergy: 5,
+    skillUsed: false,
+    burstUsed: false,
 
     aura: [],
     shield: {
@@ -376,6 +376,73 @@ export function playCard(
     follower.instanceId
   )
 
+  return resolveDeaths(result)
+}
+
+export type AbilityKind = 'skill' | 'burst'
+
+export function needsAbilityTarget(card: Card, kind: AbilityKind): boolean {
+  const ability = kind === 'skill' ? card.elementalSkill : card.elementalBurst
+  return (ability?.effects ?? []).some(effect =>
+    effect.target === 'selected_enemy_follower')
+}
+
+export function canUseAbility(
+  state: GameState,
+  followerId: string,
+  kind: AbilityKind
+): boolean {
+  if (state.phase !== 'main' || state.winnerId !== null) return false
+  const index = state.players.findIndex(p => p.id === state.currentPlayerId)
+  if (index < 0) return false
+  const owner = state.players[index]
+  const follower = owner.field.find(f => f.instanceId === followerId)
+  if (!follower || follower.health <= 0 ||
+      follower.keywords.includes('frozen')) return false
+  const card = getCard(follower.cardId)
+  const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
+  if (!ability || (kind === 'skill' ? follower.skillUsed : follower.burstUsed)) return false
+  if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
+  if (card && needsAbilityTarget(card, kind) && state.players[1 - index].field.length === 0) {
+    return false
+  }
+  return true
+}
+
+export function useAbility(
+  state: GameState,
+  followerId: string,
+  kind: AbilityKind,
+  targetId?: string
+): GameState {
+  if (!canUseAbility(state, followerId, kind)) return state
+  const index = state.players.findIndex(p => p.id === state.currentPlayerId)
+  if (index < 0) return state
+  const owner = state.players[index]
+  const follower = owner.field.find(f => f.instanceId === followerId)!
+  const card = getCard(follower.cardId)!
+  const ability = kind === 'skill' ? card.elementalSkill! : card.elementalBurst!
+  if (needsAbilityTarget(card, kind) &&
+      (!targetId || !state.players[1 - index].field.some(f => f.instanceId === targetId))) {
+    return state
+  }
+  const players = [...state.players] as [Player, Player]
+  players[index] = {
+    ...owner,
+    energy: kind === 'skill'
+      ? Math.min(5, owner.energy + 1)
+      : owner.energy - (ability.energyCost ?? 0),
+    field: owner.field.map(f =>
+      f.instanceId === followerId
+        ? { ...f,
+            skillUsed: kind === 'skill' ? true : f.skillUsed,
+            burstUsed: kind === 'burst' ? true : f.burstUsed }
+        : f),
+  }
+  let result: GameState = { ...state, players }
+  result = resolveEffects(
+    result, owner.id, ability.effects, kind, targetId, followerId
+  )
   return resolveDeaths(result)
 }
 
@@ -659,6 +726,8 @@ export function endTurn(state: GameState): GameState {
     ...f,
     canAttack: true,
     hasAttacked: false,
+    skillUsed: false,
+    burstUsed: false,
   }))
 
   const draw = drawCard(next)
