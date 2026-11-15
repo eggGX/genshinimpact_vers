@@ -1374,17 +1374,17 @@ test('炎元素15枚は原本どおり種類・地域・二つ名・効果説明
   assert.equal(pyroCards.find(c=>c.id==='C025').region[0],'璃月')
 })
 
-test('炎元素はゴールドまで12枚対戦可能、未実装レジェンド3枚を除外', async () => {
+test('炎元素は全15枚対戦可能、専用トークンはデッキに含まれない', async () => {
   const { pyroCards }=await vite.ssrLoadModule('/src/data/cards/pyro.ts')
   const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.deepEqual(pyroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C011','C012','C013','C014','C015','C016','C017','C018','C019','C020','C021','C022'])
+    ['C011','C012','C013','C014','C015','C016','C017','C018','C019','C020','C021','C022','C023','C024','C025'])
   const pool=getDeckCardPool().map(c=>c.id)
   for(const c of pyroCards) assert.equal(pool.includes(c.id), c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C023']
-  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.canPlayCard(state,0),true)
 })
 
 test('C011 炎スライムは登場時に炎元素が常時付着する', () => {
@@ -1647,6 +1647,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
   const { getDeckCardPool, getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.deepEqual(productionTokens.map(t => [t.name,t.cost,t.attack,t.health]), [
     ['ウサギ伯爵', 1, 0, 3], ['グゥオパァー', 2, 1, 3],
+    ['ファニーハット・キャット', 5, 5, 5],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
