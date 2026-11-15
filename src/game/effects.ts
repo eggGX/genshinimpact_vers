@@ -6,7 +6,7 @@ import type {
   GameState,
   Player,
 } from './types'
-import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 /**
  * 効果を順番に実行する。
