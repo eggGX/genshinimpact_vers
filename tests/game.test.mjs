@@ -964,7 +964,7 @@ test('正式カードとテストカードの登録元が分離されている',
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
   const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(productionCards.length, 0)
+  assert.equal(productionCards.length, 10)
   assert.equal(getAllCards().length, testCards.length + productionCards.length)
 })
 
@@ -989,10 +989,10 @@ test('正式カード未登録時はエラーなし・予定115枚が不足と�
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 0)
+  assert.equal(report.total, 10)
   assert.equal(report.plannedTotal, 115)
   assert.equal(report.slots.length, 32)
-  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 115)
+  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 105)
   assert.equal(report.ready, false)
 })
 
@@ -1065,4 +1065,72 @@ test('カード検索：正式／テスト用の区分を分離', async () => {
   assert.deepEqual(filterCards(cards, filters, prodIds).map(card => card.id), ['test-slime'])
   assert.deepEqual(filterCards(cards, { ...filters, origin: 'test' }, prodIds).map(card => card.id), ['test-hilichurl'])
   assert.deepEqual(filterCards(cards, { ...filters, origin: 'all', search: 'ヒル' }, prodIds).map(card => card.id), ['test-hilichurl'])
+})
+
+test('無元素の正式カードC001-C010を原本どおり10枚登録', async () => {
+  const { neutralCards } = await vite.ssrLoadModule('/src/data/cards/neutral.ts')
+  assert.deepEqual(neutralCards.map(c => c.id),
+    Array.from({ length: 10 }, (_, i) => 'C' + String(i + 1).padStart(3, '0')))
+  assert.deepEqual(neutralCards.map(c => c.name), [
+    'ヒルチャール', '宝盗団・雑夫', '遺跡守衛', 'ワイルドハント',
+    'ヒルチャール強襲', 'エラ・マスク', 'ティミー',
+    'ヒルチャール暴徒', 'パイモンのへそくり', '第四降臨者の力',
+  ])
+  assert.deepEqual(neutralCards.map(c => c.cost), [1, 2, 5, 4, 4, 3, 3, 4, 3, 5])
+  assert.deepEqual(neutralCards.map(c => c.rarity),
+    ['bronze', 'bronze', 'bronze', 'bronze',
+      'silver', 'silver', 'silver', 'silver', 'gold', 'gold'])
+})
+
+test('無元素10枚の種類とステータスを原本と照合', async () => {
+  const { neutralCards } = await vite.ssrLoadModule('/src/data/cards/neutral.ts')
+  assert.deepEqual(neutralCards.map(c => c.type), [
+    'follower', 'follower', 'follower', 'follower', 'spell',
+    'follower', 'follower', 'follower', 'spell', 'spell',
+  ])
+  assert.deepEqual(neutralCards.map(c => [c.attack ?? null, c.health ?? null]), [
+    [1,2], [2,1], [4,6], [2,2], [null,null],
+    [2,2], [1,1], [3,4], [null,null], [null,null],
+  ])
+  assert.equal(neutralCards.find(c => c.id === 'C004').region[0], 'ナド・クライ')
+  assert.equal(neutralCards.find(c => c.id === 'C008').traits[0], 'ヒルチャール')
+})
+
+test('無元素カードの説明には確定した能力を保持し未実装を明示', async () => {
+  const { neutralCards } = await vite.ssrLoadModule('/src/data/cards/neutral.ts')
+  for (const card of neutralCards) {
+    assert.equal(card.element, 'none')
+    assert.ok(card.description.length > 0)
+    assert.equal(card.implementationStatus, 'data_only')
+  }
+  assert.match(neutralCards[2].description, /守護/)
+  assert.match(neutralCards[3].description, /ラストワード/)
+  assert.match(neutralCards[6].description, /ハト/)
+  assert.match(neutralCards[7].description, /突進/)
+  assert.match(neutralCards[8].description, /最大PP/)
+  assert.match(neutralCards[9].description, /カウントダウン7/)
+})
+
+test('正式無元素10枚登録後の枚数は10/115で残り105枚', async () => {
+  const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const report = validateProductionCards(productionCards)
+  assert.deepEqual(report.errors, [])
+  assert.equal(report.total, 10)
+  assert.equal(report.plannedTotal, 115)
+  assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),105)
+  assert.equal(report.slots.filter(s => s.element === 'none').every(s => s.remaining === 0),true)
+  assert.equal(report.ready,false)
+})
+
+test('未実装正式カードは参照可能だが対戦デッキに混ざらない', async () => {
+  const { getCard, getDeckCardPool } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.equal(getCard('C001').name,'ヒルチャール')
+  assert.equal(getCard('C010').type,'spell')
+  assert.equal(getDeckCardPool().some(c => c.id.startsWith('C0')),false)
+  const state = startedGame()
+  state.players[0].hand = ['C001', 'C005']
+  state.players[0].pp = 10
+  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.canPlayCard(state,1),false)
 })
