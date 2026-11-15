@@ -1,5 +1,6 @@
 import type { Card, ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
+import { damageLeader } from './leaderShield'
 
 const MAX_FIELD = 5
 const MAX_HAND = 9
@@ -174,8 +175,9 @@ export function resolveNeutralTurnEnd(state: GameState, ownerId: string): GameSt
       const enemyIndex = result.players.findIndex(player => player.id !== ownerId)
       const players = [...result.players] as [Player, Player]
       const enemy = players[enemyIndex]
-      const hp = Math.max(0, enemy.leaderHealth - 1)
-      players[enemyIndex] = { ...enemy, leaderHealth: hp }
+      const damaged = damageLeader(enemy, 1)
+      const hp = damaged.leaderHealth
+      players[enemyIndex] = damaged
       result = { ...result, players,
         winnerId: hp === 0 ? ownerId : result.winnerId }
     }
