@@ -4823,11 +4823,11 @@ test('通常対戦デッキには正式115枚だけが入る（修練者など�
   const pool=getDeckCardPool()
   assert.equal(pool.length,115)
   assert.deepEqual(new Set(pool.map(c=>c.id)),new Set(productionCards.map(c=>c.id)))
-  assert.ok(pool.every(c=>/^C\\d{3}$/.test(c.id)))
+  assert.ok(pool.every(c=>/^C\d{3}$/.test(c.id)))
   assert.equal(getCard('test-elemental-caster').name,'水の修練者')
   assert.equal(pool.some(c=>c.id==='test-elemental-caster'),false)
   for(let i=0;i<30;i++){
     const state=engine.createInitialGameState()
-    for(const player of state.players)assert.ok([...player.hand,...player.deck].every(id=>/^C\\d{3}$/.test(id)))
+    for(const player of state.players)assert.ok([...player.hand,...player.deck].every(id=>/^C\d{3}$/.test(id)))
   }
 })
