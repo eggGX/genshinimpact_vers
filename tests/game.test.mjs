@@ -3975,3 +3975,95 @@ test('C085 放浪者のスキル疾走はターン終了時に消える',()=>{
   state=engine.endTurn(state)
   assert.equal(state.players[0].field[0].keywords.includes('storm'),false)
 })
+
+test('ビックラキャット・ボックス交戦時：炎元素カードとの戦闘前に相手へ炎2',()=>{
+  let state=startedGame()
+  const cat=place(state,0,'token-surprising-cat-box',0,8)
+  cat.keywords=['guard']
+  const attacker=place(state,1,'C012',3,7)
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},attacker.instanceId,cat.instanceId)
+  assert.equal(state.players[0].field[0].health,5)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'pyro'}])
+})
+
+test('ビックラキャット・ボックス交戦時：無元素カードには属性追加ダメージを与えない',()=>{
+  let state=startedGame()
+  const cat=place(state,0,'token-surprising-cat-box',0,8)
+  cat.keywords=['guard']
+  const attacker=place(state,1,'C001',2,6)
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},attacker.instanceId,cat.instanceId)
+  assert.equal(state.players[0].field[0].health,6)
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('ファルカのスキルは捨てる対象が手札の指定4元素以外なら使用不可',()=>{
+  let state=startedGame()
+  const varka=place(state,0,'C083',4,7)
+  state.players[0].hand=['C001','C071']
+  assert.equal(engine.canUseAbility(state,varka.instanceId,'skill'),false)
+  state.players[0].hand=['C001','C012']
+  assert.equal(engine.canUseAbility(state,varka.instanceId,'skill'),true)
+  assert.equal(engine.activateAbility(state,varka.instanceId,'skill','hand:0'),state)
+  const next=engine.activateAbility(state,varka.instanceId,'skill','hand:1')
+  assert.deepEqual(next.players[0].hand,['C001'])
+  assert.equal(next.players[0].energy,1)
+})
+
+test('ファルカの属性上書きはターン終了時にスキルで得た元素へ戻る',()=>{
+  let state=startedGame()
+  const varka=place(state,0,'C083',4,7)
+  state.players[0].hand=['C012']
+  state=engine.activateAbility(state,varka.instanceId,'skill','hand:0')
+  const foe=place(state,1,'test-mage',0,18)
+  state=engine.attackFollower(state,varka.instanceId,foe.instanceId)
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_anemo'))
+  state=engine.endTurn(state)
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_pyro'))
+  assert.ok(!state.players[0].field[0].keywords.includes('normal_attack_anemo'))
+})
+
+test('スクロースの拡散カードドローは複数対象に拡散してもターン1回まで',()=>{
+  let state=startedGame()
+  const sucrose=place(state,0,'C079',2,3)
+  state.players[0].hand=[]
+  state.players[0].deck=['C001','C071','C073']
+  const a=place(state,1,'test-mage',0,12)
+  const b=place(state,1,'test-mage',0,12)
+  a.aura=[{element:'pyro'}]
+  b.aura=[{element:'hydro'}]
+  state.players[0].pp=1
+  state=engine.activateAbility(state,sucrose.instanceId,'skill')
+  assert.equal(state.players[0].hand.length,1)
+  assert.equal(state.players[0].field[0].swirlDrawsThisTurn,1)
+})
+
+test('命の契約はカード効果による回復にも適用される',()=>{
+  let state=startedGame()
+  state.players[0].bondOfLife=3
+  state.players[0].leaderHealth=9
+  state.players[0].hand=['C031']
+  state.players[0].deck=['C001']
+  state.players[0].pp=3
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].leaderHealth,9)
+  assert.equal(state.players[0].bondOfLife,1)
+})
+
+test('放浪者の元素爆発は敵フォロワー不在でリーダーシールドから先に削る',()=>{
+  let state=startedGame()
+  const wanderer=place(state,0,'C085',3,5)
+  state.players[0].energy=3
+  state.players[1].leaderShield={normal:4,crystallize:0}
+  state=engine.activateAbility(state,wanderer.instanceId,'burst')
+  assert.equal(state.players[1].leaderShield.normal,0)
+  assert.equal(state.players[1].leaderHealth,14)
+})
+
+test('風元素専用トークン猫ボックスはデッキの初期候補から除外',async()=>{
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const card=engine.getCard('token-surprising-cat-box')
+  assert.deepEqual([card.attack,card.health],[0,8])
+  assert.equal(card.token,true)
+  assert.equal(getDeckCardPool().some(c=>c.id===card.id),false)
+})
