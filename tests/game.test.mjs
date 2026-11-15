@@ -2594,3 +2594,169 @@ test('トークン3種とカードレジストリ：水圧装置はアミュレ�
   const status=ids.map(id=>engine.getCard(id).token)
   assert.deepEqual(status,[true,true,true])
 })
+
+test('STEP32 氷元素C041-C055は15枚・B4/S4/G4/L3で原本の名前とコストを保持',async()=>{
+  const {cry oCards}= {cry oCards:null}
+})
+
+test('STEP32 氷元素15枚のID、名前、コスト、レアリティは確定資料どおり',async()=>{
+  const { cryoCards }=await vite.ssrLoadModule('/src/data/cards/cryo.ts')
+  assert.deepEqual(cryoCards.map(c=>c.id),
+    Array.from({length:15},(_,i)=>'C'+String(41+i).padStart(3,'0')))
+  assert.deepEqual(cryoCards.map(c=>c.name),[
+    '氷スライム','ヒルチャール射手・氷','イクトミ仔竜','霜の精',
+    '凛冽なる輪舞','星流揺籠の夢','ファデュイ・氷蛍術師','ヒルチャール・霜鎧の王',
+    'キャッツテールの看板娘・ディオナ','西風騎兵隊長・ガイア',
+    '夢遊する星詠み・レイラ','スチームバードの記者・シャルロット',
+    '月海亭の秘書・甘雨','黒曜石の老婆・シトラリ','神里家令嬢・神里綾華',
+  ])
+  assert.deepEqual(cryoCards.map(c=>c.cost),[1,2,2,3,3,4,4,7,3,3,3,4,5,5,5])
+  assert.deepEqual(cryoCards.map(c=>c.rarity),[
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')
+  ])
+  assert.ok(cryoCards.every(c=>c.element==='cryo'))
+})
+
+test('STEP32 氷15枚のタイプ・ステータス・地域と対戦対応状況を照合',async()=>{
+  const { cryoCards }=await vite.ssrLoadModule('/src/data/cards/cryo.ts')
+  assert.deepEqual(cryoCards.map(c=>c.type),[
+    'follower','follower','follower','follower','spell','spell',
+    'follower','follower','follower','follower','follower','follower',
+    'follower','follower','follower'
+  ])
+  assert.deepEqual(cryoCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
+    [2,2],[2,2],[2,2],[2,2],[2,4],[5,7],
+    [2,4],[3,3],[1,5],[2,4],[3,5],[2,5],[4,5],
+  ])
+  assert.deepEqual(cryoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    ['C041','C042','C043','C047','C048','C050'])
+  assert.deepEqual(cryoCards.find(c=>c.id==='C051').traits,['教令院'])
+  assert.deepEqual(cryoCards.find(c=>c.id==='C054').traits,['謎煙の主'])
+})
+
+test('STEP32 合計55/115・氷枠は全15枚登録・残り60枚',async()=>{
+  const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const result=validateProductionCards(productionCards)
+  assert.deepEqual(result.errors,[])
+  assert.equal(result.total,55)
+  assert.equal(result.slots.filter(x=>x.element==='cryo').reduce((n,x)=>n+x.remaining,0),0)
+  assert.equal(result.slots.reduce((n,x)=>n+x.remaining,0),60)
+})
+
+test('氷未対応9枚はカード一覧で参照できるがデッキ候補から除外',async()=>{
+  const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const { cryoCards }=await vite.ssrLoadModule('/src/data/cards/cryo.ts')
+  const pool=new Set(getDeckCardPool().map(c=>c.id))
+  for(const c of cryoCards) assert.equal(pool.has(c.id),c.implementationStatus==='playable')
+  const state=startedGame()
+  state.players[0].pp=10;state.players[0].hand=['C044','C045','C046','C049','C051','C052','C053','C054','C055']
+  assert.ok(state.players[0].hand.every(id=>engine.getCard(id)?.description?.length))
+  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+})
+
+test('C041 氷スライムは初期付着に氷元素を持ち、常時付着を維持',()=>{
+  let state=startedGame()
+  state.players[0].pp=1;state.players[0].hand=['C041']
+  state=engine.playCard(state,'player1',0)
+  const slime=state.players[0].field[0]
+  assert.deepEqual(slime.aura,[{element:'cryo'}])
+  assert.equal(slime.health,2)
+})
+
+test('C042 氷射手のファンファーレは敵一体に氷1と付着を付与',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C042']
+  const target=place(state,1,'test-mage',1,6)
+  state=engine.playCard(state,'player1',0,target.instanceId)
+  assert.equal(state.players[0].field[0].cardId,'C042')
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'cryo'}])
+})
+
+test('C042 氷射手は水付着した敵に凍結を発生させる',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C042']
+  const target=place(state,1,'test-mage',1,6)
+  target.aura=[{element:'hydro'}]
+  state=engine.playCard(state,'player1',0,target.instanceId)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.ok(state.players[1].field[0].keywords.includes('frozen'))
+})
+
+test('C043 イクトミ仔竜は突進で登場ターンは敵フォロワーのみ攻撃できる',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C043']
+  state=engine.playCard(state,'player1',0)
+  const dragon=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,dragon.instanceId),state)
+  const victim=place(state,1,'test-mage',0,6)
+  state=engine.attackFollower(state,dragon.instanceId,victim.instanceId)
+  assert.equal(state.players[1].field[0].health,4)
+})
+
+test('C047 氷蛍術師はファンファーレで氷蛍1/1を2体召喚',()=>{
+  let state=startedGame()
+  state.players[0].pp=4;state.players[0].hand=['C047']
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].field.map(f=>f.cardId),
+    ['C047','token-cryo-cicin','token-cryo-cicin'])
+  assert.deepEqual(state.players[0].field.filter(f=>f.cardId==='token-cryo-cicin')
+    .map(f=>[f.attack,f.health]),[[1,1],[1,1]])
+  assert.equal(engine.getCard('token-cryo-cicin').normalAttackElement,'cryo')
+})
+
+test('C047 氷蛍術師のシールドは氷蛍が存在するターン終了時のみ付与',()=>{
+  let state=startedGame()
+  const mage=place(state,0,'C047',2,4)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].shield.normal,0)
+  place(state,0,'token-cryo-cicin',1,1)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[0].field.find(f=>f.instanceId===mage.instanceId).shield.normal,2)
+})
+
+test('C047 氷蛍の召喚は場の最大5枠を超えない',()=>{
+  let state=startedGame()
+  state.players[0].pp=4;state.players[0].hand=['C047']
+  for(let i=0;i<3;i++)place(state,0,'C001',1,2)
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field.length,5)
+  assert.equal(state.players[0].field.filter(f=>f.cardId==='token-cryo-cicin').length,1)
+})
+
+test('C048 霜鎧の王は守護、ターン終了時自身に通常シールド3',()=>{
+  let state=startedGame()
+  state.players[0].pp=7;state.players[0].hand=['C048']
+  state=engine.playCard(state,'player1',0)
+  assert.ok(state.players[0].field[0].keywords.includes('guard'))
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].shield.normal,3)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].shield.normal,6)
+})
+
+test('C050 ガイアは突進・PP0スキル氷2・EN1、ターン内1回',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C050']
+  state=engine.playCard(state,'player1',0)
+  const kaeya=state.players[0].field[0]
+  const enemy=place(state,1,'test-mage',0,7)
+  assert.equal(engine.attackLeader(state,kaeya.instanceId),state)
+  assert.equal(engine.canUseAbility(state,kaeya.instanceId,'skill'),true)
+  state=engine.activateAbility(state,kaeya.instanceId,'skill',enemy.instanceId)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'cryo'}])
+  assert.equal(engine.canUseAbility(state,kaeya.instanceId,'skill'),false)
+})
+
+test('氷蛍はトークンカードであり通常のデッキに登録されない',async()=>{
+  const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const cicin=engine.getCard('token-cryo-cicin')
+  assert.deepEqual([cicin.cost,cicin.attack,cicin.health],[1,1,1])
+  assert.equal(cicin.token,true)
+  assert.equal(getDeckCardPool().some(c=>c.id===cicin.id),false)
+})
