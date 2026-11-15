@@ -19,7 +19,8 @@ export function resolveEffects(
   effects: CardEffect[],
   trigger: EffectTrigger,
   targetId?: string,
-  sourceId?: string
+  sourceId?: string,
+  afterEachEffect?: (state: GameState) => GameState
 ): GameState {
   let result = state
 
@@ -34,6 +35,8 @@ export function resolveEffects(
       targetId,
       sourceId
     )
+    // ダメージの直後に破壊・ラストワードを解決し、後続効果は更新後の盤面を参照する。
+    if (afterEachEffect) result = afterEachEffect(result)
   }
 
   return result
@@ -111,7 +114,8 @@ function applyEffect(
 
     if (
       !targetPlayer.field.some(
-        f => f.instanceId === instanceId
+        f => f.instanceId === instanceId && f.health > 0 &&
+          (effect.target !== 'selected_enemy_follower' || !f.keywords.includes('aura'))
       )
     ) {
       return state
