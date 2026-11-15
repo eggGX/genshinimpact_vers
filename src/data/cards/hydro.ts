@@ -163,7 +163,8 @@ export const hydroCards: Card[] = [
       "西風教会"
     ],
     "description": "【元素攻撃：水】【自分のターン終了時】自分のフォロワーすべてを1回復。【元素スキル：公演、開始♪】PP2：自分のリーダーにクレスト【歌声の環】（カウントダウン3、自分ターン終了時：自リーダー3回復して水元素付着）付与。",
-    "implementationStatus": "data_only",
+        "elementalSkill": {"name":"公演、開始♪","ppCost":2,"effects":[]},
+"implementationStatus": "playable",
     "normalAttackElement": "hydro"
   },
   {
@@ -182,7 +183,8 @@ export const hydroCards: Card[] = [
       "古華派"
     ],
     "description": "【ファンファーレ】1枚引く。【元素スキル：古華剣・画雨籠山】PP1：自身に【2回攻撃】【突進】【元素攻撃：水】付与。",
-    "implementationStatus": "data_only"
+        "elementalSkill": {"name":"古華剣・画雨籠山","ppCost":1,"effects":[]},
+"implementationStatus": "playable"
   },
   {
     "id": "C036",
@@ -222,7 +224,8 @@ export const hydroCards: Card[] = [
       "ナド・クライ"
     ],
     "description": "【ファンファーレ】「水圧装置」1つを場に出す。【元素スキル：名称未設定】PP1：敵フォロワー1体に水元素2ダメージ。自分の場の「水圧装置」すべてのカウントダウン+1。",
-    "implementationStatus": "data_only"
+        "elementalSkill": {"name":"名称未設定","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"hydro"}]},
+"implementationStatus": "playable"
   },
   {
     "id": "C038",
@@ -237,7 +240,9 @@ export const hydroCards: Card[] = [
       "モンド"
     ],
     "description": "【元素攻撃：水】【元素スキル：水中幻願】PP1：「虚影」1体を召喚。【元素爆発：星命定軌】エネルギー3：敵フォロワーすべてに水元素2ダメージ。その後、相手フォロワーすべてに「次に受けるダメージ+2」を付与。",
-    "implementationStatus": "data_only",
+        "elementalSkill": {"name":"水中幻願","ppCost":1,"effects":[]},
+    "elementalBurst": {"name":"星命定軌","energyCost":3,"effects":[]},
+"implementationStatus": "playable",
     "normalAttackElement": "hydro"
   },
   {
@@ -253,7 +258,9 @@ export const hydroCards: Card[] = [
       "稲妻"
     ],
     "description": "【元素攻撃：水】【自分のターン終了時】自リーダー2回復。【元素スキル：海月の誓い】PP1：「化海月」1体を召喚。【元素爆発：海人の羽衣】エネルギー3：自身+2/+0、【守護】【突進】【攻撃時：自リーダー2回復】付与。",
-    "implementationStatus": "data_only",
+        "elementalSkill": {"name":"海月の誓い","ppCost":1,"effects":[]},
+    "elementalBurst": {"name":"海人の羽衣","energyCost":3,"effects":[]},
+"implementationStatus": "playable",
     "normalAttackElement": "hydro"
   },
   {
@@ -272,6 +279,8 @@ export const hydroCards: Card[] = [
       "ファデュイ"
     ],
     "description": "【元素スキル：魔王武装・狂瀾】PP1：自身に【突進】【2回攻撃】【元素攻撃：水】付与。【元素爆発：極悪技・尽滅閃】エネルギー4：敵フォロワーすべてと相手リーダーに水元素3ダメージ。このターン自身が攻撃済みなら代わりに5。",
-    "implementationStatus": "data_only"
+        "elementalSkill": {"name":"魔王武装・狂瀾","ppCost":1,"effects":[]},
+    "elementalBurst": {"name":"極悪技・尽滅閃","energyCost":4,"effects":[]},
+"implementationStatus": "playable"
   }
 ]
