@@ -7,6 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
+import { resolvePyroDestroy } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
@@ -241,6 +242,7 @@ function resolveDeaths(state: GameState): GameState {
         resolveDeaths
       )
       result = resolveNeutralDestroy(result, ownerId, follower)
+      result = resolvePyroDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
