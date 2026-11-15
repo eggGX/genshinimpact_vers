@@ -4,13 +4,12 @@ import type { Card } from '../../game/types'
  * 初期セット Ver.1.0 / 無元素10枚（C001-C010）
  * 原本: genshin_cards_v1.csv
  *
- * 一部の効果（守護・召喚・スペル・クレスト・ドロー等）はエンジン未対応です。
- * 説明を正確に保持し、動作未実装の効果を勝手に別処理へ置き換えません。
+ * 能力実行は neutralRules.ts とゲームエンジンが担当します。
  */
 export const neutralCards: Card[] = [
   {
     id: 'C001',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: 'ヒルチャール',
     type: 'follower',
     rarity: 'bronze',
@@ -23,7 +22,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C002',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: '宝盗団・雑夫',
     type: 'follower',
     rarity: 'bronze',
@@ -36,7 +35,8 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C003',
-    implementationStatus: 'data_only',
+    keywords: ['guard'],
+    implementationStatus: 'playable',
     name: '遺跡守衛',
     type: 'follower',
     rarity: 'bronze',
@@ -49,7 +49,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C004',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: 'ワイルドハント',
     type: 'follower',
     rarity: 'bronze',
@@ -63,7 +63,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C005',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: 'ヒルチャール強襲',
     type: 'spell',
     rarity: 'silver',
@@ -73,7 +73,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C006',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: 'エラ・マスク',
     type: 'follower',
     rarity: 'silver',
@@ -86,7 +86,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C007',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: 'ティミー',
     type: 'follower',
     rarity: 'silver',
@@ -99,7 +99,8 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C008',
-    implementationStatus: 'data_only',
+    keywords: ['rush'],
+    implementationStatus: 'playable',
     name: 'ヒルチャール暴徒',
     type: 'follower',
     rarity: 'silver',
@@ -112,7 +113,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C009',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: 'パイモンのへそくり',
     type: 'spell',
     rarity: 'gold',
@@ -122,7 +123,7 @@ export const neutralCards: Card[] = [
   },
   {
     id: 'C010',
-    implementationStatus: 'data_only',
+    implementationStatus: 'playable',
     name: '第四降臨者の力',
     type: 'spell',
     rarity: 'gold',
