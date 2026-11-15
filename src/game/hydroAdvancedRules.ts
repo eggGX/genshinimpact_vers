@@ -1,6 +1,5 @@
 import type { Follower, GameState, Player } from './types'
-import { getCard } from '../data/cardRegistry'
-import { createSummonedFollower, summonFollowers } from './neutralRules'
+import { summonFollowers } from './neutralRules'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 let nextHydroAmuletId = 1
