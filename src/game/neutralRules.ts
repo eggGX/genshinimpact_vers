@@ -23,9 +23,11 @@ export function createSummonedFollower(cardId: string, keywords: string[] = []):
     burstUsed: false,
     aura: [],
     shield: { normal: 0, crystallize: 0 },
-    canAttack: false,
+    canAttack: Boolean(card.keywords?.includes('storm') ||
+      card.keywords?.includes('rush')),
     hasAttacked: false,
-    keywords,
+    keywords: [...(card.keywords ?? []), ...keywords,
+      ...(card.keywords?.includes('rush') ? ['rush_only'] : [])],
   }
 }
 
@@ -99,6 +101,10 @@ export function resolveNeutralPlay(
     case 'C007':
       return summonFollowers(state, ownerId, 'neutral-dove', 2)
     case 'C009':
+      if (state.players.find(player => player.id === ownerId)?.deck.length === 0) {
+        const opponent = state.players.find(player => player.id !== ownerId)
+        return { ...state, winnerId: opponent?.id ?? state.winnerId }
+      }
       return editPlayer(state, ownerId, player => {
         // Drawing from an empty deck is an immediate loss, handled by caller.
         const [drawn, ...deck] = player.deck
