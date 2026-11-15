@@ -3598,12 +3598,12 @@ test('C072 モンド城は自分のターン終了時に地域モンドのカー
 test('C072 モンド城は3回ターン終了で消滅・サーチ対象無しでも減少する',()=>{
   let state=startedGame()
   state.players[0].pp=2;state.players[0].hand=['C072']
-  state.players[0].deck=['C001']
+  state.players[0].deck=Array(10).fill('C001')
   state=engine.playCard(state,'player1',0)
   for(let i=0;i<5;i++)state=engine.endTurn(state)
   assert.deepEqual(state.players[0].amulets,[])
   assert.deepEqual(state.players[0].hand,[])
-  assert.equal(state.players[0].deck.length,1)
+  assert.equal(state.players[0].deck.length,8)
 })
 
 test('C072 モンド城は場が埋まっていればプレイ不可',()=>{
