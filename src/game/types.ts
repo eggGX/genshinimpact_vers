@@ -130,6 +130,7 @@ export interface Follower {
   /** Number of own-turn electro-charged triggers credited to this Ororon. */
   electroChargedTriggersThisTurn?: number
   swirlDrawsThisTurn?: number
+  geoShieldTriggersThisTurn?: number
   keywords: string[]
 }
 
