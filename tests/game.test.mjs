@@ -1666,6 +1666,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['コレアンバー', 0, undefined, undefined],
     ['草霊', 2, 2, 2],
     ['月桂・投擲型', 2, 0, 3],
+    ['ルミドゥースの瓶', 2, undefined, undefined],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -4509,10 +4510,10 @@ test('STEP40 草元素15枚は原本どおりB4/S4/G4/L3の構成', async()=>{
   assert.deepEqual(report.errors,[])
   assert.equal(report.ready,true)
 })
-test('STEP41 草元素12枚が対戦対応、残り3枚は正式データのみ',async()=>{
+test('STEP41 草元素15枚が対戦対応、残り0枚は正式データのみ',async()=>{
   const {dendroCards}=await vite.ssrLoadModule('/src/data/cards/dendro.ts')
   assert.deepEqual(dendroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C101','C102','C103','C104','C105','C106','C107','C108','C109','C110','C111','C112'])
+    ['C101','C102','C103','C104','C105','C106','C107','C108','C109','C110','C111','C112','C113','C114','C115'])
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of dendroCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
@@ -4667,4 +4668,61 @@ test('C112 カーヴェは敵草原核+0/+1、スキル草2とHP準拠リーダ�
  s=engine.activateAbility(s,s.players[0].field[0].instanceId,'skill',enemy.instanceId)
  assert.equal(s.players[1].field.find(f=>f.instanceId===enemy.instanceId).health,4)
  assert.equal(s.players[1].leaderHealth,18)
+})
+
+test('C113 ティナリのスキルは草2＋攻撃力-1',()=>{
+ let s=startedGame(), t=place(s,0,'C113',3,5)
+ const e=place(s,1,'test-mage',3,7)
+ s.players[0].pp=1
+ s=engine.activateAbility(s,t.instanceId,'skill',e.instanceId)
+ assert.equal(s.players[1].field[0].health,5)
+ assert.equal(s.players[1].field[0].attack,2)
+})
+test('C113 ティナリの爆発は敵リーダーのみなら草2を4回',()=>{
+ let s=startedGame(), t=place(s,0,'C113',3,5)
+ s.players[0].energy=3
+ s=engine.activateAbility(s,t.instanceId,'burst')
+ assert.equal(s.players[1].leaderHealth,12)
+})
+test('C113 ティナリの攻撃時はランダム敵フォロワーに草1',()=>{
+ let s=startedGame(), t=place(s,0,'C113',3,5)
+ const e=place(s,1,'test-mage',0,8)
+ s=engine.attackFollower(s,t.instanceId,e.instanceId)
+ assert.equal(s.players[1].field[0].health,4)
+})
+test('C114 エミリエのスキルは3ターンのルミドゥースの瓶',()=>{
+ let s=startedGame(), e=place(s,0,'C114',3,5)
+ s.players[0].pp=1
+ s=engine.activateAbility(s,e.instanceId,'skill')
+ assert.equal(s.players[0].amulets[0].cardId,'token-lumidouce-vial')
+ assert.equal(s.players[0].amulets[0].turnsRemaining,3)
+})
+test('C114 エミリエの爆発は燃焼状態があれば敵全体に草2を2回',()=>{
+ let s=startedGame(), e=place(s,0,'C114',3,5)
+ const foe=place(s,1,'test-mage',0,9)
+ foe.keywords.push('burning:2')
+ s.players[0].energy=3
+ s=engine.activateAbility(s,e.instanceId,'burst')
+ assert.equal(s.players[1].field[0].health,5)
+})
+test('C115 キィニチは突進・スキル草3・爆発敵全体草2＋リーダー草3',()=>{
+ let s=startedGame();s.players[0].hand=['C115'];s.players[0].pp=5
+ const e=place(s,1,'test-mage',0,10)
+ s=engine.playCard(s,'player1',0)
+ let k=s.players[0].field[0]
+ assert.ok(k.keywords.includes('rush_only'))
+ s.players[0].pp=1
+ s=engine.activateAbility(s,k.instanceId,'skill',e.instanceId)
+ assert.equal(s.players[1].field[0].health,7)
+ s.players[0].energy=3
+ s=engine.activateAbility(s,k.instanceId,'burst')
+ assert.equal(s.players[1].field[0].health,5)
+ assert.equal(s.players[1].leaderHealth,17)
+})
+test('C115 キィニチの燃焼反応による強化は自ターン最大2回',async()=>{
+ const {resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
+ let s=startedGame();place(s,0,'C115',4,5)
+ for(let i=0;i<3;i++)s=resolveReactionConsequence(s,1,'missing','burning',undefined,0)
+ assert.equal(s.players[0].field[0].attack,6)
+ assert.equal(s.players[0].field[0].dendroBurningTriggersThisTurn,2)
 })
