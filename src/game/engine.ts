@@ -168,7 +168,7 @@ export function canPlayCard(
   const cardId = owner.hand[handIndex]
   const card = cardId ? getCard(cardId) : undefined
 
-  if (!card || card.type !== 'follower') return false
+  if (!card || card.type !== 'follower' || card.implementationStatus === 'data_only') return false
   if (owner.pp < card.cost) return false
   if (owner.field.length >= MAX_FIELD_SIZE) return false
 
