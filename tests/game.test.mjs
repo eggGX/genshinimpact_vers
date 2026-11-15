@@ -617,13 +617,13 @@ test('カード検証：コスト・攻撃力・体力とトークン禁止を�
   }
 })
 
-test('カード検索：正式／テスト用の区分を分離', async () => {
+test('カード検索：正式カード／トークンの区分を分離', async () => {
   const { filterCards } = await vite.ssrLoadModule('/src/data/cardFilters.ts')
-  const cards = [engine.getCard('C011'), engine.getCard('C001')]
-  const prodIds = new Set(['C011'])
+  const cards = [engine.getCard('token-baron-bunny'), engine.getCard('C001')]
+  const prodIds = new Set(['C001'])
   const filters = { element: 'all', rarity: 'all', origin: 'production', search: '' }
-  assert.deepEqual(filterCards(cards, filters, prodIds).map(card => card.id), ['C011'])
-  assert.deepEqual(filterCards(cards, { ...filters, origin: 'test' }, prodIds).map(card => card.id), ['C001'])
+  assert.deepEqual(filterCards(cards, filters, prodIds).map(card => card.id), ['C001'])
+  assert.deepEqual(filterCards(cards, { ...filters, origin: 'token' }, prodIds).map(card => card.id), ['token-baron-bunny'])
   assert.deepEqual(filterCards(cards, { ...filters, origin: 'all', search: 'ヒル' }, prodIds).map(card => card.id), ['C001'])
 })
 
