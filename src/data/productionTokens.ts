@@ -180,5 +180,14 @@ export const productionTokens: Card[] = [
     cost: 0,
     token: true,
     description: '岩創造物。カチーナのスキルで召喚する。追加能力・持続時間は未確定。',
+  },  {
+    id: 'token-solar-isotoma',
+    name: '陽華',
+    type: 'amulet',
+    rarity: 'bronze',
+    element: 'geo',
+    cost: 0,
+    token: true,
+    description: '岩創造物。アルベドの元素スキルで召喚。未確定の持続ターン・追加能力は設定しない。',
   },
 ]
