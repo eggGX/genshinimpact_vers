@@ -558,7 +558,7 @@ test('燃焼ダメージもシールドで吸収してHPを減らさない', () 
   assert.equal(next.players[0].field[0].shield.normal,0)
 })
 
-test('開花：水＋草の反応で攻撃側に0/1草原核を生成し攻撃不可', async () => {
+test('開花：水＋草の反応で発動者の相手側に0/1草原核を生成し攻撃不可', async () => {
   const { resolveElementalDamage, resolveReactionConsequence } =
     await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
@@ -569,7 +569,8 @@ test('開花：水＋草の反応で攻撃側に0/1草原核を生成し攻撃�
   assert.deepEqual(result.follower.aura, [])
   state.players[1].field[0] = result.follower
   const next = resolveReactionConsequence(state, 1, target.instanceId, 'bloom', result.reactedElement, 0)
-  const core = next.players[0].field[0]
+  const core = next.players[1].field.find(f => f.cardId === 'dendro-core')
+  assert.ok(core)
   assert.equal(core.cardId, 'dendro-core')
   assert.equal(core.attack, 0)
   assert.equal(core.health, 1)
@@ -580,21 +581,21 @@ test('再開花：既存の草原核の体力と最大体力が1増加する', a
   const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
   let state = startedGame()
   state = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
-  const old = state.players[0].field[0]
+  const old = state.players[1].field[0]
   state = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
-  assert.equal(state.players[0].field.length, 1)
-  assert.equal(state.players[0].field[0].instanceId, old.instanceId)
-  assert.equal(state.players[0].field[0].health, 2)
-  assert.equal(state.players[0].field[0].maxHealth, 2)
+  assert.equal(state.players[1].field.length, 1)
+  assert.equal(state.players[1].field[0].instanceId, old.instanceId)
+  assert.equal(state.players[1].field[0].health, 2)
+  assert.equal(state.players[1].field[0].maxHealth, 2)
 })
 
 test('草原核は自分のフィールド5枠を超えて生成されない', async () => {
   const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  for (let i = 0; i < 5; i++) place(state, 0, 'test-slime', 1, 2)
+  for (let i = 0; i < 5; i++) place(state, 1, 'test-slime', 1, 2)
   const next = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
-  assert.equal(next.players[0].field.length, 5)
-  assert.equal(next.players[0].field.some(f => f.cardId === 'dendro-core'), false)
+  assert.equal(next.players[1].field.length, 5)
+  assert.equal(next.players[1].field.some(f => f.cardId === 'dendro-core'), false)
 })
 
 test('烈開花：炎で草原核を破壊し持ち主リーダーを3ターン燃焼にする', () => {
@@ -674,8 +675,8 @@ test('草の術師による実際のファンファーレ開花で草原核が�
   const target = place(state, 1, 'test-mage', 1, 6)
   target.aura = [{ element: 'hydro' }]
   const next = engine.playCard(state, 'player1', 0, target.instanceId)
-  assert.equal(next.players[0].field.length, 2)
-  assert.equal(next.players[0].field[1].cardId, 'dendro-core')
+  assert.equal(next.players[0].field.length, 1)
+  assert.equal(next.players[1].field[1].cardId, 'dendro-core')
   assert.equal(next.players[1].field[0].health, 5)
 })
 
@@ -4795,4 +4796,23 @@ test('岩創造物のターン終了効果はナヴィアの結晶シールド�
  s.players[0].amulets=[{instanceId:'jade-navia',cardId:'token-jade-screen',turnsRemaining:3}]
  s=engine.endTurn(s)
  assert.equal(s.players[0].field.find(f=>f.instanceId===navia.instanceId).attack,5)
+})
+
+test('Ver.1.0.1 草原核は反応を起こした側の相手の場へ生成、両方向を検証', async()=>{
+  const {resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
+  const s=startedGame()
+  const a=resolveReactionConsequence(s,1,'dummy','bloom','hydro',0)
+  assert.equal(a.players[0].field.some(f=>f.cardId==='dendro-core'),false)
+  assert.equal(a.players[1].field.filter(f=>f.cardId==='dendro-core').length,1)
+  const b=resolveReactionConsequence(s,0,'dummy','bloom','hydro',1)
+  assert.equal(b.players[1].field.some(f=>f.cardId==='dendro-core'),false)
+  assert.equal(b.players[0].field.filter(f=>f.cardId==='dendro-core').length,1)
+})
+test('草原核は相手盤面のアミュレットも含めて5枠制限',async()=>{
+  const {resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
+  let s=startedGame()
+  for(let i=0;i<4;i++)place(s,1,'test-slime',1,2)
+  s.players[1].amulets=[{instanceId:'test-full-slot',cardId:'token-jade-screen',turnsRemaining:2}]
+  s=resolveReactionConsequence(s,1,'dummy','bloom','hydro',0)
+  assert.equal(s.players[1].field.some(f=>f.cardId==='dendro-core'),false)
 })
