@@ -691,8 +691,15 @@ export function attackFollower(
     })) as [Player, Player],
   }
   const swept = geoSweepAttack(declared, owner.id, attackerId, resolveDeaths)
-  if (swept.winnerId !== null || !swept.players[index].field.some(f => f.instanceId === attackerId && f.health > 0) ||
-      !swept.players[enemyIndex].field.some(f => f.instanceId === targetId && f.health > 0)) return swept
+  if (swept.winnerId !== null || !swept.players[index].field.some(f => f.instanceId === attackerId && f.health > 0)) return swept
+  // Attack declaration consumes the attack even if its triggered AoE destroys the target.
+  if (!swept.players[enemyIndex].field.some(f => f.instanceId === targetId && f.health > 0)) {
+    const players = [...swept.players] as [Player, Player]
+    players[index] = { ...players[index], field: players[index].field.map(f =>
+      f.instanceId === attackerId ? { ...f, hasAttacked: true,
+        attacksThisTurn: (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0)) + 1 } : f) }
+    return { ...swept, players }
+  }
   const buffed = geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
