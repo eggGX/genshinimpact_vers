@@ -147,5 +147,18 @@ export const productionTokens: Card[] = [
     token: true,
     description: '【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に雷元素2ダメージ。',
   },
+  {
+    id: 'token-surprising-cat-box',
+    name: 'ビックラキャット・ボックス',
+    type: 'follower',
+    rarity: 'bronze',
+    element: 'anemo',
+    cost: 3,
+    attack: 0,
+    health: 8,
+    token: true,
+    keywords: ['guard'],
+    description: '【守護】【自分のターン終了時】ランダムな敵フォロワー1体に風元素2ダメージ。【交戦時】交戦相手が炎/水/氷/雷属性カードなら同属性2ダメージ。',
+  },
 
 ]
