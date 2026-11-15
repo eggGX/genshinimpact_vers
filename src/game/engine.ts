@@ -10,6 +10,7 @@ import { resolveEffects } from './effects'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
+import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
@@ -260,6 +261,7 @@ function resolveDeaths(state: GameState): GameState {
       result = resolveHydroAdvancedDestroy(result, ownerId, follower)
       result = cryoDestroy(result, ownerId, follower, resolveDeaths)
       result = electroDestroy(result, ownerId, follower)
+      result = resolveAnemoDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
@@ -401,7 +403,9 @@ export function playCard(
       pp: player.pp - card.cost,
       hand: player.hand.filter((_, i) => i !== handIndex),
     }
-    return resolvePyroAmuletPlay({ ...state, players }, playerId)
+    return resolveAnemoAmuletPlay(
+      resolvePyroAmuletPlay({ ...state, players }, playerId), playerId, card.id
+    )
   }
 
   const follower: Follower = {
@@ -458,6 +462,7 @@ export function playCard(
     result = cryoPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = electroPlay(result, playerId, card.id)
     result = advancedElectroPlay(result, playerId, card.id, follower.instanceId, targetId)
+    result = resolveAnemoPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
@@ -581,6 +586,7 @@ export function activateAbility(
     result = resolveHydroAdvancedSkill(result, owner.id, followerId, card.id)
     result = cryoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
     result = advancedElectroSkill(result, owner.id, followerId, card.id, targetId, resolveDeaths)
+    result = resolveAnemoSkill(result, owner.id, followerId, card.id)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
@@ -649,7 +655,8 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = advancedElectroAttack(
+  const buffed = resolveAnemoAttack(
+    advancedElectroAttack(
     electroAttack(
     cryoAttack(
       resolveHydroAdvancedAttack(
@@ -659,6 +666,7 @@ export function attackFollower(
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
+    ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
   )
@@ -748,7 +756,8 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = advancedElectroAttack(
+  const buffed = resolveAnemoAttack(
+    advancedElectroAttack(
     electroAttack(
     cryoAttack(
       resolveHydroAdvancedAttack(
@@ -758,6 +767,7 @@ export function attackLeader(
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
+    ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
   )
@@ -857,6 +867,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = electroAmuletsTurnEnd(result, currentId, resolveDeaths)
+  if (result.winnerId !== null) return result
+
+  result = resolveAnemoAmuletsTurnEnd(result, currentId)
   if (result.winnerId !== null) return result
 
   // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
