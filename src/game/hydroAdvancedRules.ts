@@ -134,10 +134,11 @@ export function resolveHydroAdvancedSkill(
       field: p.field.map(f => f.instanceId === sourceId ? {
         ...f,
         canAttack: f.hasAttacked ? f.canAttack : true,
-        keywords: [...f.keywords.filter(k => k !== 'rush_only'),
-          ...(!f.keywords.includes('rush') ? ['rush'] : []),
-          'rush_only', 'double_attack', 'normal_attack_hydro'].filter(
-            (k, i, items) => items.indexOf(k) === i),
+        keywords: [...new Set([
+          ...f.keywords.filter(k => k !== 'rush_only'),
+          'rush', ...(f.canAttack ? [] : ['rush_only']),
+          'double_attack', 'normal_attack_hydro',
+        ])],
       } : f),
     }))
   }
@@ -168,7 +169,8 @@ export function resolveHydroAdvancedBurst(
       ...p,
       field: p.field.map(f => f.instanceId === sourceId ? {
         ...f, attack: f.attack + 2, canAttack: f.hasAttacked ? f.canAttack : true,
-        keywords: [...new Set([...f.keywords, 'guard', 'rush', 'rush_only', 'attack_heal_2'])],
+        keywords: [...new Set([...f.keywords.filter(k => k !== 'rush_only'),
+          'guard', 'rush', ...(f.canAttack ? [] : ['rush_only']), 'attack_heal_2'])],
       } : f),
     }))
   }
