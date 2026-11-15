@@ -7,7 +7,7 @@ import type {
 } from './types'
 import { testCards } from '../data/testCards'
 import { resolveEffects } from './effects'
-import { resolveElementalDamage } from './elemental'
+import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 const cardDatabase = new Map<string, Card>(
   testCards.map(card => [card.id, card])
@@ -382,6 +382,7 @@ export function canFollowerAttack(
 ): boolean {
   return (
     follower.health > 0 &&
+    !follower.keywords.includes('frozen') &&
     follower.canAttack &&
     !follower.hasAttacked
   )
@@ -422,41 +423,37 @@ export function attackFollower(
   const attackerElement = getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
+  // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
+  const toAttacker = resolveElementalDamage(
+    attacker, counterDamage, defenderElement
+  )
+  const toDefender = resolveElementalDamage(
+    defender, attackDamage, attackerElement
+  )
   const players = [...state.players] as [Player, Player]
-
   players[index] = {
     ...owner,
     field: owner.field.map(f =>
       f.instanceId === attackerId
-        ? {
-            ...resolveElementalDamage(
-              f,
-              counterDamage,
-              defenderElement
-            ).follower,
-            hasAttacked: true,
-          }
+        ? { ...toAttacker.follower, hasAttacked: true }
         : f
     ),
   }
-
   players[enemyIndex] = {
     ...enemy,
     field: enemy.field.map(f =>
-      f.instanceId === targetId
-        ? resolveElementalDamage(
-            f,
-            attackDamage,
-            attackerElement
-          ).follower
-        : f
+      f.instanceId === targetId ? toDefender.follower : f
     ),
   }
 
-  return resolveDeaths({
-    ...state,
-    players,
-  })
+  let result = { ...state, players }
+  result = resolveReactionConsequence(
+    result, enemyIndex, targetId, toDefender.reaction
+  )
+  result = resolveReactionConsequence(
+    result, index, attackerId, toAttacker.reaction
+  )
+  return resolveDeaths(result)
 }
 
 /**
@@ -566,6 +563,21 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) {
     return result
   }
+
+  // 凍結は持ち主のターン終了時に解除（次の自分のターン1回を行動不可）。
+  // 将来の元素スキル・元素爆発も同じ frozen キーワードを参照する。
+  const endedPlayers = result.players.map(p => (
+    p.id === currentId
+      ? {
+          ...p,
+          field: p.field.map(f => ({
+            ...f,
+            keywords: f.keywords.filter(k => k !== 'frozen'),
+          })),
+        }
+      : p
+  )) as [Player, Player]
+  result = { ...result, players: endedPlayers }
 
   // 2. 次のプレイヤーへ
   const players = result.players.map(p => ({
