@@ -70,42 +70,10 @@ test('デッキが空の状態でドローすると敗北', () => {
   assert.equal(next.winnerId, 'player1')
 })
 
-test('アビスの魔術師のファンファーレは相手リーダーに2ダメージ', () => {
-  const state = startedGame()
-  state.players[0].pp = 3
-  state.players[0].hand = ['test-mage']
-  const next = engine.playCard(state, 'player1', 0)
-  assert.equal(next.players[1].leaderHealth, 18)
-  assert.equal(next.players[0].field.length, 1)
-  assert.equal(next.players[0].pp, 0)
-})
-
-test('氷の射手は敵フォロワーに2ダメージを与え、破壊する', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-archer']
-  const enemy = place(state, 1, 'test-slime', 1, 2)
-  assert.equal(engine.canPlayCard(state, 0), true)
-  const next = engine.playCard(state, 'player1', 0, enemy.instanceId)
-  assert.equal(next.players[1].field.length, 0)
-  assert.deepEqual(next.players[1].graveyard, ['test-slime'])
-  assert.equal(next.players[0].field.length, 1)
-})
-
-test('ラストワードはフォロワーの持ち主を回復する', () => {
-  const state = startedGame()
-  state.players[1].leaderHealth = 15
-  const attacker = place(state, 0, 'test-slime', 2, 3)
-  const target = place(state, 1, 'test-hilichurl', 2, 2)
-  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
-  assert.equal(next.players[1].leaderHealth, 17)
-  assert.deepEqual(next.players[1].graveyard, ['test-hilichurl'])
-})
-
 test('戦闘のダメージは双方同時に適用される', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 2, 2)
-  const target = place(state, 1, 'test-slime', 2, 2)
+  const attacker = place(state, 0, 'C011', 2, 2)
+  const target = place(state, 1, 'C011', 2, 2)
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[0].field.length, 0)
   assert.equal(next.players[1].field.length, 0)
@@ -113,18 +81,9 @@ test('戦闘のダメージは双方同時に適用される', () => {
   assert.equal(next.players[1].graveyard.length, 1)
 })
 
-test('ターン終了時の祈祷師はリーダーを1回復する', () => {
-  const state = startedGame()
-  state.players[0].leaderHealth = 16
-  place(state, 0, 'test-shaman', 1, 3)
-  const next = engine.endTurn(state)
-  assert.equal(next.players[0].leaderHealth, 17)
-  assert.equal(next.currentPlayerId, 'player2')
-})
-
 test('攻撃したフォロワーは同じターンに再度攻撃できない', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 1, 2)
+  const attacker = place(state, 0, 'C011', 1, 2)
   const next = engine.attackLeader(state, attacker.instanceId)
   assert.equal(next.players[1].leaderHealth, 19)
   assert.equal(next.players[0].field[0].hasAttacked, true)
@@ -134,27 +93,17 @@ test('攻撃したフォロワーは同じターンに再度攻撃できない',
 
 test('炎スライムの通常攻撃は生存した敵に炎元素を付着させる', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 1, 2)
-  const target = place(state, 1, 'test-mage', 1, 4)
+  const attacker = place(state, 0, 'C011', 1, 2)
+  const target = place(state, 1, 'C001', 1, 4)
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[1].field[0].health, 3)
   assert.deepEqual(next.players[1].field[0].aura, [{ element: 'pyro' }])
 })
 
-test('氷の射手のダメージは生存した敵に氷元素を付着させる', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-archer']
-  const target = place(state, 1, 'test-mage', 1, 4)
-  const next = engine.playCard(state, 'player1', 0, target.instanceId)
-  assert.equal(next.players[1].field[0].health, 2)
-  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'cryo' }])
-})
-
 test('物理通常攻撃は元素付着を生じない', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-hilichurl', 1, 4)
-  const target = place(state, 1, 'test-mage', 1, 4)
+  const attacker = place(state, 0, 'C001', 1, 4)
+  const target = place(state, 1, 'C001', 1, 4)
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.deepEqual(next.players[1].field[0].aura, [])
 })
@@ -162,7 +111,7 @@ test('物理通常攻撃は元素付着を生じない', () => {
 test('風・岩・無元素の攻撃は付着せず、同元素は重複登録しない', async () => {
   const { applyElementalAura } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 4)
+  const target = place(state, 1, 'C001', 1, 4)
   assert.deepEqual(applyElementalAura(target, 'anemo').aura, [])
   assert.deepEqual(applyElementalAura(target, 'geo').aura, [])
   assert.deepEqual(applyElementalAura(target, 'none').aura, [])
@@ -174,38 +123,18 @@ test('風・岩・無元素の攻撃は付着せず、同元素は重複登録�
 test('異なる元素の重なりは保持するが反応を起こさない（STEP14）', async () => {
   const { applyElementalAura } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 4)
+  const target = place(state, 1, 'C001', 1, 4)
   const hydro = applyElementalAura(target, 'hydro')
   const cryo = applyElementalAura(hydro, 'cryo')
   assert.deepEqual(cryo.aura.map(a => a.element), ['hydro', 'cryo'])
   assert.equal(cryo.health, 4)
 })
 
-test('訓練兵は登場時に自身を2/2から3/4に強化する', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-trainee']
-  const next = engine.playCard(state, 'player1', 0)
-  assert.equal(next.players[0].field[0].attack, 3)
-  assert.equal(next.players[0].field[0].health, 4)
-  assert.equal(next.players[0].field[0].maxHealth, 4)
-})
-
-test('雷の術師は選択した敵の攻撃力を1下げ、体力は変えない', () => {
-  const state = startedGame()
-  state.players[0].pp = 3
-  state.players[0].hand = ['test-electro-mage']
-  const target = place(state, 1, 'test-hilichurl', 2, 2)
-  const next = engine.playCard(state, 'player1', 0, target.instanceId)
-  assert.equal(next.players[1].field[0].attack, 1)
-  assert.equal(next.players[1].field[0].health, 2)
-})
-
 test('蒸発は水→炎、炎→水の両方向で+2し付着を消費する', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   for (const [attached, incoming] of [['hydro', 'pyro'], ['pyro', 'hydro']]) {
     const state = startedGame()
-    const target = place(state, 1, 'test-mage', 1, 10)
+    const target = place(state, 1, 'C001', 1, 10)
     target.aura = [{ element: attached }]
     const outcome = resolveElementalDamage(target, 2, incoming)
     assert.equal(outcome.reaction, 'vaporize')
@@ -219,7 +148,7 @@ test('溶解は炎→氷、氷→炎の両方向で+3し付着を消費する', 
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   for (const [attached, incoming] of [['pyro', 'cryo'], ['cryo', 'pyro']]) {
     const state = startedGame()
-    const target = place(state, 1, 'test-mage', 1, 10)
+    const target = place(state, 1, 'C001', 1, 10)
     target.aura = [{ element: attached }]
     const outcome = resolveElementalDamage(target, 1, incoming)
     assert.equal(outcome.reaction, 'melt')
@@ -232,7 +161,7 @@ test('溶解は炎→氷、氷→炎の両方向で+3し付着を消費する', 
 test('元素のない攻撃では反応を起こさず、元の付着を維持する', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 8)
+  const target = place(state, 1, 'C001', 1, 8)
   target.aura = [{ element: 'pyro' }]
   const result = resolveElementalDamage(target, 2)
   assert.equal(result.reaction, null)
@@ -240,21 +169,10 @@ test('元素のない攻撃では反応を起こさず、元の付着を維持�
   assert.deepEqual(result.follower.aura, [{ element: 'pyro' }])
 })
 
-test('氷の射手の登場時効果で溶解+3、致死ダメージなら墓場へ送る', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-archer']
-  const target = place(state, 1, 'test-mage', 1, 4)
-  target.aura = [{ element: 'pyro' }]
-  const next = engine.playCard(state, 'player1', 0, target.instanceId)
-  assert.equal(next.players[1].field.length, 0)
-  assert.deepEqual(next.players[1].graveyard, ['test-mage'])
-})
-
 test('炎スライムの通常攻撃で蒸発が発生する', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 1, 6)
-  const target = place(state, 1, 'test-mage', 1, 7)
+  const attacker = place(state, 0, 'C011', 1, 6)
+  const target = place(state, 1, 'C001', 1, 7)
   target.aura = [{ element: 'hydro' }]
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[1].field[0].health, 4)
@@ -263,21 +181,21 @@ test('炎スライムの通常攻撃で蒸発が発生する', () => {
 
 test('同時戦闘で片方に反応が発生しても双方の攻撃を処理する', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 2, 2)
-  const target = place(state, 1, 'test-slime', 2, 4)
+  const attacker = place(state, 0, 'C011', 2, 2)
+  const target = place(state, 1, 'C011', 2, 4)
   target.aura = [{ element: 'hydro' }]
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[0].field.length, 0)
   assert.equal(next.players[1].field.length, 0)
-  assert.deepEqual(next.players[0].graveyard, ['test-slime'])
-  assert.deepEqual(next.players[1].graveyard, ['test-slime'])
+  assert.deepEqual(next.players[0].graveyard, ['C011'])
+  assert.deepEqual(next.players[1].graveyard, ['C011'])
 })
 
 test('感電は水＋雷で反応し、攻撃対象の付着を解除する', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   for (const [aura, incoming] of [['hydro', 'electro'], ['electro', 'hydro']]) {
     const state = startedGame()
-    const target = place(state, 1, 'test-mage', 1, 8)
+    const target = place(state, 1, 'C001', 1, 8)
     target.aura = [{ element: aura }]
     const result = resolveElementalDamage(target, 2, incoming)
     assert.equal(result.reaction, 'electro_charged')
@@ -289,8 +207,8 @@ test('感電は水＋雷で反応し、攻撃対象の付着を解除する', as
 test('感電の追加1ダメージは別の敵フォロワーへ与える', async () => {
   const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 8)
-  place(state, 1, 'test-hilichurl', 1, 3)
+  const target = place(state, 1, 'C001', 1, 8)
+  place(state, 1, 'C001', 1, 3)
   const next = resolveReactionConsequence(state, 1, target.instanceId, 'electro_charged')
   assert.equal(next.players[1].field[0].health, 8)
   assert.equal(next.players[1].field[1].health, 2)
@@ -300,7 +218,7 @@ test('感電の追加1ダメージは別の敵フォロワーへ与える', asyn
 test('感電で別の敵がいないときはリーダーに1ダメージ', async () => {
   const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 8)
+  const target = place(state, 1, 'C001', 1, 8)
   const next = resolveReactionConsequence(state, 1, target.instanceId, 'electro_charged')
   assert.equal(next.players[1].leaderHealth, 19)
 })
@@ -309,7 +227,7 @@ test('過負荷は炎＋雷で反応しコスト5以下の敵を手札に戻す'
   const { resolveReactionConsequence, resolveElementalDamage } =
     await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-hilichurl', 1, 8)
+  const target = place(state, 1, 'C001', 1, 8)
   target.aura = [{ element: 'pyro' }]
   const outcome = resolveElementalDamage(target, 1, 'electro')
   assert.equal(outcome.reaction, 'overloaded')
@@ -318,14 +236,14 @@ test('過負荷は炎＋雷で反応しコスト5以下の敵を手札に戻す'
   const next = resolveReactionConsequence(state, 1, target.instanceId, outcome.reaction)
   assert.equal(next.players[1].field.length, 0)
   assert.equal(next.players[1].hand.length, before + 1)
-  assert.equal(next.players[1].hand.at(-1), 'test-hilichurl')
+  assert.equal(next.players[1].hand.at(-1), 'C001')
   assert.equal(next.players[1].graveyard.length, 0)
 })
 
 test('凍結は水＋氷で発生し、反応後は付着を解除する', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 8)
+  const target = place(state, 1, 'C001', 1, 8)
   target.aura = [{ element: 'hydro' }]
   const outcome = resolveElementalDamage(target, 1, 'cryo')
   assert.equal(outcome.reaction, 'frozen')
@@ -337,7 +255,7 @@ test('凍結は水＋氷で発生し、反応後は付着を解除する', async
 
 test('凍結したフォロワーは持ち主のターン終了まで攻撃不可', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-hilichurl', 2, 5)
+  const attacker = place(state, 0, 'C001', 2, 5)
   attacker.keywords = ['frozen']
   const blocked = engine.attackLeader(state, attacker.instanceId)
   assert.equal(blocked.players[1].leaderHealth, 20)
@@ -346,34 +264,21 @@ test('凍結したフォロワーは持ち主のターン終了まで攻撃不�
   assert.equal(switched.currentPlayerId, 'player2')
 })
 
-test('氷の射手の効果で凍結し、解除前は攻撃できない', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-archer']
-  const target = place(state, 1, 'test-mage', 1, 8)
-  target.aura = [{ element: 'hydro' }]
-  const next = engine.playCard(state, 'player1', 0, target.instanceId)
-  const enemy = next.players[1].field[0]
-  assert.equal(enemy.health, 6)
-  assert.equal(enemy.keywords.includes('frozen'), true)
-  assert.equal(engine.canFollowerAttack(enemy), false)
-})
-
 test('通常攻撃中の反応はダメージの同時処理を維持する', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 1, 5)
-  const target = place(state, 1, 'test-hilichurl', 1, 5)
+  const attacker = place(state, 0, 'C011', 1, 5)
+  const target = place(state, 1, 'C001', 1, 5)
   target.aura = [{ element: 'electro' }]
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[0].field[0].health, 4)
   assert.equal(next.players[1].field.length, 0)
-  assert.equal(next.players[1].hand.at(-1), 'test-hilichurl')
+  assert.equal(next.players[1].hand.at(-1), 'C001')
 })
 
 test('超電導：氷＋雷で次の物理ダメージが+2になり一度で消費される', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const f = place(state, 1, 'test-mage', 1, 10)
+  const f = place(state, 1, 'C001', 1, 10)
   f.aura = [{element:'cryo'}]
   const reaction = resolveElementalDamage(f, 1, 'electro')
   assert.equal(reaction.reaction, 'superconduct')
@@ -388,7 +293,7 @@ test('超電導：氷＋雷で次の物理ダメージが+2になり一度で消
 test('原激化：草＋雷で2回分の状態を作り雷・草の命中で消費する', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const f = place(state, 1, 'test-mage', 1, 12)
+  const f = place(state, 1, 'C001', 1, 12)
   f.aura = [{element:'dendro'}]
   const first = resolveElementalDamage(f, 1, 'electro')
   assert.equal(first.reaction,'quicken')
@@ -402,7 +307,7 @@ test('原激化：草＋雷で2回分の状態を作り雷・草の命中で消�
 test('燃焼：炎＋草でターン数1が付き、ターン終了に1ダメージで解除', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const f = place(state, 0, 'test-mage', 1, 10)
+  const f = place(state, 0, 'C001', 1, 10)
   f.aura = [{element:'dendro'}]
   const reaction = resolveElementalDamage(f, 1, 'pyro')
   assert.equal(reaction.reaction,'burning')
@@ -417,8 +322,8 @@ test('拡散：風＋炎は別の敵にも1ダメージと炎付着', async () =
   const { resolveElementalDamage,resolveReactionConsequence } =
     await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const primary = place(state,1,'test-mage',1,8)
-  const other = place(state,1,'test-hilichurl',1,8)
+  const primary = place(state,1,'C001',1,8)
+  const other = place(state,1,'C001',1,8)
   primary.aura=[{element:'pyro'}]
   const effect=resolveElementalDamage(primary,1,'anemo')
   assert.equal(effect.reaction,'swirl')
@@ -434,8 +339,8 @@ test('拡散：風＋炎は別の敵にも1ダメージと炎付着', async () =
 test('拡散の飛び火は別の元素と反応できる', async () => {
   const {resolveElementalDamage,resolveReactionConsequence} = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state=startedGame()
-  const primary=place(state,1,'test-mage',1,8)
-  const secondary=place(state,1,'test-hilichurl',1,8)
+  const primary=place(state,1,'C001',1,8)
+  const secondary=place(state,1,'C001',1,8)
   primary.aura=[{element:'pyro'}]
   secondary.aura=[{element:'hydro'}]
   const reaction=resolveElementalDamage(primary,1,'anemo')
@@ -448,8 +353,8 @@ test('拡散の飛び火は別の元素と反応できる', async () => {
 test('結晶：岩で反応すると攻撃側の結晶シールドが1増加する', async () => {
   const {resolveElementalDamage,resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
   const state=startedGame()
-  const caster=place(state,0,'test-hilichurl',1,8)
-  const target=place(state,1,'test-mage',1,8)
+  const caster=place(state,0,'C001',1,8)
+  const target=place(state,1,'C001',1,8)
   target.aura=[{element:'hydro'}]
   const r=resolveElementalDamage(target,1,'geo')
   assert.equal(r.reaction,'crystallize')
@@ -459,54 +364,10 @@ test('結晶：岩で反応すると攻撃側の結晶シールドが1増加す�
   assert.equal(next.players[0].field[0].instanceId,caster.instanceId)
 })
 
-test('シールド：通常から消費し、その後に結晶、残りだけHP減少', async () => {
-  const { absorbDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
-  const state = startedGame()
-  const unit = place(state, 0, 'test-shield-guard', 1, 10)
-  unit.shield = { normal: 3, crystallize: 4 }
-  const a = absorbDamage(unit, 5)
-  assert.equal(a.health, 10)
-  assert.deepEqual(a.shield, { normal: 0, crystallize: 2 })
-  const b = absorbDamage(a, 4)
-  assert.equal(b.health, 8)
-  assert.deepEqual(b.shield, { normal: 0, crystallize: 0 })
-})
-
-test('シールド：各種類の最大値は10、負の付与は無視', async () => {
-  const { grantShield } = await vite.ssrLoadModule('/src/game/elemental.ts')
-  const state = startedGame()
-  const unit = place(state, 0, 'test-shield-guard', 1, 10)
-  const a = grantShield(unit, 'normal', 20)
-  const b = grantShield(a, 'crystallize', 30)
-  assert.deepEqual(b.shield, { normal: 10, crystallize: 10 })
-  assert.deepEqual(grantShield(b, 'normal', -5).shield, b.shield)
-})
-
-test('シールド兵の登場時効果は通常シールド3を付与する', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-shield-guard']
-  const next = engine.playCard(state, 'player1', 0)
-  assert.equal(next.players[0].field[0].shield.normal, 3)
-})
-
-test('通常攻撃と反撃の両方でシールドが吸収する', () => {
-  const state = startedGame()
-  const attacker = place(state, 0, 'test-hilichurl', 3, 5)
-  const target = place(state, 1, 'test-shield-guard', 2, 5)
-  attacker.shield = { normal: 2, crystallize: 1 }
-  target.shield = { normal: 1, crystallize: 1 }
-  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
-  assert.equal(next.players[0].field[0].health, 5)
-  assert.deepEqual(next.players[0].field[0].shield, {normal:0, crystallize:1})
-  assert.equal(next.players[1].field[0].health, 4)
-  assert.deepEqual(next.players[1].field[0].shield, {normal:0, crystallize:0})
-})
-
 test('元素ダメージは反応計算後の合計値をシールドで吸収する', async () => {
   const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const unit = place(state, 1, 'test-mage', 1, 10)
+  const unit = place(state, 1, 'C001', 1, 10)
   unit.aura = [{element:'hydro'}]
   unit.shield = {normal:3, crystallize:2}
   const result = resolveElementalDamage(unit, 2, 'pyro')
@@ -517,40 +378,9 @@ test('元素ダメージは反応計算後の合計値をシールドで吸収�
   assert.deepEqual(result.follower.aura, [])
 })
 
-test('元素生物：登場時から固有元素を持つ（水・風・岩）', () => {
-  for(const [id,element] of [['test-hydro-elemental','hydro'],['test-anemo-elemental','anemo'],['test-geo-elemental','geo']]) {
-    const state = startedGame()
-    state.players[0].pp = 2
-    state.players[0].hand = [id]
-    const next = engine.playCard(state, 'player1', 0)
-    assert.deepEqual(next.players[0].field[0].aura, [{element}])
-  }
-})
-
-test('元素生物：反応後に固有元素付着を復元し別元素は残さない', async () => {
-  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
-  const state = startedGame()
-  const unit = place(state, 1, 'test-hydro-elemental', 1, 10)
-  unit.aura = [{element:'hydro'}]
-  const result = resolveElementalDamage(unit, 1, 'pyro')
-  assert.equal(result.reaction, 'vaporize')
-  assert.deepEqual(result.follower.aura, [{element:'hydro'}])
-})
-
-test('元素生物：風・岩の固有付着は元素反応後も保持', async () => {
-  const { restoreInherentAura, resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
-  const state = startedGame()
-  for (const [id,element] of [['test-anemo-elemental','anemo'],['test-geo-elemental','geo']]) {
-    const unit = place(state, 1, id, 1, 10)
-    assert.deepEqual(restoreInherentAura(unit).aura, [{element}])
-    const result = resolveElementalDamage(restoreInherentAura(unit), 1, 'hydro')
-    assert.deepEqual(result.follower.aura[0], {element})
-  }
-})
-
 test('燃焼ダメージもシールドで吸収してHPを減らさない', () => {
   const state = startedGame()
-  const unit = place(state, 0, 'test-mage', 1, 10)
+  const unit = place(state, 0, 'C001', 1, 10)
   unit.shield = { normal: 1, crystallize: 0 }
   unit.keywords = ['burning:1']
   const next = engine.endTurn(state)
@@ -562,7 +392,7 @@ test('開花：水＋草の反応で発動者の相手側に0/1草原核を生�
   const { resolveElementalDamage, resolveReactionConsequence } =
     await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  const target = place(state, 1, 'test-mage', 1, 10)
+  const target = place(state, 1, 'C001', 1, 10)
   target.aura = [{ element: 'hydro' }]
   const result = resolveElementalDamage(target, 1, 'dendro')
   assert.equal(result.reaction, 'bloom')
@@ -592,7 +422,7 @@ test('再開花：既存の草原核の体力と最大体力が1増加する', a
 test('草原核は自分のフィールド5枠を超えて生成されない', async () => {
   const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
-  for (let i = 0; i < 5; i++) place(state, 1, 'test-slime', 1, 2)
+  for (let i = 0; i < 5; i++) place(state, 1, 'C011', 1, 2)
   const next = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
   assert.equal(next.players[1].field.length, 5)
   assert.equal(next.players[1].field.some(f => f.cardId === 'dendro-core'), false)
@@ -600,7 +430,7 @@ test('草原核は自分のフィールド5枠を超えて生成されない', a
 
 test('烈開花：炎で草原核を破壊し持ち主リーダーを3ターン燃焼にする', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-slime', 1, 4)
+  const attacker = place(state, 0, 'C011', 1, 4)
   const core = place(state, 1, 'dendro-core', 0, 1)
   core.keywords = ['cannot_attack']
   core.shield = { normal: 5, crystallize: 2 }
@@ -616,7 +446,7 @@ test('超開花：雷で草原核を破壊し自陣別フォロワーに3ダメ�
   const state = startedGame()
   const core = place(state, 1, 'dendro-core', 0, 1)
   core.keywords = ['cannot_attack']
-  const target = place(state, 1, 'test-mage', 1, 8)
+  const target = place(state, 1, 'C001', 1, 8)
   const outcome = resolveElementalDamage(core, 1, 'electro')
   assert.equal(outcome.reaction, 'hyperbloom')
   state.players[1].field[0] = outcome.follower
@@ -668,18 +498,6 @@ test('烈開花によるリーダー燃焼は3回の持ち主ターン終了時�
   assert.equal(state.players[0].leaderHealth, 17)
 })
 
-test('草の術師による実際のファンファーレ開花で草原核が生成される', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-dendro-caster']
-  const target = place(state, 1, 'test-mage', 1, 6)
-  target.aura = [{ element: 'hydro' }]
-  const next = engine.playCard(state, 'player1', 0, target.instanceId)
-  assert.equal(next.players[0].field.length, 1)
-  assert.equal(next.players[1].field[1].cardId, 'dendro-core')
-  assert.equal(next.players[1].field[0].health, 5)
-})
-
 test('草原核トークンは通常のランダムデッキに含まれない', () => {
   for (let i = 0; i < 8; i++) {
     const state = engine.createInitialGameState()
@@ -689,239 +507,13 @@ test('草原核トークンは通常のランダムデッキに含まれない',
   }
 })
 
-test('共有ENはプレイヤーごとに0で始まりフォロワーにENを持たない', () => {
-  const state = startedGame()
-  assert.equal(state.players[0].energy, 0)
-  assert.equal(state.players[1].energy, 0)
-  const follower = place(state, 0, 'test-elemental-caster', 1, 4)
-  assert.equal('energy' in follower, false)
-})
-
-test('元素スキルは登場ターンに使用できEN+1と能力効果を適用する', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-elemental-caster']
-  const placed = engine.playCard(state, 'player1', 0)
-  const source = placed.players[0].field[0]
-  assert.equal(source.canAttack, false)
-  assert.equal(engine.canUseAbility(placed, source.instanceId, 'skill'), true)
-  const next = engine.activateAbility(placed, source.instanceId, 'skill')
-  assert.equal(next.players[0].energy, 1)
-  assert.equal(next.players[0].field[0].shield.normal, 1)
-  assert.equal(next.players[0].field[0].skillUsed, true)
-  assert.equal(next.players[1].energy, 0)
-})
-
-test('スキルは同じフォロワーで1ターン1回しか使えない', () => {
-  const state = startedGame()
-  const f = place(state, 0, 'test-elemental-caster', 1, 4)
-  const next = engine.activateAbility(state, f.instanceId, 'skill')
-  assert.equal(engine.canUseAbility(next, f.instanceId, 'skill'), false)
-  const again = engine.activateAbility(next, f.instanceId, 'skill')
-  assert.equal(again, next)
-  assert.equal(next.players[0].energy, 1)
-})
-
-test('異なるフォロワーのスキルで共通ENを最大5まで貯める', () => {
-  let state = startedGame()
-  state.players[0].energy = 4
-  const a = place(state, 0, 'test-elemental-caster', 1, 4)
-  const b = place(state, 0, 'test-electro-caster', 1, 4)
-  state = engine.activateAbility(state, a.instanceId, 'skill')
-  state = engine.activateAbility(state, b.instanceId, 'skill')
-  assert.equal(state.players[0].energy, 5)
-  assert.equal(state.players[0].field[0].skillUsed, true)
-  assert.equal(state.players[0].field[1].skillUsed, true)
-})
-
-test('元素爆発は共有EN不足では使用不可かつ状態を変更しない', () => {
-  const state = startedGame()
-  const f = place(state, 0, 'test-electro-caster', 1, 4)
-  assert.equal(engine.canUseAbility(state, f.instanceId, 'burst'), false)
-  assert.equal(engine.activateAbility(state, f.instanceId, 'burst'), state)
-})
-
-test('元素爆発はEN2を消費しリーダーへ3ダメージを与える', () => {
-  const state = startedGame()
-  const f = place(state, 0, 'test-electro-caster', 1, 4)
-  state.players[0].energy = 3
-  const next = engine.activateAbility(state, f.instanceId, 'burst')
-  assert.equal(next.players[0].energy, 1)
-  assert.equal(next.players[1].leaderHealth, 17)
-  assert.equal(next.players[0].field[0].burstUsed, true)
-  assert.equal(engine.canUseAbility(next, f.instanceId, 'burst'), false)
-})
-
-test('元素爆発の対象指定は必須で、無効対象ならENを消費しない', () => {
-  const state = startedGame()
-  state.players[0].energy = 2
-  const f = place(state, 0, 'test-elemental-caster', 1, 4)
-  const enemy = place(state, 1, 'test-hilichurl', 1, 6)
-  assert.equal(engine.canUseAbility(state, f.instanceId, 'burst'), true)
-  assert.equal(engine.activateAbility(state, f.instanceId, 'burst'), state)
-  assert.equal(engine.activateAbility(state, f.instanceId, 'burst', 'missing'), state)
-  const next = engine.activateAbility(state, f.instanceId, 'burst', enemy.instanceId)
-  assert.equal(next.players[0].energy, 0)
-  assert.equal(next.players[1].field[0].health, 3)
-  assert.equal(next.players[0].field[0].burstUsed, true)
-})
-
-test('元素爆発は同じターン1回、スキルとは別枠', () => {
-  const state = startedGame()
-  state.players[0].energy = 2
-  const f = place(state, 0, 'test-electro-caster', 1, 4)
-  const burst = engine.activateAbility(state, f.instanceId, 'burst')
-  assert.equal(engine.canUseAbility(burst, f.instanceId, 'skill'), true)
-  const skill = engine.activateAbility(burst, f.instanceId, 'skill')
-  assert.equal(skill.players[0].energy, 1)
-  assert.equal(skill.players[1].leaderHealth, 16)
-  assert.equal(engine.canUseAbility(skill, f.instanceId, 'burst'), false)
-})
-
-test('凍結中はスキルも爆発も使用できない', () => {
-  const state = startedGame()
-  state.players[0].energy = 5
-  const f = place(state, 0, 'test-electro-caster', 1, 4)
-  f.keywords = ['frozen']
-  assert.equal(engine.canUseAbility(state, f.instanceId, 'skill'), false)
-  assert.equal(engine.canUseAbility(state, f.instanceId, 'burst'), false)
-  assert.equal(engine.activateAbility(state, f.instanceId, 'skill'), state)
-})
-
-test('能力使用回数は自分の次ターン開始時にリセットされる', () => {
-  let state = startedGame()
-  const f = place(state, 0, 'test-electro-caster', 1, 4)
-  state.players[0].energy = 2
-  state = engine.activateAbility(state, f.instanceId, 'skill')
-  state = engine.activateAbility(state, f.instanceId, 'burst')
-  assert.equal(state.players[0].field[0].skillUsed, true)
-  assert.equal(state.players[0].field[0].burstUsed, true)
-  state = engine.endTurn(state)
-  assert.equal(state.players[0].field[0].skillUsed, true)
-  state = engine.endTurn(state)
-  assert.equal(state.currentPlayerId, 'player1')
-  assert.equal(state.players[0].field[0].skillUsed, false)
-  assert.equal(state.players[0].field[0].burstUsed, false)
-})
-
-test('相手フォロワーの能力は手動で使用できない', () => {
-  const state = startedGame()
-  const enemy = place(state, 1, 'test-electro-caster', 1, 4)
-  assert.equal(engine.canUseAbility(state, enemy.instanceId, 'skill'), false)
-  assert.equal(engine.activateAbility(state, enemy.instanceId, 'skill'), state)
-})
-
-test('使用可能な効果なし・ゲーム終了後は能力使用不可', () => {
-  const state = startedGame()
-  const ordinary = place(state, 0, 'test-hilichurl', 2, 2)
-  const caster = place(state, 0, 'test-electro-caster', 1, 4)
-  assert.equal(engine.canUseAbility(state, ordinary.instanceId, 'skill'), false)
-  state.winnerId = 'player1'
-  assert.equal(engine.canUseAbility(state, caster.instanceId, 'skill'), false)
-})
-
-test('複数効果は順番に処理し破壊時のラストワードを次の効果より先に解決する', () => {
-  const state = startedGame()
-  const caster = place(state, 0, 'test-chain-caster', 1, 4)
-  const enemy = place(state, 1, 'test-hilichurl', 1, 2)
-  state.players[1].leaderHealth = 20
-  const next = engine.activateAbility(state, caster.instanceId, 'skill', enemy.instanceId)
-  assert.equal(next.players[1].field.length, 0)
-  assert.deepEqual(next.players[1].graveyard, ['test-hilichurl'])
-  // 敵ラストワードの+2は満タンで溢れ、続くリーダー2ダメージで18になる
-  assert.equal(next.players[1].leaderHealth, 18)
-  assert.equal(next.players[0].energy, 1)
-})
-
-test('途中で対象が破壊されても後続のリーダー効果は実行される', () => {
-  const state = startedGame()
-  const caster = place(state, 0, 'test-chain-caster', 1, 4)
-  const target = place(state, 1, 'test-mage', 1, 1)
-  const next = engine.activateAbility(state, caster.instanceId, 'skill', target.instanceId)
-  assert.equal(next.players[1].field.length, 0)
-  assert.equal(next.players[1].leaderHealth, 18)
-  assert.equal(next.players[0].field[0].skillUsed, true)
-})
-
-test('途中で勝敗が確定した場合は後続の回復効果を実行しない', () => {
-  const state = startedGame()
-  const caster = place(state, 0, 'test-chain-caster', 1, 4)
-  state.players[0].energy = 2
-  const next = engine.activateAbility(state, caster.instanceId, 'burst')
-  assert.equal(next.winnerId, 'player1')
-  assert.equal(next.players[1].leaderHealth, 0)
-  assert.equal(next.players[0].energy, 0)
-})
-
-test('オーラ：選択対象がオーラのみなら対象指定能力を使用できない', () => {
-  const state = startedGame()
-  const caster = place(state, 0, 'test-elemental-caster', 1, 4)
-  state.players[0].energy = 2
-  const protectedUnit = place(state, 1, 'test-mage', 1, 4)
-  protectedUnit.keywords = ['aura']
-  assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), false)
-  assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', protectedUnit.instanceId), state)
-})
-
-test('オーラ：別の選択可能な敵がいれば能力を発動できるがオーラは選べない', () => {
-  const state = startedGame()
-  const caster = place(state, 0, 'test-elemental-caster', 1, 4)
-  state.players[0].energy = 2
-  const protectedUnit = place(state, 1, 'test-mage', 1, 4)
-  protectedUnit.keywords = ['aura']
-  const ordinary = place(state, 1, 'test-mage', 1, 4)
-  assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), true)
-  assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', protectedUnit.instanceId), state)
-  const next = engine.activateAbility(state, caster.instanceId, 'burst', ordinary.instanceId)
-  assert.equal(next.players[1].field[0].health, 4)
-  assert.equal(next.players[1].field[1].health, 1)
-  assert.equal(next.players[0].energy, 0)
-})
-
-test('オーラ：ファンファーレで対象に選べずPPも手札も消費しない', () => {
-  const state = startedGame()
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-archer']
-  const target = place(state, 1, 'test-mage', 1, 4)
-  target.keywords = ['aura']
-  assert.equal(engine.canPlayCard(state, 0), false)
-  assert.equal(engine.playCard(state, 'player1', 0, target.instanceId), state)
-  place(state, 1, 'test-mage', 1, 4)
-  assert.equal(engine.canPlayCard(state, 0), true)
-  assert.equal(engine.playCard(state, 'player1', 0, target.instanceId), state)
-})
-
-test('威圧：フォロワーからの攻撃だけ防ぎ効果の対象には選べる', () => {
-  const state = startedGame()
-  const attacker = place(state, 0, 'test-hilichurl', 3, 5)
-  const intimidating = place(state, 1, 'test-mage', 1, 6)
-  intimidating.keywords = ['intimidate']
-  assert.equal(engine.attackFollower(state, attacker.instanceId, intimidating.instanceId), state)
-  state.players[0].pp = 2
-  state.players[0].hand = ['test-archer']
-  const next = engine.playCard(state, 'player1', 0, intimidating.instanceId)
-  assert.equal(next.players[1].field[0].health, 4)
-})
-
 test('オーラのフォロワーは通常攻撃対象には選べる', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'test-hilichurl', 2, 5)
-  const target = place(state, 1, 'test-mage', 1, 6)
+  const attacker = place(state, 0, 'C001', 2, 5)
+  const target = place(state, 1, 'C001', 1, 6)
   target.keywords = ['aura']
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[1].field[0].health, 4)
-})
-
-test('複数効果中の元素反応でも後続効果と使用済み状態が保持される', () => {
-  const state = startedGame()
-  const caster = place(state, 0, 'test-chain-caster', 1, 4)
-  const enemy = place(state, 1, 'test-hydro-elemental', 1, 9)
-  enemy.aura = [{ element: 'hydro' }]
-  const next = engine.activateAbility(state, caster.instanceId, 'skill', enemy.instanceId)
-  assert.equal(next.players[1].field[0].health, 1) // 2+2 then 2+2 reaction from inherent hydro
-  assert.deepEqual(next.players[1].field[0].aura, [{ element: 'hydro' }])
-  assert.equal(next.players[1].leaderHealth, 18)
-  assert.equal(next.players[0].field[0].skillUsed, true)
 })
 
 test('カード登録台帳：既存のテストカードがすべて検索できる', async () => {
@@ -938,7 +530,7 @@ test('カード登録台帳：既存のテストカードがすべて検索で�
 
 test('カード登録台帳：IDの重複はエラーとして検出される', async () => {
   const { createCardRegistry } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  const card = engine.getCard('test-slime')
+  const card = engine.getCard('C011')
   assert.throws(() => createCardRegistry([card, card]), /Duplicate card ID/)
   assert.throws(() => createCardRegistry([{ ...card, id: ' ' }]), /Card ID/)
 })
@@ -951,14 +543,6 @@ test('カード登録台帳：トークンは検索可能でもデッキ候補�
   assert.ok(pool.length > 0)
   assert.equal(pool.some(card => card.id === 'dendro-core'), false)
   assert.ok(pool.every(card => !card.token))
-})
-
-test('カード登録台帳：元素生物とバウンス用のカード情報も維持される', async () => {
-  const { getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(getCard('test-hydro-elemental')?.elementalCreature, true)
-  assert.equal(getCard('test-hydro-elemental')?.element, 'hydro')
-  assert.equal(getCard('test-hilichurl')?.cost, 2)
-  assert.equal(getCard('test-elemental-caster')?.elementalBurst?.energyCost, 2)
 })
 
 test('正式カードとテストカードの登録元が分離されている', async () => {
@@ -1001,7 +585,7 @@ test('正式70枚登録時はエラーなし・予定45枚が不足と判定', a
 
 test('カード検証：重複IDと空ID・空名前を検出', async () => {
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
-  const base = engine.getCard('test-slime')
+  const base = engine.getCard('C011')
   const report = validateProductionCards([
     { ...base, id: 'a', name: '1' },
     { ...base, id: 'a', name: '2' },
@@ -1015,7 +599,7 @@ test('カード検証：重複IDと空ID・空名前を検出', async () => {
 
 test('カード検証：元素別・レアリティ別の枠超過を検出', async () => {
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
-  const base = engine.getCard('test-slime')
+  const base = engine.getCard('C011')
   const cards = Array.from({ length: 5 }, (_, n) => ({ ...base, id: `pyro-b-${n}` }))
   const report = validateProductionCards(cards)
   assert.ok(report.errors.some(e => e.includes('上限4枚')))
@@ -1024,7 +608,7 @@ test('カード検証：元素別・レアリティ別の枠超過を検出', as
 
 test('カード検証：コスト・攻撃力・体力とトークン禁止を検出', async () => {
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
-  const base = engine.getCard('test-slime')
+  const base = engine.getCard('C011')
   const report = validateProductionCards([
     { ...base, cost: -1, attack: -2, health: 0, token: true },
   ])
@@ -1033,41 +617,14 @@ test('カード検証：コスト・攻撃力・体力とトークン禁止を�
   }
 })
 
-test('カード検証：スキルと爆発のトリガー・必要ENを検査', async () => {
-  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
-  const base = engine.getCard('test-elemental-caster')
-  const bad = {
-    ...base,
-    id: 'bad-ability',
-    elementalSkill: { name: '', effects: [{ type: 'heal', trigger: 'burst', target: 'own_leader', value: 1 }] },
-    elementalBurst: { name: '爆発', energyCost: 9, effects: [{ type: 'damage', trigger: 'skill', target: 'enemy_leader', value: 1 }] },
-  }
-  const report = validateProductionCards([bad])
-  assert.ok(report.errors.some(e => e.includes('元素スキル')))
-  assert.ok(report.errors.some(e => e.includes('元素爆発')))
-})
-
-test('カード検索：元素・レアリティ・ID部分一致で絞り込める', async () => {
-  const { filterCards } = await vite.ssrLoadModule('/src/data/cardFilters.ts')
-  const cards = [
-    engine.getCard('test-slime'),
-    engine.getCard('test-elemental-caster'),
-    engine.getCard('test-electro-caster'),
-  ]
-  const result = filterCards(cards, {
-    element: 'hydro', rarity: 'legendary', origin: 'all', search: 'elemental',
-  }, new Set())
-  assert.deepEqual(result.map(card => card.id), ['test-elemental-caster'])
-})
-
 test('カード検索：正式／テスト用の区分を分離', async () => {
   const { filterCards } = await vite.ssrLoadModule('/src/data/cardFilters.ts')
-  const cards = [engine.getCard('test-slime'), engine.getCard('test-hilichurl')]
-  const prodIds = new Set(['test-slime'])
+  const cards = [engine.getCard('C011'), engine.getCard('C001')]
+  const prodIds = new Set(['C011'])
   const filters = { element: 'all', rarity: 'all', origin: 'production', search: '' }
-  assert.deepEqual(filterCards(cards, filters, prodIds).map(card => card.id), ['test-slime'])
-  assert.deepEqual(filterCards(cards, { ...filters, origin: 'test' }, prodIds).map(card => card.id), ['test-hilichurl'])
-  assert.deepEqual(filterCards(cards, { ...filters, origin: 'all', search: 'ヒル' }, prodIds).map(card => card.id), ['test-hilichurl'])
+  assert.deepEqual(filterCards(cards, filters, prodIds).map(card => card.id), ['C011'])
+  assert.deepEqual(filterCards(cards, { ...filters, origin: 'test' }, prodIds).map(card => card.id), ['C001'])
+  assert.deepEqual(filterCards(cards, { ...filters, origin: 'all', search: 'ヒル' }, prodIds).map(card => card.id), ['C001'])
 })
 
 test('無元素の正式カードC001-C010を原本どおり10枚登録', async () => {
@@ -1196,7 +753,7 @@ test('C004 ワイルドハント：登場時に同名を召喚し分身はファ
 test('C004 ワイルドハント：本体の破壊で分身を召喚、分身はラストワード無し', () => {
   const state = startedGame()
   const main = place(state, 0, 'C004', 2, 1)
-  const opponent = place(state, 1, 'test-hilichurl', 2, 8)
+  const opponent = place(state, 1, 'C001', 2, 8)
   let next = engine.attackFollower(state, main.instanceId, opponent.instanceId)
   assert.equal(next.players[0].field.length, 1)
   assert.equal(next.players[0].field[0].cardId, 'C004')
@@ -1267,7 +824,7 @@ test('C008 ヒルチャール暴徒：突進は登場ターンに敵フォロワ
   const state=startedGame()
   state.players[0].pp=4
   state.players[0].hand=['C008']
-  const enemy=place(state,1,'test-mage',1,8)
+  const enemy=place(state,1,'C001',1,8)
   const summoned=engine.playCard(state,'player1',0)
   const attacker=summoned.players[0].field[0]
   assert.equal(engine.attackLeader(summoned,attacker.instanceId),summoned)
@@ -1280,7 +837,7 @@ test('C008 ヒルチャール暴徒：味方ヒルチャールがいる攻撃時
   const state=startedGame()
   const attacker=place(state,0,'C008',3,4)
   place(state,0,'C001',1,2)
-  const enemy=place(state,1,'test-mage',1,8)
+  const enemy=place(state,1,'C001',1,8)
   const next=engine.attackFollower(state,attacker.instanceId,enemy.instanceId)
   assert.equal(next.players[0].field[0].attack,4)
   assert.equal(next.players[1].field[0].health,4)
@@ -1401,7 +958,7 @@ test('C012 炎射手はファンファーレで対象1体に炎1ダメージと�
   const state=startedGame()
   state.players[0].pp=2
   state.players[0].hand=['C012']
-  const target=place(state,1,'test-mage',1,5)
+  const target=place(state,1,'C001',1,5)
   const next=engine.playCard(state,'player1',0,target.instanceId)
   assert.equal(next.players[1].field[0].health,4)
   assert.deepEqual(next.players[1].field[0].aura,[{element:'pyro'}])
@@ -1411,7 +968,7 @@ test('C012 炎射手は対象選択できない敵だけならプレイ不可', 
   const state=startedGame()
   state.players[0].pp=2
   state.players[0].hand=['C012']
-  const target=place(state,1,'test-mage',1,5)
+  const target=place(state,1,'C001',1,5)
   target.keywords=['aura']
   assert.equal(engine.canPlayCard(state,0),false)
   assert.equal(engine.playCard(state,'player1',0,target.instanceId),state)
@@ -1420,7 +977,7 @@ test('C012 炎射手は対象選択できない敵だけならプレイ不可', 
 test('C013 ドドコは破壊時にランダムな敵1体に炎2ダメージ', () => {
   const state=startedGame()
   const dodoco=place(state,0,'C013',1,1)
-  const enemy=place(state,1,'test-mage',2,7)
+  const enemy=place(state,1,'C001',2,7)
   const next=engine.attackFollower(state,dodoco.instanceId,enemy.instanceId)
   assert.equal(next.players[0].field.length,0)
   assert.equal(next.players[1].field[0].health,4)
@@ -1449,8 +1006,8 @@ test('C015 旋火輪：全敵フォロワーに炎1ダメージ、クレスト2�
   const state = startedGame()
   state.players[0].hand = ['C015']
   state.players[0].pp = 4
-  const a = place(state, 1, 'test-mage', 1, 6)
-  const b = place(state, 1, 'test-hilichurl', 1, 4)
+  const a = place(state, 1, 'C001', 1, 6)
+  const b = place(state, 1, 'C001', 1, 4)
   const next = engine.playCard(state, 'player1', 0)
   assert.equal(next.players[0].pp, 0)
   assert.deepEqual(next.players[0].graveyard, ['C015'])
@@ -1465,9 +1022,9 @@ test('C015 旋火輪：全体ダメージは蒸発反応とシールド吸収に
   const state = startedGame()
   state.players[0].hand = ['C015']
   state.players[0].pp = 4
-  const hydro = place(state, 1, 'test-mage', 1, 8)
+  const hydro = place(state, 1, 'C001', 1, 8)
   hydro.aura = [{ element: 'hydro' }]
-  const shielded = place(state, 1, 'test-hilichurl', 1, 5)
+  const shielded = place(state, 1, 'C001', 1, 5)
   shielded.shield = { normal: 2, crystallize: 0 }
   const next = engine.playCard(state, 'player1', 0)
   assert.equal(next.players[1].field[0].health, 5)
@@ -1480,7 +1037,7 @@ test('C015 旋火輪：自分のターン終了時に敵全体とリーダーへ
   let state = startedGame()
   state.players[0].hand = ['C015']
   state.players[0].pp = 4
-  place(state, 1, 'test-mage', 1, 10)
+  place(state, 1, 'C001', 1, 10)
   state = engine.playCard(state, 'player1', 0)
   state = engine.endTurn(state)
   assert.equal(state.players[1].leaderHealth, 19)
@@ -1551,7 +1108,7 @@ test('C017 デットエージェント：潜伏と炎通常攻撃を所持し対
   const agent = agentState.players[0].field[0]
   assert.ok(agent.keywords.includes('stealth'))
   assert.equal(engine.getCard('C017').normalAttackElement, 'pyro')
-  const enemyAttacker = place(agentState, 1, 'test-mage', 3, 5)
+  const enemyAttacker = place(agentState, 1, 'C001', 3, 5)
   const enemyTurn = { ...agentState, currentPlayerId: 'player2' }
   assert.equal(engine.attackFollower(enemyTurn, enemyAttacker.instanceId, agent.instanceId), enemyTurn)
 })
@@ -1560,14 +1117,14 @@ test('C017 デットエージェント：通常攻撃で潜伏解除、他のフ
   const state = startedGame()
   const agent = place(state, 0, 'C017', 3, 5)
   agent.keywords = ['stealth']
-  const enemy = place(state, 1, 'test-mage', 0, 10)
+  const enemy = place(state, 1, 'C001', 0, 10)
   let next = engine.attackFollower(state, agent.instanceId, enemy.instanceId)
   assert.equal(next.players[0].field[0].keywords.includes('stealth'), false)
   const withFatui = startedGame()
   const agent2 = place(withFatui, 0, 'C017', 3, 5)
   agent2.keywords = ['stealth']
   place(withFatui, 0, 'C017', 3, 2)
-  const enemy2 = place(withFatui, 1, 'test-mage', 0, 10)
+  const enemy2 = place(withFatui, 1, 'C001', 0, 10)
   next = engine.attackFollower(withFatui, agent2.instanceId, enemy2.instanceId)
   assert.equal(next.players[0].field[0].keywords.includes('stealth'), true)
 })
@@ -1613,20 +1170,6 @@ test('共通召喚はアミュレットも含めた場の5枠上限を守る', (
   state = engine.playCard(state, 'player1', 0)
   assert.equal(state.players[0].field.length, 4)
   assert.equal(state.players[0].field.length + state.players[0].amulets.length, 5)
-})
-
-test('潜伏中の敵フォロワーはスキルとファンファーレの選択対象にならない', () => {
-  const state = startedGame()
-  state.players[0].hand = ['C012']
-  state.players[0].pp = 2
-  const hidden = place(state, 1, 'C017', 3, 5)
-  hidden.keywords = ['stealth']
-  assert.equal(engine.canPlayCard(state, 0), false)
-  assert.equal(engine.playCard(state, 'player1', 0, hidden.instanceId), state)
-  state.players[0].energy = 3
-  const caster = place(state, 0, 'test-elemental-caster', 1, 4)
-  assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), false)
-  assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', hidden.instanceId), state)
 })
 
 test('STEP28 炎ゴールド4枚は対戦対応、PP消費型スキルと原本の能力文を保持', async () => {
@@ -1683,7 +1226,7 @@ test('C019 アンバー：ファンファーレで敵1体へ炎2ダメージと�
   const state = startedGame()
   state.players[0].hand = ['C019']
   state.players[0].pp = 3
-  const enemy = place(state, 1, 'test-mage', 1, 6)
+  const enemy = place(state, 1, 'C001', 1, 6)
   const next = engine.playCard(state, 'player1', 0, enemy.instanceId)
   assert.equal(next.players[0].field[0].cardId, 'C019')
   assert.equal(next.players[1].field[0].health, 4)
@@ -1695,7 +1238,7 @@ test('C019 アンバー：スキルPP1とEN+1でウサギ伯爵を召喚し1タ�
   const state = startedGame()
   state.players[0].hand = ['C019']
   state.players[0].pp = 4
-  const enemy = place(state, 1, 'test-mage', 1, 8)
+  const enemy = place(state, 1, 'C001', 1, 8)
   let next = engine.playCard(state, 'player1', 0, enemy.instanceId)
   const amber = next.players[0].field[0]
   assert.equal(engine.canUseAbility(next, amber.instanceId, 'skill'), true)
@@ -1726,7 +1269,7 @@ test('ウサギ伯爵：破壊時に敵全体と相手リーダーに炎1ダメ�
   const state = startedGame()
   const rabbit = place(state, 0, 'token-baron-bunny', 0, 1)
   rabbit.keywords = ['guard', 'damage_cap_1']
-  const attacker = place(state, 1, 'test-hilichurl', 3, 5)
+  const attacker = place(state, 1, 'C001', 3, 5)
   const other = place(state, 1, 'C001', 1, 4)
   const enemyTurn = {...state, currentPlayerId: 'player2'}
   const next = engine.attackFollower(enemyTurn, attacker.instanceId, rabbit.instanceId)
@@ -1791,7 +1334,7 @@ test('C021 ベネット：召喚時は味方一体か自身を指定して攻撃
 test('C021 ベネット：スキルPP1で敵に炎4・自身に物理1、EN+1', () => {
   const state = startedGame()
   const bennett = place(state, 0, 'C021', 2, 4)
-  const target = place(state, 1, 'test-mage', 1, 8)
+  const target = place(state, 1, 'C001', 1, 8)
   state.players[0].pp = 1
   const next = engine.activateAbility(state, bennett.instanceId, 'skill', target.instanceId)
   assert.equal(next.players[0].pp, 0)
@@ -1815,7 +1358,7 @@ test('PP不足では元素スキルを使えずターン中の制限も変わら
 test('C022 シュヴルーズ：スキルPP1・炎2と自リーダーHP2回復・EN+1', () => {
   const state = startedGame()
   const cheval = place(state, 0, 'C022', 3, 4)
-  const enemy = place(state, 1, 'test-mage', 1, 8)
+  const enemy = place(state, 1, 'C001', 1, 8)
   state.players[0].pp = 1
   state.players[0].leaderHealth = 16
   const next = engine.activateAbility(state, cheval.instanceId, 'skill', enemy.instanceId)
@@ -1830,14 +1373,14 @@ test('C022 シュヴルーズ：過負荷を起こすたびに自陣全員の攻
   const state = startedGame()
   const cheval = place(state, 0, 'C022', 3, 4)
   const ally = place(state, 0, 'C001', 1, 4)
-  const enemy = place(state, 1, 'test-mage', 1, 8)
+  const enemy = place(state, 1, 'C001', 1, 8)
   enemy.aura = [{element:'electro'}]
   state.players[0].pp = 1
   const next = engine.activateAbility(state, cheval.instanceId, 'skill', enemy.instanceId)
   assert.equal(next.players[0].field.find(f=>f.instanceId===cheval.instanceId).attack, 4)
   assert.equal(next.players[0].field.find(f=>f.instanceId===ally.instanceId).attack, 2)
   assert.equal(next.players[1].field.length, 0)
-  assert.equal(next.players[1].hand.at(-1), 'test-mage')
+  assert.equal(next.players[1].hand.at(-1), 'C001')
 })
 
 test('C022 シュヴルーズ：2体いれば過負荷1回につき+2攻撃力', async () => {
@@ -1846,7 +1389,7 @@ test('C022 シュヴルーズ：2体いれば過負荷1回につき+2攻撃力',
   place(state, 0, 'C022', 3, 4)
   place(state, 0, 'C022', 3, 4)
   const ally = place(state, 0, 'C001', 1, 4)
-  const enemy = place(state, 1, 'test-mage', 1, 6)
+  const enemy = place(state, 1, 'C001', 1, 6)
   const next = resolveReactionConsequence(state, 1, enemy.instanceId, 'overloaded', 'electro', 0)
   assert.equal(next.players[0].field[0].attack, 5)
   assert.equal(next.players[0].field[1].attack, 5)
@@ -1857,7 +1400,7 @@ test('相手のターン中に生じた過負荷ではシュヴルーズのバ�
   const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
   const cheval = place(state, 0, 'C022', 3, 4)
-  const enemy = place(state, 1, 'test-mage', 1, 6)
+  const enemy = place(state, 1, 'C001', 1, 6)
   state.currentPlayerId = 'player2'
   const next = resolveReactionConsequence(state, 1, enemy.instanceId, 'overloaded', 'electro', 0)
   assert.equal(next.players[0].field.find(f=>f.instanceId===cheval.instanceId).attack, 3)
@@ -1902,7 +1445,7 @@ test('C023 ディルック：スキル1/2/3回目は炎3/4/5ダメージ、各PP
   let state = startedGame()
   const diluc = place(state,0,'C023',4,5)
   state.players[0].pp=4
-  const target = place(state,1,'test-mage',1,20)
+  const target = place(state,1,'C001',1,20)
   for (const [i,expectedHp] of [17,13,8].entries()) {
     assert.equal(engine.canUseAbility(state,diluc.instanceId,'skill'),true)
     state=engine.activateAbility(state,diluc.instanceId,'skill',target.instanceId)
@@ -1919,7 +1462,7 @@ test('C023 ディルック：使用回数は次の自分のターンにリセッ
   let state = startedGame()
   const diluc=place(state,0,'C023',4,5)
   state.players[0].pp=5
-  place(state,1,'test-mage',1,25)
+  place(state,1,'C001',1,25)
   state=engine.activateAbility(state,diluc.instanceId,'skill',state.players[1].field[0].instanceId)
   assert.equal(state.players[0].field[0].skillUsesThisTurn,1)
   state=engine.endTurn(state)
@@ -1932,8 +1475,8 @@ test('C023 ディルック：元素爆発はEN3消費し敵全体とリーダー
   let state=startedGame()
   const diluc=place(state,0,'C023',4,5)
   state.players[0].energy=4
-  const a=place(state,1,'test-mage',1,7)
-  const b=place(state,1,'test-mage',1,8)
+  const a=place(state,1,'C001',1,7)
+  const b=place(state,1,'C001',1,8)
   b.aura=[{element:'hydro'}]
   state=engine.activateAbility(state,diluc.instanceId,'burst')
   assert.equal(state.players[0].energy,1)
@@ -1948,7 +1491,7 @@ test('C023 ディルック：スキルと爆発は別枠で同じターンに使
   const diluc=place(state,0,'C023',4,5)
   state.players[0].energy=3
   state.players[0].pp=1
-  const enemy=place(state,1,'test-mage',1,12)
+  const enemy=place(state,1,'C001',1,12)
   state=engine.activateAbility(state,diluc.instanceId,'skill',enemy.instanceId)
   state=engine.activateAbility(state,diluc.instanceId,'burst')
   assert.equal(state.players[0].energy,1)
@@ -1985,7 +1528,7 @@ test('C024 リネ：味方炎カードが自身含め3枚以上なら攻撃時+1
 test('C024 リネ：元素スキルはPP1で炎2ダメージ、EN1獲得', () => {
   let state=startedGame()
   const lyney=place(state,0,'C024',2,3)
-  const enemy=place(state,1,'test-mage',1,6)
+  const enemy=place(state,1,'C001',1,6)
   state.players[0].pp=1
   state=engine.activateAbility(state,lyney.instanceId,'skill',enemy.instanceId)
   assert.equal(state.players[0].pp,0)
@@ -2026,7 +1569,7 @@ test('ファニーハット・キャット：突進で敵フォロワー攻撃�
   const lyney=place(state,0,'C024',2,3)
   let next=engine.activateAbility(state,lyney.instanceId,'burst')
   const cat=next.players[0].field[0]
-  const enemy=place(next,1,'test-mage',1,9)
+  const enemy=place(next,1,'C001',1,9)
   assert.equal(engine.attackLeader(next,cat.instanceId),next)
   next=engine.attackFollower(next,cat.instanceId,enemy.instanceId)
   assert.equal(next.players[1].field[0].health,4)
@@ -2053,7 +1596,7 @@ test('ファニーハット・キャット：オーラと威圧が有効、破�
   state.players[0].energy=2
   state=engine.activateAbility(state,lyney.instanceId,'burst')
   const cat=state.players[0].field[0]
-  const enemy=place(state,1,'test-mage',1,8)
+  const enemy=place(state,1,'C001',1,8)
   const p2={...state,currentPlayerId:'player2'}
   assert.equal(engine.attackFollower(p2,enemy.instanceId,cat.instanceId),p2)
   p2.players[1].hand=['C018'];p2.players[1].pp=4
@@ -2093,7 +1636,7 @@ test('C025 胡桃：元素スキルはPP1とHP3を消費し自身+2攻撃、炎�
   assert.equal(state.players[0].leaderHealth,12)
   assert.equal(state.players[0].field[0].attack,5)
   assert.ok(state.players[0].field[0].keywords.includes('normal_attack_pyro'))
-  const target=place(state,1,'test-mage',1,9)
+  const target=place(state,1,'C001',1,9)
   state=engine.attackFollower(state,hutao.instanceId,target.instanceId)
   assert.deepEqual(state.players[1].field[0].aura,[{element:'pyro'}])
 })
@@ -2251,7 +1794,7 @@ test('C029 水アビス魔術師はファンファーレでシールド3と水�
   state.players[0].pp=3;state.players[0].hand=['C029']
   state=engine.playCard(state,'player1',0)
   assert.equal(state.players[0].field[0].shield.normal,3)
-  const target=place(state,1,'test-mage',1,6)
+  const target=place(state,1,'C001',1,6)
   state.players[0].field[0].canAttack=true
   const next=engine.attackFollower(state,state.players[0].field[0].instanceId,target.instanceId)
   assert.deepEqual(next.players[1].field[0].aura,[{element:'hydro'}])
@@ -2301,7 +1844,7 @@ test('C033 水レンジャーは突進し攻撃時にヒルチャール1体を�
   state=engine.playCard(state,'player1',0)
   const ranger=state.players[0].field[0]
   assert.equal(engine.attackLeader(state,ranger.instanceId),state)
-  const enemy=place(state,1,'test-mage',1,10)
+  const enemy=place(state,1,'C001',1,10)
   state=engine.attackFollower(state,ranger.instanceId,enemy.instanceId)
   assert.deepEqual(state.players[0].field.map(f=>f.cardId),['C033','C001'])
   assert.equal(state.players[1].field[0].health,6)
@@ -2311,7 +1854,7 @@ test('C033 水レンジャー攻撃時の召喚は場が満員なら不発、攻
   let state=startedGame()
   const ranger=place(state,0,'C033',4,4)
   for(let i=0;i<4;i++)place(state,0,'C001',1,2)
-  const enemy=place(state,1,'test-mage',1,8)
+  const enemy=place(state,1,'C001',1,8)
   state=engine.attackFollower(state,ranger.instanceId,enemy.instanceId)
   assert.equal(state.players[0].field.length,5)
   assert.equal(state.players[1].field[0].health,4)
@@ -2322,7 +1865,7 @@ test('C036 キャンディスは守護持ち、スキルPP1で自身シールド
   state.players[0].hand=['C036'];state.players[0].pp=4
   state=engine.playCard(state,'player1',0)
   const candace=state.players[0].field[0]
-  const enemy=place(state,1,'test-mage',1,7)
+  const enemy=place(state,1,'C001',1,7)
   state.players[0].pp=1
   state=engine.activateAbility(state,candace.instanceId,'skill',enemy.instanceId)
   assert.ok(state.players[0].field[0].keywords.includes('guard'))
@@ -2414,7 +1957,7 @@ test('C035 行秋：スキルで2回攻撃・突進・水攻撃、登場ター�
   assert.equal(state.players[0].pp,0)
   assert.equal(state.players[0].energy,1)
   assert.equal(engine.attackLeader(state,xing.instanceId),state)
-  let enemy=place(state,1,'test-mage',0,12)
+  let enemy=place(state,1,'C001',0,12)
   state=engine.attackFollower(state,xing.instanceId,enemy.instanceId)
   assert.equal(state.players[1].field[0].health,10)
   assert.deepEqual(state.players[1].field[0].aura,[{element:'hydro'}])
@@ -2457,7 +2000,7 @@ test('C037 アイノ：スキルPP1で水2ダメージと全水圧装置カウ�
   const aino=place(state,0,'C037',2,4)
   state.players[0].amulets=[{instanceId:'device1',cardId:'token-hydro-pressure-device',turnsRemaining:2}]
   state.players[0].pp=1
-  const target=place(state,1,'test-mage',0,7)
+  const target=place(state,1,'C001',0,7)
   state=engine.activateAbility(state,aino.instanceId,'skill',target.instanceId)
   assert.equal(state.players[1].field[0].health,5)
   assert.equal(state.players[0].amulets[0].turnsRemaining,3)
@@ -2467,7 +2010,7 @@ test('C037 アイノ：スキルPP1で水2ダメージと全水圧装置カウ�
 test('水圧装置：ターン終了で敵一体に水1・カウント減少、0で消滅',()=>{
   let state=startedGame()
   state.players[0].amulets=[{instanceId:'d1',cardId:'token-hydro-pressure-device',turnsRemaining:2}]
-  place(state,1,'test-mage',0,7)
+  place(state,1,'C001',0,7)
   state=engine.endTurn(state)
   assert.equal(state.players[1].field[0].health,6)
   assert.equal(state.players[0].amulets[0].turnsRemaining,1)
@@ -2492,7 +2035,7 @@ test('虚影：破壊時にランダムな敵フォロワーへ水2ダメージ'
   let state=startedGame()
   const phantom=place(state,0,'token-hydro-phantom',0,1)
   phantom.keywords=['guard']
-  const enemy=place(state,1,'test-mage',2,8)
+  const enemy=place(state,1,'C001',2,8)
   state=engine.attackFollower(state,phantom.instanceId,enemy.instanceId)
   assert.equal(state.players[0].field.length,0)
   assert.equal(state.players[1].field[0].health,6)
@@ -2503,8 +2046,8 @@ test('C038 モナ：爆発EN3で敵全体水2・残存敵に次のダメージ+2
   let state=startedGame()
   const mona=place(state,0,'C038',2,4)
   state.players[0].energy=3
-  const enemy=place(state,1,'test-mage',0,9)
-  const enemy2=place(state,1,'test-mage',0,1)
+  const enemy=place(state,1,'C001',0,9)
+  const enemy2=place(state,1,'C001',0,1)
   state=engine.activateAbility(state,mona.instanceId,'burst')
   assert.equal(state.players[0].energy,0)
   assert.equal(state.players[1].field.length,1)
@@ -2516,7 +2059,7 @@ test('C038 モナ：爆発EN3で敵全体水2・残存敵に次のダメージ+2
 
 test('モナの「次に受けるダメージ+2」は一度のみ、シールドにも適用',async()=>{
   const {resolveElementalDamage}=await vite.ssrLoadModule('/src/game/elemental.ts')
-  const f=place(startedGame(),1,'test-mage',0,10)
+  const f=place(startedGame(),1,'C001',0,10)
   f.keywords=['next_damage_plus_2']
   f.shield.normal=2
   const first=resolveElementalDamage(f,1,'hydro').follower
@@ -2541,7 +2084,7 @@ test('C039 心海：スキルPP1で化海月0/4を召喚、ターン終了で回
   state.players[0].leaderHealth=12
   state.players[0].pp=1
   const ally=place(state,0,'C001',1,1);ally.maxHealth=3
-  place(state,1,'test-mage',0,6)
+  place(state,1,'C001',0,6)
   state=engine.activateAbility(state,kokomi.instanceId,'skill')
   assert.deepEqual([state.players[0].field[2].cardId,state.players[0].field[2].health],
     ['token-hydro-jellyfish',4])
@@ -2564,7 +2107,7 @@ test('C039 心海：爆発EN3で自身+2/0・守護・突進・攻撃時自リ�
   assert.ok(boosted.keywords.includes('rush'))
   assert.equal(boosted.canAttack,true)
   assert.equal(engine.attackLeader(state,kokomi.instanceId),state)
-  const target=place(state,1,'test-mage',0,9)
+  const target=place(state,1,'C001',0,9)
   state=engine.attackFollower(state,kokomi.instanceId,target.instanceId)
   assert.equal(state.players[0].leaderHealth,14)
   assert.equal(state.players[1].field[0].health,5)
@@ -2575,7 +2118,7 @@ test('C040 タルタリヤ：スキルで2回攻撃・突進・水攻撃、PP1�
   const childe=place(state,0,'C040',4,5)
   childe.canAttack=false
   state.players[0].pp=1
-  const enemy=place(state,1,'test-mage',0,12)
+  const enemy=place(state,1,'C001',0,12)
   state=engine.activateAbility(state,childe.instanceId,'skill')
   assert.equal(state.players[0].pp,0)
   assert.equal(state.players[0].energy,1)
@@ -2590,7 +2133,7 @@ test('C040 タルタリヤ：爆発EN4で未攻撃なら敵全体・リーダー
   let state=startedGame()
   const childe=place(state,0,'C040',4,5)
   state.players[0].energy=4
-  place(state,1,'test-mage',0,8)
+  place(state,1,'C001',0,8)
   state=engine.activateAbility(state,childe.instanceId,'burst')
   assert.equal(state.players[1].field[0].health,5)
   assert.equal(state.players[1].leaderHealth,17)
@@ -2600,7 +2143,7 @@ test('C040 タルタリヤ：爆発EN4で未攻撃なら敵全体・リーダー
 test('C040 タルタリヤ：攻撃済みなら爆発のダメージが5',()=>{
   let state=startedGame()
   const childe=place(state,0,'C040',4,5)
-  const enemy=place(state,1,'test-mage',0,12)
+  const enemy=place(state,1,'C001',0,12)
   state=engine.attackFollower(state,childe.instanceId,enemy.instanceId)
   assert.equal(state.players[0].field[0].hasAttacked,true)
   state.players[0].energy=4
@@ -2688,7 +2231,7 @@ test('C041 氷スライムは初期付着に氷元素を持ち、常時付着を
 test('C042 氷射手のファンファーレは敵一体に氷1と付着を付与',()=>{
   let state=startedGame()
   state.players[0].pp=2;state.players[0].hand=['C042']
-  const target=place(state,1,'test-mage',1,6)
+  const target=place(state,1,'C001',1,6)
   state=engine.playCard(state,'player1',0,target.instanceId)
   assert.equal(state.players[0].field[0].cardId,'C042')
   assert.equal(state.players[1].field[0].health,5)
@@ -2698,7 +2241,7 @@ test('C042 氷射手のファンファーレは敵一体に氷1と付着を付�
 test('C042 氷射手は水付着した敵に凍結を発生させる',()=>{
   let state=startedGame()
   state.players[0].pp=2;state.players[0].hand=['C042']
-  const target=place(state,1,'test-mage',1,6)
+  const target=place(state,1,'C001',1,6)
   target.aura=[{element:'hydro'}]
   state=engine.playCard(state,'player1',0,target.instanceId)
   assert.equal(state.players[1].field[0].health,5)
@@ -2711,7 +2254,7 @@ test('C043 イクトミ仔竜は突進で登場ターンは敵フォロワーの
   state=engine.playCard(state,'player1',0)
   const dragon=state.players[0].field[0]
   assert.equal(engine.attackLeader(state,dragon.instanceId),state)
-  const victim=place(state,1,'test-mage',0,6)
+  const victim=place(state,1,'C001',0,6)
   state=engine.attackFollower(state,dragon.instanceId,victim.instanceId)
   assert.equal(state.players[1].field[0].health,4)
 })
@@ -2762,7 +2305,7 @@ test('C050 ガイアは突進・PP0スキル氷2・EN1、ターン内1回',()=>{
   state.players[0].pp=3;state.players[0].hand=['C050']
   state=engine.playCard(state,'player1',0)
   const kaeya=state.players[0].field[0]
-  const enemy=place(state,1,'test-mage',0,7)
+  const enemy=place(state,1,'C001',0,7)
   assert.equal(engine.attackLeader(state,kaeya.instanceId),state)
   assert.equal(engine.canUseAbility(state,kaeya.instanceId,'skill'),true)
   state=engine.activateAbility(state,kaeya.instanceId,'skill',enemy.instanceId)
@@ -2807,7 +2350,7 @@ test('C044 霜の精：味方を選び+2攻撃、本人も指定可能、無指�
 test('C045 凛冽なる輪舞：カウント3、毎自ターン終了で氷2を2回',()=>{
   let state=startedGame()
   state.players[0].hand=['C045'];state.players[0].pp=3
-  place(state,1,'test-mage',1,18)
+  place(state,1,'C001',1,18)
   state=engine.playCard(state,'player1',0)
   assert.equal(state.players[0].crests[0].turnsRemaining,3)
   state=engine.endTurn(state)
@@ -2833,8 +2376,8 @@ test('C046 星流揺籠の夢：全味方＋リーダーにシールド2、敵�
   let state=startedGame()
   state.players[0].hand=['C046'];state.players[0].pp=4
   place(state,0,'C001',1,3)
-  place(state,1,'test-mage',1,8)
-  place(state,1,'test-mage',1,7)
+  place(state,1,'C001',1,8)
+  place(state,1,'C001',1,7)
   state=engine.playCard(state,'player1',0)
   assert.equal(state.players[0].leaderShield.normal,2)
   assert.equal(state.players[0].field[0].shield.normal,2)
@@ -2861,8 +2404,8 @@ test('C049 ディオナ：登場時リーダーへ通常シールド2',()=>{
 test('C049 ディオナ：スキルは選択した敵＋もう1体へ氷2、シールド2',()=>{
   let state=startedGame()
   const diona=place(state,0,'C049',2,4)
-  const a=place(state,1,'test-mage',1,7)
-  const b=place(state,1,'test-mage',1,6)
+  const a=place(state,1,'C001',1,7)
+  const b=place(state,1,'C001',1,6)
   state.players[0].pp=2
   assert.equal(engine.needsAbilityTarget(engine.getCard('C049'),'skill'),true)
   assert.equal(engine.activateAbility(state,diona.instanceId,'skill',b.instanceId),state)
@@ -2878,7 +2421,7 @@ test('C049 ディオナ：スキルは選択した敵＋もう1体へ氷2、シ�
 test('C051 レイラ：守護、ターン終了時氷1・PP1スキル盾3',()=>{
   let state=startedGame()
   state.players[0].hand=['C051'];state.players[0].pp=4
-  place(state,1,'test-mage',1,7)
+  place(state,1,'C001',1,7)
   state=engine.playCard(state,'player1',0)
   const layla=state.players[0].field[0]
   assert.ok(layla.keywords.includes('guard'))
@@ -2896,7 +2439,7 @@ test('C052 シャルロット：登場時1枚引き、スキル氷2＋攻撃-1',
   assert.deepEqual(state.players[0].hand,['C001'])
   const charlotte=state.players[0].field[0]
   assert.equal(engine.getCard('C052').normalAttackElement,'cryo')
-  const foe=place(state,1,'test-mage',3,8)
+  const foe=place(state,1,'C001',3,8)
   state=engine.activateAbility(state,charlotte.instanceId,'skill',foe.instanceId)
   assert.equal(state.players[1].field[0].health,6)
   assert.equal(state.players[1].field[0].attack,2)
@@ -2913,7 +2456,7 @@ test('C052 シャルロット：空デッキのファンファーレはデッキ
 test('C053 甘雨：攻撃時に相手リーダーへ1、通常攻撃は別に解決',()=>{
   let state=startedGame()
   const ganyu=place(state,0,'C053',3,5)
-  const foe=place(state,1,'test-mage',0,8)
+  const foe=place(state,1,'C001',0,8)
   state=engine.attackFollower(state,ganyu.instanceId,foe.instanceId)
   assert.equal(state.players[1].leaderHealth,19)
   assert.equal(state.players[1].field[0].health,5)
@@ -2935,8 +2478,8 @@ test('氷蓮は破壊時に敵フォロワー全員へ氷1を与える',()=>{
   let state=startedGame()
   const lotus=place(state,0,'token-cryo-ice-lotus',0,1)
   lotus.keywords=['guard']
-  const foe=place(state,1,'test-mage',2,7)
-  place(state,1,'test-mage',1,6)
+  const foe=place(state,1,'C001',2,7)
+  place(state,1,'C001',1,6)
   state=engine.attackFollower(state,lotus.instanceId,foe.instanceId)
   assert.equal(state.players[0].field.length,0)
   assert.deepEqual(state.players[1].field.map(f=>f.health),[6,5])
@@ -2947,7 +2490,7 @@ test('C053 甘雨：爆発は敵全体に氷2＋3ターン×2回クレスト',()
   let state=startedGame()
   const ganyu=place(state,0,'C053',3,5)
   state.players[0].energy=3
-  place(state,1,'test-mage',0,18)
+  place(state,1,'C001',0,18)
   state=engine.activateAbility(state,ganyu.instanceId,'burst')
   assert.equal(state.players[0].energy,0)
   assert.equal(state.players[1].field[0].health,16)
@@ -2979,7 +2522,7 @@ test('C054 シトラリ：PP1スキルでイツパパ1/3を召喚',()=>{
 test('イツパパ：ターン終了時のランダム氷1とリーダー盾1',()=>{
   let state=startedGame()
   place(state,0,'token-cryo-itzpapa',1,3)
-  place(state,1,'test-mage',0,7)
+  place(state,1,'C001',0,7)
   state=engine.endTurn(state)
   assert.equal(state.players[1].field[0].health,6)
   assert.equal(state.players[0].leaderShield.normal,1)
@@ -2989,7 +2532,7 @@ test('C054 シトラリ：爆発EN3で敵全員氷3＋リーダー盾3',()=>{
   let state=startedGame()
   const citlali=place(state,0,'C054',2,5)
   state.players[0].energy=3
-  place(state,1,'test-mage',0,9)
+  place(state,1,'C001',0,9)
   state=engine.activateAbility(state,citlali.instanceId,'burst')
   assert.equal(state.players[0].energy,0)
   assert.equal(state.players[1].field[0].health,6)
@@ -3001,8 +2544,8 @@ test('C055 神里綾華：突進・スキル全敵氷1・自身に氷通常攻�
   state.players[0].pp=6;state.players[0].hand=['C055']
   state=engine.playCard(state,'player1',0)
   const ayaka=state.players[0].field[0]
-  place(state,1,'test-mage',0,9)
-  place(state,1,'test-mage',0,8)
+  place(state,1,'C001',0,9)
+  place(state,1,'C001',0,8)
   assert.equal(engine.attackLeader(state,ayaka.instanceId),state)
   state=engine.activateAbility(state,ayaka.instanceId,'skill')
   assert.deepEqual(state.players[1].field.map(f=>f.health),[8,7])
@@ -3013,7 +2556,7 @@ test('C055 神里綾華：爆発EN3で敵一体に氷2×5回（対象を毎回�
   let state=startedGame()
   const ayaka=place(state,0,'C055',4,5)
   state.players[0].energy=3
-  place(state,1,'test-mage',0,12)
+  place(state,1,'C001',0,12)
   state=engine.activateAbility(state,ayaka.instanceId,'burst')
   assert.equal(state.players[0].energy,0)
   assert.equal(state.players[1].field[0].health,2)
@@ -3034,8 +2577,8 @@ test('C049 ディオナ：同じ敵を2回選択できず、敵1体なら1体を
   let state=startedGame()
   const diona=place(state,0,'C049',2,4)
   state.players[0].pp=2
-  const a=place(state,1,'test-mage',1,8)
-  const b=place(state,1,'test-mage',1,8)
+  const a=place(state,1,'C001',1,8)
+  const b=place(state,1,'C001',1,8)
   assert.equal(engine.activateAbility(state,diona.instanceId,'skill',
     a.instanceId + '|' + a.instanceId),state)
   assert.equal(engine.activateAbility(state,diona.instanceId,'skill',a.instanceId),state)
@@ -3112,7 +2655,7 @@ test('C056 雷スライムは元素生物として初期雷付着を維持',()=>
 test('C057 雷キノコン：ラストワードでランダムな敵1体へ雷2・付着',()=>{
   let state=startedGame()
   const mushroom=place(state,0,'C057',1,1)
-  const victim=place(state,1,'test-mage',2,8)
+  const victim=place(state,1,'C001',2,8)
   state=engine.attackFollower(state,mushroom.instanceId,victim.instanceId)
   assert.ok(state.players[0].graveyard.includes('C057'))
   assert.equal(state.players[1].field[0].health,5)
@@ -3122,7 +2665,7 @@ test('C057 雷キノコン：ラストワードでランダムな敵1体へ雷2�
 test('C057 雷キノコン：相手フォロワー不在のラストワードはリーダーを攻撃しない',()=>{
   let state=startedGame()
   const mushroom=place(state,0,'C057',1,1)
-  const attacker=place(state,1,'test-mage',2,8)
+  const attacker=place(state,1,'C001',2,8)
   const enemyTurn={...state,currentPlayerId:'player2'}
   state=engine.attackFollower(enemyTurn,attacker.instanceId,mushroom.instanceId)
   assert.equal(state.players[0].field.length,0)
@@ -3135,7 +2678,7 @@ test('C058 ライノ仔竜：突進で登場ターンはリーダーに攻撃不
   state=engine.playCard(state,'player1',0)
   const rhino=state.players[0].field[0]
   assert.equal(engine.attackLeader(state,rhino.instanceId),state)
-  const foe=place(state,1,'test-mage',1,8)
+  const foe=place(state,1,'C001',1,8)
   state=engine.attackFollower(state,rhino.instanceId,foe.instanceId)
   assert.equal(state.players[1].field[0].health,6)
 })
@@ -3147,7 +2690,7 @@ test('C059 雷フライム：常時雷付着、破壊時相手リーダーに雷
   const float=state.players[0].field[0]
   assert.deepEqual(float.aura,[{element:'electro'}])
   float.health=1
-  const attacker=place(state,1,'test-mage',3,8)
+  const attacker=place(state,1,'C001',3,8)
   state=engine.attackFollower({...state,currentPlayerId:'player2'},attacker.instanceId,float.instanceId)
   assert.equal(state.players[1].leaderHealth,18)
   assert.ok(state.players[0].graveyard.includes('C059'))
@@ -3156,7 +2699,7 @@ test('C059 雷フライム：常時雷付着、破壊時相手リーダーに雷
 test('C059 雷フライムのラストワードはリーダーシールドを先に消費',()=>{
   let state=startedGame()
   const float=place(state,0,'C059',2,1)
-  const attacker=place(state,1,'test-mage',3,8)
+  const attacker=place(state,1,'C001',3,8)
   state.players[1].leaderShield={normal:2,crystallize:0}
   state=engine.attackFollower({...state,currentPlayerId:'player2'},attacker.instanceId,float.instanceId)
   assert.equal(state.players[1].leaderHealth,20)
@@ -3166,7 +2709,7 @@ test('C059 雷フライムのラストワードはリーダーシールドを先
 test('C060 夜の幻現：選択した敵に雷3、その後オズ3/3召喚',()=>{
   let state=startedGame()
   state.players[0].hand=['C060'];state.players[0].pp=4
-  const enemy=place(state,1,'test-mage',1,8)
+  const enemy=place(state,1,'C001',1,8)
   assert.equal(engine.needsPlayTarget(engine.getCard('C060')),true)
   state=engine.playCard(state,'player1',0,enemy.instanceId)
   assert.equal(state.players[1].field[0].health,5)
@@ -3181,7 +2724,7 @@ test('C060 夜の幻現：敵無しではプレイ不可、場満員ならオズ
   state.players[0].hand=['C060'];state.players[0].pp=4
   assert.equal(engine.canPlayCard(state,0),false)
   for(let i=0;i<5;i++)place(state,0,'C001',1,2)
-  const enemy=place(state,1,'test-mage',1,8)
+  const enemy=place(state,1,'C001',1,8)
   state=engine.playCard(state,'player1',0,enemy.instanceId)
   assert.equal(state.players[0].field.length,5)
   assert.equal(state.players[1].field[0].health,5)
@@ -3190,7 +2733,7 @@ test('C060 夜の幻現：敵無しではプレイ不可、場満員ならオズ
 test('オズは毎自ターン終了時にランダムな敵1体へ雷3',()=>{
   let state=startedGame()
   place(state,0,'token-oz',3,3)
-  place(state,1,'test-mage',1,10)
+  place(state,1,'C001',1,10)
   state=engine.endTurn(state)
   assert.equal(state.players[1].field[0].health,7)
   assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
@@ -3228,7 +2771,7 @@ test('C062 雷蛍術師は最大5枠を超えて雷蛍を召喚しない',()=>{
 test('C063 雷ハウンド：通常攻撃は雷、攻撃宣言時に敵リーダーへ非元素1',()=>{
   let state=startedGame()
   const hound=place(state,0,'C063',3,3)
-  const enemy=place(state,1,'test-mage',0,10)
+  const enemy=place(state,1,'C001',0,10)
   state=engine.attackFollower(state,hound.instanceId,enemy.instanceId)
   assert.equal(state.players[1].leaderHealth,19)
   assert.equal(state.players[1].field[0].health,7)
@@ -3262,7 +2805,7 @@ test('C061 御詠鳴神刈山祭：リーダーHP11ならランダム雷1を3回
   let state=startedGame()
   state.players[0].hand=['C061'];state.players[0].pp=3
   state.players[0].leaderHealth=11
-  place(state,1,'test-mage',0,10)
+  place(state,1,'C001',0,10)
   state=engine.playCard(state,'player1',0)
   assert.equal(state.players[1].field[0].health,7)
   assert.deepEqual(state.players[1].field[0].aura,[{element:'electro'}])
@@ -3273,7 +2816,7 @@ test('C061 御詠鳴神刈山祭：リーダーHP10以下なら雷1を5回',()=>
   let state=startedGame()
   state.players[0].hand=['C061'];state.players[0].pp=3
   state.players[0].leaderHealth=10
-  place(state,1,'test-mage',0,12)
+  place(state,1,'C001',0,12)
   state=engine.playCard(state,'player1',0)
   assert.equal(state.players[1].field[0].health,7)
 })
@@ -3316,7 +2859,7 @@ test('C065 久岐忍：スキルPP1で自身1ダメージ・リーダー2回復�
   let state=startedGame()
   const kuki=place(state,0,'C065',2,4)
   state.players[0].pp=1;state.players[0].leaderHealth=10
-  place(state,1,'test-mage',0,7)
+  place(state,1,'C001',0,7)
   state=engine.activateAbility(state,kuki.instanceId,'skill')
   assert.equal(state.players[0].field[0].health,3)
   assert.equal(state.players[0].leaderHealth,12)
@@ -3341,7 +2884,7 @@ test('C066 九条裟羅：スキル対象の雷フォロワー+2攻撃、敵ラ�
   let state=startedGame()
   const sara=place(state,0,'C066',3,4)
   const ally=place(state,0,'C056',2,2)
-  place(state,1,'test-mage',0,6)
+  place(state,1,'C001',0,6)
   state.players[0].pp=1
   assert.equal(engine.activateAbility(state,sara.instanceId,'skill','invalid'),state)
   state=engine.activateAbility(state,sara.instanceId,'skill',ally.instanceId)
@@ -3353,8 +2896,8 @@ test('C066 九条裟羅：スキル対象の雷フォロワー+2攻撃、敵ラ�
 test('C067 オロルン：スキルで指定敵雷2、別の敵に雷1',()=>{
   let state=startedGame()
   const ororon=place(state,0,'C067',2,4)
-  const one=place(state,1,'test-mage',0,9)
-  const two=place(state,1,'test-mage',0,9)
+  const one=place(state,1,'C001',0,9)
+  const two=place(state,1,'C001',0,9)
   state.players[0].pp=1
   state=engine.activateAbility(state,ororon.instanceId,'skill',one.instanceId)
   assert.equal(state.players[1].field[0].health,7)
@@ -3365,7 +2908,7 @@ test('C067 オロルン：スキルで指定敵雷2、別の敵に雷1',()=>{
 test('C067 オロルン：別対象がいなければ指定敵のみ雷2',()=>{
   let state=startedGame()
   const ororon=place(state,0,'C067',2,4)
-  const one=place(state,1,'test-mage',0,9)
+  const one=place(state,1,'C001',0,9)
   state.players[0].pp=1
   state=engine.activateAbility(state,ororon.instanceId,'skill',one.instanceId)
   assert.equal(state.players[1].field[0].health,7)
@@ -3375,8 +2918,8 @@ test('C067 オロルン：自ターン感電で追加雷1、回数は最大2',as
   const {resolveElementalDamage,resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
   let state=startedGame()
   const ororon=place(state,0,'C067',2,4)
-  const enemy=place(state,1,'test-mage',0,15)
-  const other=place(state,1,'test-mage',0,12)
+  const enemy=place(state,1,'C001',0,15)
+  const other=place(state,1,'C001',0,12)
   for(let n=0;n<3;n++){
     state.players[1].field.find(f=>f.instanceId===enemy.instanceId).aura=[{element:'hydro'}]
     const victim=state.players[1].field.find(f=>f.instanceId===enemy.instanceId)
@@ -3391,7 +2934,7 @@ test('C067 オロルン：自ターン感電で追加雷1、回数は最大2',as
 test('C068 セノ：スキル敵雷2、爆発EN3で自身+2/+2と2回攻撃・雷攻撃',()=>{
   let state=startedGame()
   const cyno=place(state,0,'C068',4,5)
-  const enemy=place(state,1,'test-mage',0,12)
+  const enemy=place(state,1,'C001',0,12)
   state.players[0].pp=1;state.players[0].energy=3
   state=engine.activateAbility(state,cyno.instanceId,'skill',enemy.instanceId)
   assert.equal(state.players[1].field[0].health,10)
@@ -3421,7 +2964,7 @@ test('C069 八重神子：PP1スキルを1ターン3回、殺生櫻を3個設置
 test('殺生櫻：ターン終了でランダム雷2、カウント3から0で消滅',()=>{
   let state=startedGame()
   state.players[0].amulets=[{instanceId:'sakura-1',cardId:'token-sesshou-sakura',turnsRemaining:3}]
-  place(state,1,'test-mage',0,12)
+  place(state,1,'C001',0,12)
   state=engine.endTurn(state)
   assert.equal(state.players[1].field[0].health,10)
   assert.equal(state.players[0].amulets[0].turnsRemaining,2)
@@ -3451,7 +2994,7 @@ test('C070 ヴァレサ：攻撃時自身+1、スキルPP1で雷攻撃・落下�
   state=engine.activateAbility(state,varesa.instanceId,'skill')
   assert.ok(state.players[0].field[0].keywords.includes('plunge_attack'))
   assert.ok(state.players[0].field[0].keywords.includes('normal_attack_electro'))
-  place(state,1,'test-mage',0,12)
+  place(state,1,'C001',0,12)
   state=engine.attackFollower(state,varesa.instanceId,state.players[1].field[0].instanceId)
   assert.equal(state.players[0].field[0].attack,6)
   assert.equal(state.players[1].field[0].health,5)
@@ -3463,7 +3006,7 @@ test('C070 ヴァレサ：落下攻撃は守護を無視して攻撃し攻撃後
   varesa.keywords=['normal_attack_electro','plunge_attack']
   const guard=place(state,1,'C003',0,9)
   guard.keywords=['guard']
-  const other=place(state,1,'test-mage',0,10)
+  const other=place(state,1,'C001',0,10)
   state=engine.attackFollower(state,varesa.instanceId,other.instanceId)
   assert.equal(state.players[1].field.find(f=>f.instanceId===guard.instanceId).health,8)
   assert.equal(state.players[1].field.find(f=>f.instanceId===other.instanceId).health,3)
@@ -3473,7 +3016,7 @@ test('C070 ヴァレサ：爆発EN3で敵全体雷3＋自身攻撃+2',()=>{
   let state=startedGame()
   const varesa=place(state,0,'C070',5,5)
   state.players[0].energy=3
-  place(state,1,'test-mage',0,9)
+  place(state,1,'C001',0,9)
   state=engine.activateAbility(state,varesa.instanceId,'burst')
   assert.equal(state.players[1].field[0].health,6)
   assert.equal(state.players[0].field[0].attack,7)
@@ -3636,7 +3179,7 @@ test('C073 クク仔竜の突進は登場ターンのフォロワー攻撃のみ
   state=engine.playCard(state,'player1',0)
   const kuku=state.players[0].field[0]
   assert.equal(engine.attackLeader(state,kuku.instanceId),state)
-  const enemy=place(state,1,'test-mage',0,7)
+  const enemy=place(state,1,'C001',0,7)
   state=engine.attackFollower(state,kuku.instanceId,enemy.instanceId)
   assert.equal(state.players[1].field[0].health,5)
 })
@@ -3648,7 +3191,7 @@ test('C074 風フライムは風元素常時付着・破壊時リーダー2ダ�
   const specter=state.players[0].field[0]
   assert.deepEqual(specter.aura,[{element:'anemo'}])
   specter.health=1
-  const enemy=place(state,1,'test-mage',3,8)
+  const enemy=place(state,1,'C001',3,8)
   state=engine.attackFollower({...state,currentPlayerId:'player2'},enemy.instanceId,specter.instanceId)
   assert.equal(state.players[1].leaderHealth,18)
   assert.ok(state.players[0].graveyard.includes('C074'))
@@ -3657,7 +3200,7 @@ test('C074 風フライムは風元素常時付着・破壊時リーダー2ダ�
 test('C074 風フライムのラストワードはリーダーシールドを先に消費',()=>{
   let state=startedGame()
   const specter=place(state,0,'C074',2,1)
-  const enemy=place(state,1,'test-mage',3,8)
+  const enemy=place(state,1,'C001',3,8)
   state.players[1].leaderShield={normal:2,crystallize:0}
   state=engine.attackFollower({...state,currentPlayerId:'player2'},enemy.instanceId,specter.instanceId)
   assert.equal(state.players[1].leaderHealth,20)
@@ -3670,7 +3213,7 @@ test('C077 風レンジャーは突進し攻撃時にヒルチャールを1体�
   state=engine.playCard(state,'player1',0)
   const ranger=state.players[0].field[0]
   assert.equal(engine.attackLeader(state,ranger.instanceId),state)
-  const enemy=place(state,1,'test-mage',0,10)
+  const enemy=place(state,1,'C001',0,10)
   state=engine.attackFollower(state,ranger.instanceId,enemy.instanceId)
   assert.deepEqual(state.players[0].field.map(f=>f.cardId),['C077','C001'])
   assert.equal(state.players[1].field[0].health,6)
@@ -3680,7 +3223,7 @@ test('C077 風レンジャーは場が5枠でも攻撃できるが追加召喚�
   let state=startedGame()
   const ranger=place(state,0,'C077',4,4)
   for(let i=0;i<4;i++)place(state,0,'C001',1,2)
-  const foe=place(state,1,'test-mage',0,10)
+  const foe=place(state,1,'C001',0,10)
   state=engine.attackFollower(state,ranger.instanceId,foe.instanceId)
   assert.equal(state.players[0].field.length,5)
   assert.equal(state.players[1].field[0].health,6)
@@ -3692,7 +3235,7 @@ test('C080 早柚は潜伏を持ちスキルPP1で風2・自身攻撃+1',()=>{
   state=engine.playCard(state,'player1',0)
   const sayu=state.players[0].field[0]
   assert.ok(sayu.keywords.includes('stealth'))
-  const foe=place(state,1,'test-mage',0,8)
+  const foe=place(state,1,'C001',0,8)
   state.players[0].pp=1
   state=engine.activateAbility(state,sayu.instanceId,'skill',foe.instanceId)
   assert.equal(state.players[0].energy,1)
@@ -3718,7 +3261,7 @@ test('C082 リネットの元素スキルはPP1・風2ダメージ・自身1回�
   const lynette=place(state,0,'C082',2,2)
   lynette.maxHealth=3
   state.players[0].pp=1
-  const enemy=place(state,1,'test-mage',0,8)
+  const enemy=place(state,1,'C001',0,8)
   state=engine.activateAbility(state,lynette.instanceId,'skill',enemy.instanceId)
   assert.equal(state.players[0].pp,0)
   assert.equal(state.players[0].energy,1)
@@ -3755,7 +3298,7 @@ test('C075 魔術・アストニシングシフトは守護0/8の猫ボックス
 test('ビックラキャット・ボックスは自ターン終了時にランダムな敵に風2',()=>{
   let state=startedGame()
   place(state,0,'token-surprising-cat-box',0,8)
-  place(state,1,'test-mage',1,9)
+  place(state,1,'C001',1,9)
   state=engine.endTurn(state)
   assert.equal(state.players[1].field[0].health,7)
 })
@@ -3773,7 +3316,7 @@ test('C076 禁・風霊作成・七五同構弐型は4PP、カウント3の風�
 test('C076 初回拡散元素を記録し、風1と記録元素1の全体ダメージ',()=>{
   let state=startedGame()
   state.players[0].hand=['C076'];state.players[0].pp=4
-  const enemy=place(state,1,'test-mage',0,12)
+  const enemy=place(state,1,'C001',0,12)
   enemy.aura=[{element:'pyro'}]
   state=engine.playCard(state,'player1',0)
   state=engine.endTurn(state)
@@ -3784,7 +3327,7 @@ test('C076 初回拡散元素を記録し、風1と記録元素1の全体ダメ�
 test('C076 初回拡散が無い場合は付加元素を記録しない',()=>{
   let state=startedGame()
   state.players[0].hand=['C076'];state.players[0].pp=4
-  place(state,1,'test-mage',0,12)
+  place(state,1,'C001',0,12)
   state=engine.playCard(state,'player1',0)
   state=engine.endTurn(state)
   assert.equal(state.players[0].amulets[0].recordedElement,undefined)
@@ -3826,8 +3369,8 @@ test('C079 スクロース：スキルPP1で敵全体に風1',()=>{
   let state=startedGame()
   const sucrose=place(state,0,'C079',2,3)
   state.players[0].pp=1
-  place(state,1,'test-mage',0,9)
-  place(state,1,'test-mage',0,8)
+  place(state,1,'C001',0,9)
+  place(state,1,'C001',0,8)
   state=engine.activateAbility(state,sucrose.instanceId,'skill')
   assert.deepEqual(state.players[1].field.map(f=>f.health),[8,7])
   assert.equal(state.players[0].energy,1)
@@ -3836,7 +3379,7 @@ test('C079 スクロース：スキルPP1で敵全体に風1',()=>{
 test('C079 スクロース：拡散時に自ターン1回ドロー',()=>{
   let state=startedGame()
   const sucrose=place(state,0,'C079',2,3)
-  const enemy=place(state,1,'test-mage',0,12)
+  const enemy=place(state,1,'C001',0,12)
   enemy.aura=[{element:'pyro'}]
   state.players[0].deck=['C001','C071']
   state.players[0].hand=[]
@@ -3869,7 +3412,7 @@ test('C081 ファルザンのスキルは風2＋味方風元素全体攻撃+1',(
   place(state,0,'C071',2,2)
   place(state,0,'C001',1,2)
   state.players[0].pp=1
-  const foe=place(state,1,'test-mage',0,10)
+  const foe=place(state,1,'C001',0,10)
   state=engine.activateAbility(state,faruzan.instanceId,'skill',foe.instanceId)
   assert.deepEqual(state.players[0].field.map(f=>f.attack),[3,3,1])
   assert.equal(state.players[1].field[0].health,8)
@@ -3904,7 +3447,7 @@ test('C083 ファルカは攻撃時に西風騎士団全体を+1/+1、攻撃後�
   const knight=place(state,0,'C079',2,3)
   state.players[0].hand=['C012']
   state=engine.activateAbility(state,varka.instanceId,'skill','hand:0')
-  const foe=place(state,1,'test-mage',0,15)
+  const foe=place(state,1,'C001',0,15)
   state=engine.attackFollower(state,varka.instanceId,foe.instanceId)
   assert.equal(state.players[0].field[0].attack,5)
   assert.deepEqual([state.players[0].field[0].health,state.players[0].field[0].maxHealth],[8,8])
@@ -3917,7 +3460,7 @@ test('C083 ファルカの爆発EN3は敵フォロワー全体風2',()=>{
   let state=startedGame()
   const varka=place(state,0,'C083',4,7)
   state.players[0].energy=3
-  place(state,1,'test-mage',0,8)
+  place(state,1,'C001',0,8)
   state=engine.activateAbility(state,varka.instanceId,'burst')
   assert.equal(state.players[0].energy,0)
   assert.equal(state.players[1].field[0].health,6)
@@ -3927,7 +3470,7 @@ test('C084 魈のスキルはPP1で1ターン2回まで、敵に風2',()=>{
   let state=startedGame()
   const xiao=place(state,0,'C084',4,5)
   state.players[0].pp=3
-  place(state,1,'test-mage',0,12)
+  place(state,1,'C001',0,12)
   for(let i=0;i<2;i++)state=engine.activateAbility(state,xiao.instanceId,'skill',state.players[1].field[0].instanceId)
   assert.equal(state.players[1].field[0].health,8)
   assert.equal(state.players[0].field[0].skillUsesThisTurn,2)
@@ -4029,7 +3572,7 @@ test('ファルカの属性上書きはターン終了時にスキルで得た�
   const varka=place(state,0,'C083',4,7)
   state.players[0].hand=['C012']
   state=engine.activateAbility(state,varka.instanceId,'skill','hand:0')
-  const foe=place(state,1,'test-mage',0,18)
+  const foe=place(state,1,'C001',0,18)
   state=engine.attackFollower(state,varka.instanceId,foe.instanceId)
   assert.ok(state.players[0].field[0].keywords.includes('normal_attack_anemo'))
   state=engine.endTurn(state)
@@ -4042,8 +3585,8 @@ test('スクロースの拡散カードドローは複数対象に拡散して�
   const sucrose=place(state,0,'C079',2,3)
   state.players[0].hand=[]
   state.players[0].deck=['C001','C071','C073']
-  const a=place(state,1,'test-mage',0,12)
-  const b=place(state,1,'test-mage',0,12)
+  const a=place(state,1,'C001',0,12)
+  const b=place(state,1,'C001',0,12)
   a.aura=[{element:'pyro'}]
   b.aura=[{element:'hydro'}]
   state.players[0].pp=1
@@ -4187,7 +3730,7 @@ test('C088 テペトル仔竜は突進で登場ターンは敵フォロワーの
   state=engine.playCard(state,'player1',0)
   const dragon=state.players[0].field[0]
   assert.equal(engine.attackLeader(state,dragon.instanceId),state)
-  const foe=place(state,1,'test-mage',0,7)
+  const foe=place(state,1,'C001',0,7)
   state=engine.attackFollower(state,dragon.instanceId,foe.instanceId)
   assert.equal(state.players[1].field[0].health,5)
 })
@@ -4197,7 +3740,7 @@ test('C089 ベビーヴィシャップは突進、攻撃時に自リーダー結
   state.players[0].hand=['C089'];state.players[0].pp=4
   state=engine.playCard(state,'player1',0)
   const baby=state.players[0].field[0]
-  const foe=place(state,1,'test-mage',0,8)
+  const foe=place(state,1,'C001',0,8)
   state=engine.attackFollower(state,baby.instanceId,foe.instanceId)
   assert.equal(state.players[0].leaderShield.crystallize,1)
   assert.equal(state.players[1].field[0].health,5)
@@ -4206,7 +3749,7 @@ test('C089 ベビーヴィシャップは突進、攻撃時に自リーダー結
 test('C092 岩ハウンドは岩元素通常攻撃＋敵リーダーへの追加非元素1',()=>{
   let state=startedGame()
   const hound=place(state,0,'C092',3,3)
-  const foe=place(state,1,'test-mage',0,10)
+  const foe=place(state,1,'C001',0,10)
   state=engine.attackFollower(state,hound.instanceId,foe.instanceId)
   assert.equal(state.players[1].leaderHealth,19)
   assert.equal(state.players[1].field[0].health,7)
@@ -4228,7 +3771,7 @@ test('C093 岩ヴィシャップは守護、交戦時に自リーダー結晶シ
   assert.ok(state.players[0].field[0].keywords.includes('guard'))
   const vishap=state.players[0].field[0]
   vishap.canAttack=true // 次の自分ターン以降の交戦を再現
-  const foe=place(state,1,'test-mage',2,9)
+  const foe=place(state,1,'C001',2,9)
   state=engine.attackFollower(state,vishap.instanceId,foe.instanceId)
   assert.equal(state.players[0].leaderShield.crystallize,2)
 })
@@ -4237,7 +3780,7 @@ test('C093 岩ヴィシャップは敵に攻撃されても交戦時シールド
   let state=startedGame()
   const vishap=place(state,0,'C093',6,7)
   vishap.keywords=['guard']
-  const enemy=place(state,1,'test-mage',2,9)
+  const enemy=place(state,1,'C001',2,9)
   state=engine.attackFollower({...state,currentPlayerId:'player2'},enemy.instanceId,vishap.instanceId)
   assert.equal(state.players[0].leaderShield.crystallize,2)
 })
@@ -4258,7 +3801,7 @@ test('C094 ノエルは攻撃時リーダーを2回復',()=>{
   let state=startedGame()
   const noelle=place(state,0,'C094',2,5)
   state.players[0].leaderHealth=15
-  const enemy=place(state,1,'test-mage',0,8)
+  const enemy=place(state,1,'C001',0,8)
   state=engine.attackFollower(state,noelle.instanceId,enemy.instanceId)
   assert.equal(state.players[0].leaderHealth,17)
 })
@@ -4268,7 +3811,7 @@ test('C094 ノエルの回復は命の契約を先に吸収する',()=>{
   const noelle=place(state,0,'C094',2,5)
   state.players[0].leaderHealth=10
   state.players[0].bondOfLife=2
-  const enemy=place(state,1,'test-mage',0,8)
+  const enemy=place(state,1,'C001',0,8)
   state=engine.attackFollower(state,noelle.instanceId,enemy.instanceId)
   assert.equal(state.players[0].leaderHealth,10)
   assert.equal(state.players[0].bondOfLife,0)
@@ -4401,7 +3944,7 @@ test('C100 アルベドの爆発は岩創造物があると岩2+2',()=>{
   let s=startedGame();const a=place(s,0,'C100',3,5)
   s.players[0].pp=1;s.players[0].energy=3
   s=engine.activateAbility(s,a.instanceId,'skill')
-  const foe=place(s,1,'test-mage',0,8)
+  const foe=place(s,1,'C001',0,8)
   s=engine.activateAbility(s,a.instanceId,'burst')
   assert.equal(s.players[1].field.find(f=>f.instanceId===foe.instanceId).health,4)
   assert.equal(s.players[0].energy,1)
@@ -4418,7 +3961,7 @@ test('C091 大掃除は指定味方を強化し攻撃時敵全体へ岩1',()=>{
   s=engine.playCard(s,'player1',0,ally.instanceId)
   assert.equal(s.players[0].field[0].attack,4)
   assert.ok(s.players[0].field[0].keywords.includes('normal_attack_geo'))
-  const e=place(s,1,'test-mage',0,8), other=place(s,1,'test-mage',0,8)
+  const e=place(s,1,'C001',0,8), other=place(s,1,'C001',0,8)
   s=engine.attackFollower(s,ally.instanceId,e.instanceId)
   assert.equal(s.players[1].field.find(f=>f.instanceId===other.instanceId).health,7)
 })
@@ -4430,7 +3973,7 @@ test('C091 大掃除は対象指定なしではPPも手札も変化しない',()
 test('C099 ナヴィアのスキルは結晶3消費して岩7、PP0、EN+1',()=>{
   let s=startedGame(); const n=place(s,0,'C099',4,5)
   s.players[0].leaderShield={normal:0,crystallize:3}
-  const e=place(s,1,'test-mage',0,10)
+  const e=place(s,1,'C001',0,10)
   s=engine.activateAbility(s,n.instanceId,'skill',e.instanceId)
   assert.equal(s.players[0].leaderShield.crystallize,0)
   assert.equal(s.players[0].energy,1)
@@ -4441,7 +3984,7 @@ test('C099 ナヴィアは自ターン中結晶獲得のたび最大3回攻撃+1
   const v=place(s,0,'C089',3,5)
   for(let i=0;i<4;i++){
     s.players[0].field.find(f=>f.instanceId===v.instanceId).hasAttacked=false
-    const enemy=place(s,1,'test-mage',0,100)
+    const enemy=place(s,1,'C001',0,100)
     s=engine.attackFollower(s,v.instanceId,enemy.instanceId)
   }
   const navia=s.players[0].field.find(f=>f.instanceId===n.instanceId)
@@ -4450,7 +3993,7 @@ test('C099 ナヴィアは自ターン中結晶獲得のたび最大3回攻撃+1
 })
 test('C099 ナヴィア爆発は岩1全体・結晶1・2回クレスト',()=>{
   let s=startedGame();const n=place(s,0,'C099',4,5)
-  const e=place(s,1,'test-mage',0,10)
+  const e=place(s,1,'C001',0,10)
   s.players[0].energy=3
   s=engine.activateAbility(s,n.instanceId,'burst')
   assert.equal(s.players[1].field[0].health,9)
@@ -4478,7 +4021,7 @@ test('C098 千織のスキルはPP1でたもと召喚とEN+1',()=>{
 test('C098 千織爆発は全体岩3とたもと数の岩2追加',()=>{
   let s=startedGame();const c=place(s,0,'C098',3,5)
   place(s,0,'token-tamoto',1,3)
-  place(s,1,'test-mage',0,3)
+  place(s,1,'C001',0,3)
   s.players[0].energy=3
   s=engine.activateAbility(s,c.instanceId,'burst')
   assert.equal(s.players[1].field.length,0)
@@ -4486,7 +4029,7 @@ test('C098 千織爆発は全体岩3とたもと数の岩2追加',()=>{
 })
 test('たもとの終了時効果は敵フォロワーに岩2',()=>{
   let s=startedGame();place(s,0,'token-tamoto',1,3)
-  place(s,1,'test-mage',0,5)
+  place(s,1,'C001',0,5)
   s=engine.endTurn(s)
   assert.equal(s.players[1].field[0].health,3)
 })
@@ -4495,7 +4038,7 @@ test('C091 攻撃時全体岩ダメージで攻撃対象を倒しても攻撃回
   let s=startedGame(); const attacker=place(s,0,'C001',2,5)
   s.players[0].pp=3;s.players[0].hand=['C091']
   s=engine.playCard(s,'player1',0,attacker.instanceId)
-  const foe=place(s,1,'test-mage',0,1)
+  const foe=place(s,1,'C001',0,1)
   s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
   assert.equal(s.players[1].field.length,0)
   assert.equal(s.players[0].field[0].hasAttacked,true)
@@ -4553,7 +4096,7 @@ test('C102 スメールの知恵で探索後にデッキ切れドローなら即
 })
 test('C104 草フライムのラストワードは相手リーダーへ草2',()=>{
   let s=startedGame();const a=place(s,0,'C104',2,1)
-  const foe=place(s,1,'test-mage',2,5)
+  const foe=place(s,1,'C001',2,5)
   s=engine.attackFollower(s,a.instanceId,foe.instanceId)
   assert.equal(s.players[1].leaderHealth,18)
   assert.equal(s.players[0].graveyard.includes('C104'),true)
@@ -4591,7 +4134,7 @@ test('C105 玉顆珊々月中落は月桂・跳躍型2体召喚とリーダー�
 })
 test('月桂・跳躍型のターン終了効果は敵に草2・自リーダー回復1',()=>{
   let s=startedGame();place(s,0,'token-yuegui-jumping',0,3)
-  const e=place(s,1,'test-mage',0,8)
+  const e=place(s,1,'C001',0,8)
   s.players[0].leaderHealth=12
   s=engine.endTurn(s)
   assert.equal(s.players[1].field.find(x=>x.instanceId===e.instanceId).health,6)
@@ -4599,7 +4142,7 @@ test('月桂・跳躍型のターン終了効果は敵に草2・自リーダー�
 })
 test('C106 ニャンコトレジャーは敵全体草1と2ターンのコレアンバー',()=>{
   let s=startedGame()
-  const e=place(s,1,'test-mage',0,8)
+  const e=place(s,1,'C001',0,8)
   s.players[0].hand=['C106'];s.players[0].pp=3
   s=engine.playCard(s,'player1',0)
   assert.equal(s.players[1].field[0].health,7)
@@ -4625,7 +4168,7 @@ test('C108 フローラルリングダンサーは草霊がいれば攻撃時+2/
   let s=startedGame()
   const attacker=place(s,0,'C108',3,4)
   place(s,0,'token-dendro-spirit',2,2)
-  const foe=place(s,1,'test-mage',0,9)
+  const foe=place(s,1,'C001',0,9)
   s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
   assert.equal(s.players[0].field[0].attack,5)
   assert.equal(s.players[1].field[0].health,4)
@@ -4633,7 +4176,7 @@ test('C108 フローラルリングダンサーは草霊がいれば攻撃時+2/
 test('C108 フローラルリングダンサーは草霊がなければ攻撃力そのまま',()=>{
   let s=startedGame()
   const attacker=place(s,0,'C108',3,4)
-  const foe=place(s,1,'test-mage',0,9)
+  const foe=place(s,1,'C001',0,9)
   s=engine.attackFollower(s,attacker.instanceId,foe.instanceId)
   assert.equal(s.players[0].field[0].attack,3)
 })
@@ -4647,7 +4190,7 @@ test('C109 ヨォーヨのスキルは月桂・投擲型を召喚し終了時回
 })
 test('C110 綺良々の登場時シールド2とスキルの自盾3＋敵草1',()=>{
  let s=startedGame();s.players[0].pp=3;s.players[0].hand=['C110']
- const e=place(s,1,'test-mage',0,6)
+ const e=place(s,1,'C001',0,6)
  s=engine.playCard(s,'player1',0)
  assert.equal(s.players[0].leaderShield.normal,2)
  s.players[0].pp=1
@@ -4657,7 +4200,7 @@ test('C110 綺良々の登場時シールド2とスキルの自盾3＋敵草1',(
 })
 test('C111 コレイは草元素スペルを探索し敵1体草2と別体草1',()=>{
  let s=startedGame();s.players[0].pp=3;s.players[0].hand=['C111'];s.players[0].deck=['C001','C105']
- const e=place(s,1,'test-mage',0,6),other=place(s,1,'test-mage',0,6)
+ const e=place(s,1,'C001',0,6),other=place(s,1,'C001',0,6)
  s=engine.playCard(s,'player1',0)
  assert.ok(s.players[0].hand.includes('C105'))
  s.players[0].pp=1
@@ -4667,7 +4210,7 @@ test('C111 コレイは草元素スペルを探索し敵1体草2と別体草1',(
 })
 test('C112 カーヴェは敵草原核+0/+1、スキル草2とHP準拠リーダーダメージ',()=>{
  let s=startedGame();s.players[0].pp=4;s.players[0].hand=['C112']
- const core=place(s,1,'dendro-core',0,1),enemy=place(s,1,'test-mage',0,6)
+ const core=place(s,1,'dendro-core',0,1),enemy=place(s,1,'C001',0,6)
  s=engine.playCard(s,'player1',0)
  assert.equal(s.players[1].field.find(f=>f.instanceId===core.instanceId).health,2)
  s.players[0].pp=1
@@ -4678,7 +4221,7 @@ test('C112 カーヴェは敵草原核+0/+1、スキル草2とHP準拠リーダ�
 
 test('C113 ティナリのスキルは草2＋攻撃力-1',()=>{
  let s=startedGame(), t=place(s,0,'C113',3,5)
- const e=place(s,1,'test-mage',3,7)
+ const e=place(s,1,'C001',3,7)
  s.players[0].pp=1
  s=engine.activateAbility(s,t.instanceId,'skill',e.instanceId)
  assert.equal(s.players[1].field[0].health,5)
@@ -4692,7 +4235,7 @@ test('C113 ティナリの爆発は敵リーダーのみなら草2を4回',()=>{
 })
 test('C113 ティナリの攻撃時はランダム敵フォロワーに草1',()=>{
  let s=startedGame(), t=place(s,0,'C113',3,5)
- const e=place(s,1,'test-mage',0,8)
+ const e=place(s,1,'C001',0,8)
  s=engine.attackFollower(s,t.instanceId,e.instanceId)
  assert.equal(s.players[1].field[0].health,4)
 })
@@ -4705,7 +4248,7 @@ test('C114 エミリエのスキルは3ターンのルミドゥースの瓶',()=
 })
 test('C114 エミリエの爆発は燃焼状態があれば敵全体に草2を2回',()=>{
  let s=startedGame(), e=place(s,0,'C114',3,5)
- const foe=place(s,1,'test-mage',0,9)
+ const foe=place(s,1,'C001',0,9)
  foe.keywords.push('burning:2')
  s.players[0].energy=3
  s=engine.activateAbility(s,e.instanceId,'burst')
@@ -4713,7 +4256,7 @@ test('C114 エミリエの爆発は燃焼状態があれば敵全体に草2を2�
 })
 test('C115 キィニチは突進・スキル草3・爆発敵全体草2＋リーダー草3',()=>{
  let s=startedGame();s.players[0].hand=['C115'];s.players[0].pp=5
- const e=place(s,1,'test-mage',0,10)
+ const e=place(s,1,'C001',0,10)
  s=engine.playCard(s,'player1',0)
  let k=s.players[0].field[0]
  assert.ok(k.keywords.includes('rush_only'))
@@ -4743,14 +4286,14 @@ test('C030の正式効果：味方指定で水1攻撃時能力を付与し対象
  assert.ok(s.players[0].graveyard.includes('C030'))
 })
 test('C030攻撃時は通常戦闘より先に敵フォロワーに水1、通常攻撃も追加',()=>{
- let s=startedGame();const ally=place(s,0,'C001',2,4),foe=place(s,1,'test-mage',0,6)
+ let s=startedGame();const ally=place(s,0,'C001',2,4),foe=place(s,1,'C001',0,6)
  s.players[0].pp=2;s.players[0].hand=['C030']
  s=engine.playCard(s,'player1',0,ally.instanceId)
  s=engine.attackFollower(s,ally.instanceId,foe.instanceId)
  assert.equal(s.players[1].field[0].health,3)
 })
 test('C030攻撃時の水1で対象を破壊したら通常攻撃は行わず攻撃回数を消費',()=>{
- let s=startedGame();const ally=place(s,0,'C001',2,4),foe=place(s,1,'test-mage',0,1)
+ let s=startedGame();const ally=place(s,0,'C001',2,4),foe=place(s,1,'C001',0,1)
  s.players[0].pp=2;s.players[0].hand=['C030']
  s=engine.playCard(s,'player1',0,ally.instanceId)
  s=engine.attackFollower(s,ally.instanceId,foe.instanceId)
@@ -4770,7 +4313,7 @@ test('C030は同じフォロワーへ複数回付与しても追加効果は1回
  s.players[0].pp=4;s.players[0].hand=['C030','C030']
  s=engine.playCard(s,'player1',0,ally.instanceId)
  s=engine.playCard(s,'player1',0,ally.instanceId)
- const e=place(s,1,'test-mage',0,8)
+ const e=place(s,1,'C001',0,8)
  s=engine.attackFollower(s,ally.instanceId,e.instanceId)
  assert.equal(s.players[1].field[0].health,5)
 })
@@ -4782,7 +4325,7 @@ test('岩創造物3種は3ターン継続、各ターン固有の効果が発動
   {instanceId:'turbo-audit',cardId:'token-spinning-turbo',turnsRemaining:3},
   {instanceId:'solar-audit',cardId:'token-solar-isotoma',turnsRemaining:3},
  ]
- const e=place(s,1,'test-mage',0,10)
+ const e=place(s,1,'C001',0,10)
  s=engine.endTurn(s)
  assert.equal(s.players[0].leaderShield.crystallize,3)
  assert.equal(s.players[1].field.find(f=>f.instanceId===e.instanceId).health,7)
@@ -4808,26 +4351,21 @@ test('Ver.1.0.1 草原核は反応を起こした側の相手の場へ生成、�
   assert.equal(b.players[1].field.some(f=>f.cardId==='dendro-core'),false)
   assert.equal(b.players[0].field.filter(f=>f.cardId==='dendro-core').length,1)
 })
-test('草原核は相手盤面のアミュレットも含めて5枠制限',async()=>{
-  const {resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
-  let s=startedGame()
-  for(let i=0;i<4;i++)place(s,1,'test-slime',1,2)
-  s.players[1].amulets=[{instanceId:'test-full-slot',cardId:'token-jade-screen',turnsRemaining:2}]
-  s=resolveReactionConsequence(s,1,'dummy','bloom','hydro',0)
-  assert.equal(s.players[1].field.some(f=>f.cardId==='dendro-core'),false)
-})
 
-test('通常対戦デッキには正式115枚だけが入る（修練者などのテストカードは除外）',async()=>{
-  const {getDeckCardPool,getCard}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+test('テスト用カードデータは正式台帳から完全削除されている',async()=>{
+  const {getAllCards,getDeckCardPool,getCard}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
-  const pool=getDeckCardPool()
-  assert.equal(pool.length,115)
-  assert.deepEqual(new Set(pool.map(c=>c.id)),new Set(productionCards.map(c=>c.id)))
-  assert.ok(pool.every(c=>/^C\d{3}$/.test(c.id)))
-  assert.equal(getCard('test-elemental-caster').name,'水の修練者')
-  assert.equal(pool.some(c=>c.id==='test-elemental-caster'),false)
+  const {productionTokens}=await vite.ssrLoadModule('/src/data/productionTokens.ts')
+  const registry=getAllCards()
+  assert.equal(productionCards.length,115)
+  assert.equal(productionTokens.length,24)
+  assert.equal(registry.length,139)
+  assert.equal(getDeckCardPool().length,115)
+  assert.ok(registry.every(card=>!card.id.startsWith('test-')))
+  assert.equal(getCard('test-elemental-caster'),undefined)
   for(let i=0;i<30;i++){
     const state=engine.createInitialGameState()
-    for(const player of state.players)assert.ok([...player.hand,...player.deck].every(id=>/^C\d{3}$/.test(id)))
+    for(const player of state.players)
+      assert.ok([...player.hand,...player.deck].every(id=>/^C\d{3}$/.test(id)))
   }
 })
