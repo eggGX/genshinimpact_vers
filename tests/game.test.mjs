@@ -1656,6 +1656,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['イツパパ', 2, 1, 3],
     ['雷蛍', 1, 1, 1],
     ['オズ', 3, 3, 3],
+    ['殺生櫻', 1, undefined, undefined],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -3056,8 +3057,8 @@ test('STEP34 雷15枚ステータス・地域・タイプ・対戦実装区分',
   assert.deepEqual(electroCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
     [2,2],[1,3],[2,2],[2,3],[2,4],[3,3],
     [2,3],[2,4],[3,4],[2,4],[4,5],[3,5],[5,5]])
-  assert.deepEqual(electroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),[
-    'C056','C057','C058','C059','C060','C062','C063'])
+  assert.deepEqual(electroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    electroCards.map(c=>c.id))
   assert.deepEqual(electroCards.find(c=>c.id==='C067').traits,['謎煙の主'])
   assert.deepEqual(electroCards.find(c=>c.id==='C070').traits,['豊穣の邦'])
 })
@@ -3072,7 +3073,7 @@ test('STEP34 正式70/115、雷15枚の予定枠充足、残り45枚',async()=>{
   assert.equal(validation.slots.reduce((n,s)=>n+s.remaining,0),45)
 })
 
-test('STEP34 雷元素は7枚のみ対戦対応、残る8枚はデッキから除外',async()=>{
+test('STEP35 雷元素15枚すべて対戦対応しデッキに含める',async()=>{
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(let i=56;i<=70;i++){
@@ -3082,7 +3083,7 @@ test('STEP34 雷元素は7枚のみ対戦対応、残る8枚はデッキから�
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C061','C064','C065','C066','C067','C068','C069','C070']
-  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+  assert.ok(state.players[0].hand.every((_,i)=>engine.canPlayCard(state,i)))
 })
 
 test('C056 雷スライムは元素生物として初期雷付着を維持',()=>{
