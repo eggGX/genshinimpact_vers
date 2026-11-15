@@ -31,12 +31,19 @@ export type EffectTarget =
 
 export type CardEffect =
   | {
-      type: 'damage' | 'heal'
+      type: 'heal'
       trigger: EffectTrigger
       target: EffectTarget
       value: number
     }
   | {
+      type: 'damage'
+      trigger: EffectTrigger
+      target: 'own_leader' | 'enemy_leader' | 'selected_enemy_follower' | 'self_follower'
+      value: number
+      element?: ElementType
+    }
+  | { 
       type: 'modify_stats'
       trigger: EffectTrigger
       target: 'self_follower' | 'selected_enemy_follower'
@@ -45,6 +52,8 @@ export type CardEffect =
     }
 
 export interface Card {
+  /** 通常攻撃の属性。省略時は物理（無元素） */
+  normalAttackElement?: ElementType
   id: string
   name: string
   type: CardType
