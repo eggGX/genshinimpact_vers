@@ -11,7 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
-import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage } from './geoRules'
+import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell } from './geoRules'
 import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
@@ -397,6 +397,7 @@ export function playCard(
     next = electroSpell(next, playerId, card.id)
     next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
     next = advancedAnemoSpell(next, playerId, card.id)
+    next = geoSpell(next, playerId, card.id, resolveDeaths)
     return resolveDeaths(next)
   }
 
