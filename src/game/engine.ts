@@ -7,7 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
-import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter } from './pyroRules'
+import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
@@ -143,6 +143,11 @@ export function confirmMulligan(
 /**
  * プレイ時の対象選択判定
  */
+/** A self-buff fanfare can choose an existing ally or the new follower itself. */
+export function needsFriendlyPlayTarget(card: Card): boolean {
+  return card.id === 'C021'
+}
+
 export function needsPlayTarget(card: Card): boolean {
   return card.id === 'C018' || (card.effects ?? []).some(
     effect =>
@@ -296,6 +301,10 @@ function resolveTurnEffects(
     )
 
     result = resolveDeaths(result)
+    if (result.winnerId === null && trigger === 'turn_end') {
+      result = resolvePyroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = resolveDeaths(result)
+    }
   }
 
   return result
@@ -321,6 +330,12 @@ export function playCard(
   const player = state.players[index]
   const cardId = player.hand[handIndex]
   const card = getCard(cardId)!
+
+  if (needsFriendlyPlayTarget(card) &&
+      (targetId !== 'self' && (!targetId ||
+        !player.field.some(f => f.instanceId === targetId && f.health > 0)))) {
+    return state
+  }
 
   if (needsPlayTarget(card)) {
     const enemy = state.players[1 - index]
@@ -409,6 +424,7 @@ export function playCard(
 
   if (result.winnerId === null) {
     result = resolveNeutralPlay(result, playerId, card)
+    result = resolvePyroGoldPlay(result, playerId, card.id, follower.instanceId, targetId)
   }
   return resolveDeaths(result)
 }
@@ -436,6 +452,9 @@ export function canUseAbility(
   const card = getCard(follower.cardId)
   const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
   if (!ability || (kind === 'skill' ? follower.skillUsed : follower.burstUsed)) return false
+  if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
+  if (kind === 'skill' && (card?.id === 'C019' || card?.id === 'C020') &&
+      owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
   if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))) {
     return false
@@ -466,6 +485,7 @@ export function activateAbility(
     energy: kind === 'skill'
       ? Math.min(5, owner.energy + 1)
       : owner.energy - (ability.energyCost ?? 0),
+    pp: kind === 'skill' ? owner.pp - (ability.ppCost ?? 0) : owner.pp,
     field: owner.field.map(f =>
       f.instanceId === followerId
         ? { ...f,
@@ -478,6 +498,9 @@ export function activateAbility(
     result, owner.id, ability.effects, kind, targetId, followerId,
     resolveDeaths
   )
+  if (result.winnerId === null && kind === 'skill') {
+    result = resolvePyroGoldSkill(result, owner.id, card.id)
+  }
   return resolveDeaths(result)
 }
 
