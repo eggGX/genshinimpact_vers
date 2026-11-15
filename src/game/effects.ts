@@ -165,7 +165,8 @@ function applyEffect(
       targetIndex,
       instanceId,
       reaction,
-      reactedElement
+      reactedElement,
+      ownerIndex
     )
   }
 
