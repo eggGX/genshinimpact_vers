@@ -1,4 +1,275 @@
 import type { Card } from '../../game/types'
 
-/** geo 正式カード。確定済みカードのデータをこの配列に追加します。 */
-export const geoCards: Card[] = []
+/** Ver.1.0確定済み岩元素15枚（C086–C100）。
+ * 特殊能力未対応のカードは data_only としてデッキから除外する。
+ */
+export const geoCards: Card[] = [
+  {
+    "id": "C086",
+    "name": "岩スライム",
+    "type": "follower",
+    "rarity": "bronze",
+    "element": "geo",
+    "cost": 1,
+    "attack": 2,
+    "health": 2,
+    "traits": [
+      "スライム"
+    ],
+    "description": "【元素生物：岩】",
+    "implementationStatus": "playable",
+    "elementalCreature": true
+  },
+  {
+    "id": "C087",
+    "name": "璃月港",
+    "type": "amulet",
+    "rarity": "bronze",
+    "element": "geo",
+    "cost": 2,
+    "region": [
+      "璃月"
+    ],
+    "description": "アミュレット。【カウントダウン3】【自分のターン終了時】デッキから地域「璃月」のランダムなカード1枚を手札に加える。",
+    "implementationStatus": "playable"
+  },
+  {
+    "id": "C088",
+    "name": "テペトル仔竜",
+    "type": "follower",
+    "rarity": "bronze",
+    "element": "geo",
+    "cost": 2,
+    "attack": 2,
+    "health": 2,
+    "region": [
+      "ナタ"
+    ],
+    "traits": [
+      "竜"
+    ],
+    "description": "【突進】",
+    "implementationStatus": "playable",
+    "keywords": [
+      "rush"
+    ]
+  },
+  {
+    "id": "C089",
+    "name": "ベビーヴィシャップ",
+    "type": "follower",
+    "rarity": "bronze",
+    "element": "geo",
+    "cost": 4,
+    "attack": 3,
+    "health": 4,
+    "region": [
+      "璃月"
+    ],
+    "traits": [
+      "ヴィシャップ"
+    ],
+    "description": "【突進】【攻撃時】自リーダーに結晶シールド1。",
+    "implementationStatus": "playable",
+    "keywords": [
+      "rush"
+    ]
+  },
+  {
+    "id": "C090",
+    "name": "天権崩玉",
+    "type": "spell",
+    "rarity": "silver",
+    "element": "geo",
+    "cost": 4,
+    "region": [
+      "璃月"
+    ],
+    "description": "ランダムな敵フォロワーまたは相手リーダーに岩元素1ダメージ×4回。自分の場に岩創造物があるなら追加で4回。",
+    "implementationStatus": "data_only"
+  },
+  {
+    "id": "C091",
+    "name": "大掃除",
+    "type": "spell",
+    "rarity": "silver",
+    "element": "geo",
+    "cost": 3,
+    "region": [
+      "モンド"
+    ],
+    "description": "自分のフォロワー1体を+2/+0し、【元素攻撃：岩】【攻撃時：敵フォロワーすべてに岩元素1ダメージ】を付与。",
+    "implementationStatus": "data_only"
+  },
+  {
+    "id": "C092",
+    "name": "獣域ハウンド・岩",
+    "type": "follower",
+    "rarity": "silver",
+    "element": "geo",
+    "cost": 4,
+    "attack": 3,
+    "health": 3,
+    "traits": [
+      "アビス"
+    ],
+    "description": "【元素攻撃：岩】【攻撃時】相手リーダーに非元素1ダメージ。",
+    "implementationStatus": "playable",
+    "normalAttackElement": "geo"
+  },
+  {
+    "id": "C093",
+    "name": "ヴィシャップ・岩",
+    "type": "follower",
+    "rarity": "silver",
+    "element": "geo",
+    "cost": 7,
+    "attack": 6,
+    "health": 7,
+    "region": [
+      "璃月"
+    ],
+    "traits": [
+      "ヴィシャップ"
+    ],
+    "description": "【守護】【交戦時】自リーダーに結晶シールド2。",
+    "implementationStatus": "playable",
+    "keywords": [
+      "guard"
+    ]
+  },
+  {
+    "id": "C094",
+    "name": "騎士を夢見るメイド・ノエル",
+    "type": "follower",
+    "rarity": "gold",
+    "element": "geo",
+    "cost": 4,
+    "attack": 2,
+    "health": 5,
+    "region": [
+      "モンド"
+    ],
+    "traits": [
+      "西風騎士団"
+    ],
+    "description": "【守護】【攻撃時】自リーダー2回復。【元素スキル：護心鎧】PP1：自身と自リーダーに通常シールド3。",
+    "implementationStatus": "playable",
+    "keywords": [
+      "guard"
+    ],
+    "elementalSkill": {
+      "name": "護心鎧",
+      "ppCost": 1,
+      "effects": []
+    }
+  },
+  {
+    "id": "C095",
+    "name": "月を覆う天権・凝光",
+    "type": "follower",
+    "rarity": "gold",
+    "element": "geo",
+    "cost": 4,
+    "attack": 3,
+    "health": 4,
+    "region": [
+      "璃月"
+    ],
+    "traits": [
+      "璃月七星"
+    ],
+    "description": "【元素攻撃：岩】【ファンファーレ】自リーダー結晶シールド2。【元素スキル：璇璣屏】PP1：「璇璣屏」1つを場に出す。",
+    "implementationStatus": "data_only"
+  },
+  {
+    "id": "C096",
+    "name": "海祇軍の大将・ゴロー",
+    "type": "follower",
+    "rarity": "gold",
+    "element": "geo",
+    "cost": 3,
+    "attack": 2,
+    "health": 4,
+    "region": [
+      "稲妻"
+    ],
+    "description": "【ファンファーレ】自分の岩元素フォロワーすべて+0/+1。【元素スキル：犬坂の陣構え】PP1：自分の岩元素フォロワーすべて+1/+1。",
+    "implementationStatus": "playable",
+    "elementalSkill": {
+      "name": "犬坂の陣構え",
+      "ppCost": 1,
+      "effects": []
+    }
+  },
+  {
+    "id": "C097",
+    "name": "不屈の勇士・カチーナ",
+    "type": "follower",
+    "rarity": "gold",
+    "element": "geo",
+    "cost": 3,
+    "attack": 2,
+    "health": 4,
+    "region": [
+      "ナタ"
+    ],
+    "traits": [
+      "こだまの子"
+    ],
+    "description": "【ファンファーレ】自リーダー結晶シールド2。【元素スキル：いけ、ぐるぐるコマちゃん！】PP1：「ぐるぐるコマちゃん」1つを場に出す。",
+    "implementationStatus": "data_only"
+  },
+  {
+    "id": "C098",
+    "name": "千織屋の店主・千織",
+    "type": "follower",
+    "rarity": "legendary",
+    "element": "geo",
+    "cost": 5,
+    "attack": 3,
+    "health": 5,
+    "region": [
+      "フォンテーヌ",
+      "稲妻"
+    ],
+    "description": "【ファンファーレ】自分の場に岩創造物があるなら「たもと」1体召喚。【元素スキル：羽袖一触】PP1：「たもと」1体召喚。【元素爆発：二刀の型・比翼】エネルギー3：敵フォロワーすべてに岩元素3ダメージ。自分の「たもと」1体につき追加でランダムな敵フォロワーまたはリーダーに岩元素2ダメージ。",
+    "implementationStatus": "data_only"
+  },
+  {
+    "id": "C099",
+    "name": "棘薔薇の会会長・ナヴィア",
+    "type": "follower",
+    "rarity": "legendary",
+    "element": "geo",
+    "cost": 5,
+    "attack": 4,
+    "health": 5,
+    "region": [
+      "フォンテーヌ"
+    ],
+    "traits": [
+      "棘薔薇の会"
+    ],
+    "description": "【自分のターン中】自リーダーが結晶シールドを獲得するたび自身+1/+0（最大3回/ターン）。【元素スキル：セレモニアル・クリスタルショット】自リーダーの結晶シールドを自動消費（最大3、PP消費なし）。敵フォロワー1体に岩元素Xダメージ、X=1+消費数×2。【元素爆発：晴天を衝く霰弾の名射手】エネルギー3：敵フォロワーすべてに岩元素1ダメージ。自リーダー結晶シールド1。クレスト【晴天を衝く霰弾の名射手】（カウントダウン2、自ターン終了時：敵フォロワーすべてに岩元素1ダメージ＆自リーダー結晶シールド1）付与。",
+    "implementationStatus": "data_only"
+  },
+  {
+    "id": "C100",
+    "name": "白亜の申し子・アルベド",
+    "type": "follower",
+    "rarity": "legendary",
+    "element": "geo",
+    "cost": 5,
+    "attack": 3,
+    "health": 5,
+    "region": [
+      "モンド"
+    ],
+    "traits": [
+      "西風騎士団"
+    ],
+    "description": "【自分のターン終了時】自リーダー結晶シールド1。【元素スキル：創生術・擬似陽華】PP1：「陽華」1つを場に出す。【元素爆発：誕生式・大地の潮】エネルギー3：敵フォロワーすべてに岩元素2ダメージ。自分の場に岩創造物があれば追加で岩元素2ダメージ。",
+    "implementationStatus": "data_only"
+  }
+]
