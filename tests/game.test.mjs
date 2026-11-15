@@ -1660,6 +1660,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['ビックラキャット・ボックス', 3, 0, 8],
     ['璇璣屏', 0, undefined, undefined],
     ['ぐるぐるコマちゃん', 0, undefined, undefined],
+    ['陽華', 0, undefined, undefined],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -4099,7 +4100,7 @@ test('STEP39 岩15枚のタイプ・ステータス・地域と対戦実装区�
   assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
   assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
   assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C086','C087','C088','C089','C090','C092','C093','C094','C095','C096','C097'])
+    ['C086','C087','C088','C089','C090','C092','C093','C094','C095','C096','C097','C100'])
 })
 
 test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
@@ -4112,14 +4113,14 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
-test('STEP39 岩元素11枚がデッキ候補、未実装4枚はデッキに入らない',async()=>{
+test('STEP39 岩元素12枚がデッキ候補、未実装3枚はデッキに入らない',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of geoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C091','C098','C099','C100']
+  state.players[0].hand=['C091','C098','C099']
   assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
 })
 
@@ -4375,4 +4376,26 @@ test('岩創造物は通常カードと同様に場の5枠を占有する',()=>{
   for(let i=0;i<3;i++)place(state,0,'C086',2,2)
   state.players[0].hand=['C086'];state.players[0].pp=1
   assert.equal(engine.canPlayCard(state,0),false)
+})
+
+test('C100 アルベドのスキルは陽華を盤面に設置しEN+1',()=>{
+  let s=startedGame();const a=place(s,0,'C100',3,5)
+  s.players[0].pp=1
+  s=engine.activateAbility(s,a.instanceId,'skill')
+  assert.equal(s.players[0].amulets[0].cardId,'token-solar-isotoma')
+  assert.equal(s.players[0].energy,1)
+})
+test('C100 アルベドの爆発は岩創造物があると岩2+2',()=>{
+  let s=startedGame();const a=place(s,0,'C100',3,5)
+  s.players[0].pp=1;s.players[0].energy=3
+  s=engine.activateAbility(s,a.instanceId,'skill')
+  const foe=place(s,1,'test-mage',0,8)
+  s=engine.activateAbility(s,a.instanceId,'burst')
+  assert.equal(s.players[1].field.find(f=>f.instanceId===foe.instanceId).health,4)
+  assert.equal(s.players[0].energy,1)
+})
+test('C100 アルベドは自ターン終了時結晶シールド1獲得',()=>{
+  let s=startedGame();place(s,0,'C100',3,5)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].leaderShield.crystallize,1)
 })
