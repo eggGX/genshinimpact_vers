@@ -1,7 +1,7 @@
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { healLeader } from './leaderShield'
-import { grantShield } from './elemental'
+import { healLeader, damageLeader } from './leaderShield'
+import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 import { summonFollowers } from './neutralRules'
 
 function updatePlayer(
@@ -69,4 +69,40 @@ export function resolveHydroAttack(state: GameState, ownerId: string, attackerId
   if (!source || source.cardId !== 'C033') return state
   if (!getCard('C001')) return state
   return summonFollowers(state, ownerId, 'C001', 1)
+}
+
+/** C030 古華剣・裁雨留虹: grants one Hydro 1 strike to the actual attack target. */
+export function grantRaincutter(state: GameState, ownerId: string, targetId?: string): GameState {
+  if (!targetId || state.winnerId !== null) return state
+  return updatePlayer(state, ownerId, p => ({
+    ...p, field: p.field.map(f => f.instanceId === targetId && f.health > 0
+      ? { ...f, keywords: [...new Set([...f.keywords, 'raincutter_on_attack'])] } : f),
+  }))
+}
+
+export function raincutterAttackFollower(state: GameState, ownerId: string, attackerId: string,
+  targetId: string, deaths: (state: GameState) => GameState): GameState {
+  const index = state.players.findIndex(p => p.id === ownerId)
+  if (index < 0 || state.winnerId !== null) return state
+  const attacker = state.players[index].field.find(f => f.instanceId === attackerId && f.health > 0)
+  const target = state.players[1-index].field.find(f => f.instanceId === targetId && f.health > 0)
+  if (!attacker?.keywords.includes('raincutter_on_attack') || !target) return state
+  const hit = resolveElementalDamage(target, 1, 'hydro')
+  const updated = updatePlayer(state, state.players[1-index].id, p => ({
+    ...p, field: p.field.map(f => f.instanceId === targetId ? hit.follower : f),
+  }))
+  return deaths(resolveReactionConsequence(updated, 1-index, targetId,
+    hit.reaction, hit.reactedElement, index))
+}
+
+export function raincutterAttackLeader(state: GameState, ownerId: string, attackerId: string): GameState {
+  if (state.winnerId !== null) return state
+  const index = state.players.findIndex(p => p.id === ownerId)
+  if (index < 0) return state
+  const attacker = state.players[index].field.find(f => f.instanceId === attackerId && f.health > 0)
+  if (!attacker?.keywords.includes('raincutter_on_attack')) return state
+  const enemy = state.players[1-index]
+  const damaged = damageLeader(enemy, 1)
+  return { ...updatePlayer(state, enemy.id, () => damaged),
+    winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId }
 }
