@@ -2202,14 +2202,16 @@ test('STEP30 構築済み水元素15枚と正式登録総数を照合',async()=>
   assert.equal(report.ready,true)
 })
 
-test.skip('旧C030未確定仕様テスト（Ver.1.0.1で確定済み）',()=>{
+test('C030はVer.1.0.1で対戦対応し味方フォロワー不在時は対象を選べない',()=>{
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C030']
   assert.equal(engine.getCard('C030').implementationStatus,'playable')
-  assert.match(engine.getCard('C030').description,/要確認/)
-  assert.equal(engine.canPlayCard(state,0),false)
+  assert.match(engine.getCard('C030').description,/今攻撃している対象/)
   assert.equal(engine.playCard(state,'player1',0),state)
+  const ally=place(state,0,'C001',1,2)
+  const played=engine.playCard(state,'player1',0,ally.instanceId)
+  assert.ok(played.players[0].field[0].keywords.includes('raincutter_on_attack'))
 })
 
 test('C026 水スライムは元素生物の水元素を常時付着した状態で出す',()=>{
