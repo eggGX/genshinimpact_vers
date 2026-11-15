@@ -1,7 +1,7 @@
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { addLeaderShield, healLeader, damageLeader } from './leaderShield'
-import { grantShield } from './elemental'
+import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 let nextLiyueHarborId = 1
 
@@ -101,4 +101,51 @@ export function geoEngage(
   if (attacker?.cardId === 'C093') return update(state, own.id, p => addLeaderShield(p, 2, 'crystallize'))
   if (defender?.cardId === 'C093') return update(state, foe.id, p => addLeaderShield(p, 2, 'crystallize'))
   return state
+}
+
+
+/**
+ * C090: four independent random Geo hits, doubled while a friendly
+ * Geo construct is on the board. Resolve deaths after every hit so a
+ * destroyed target cannot be selected again.
+ */
+export function geoSpell(
+  state: GameState, ownerId: string, cardId: string,
+  resolveDeaths: (state: GameState) => GameState
+): GameState {
+  if (cardId !== 'C090' || state.winnerId !== null) return state
+  const ownerIndex = state.players.findIndex(p => p.id === ownerId)
+  if (ownerIndex < 0) return state
+  const foeIndex = 1 - ownerIndex
+  const owner = state.players[ownerIndex]
+  const construct = (id: string) => ['token-jade-screen', 'token-spinning-turbo', 'token-solar-isotoma'].includes(id)
+  const hasConstruct = owner.field.some(f => f.health > 0 && construct(f.cardId)) ||
+    (owner.amulets ?? []).some(a => construct(a.cardId))
+  let result = state
+  for (let hit = 0; hit < (hasConstruct ? 8 : 4); hit++) {
+    if (result.winnerId !== null) break
+    const enemy = result.players[foeIndex]
+    const targets = enemy.field.filter(f => f.health > 0 &&
+      !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
+    // Index 0 denotes the opponent's leader.
+    const chosen = Math.floor(Math.random() * (targets.length + 1))
+    if (chosen === 0) {
+      const damaged = damageLeader(enemy, 1)
+      result = { ...update(result, enemy.id, () => damaged),
+        winnerId: damaged.leaderHealth === 0 ? ownerId : result.winnerId }
+    } else {
+      const target = targets[chosen - 1]
+      const outcome = resolveElementalDamage(target, 1, 'geo')
+      result = update(result, enemy.id, p => ({
+        ...p, field: p.field.map(f => f.instanceId === target.instanceId
+          ? outcome.follower : f),
+      }))
+      result = resolveReactionConsequence(
+        result, foeIndex, target.instanceId,
+        outcome.reaction, outcome.reactedElement, ownerIndex
+      )
+      result = resolveDeaths(result)
+    }
+  }
+  return result
 }
