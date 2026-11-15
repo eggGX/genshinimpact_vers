@@ -4816,3 +4816,18 @@ test('草原核は相手盤面のアミュレットも含めて5枠制限',async
   s=resolveReactionConsequence(s,1,'dummy','bloom','hydro',0)
   assert.equal(s.players[1].field.some(f=>f.cardId==='dendro-core'),false)
 })
+
+test('通常対戦デッキには正式115枚だけが入る（修練者などのテストカードは除外）',async()=>{
+  const {getDeckCardPool,getCard}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const pool=getDeckCardPool()
+  assert.equal(pool.length,115)
+  assert.deepEqual(new Set(pool.map(c=>c.id)),new Set(productionCards.map(c=>c.id)))
+  assert.ok(pool.every(c=>/^C\\d{3}$/.test(c.id)))
+  assert.equal(getCard('test-elemental-caster').name,'水の修練者')
+  assert.equal(pool.some(c=>c.id==='test-elemental-caster'),false)
+  for(let i=0;i<30;i++){
+    const state=engine.createInitialGameState()
+    for(const player of state.players)assert.ok([...player.hand,...player.deck].every(id=>/^C\\d{3}$/.test(id)))
+  }
+})
