@@ -65,6 +65,8 @@ export function validateProductionCards(cards: readonly Card[]): CardValidationR
       }
     }
     if (card.elementalSkill && (!card.elementalSkill.name.trim() ||
+        (card.elementalSkill.ppCost !== undefined &&
+          (!Number.isInteger(card.elementalSkill.ppCost) || card.elementalSkill.ppCost < 0)) ||
         card.elementalSkill.effects.some(e => e.trigger !== 'skill'))) {
       errors.push(`${id}: 元素スキル定義が不正です`)
     }
