@@ -10,7 +10,7 @@ import { dendroCards } from './cards/dendro'
 
 /**
  * 正式カードの登録先。元素別ファイルに定義するだけでゲームに反映されます。
- * 確定115枚の実データは未登録。テスト用カードは別管理します。
+ * 確定115枚の正式カードのみを登録。テスト専用カードは持ちません。
  */
 export const productionCards: Card[] = [
   ...neutralCards,
