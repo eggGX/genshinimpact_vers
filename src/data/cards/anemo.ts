@@ -1,7 +1,7 @@
 import type { Card } from '../../game/types'
 
 /** Ver.1.0確定済み風元素15枚（C071–C085）。
- * 特殊効果が対戦エンジンで未対応のカードは data_only とする。
+ * STEP37で風元素全15枚を対戦対応。
  */
 export const anemoCards: Card[] = [
   {
@@ -81,7 +81,7 @@ export const anemoCards: Card[] = [
       "フォンテーヌ"
     ],
     "description": "「ビックラキャット・ボックス」1体を召喚。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C076",
@@ -94,7 +94,7 @@ export const anemoCards: Card[] = [
       "モンド"
     ],
     "description": "アミュレット。【カウントダウン3】【自分のターン終了時】敵フォロワーすべてに風元素1ダメージ。このアミュレットが初めて起こした拡散元素（炎・水・氷・雷）を記録し、以後同時にその元素1ダメージを敵フォロワーすべてに与える。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C077",
@@ -127,7 +127,8 @@ export const anemoCards: Card[] = [
       "ファデュイ"
     ],
     "description": "【元素攻撃：風】【ファンファーレ】相手リーダーに【命の契約3】を付与。【ターン終了時】相手リーダーに命の契約が残るなら、相手リーダーに非元素1ダメージ（双方のターン終了時）。",
-    "implementationStatus": "data_only",
+    "normalAttackElement": "anemo",
+    "implementationStatus": "playable",
     "normalAttackElement": "anemo"
   },
   {
@@ -146,7 +147,8 @@ export const anemoCards: Card[] = [
       "西風騎士団"
     ],
     "description": "【元素攻撃：風】【自分のターン中】自分が拡散を起こすたびカード1枚引く（1ターン最大1回）。【元素スキル：風霊作成・六三〇八】PP1：敵フォロワーすべてに風元素1ダメージ。",
-    "implementationStatus": "data_only",
+    "elementalSkill": {"name":"風霊作成・六三〇八","ppCost":1,"effects":[]},
+    "implementationStatus": "playable",
     "normalAttackElement": "anemo"
   },
   {
@@ -196,7 +198,8 @@ export const anemoCards: Card[] = [
       "教令院"
     ],
     "description": "【ファンファーレ】他の自分の風元素フォロワー1体を+1/+0。【元素スキル：非想風天】PP1：敵フォロワー1体に風元素2ダメージ。自分の風元素フォロワーすべてを+1/+0。",
-    "implementationStatus": "data_only"
+    "elementalSkill": {"name":"非想風天","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
+    "implementationStatus": "playable"
   },
   {
     "id": "C082",
@@ -248,7 +251,10 @@ export const anemoCards: Card[] = [
       "西風騎士団"
     ],
     "description": "【疾走】【2回攻撃】【ファンファーレ】デッキからランダムな西風騎士団フォロワー1枚を手札に加える。【攻撃時】自分の西風騎士団フォロワーすべて+1/+1。【攻撃後】自身の元素攻撃が炎/水/氷/雷ならそれを風元素攻撃に上書き（ターン終了まで）。【元素スキル：堕ちる烈風】コスト：手札の炎/水/氷/雷カード1枚を捨てる。同元素攻撃を得る。【元素爆発：我こそ朔風】エネルギー3：敵フォロワーすべてに風元素2ダメージ。",
-    "implementationStatus": "data_only"
+    "keywords": ["storm","double_attack"],
+    "elementalSkill": {"name":"堕ちる烈風","ppCost":0,"effects":[]},
+    "elementalBurst": {"name":"我こそ朔風","energyCost":3,"effects":[]},
+    "implementationStatus": "playable"
   },
   {
     "id": "C084",
@@ -266,7 +272,10 @@ export const anemoCards: Card[] = [
       "仙人"
     ],
     "description": "【突進】【元素スキル：風輪両立】PP1：敵フォロワー1体に風元素2ダメージ。1ターン最大2回。【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。さらに【自分のターン終了時】自身と自リーダーに1ダメージ、を付与。",
-    "implementationStatus": "data_only",
+    "keywords": ["rush"],
+    "elementalSkill": {"name":"風輪両立","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
+    "elementalBurst": {"name":"靖妖儺舞","energyCost":4,"effects":[]},
+    "implementationStatus": "playable",
     "keywords": [
       "rush"
     ]
@@ -287,7 +296,11 @@ export const anemoCards: Card[] = [
       "教令院"
     ],
     "description": "【元素攻撃：風】【オーラ】【元素スキル：羽画・風姿華歌】PP1：自身+2/+0、このターン【疾走】付与。【元素爆発：狂言・式楽伍番】エネルギー3：ランダムな敵フォロワーまたはリーダーに風元素2ダメージ×5回。",
-    "implementationStatus": "data_only",
+    "keywords": ["aura"],
+    "normalAttackElement": "anemo",
+    "elementalSkill": {"name":"羽画・風姿華歌","ppCost":1,"effects":[]},
+    "elementalBurst": {"name":"狂言・式楽伍番","energyCost":3,"effects":[]},
+    "implementationStatus": "playable",
     "normalAttackElement": "anemo"
   }
 ]
