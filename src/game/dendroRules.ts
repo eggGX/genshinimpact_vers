@@ -244,7 +244,7 @@ export function dendroGoldSkill(state: GameState, ownerId: string, sourceId: str
   if (state.winnerId !== null) return state
   if (cardId === 'C109') return summonFollowers(state,ownerId,'token-yuegui-throwing',1)
   if (cardId === 'C110') {
-    let result=edit(state,ownerId,p=>({...p,field:p.field.map(f=>f.instanceId===sourceId?
+    const result=edit(state,ownerId,p=>({...p,field:p.field.map(f=>f.instanceId===sourceId?
       grantShield(f,'normal',3):f)}))
     return dendroRandomFollower(result,ownerId,1)
   }
