@@ -1662,6 +1662,8 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['ぐるぐるコマちゃん', 0, undefined, undefined],
     ['陽華', 0, undefined, undefined],
     ['たもと', 2, 1, 3],
+    ['月桂・跳躍型', 2, 0, 3],
+    ['コレアンバー', 0, undefined, undefined],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -4505,10 +4507,10 @@ test('STEP40 草元素15枚は原本どおりB4/S4/G4/L3の構成', async()=>{
   assert.deepEqual(report.errors,[])
   assert.equal(report.ready,true)
 })
-test('STEP40 草元素5枚が対戦対応、残り10枚は正式データのみ',async()=>{
+test('STEP40 草元素7枚が対戦対応、残り8枚は正式データのみ',async()=>{
   const {dendroCards}=await vite.ssrLoadModule('/src/data/cards/dendro.ts')
   assert.deepEqual(dendroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C101','C102','C103','C104','C107'])
+    ['C101','C102','C103','C104','C105','C106','C107'])
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of dendroCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
@@ -4567,4 +4569,38 @@ test('C107 ヴァナラーナのドローはデッキ切れ即敗北',()=>{
   s=engine.playCard(s,'player1',0)
   s=engine.endTurn(s)
   assert.equal(s.winnerId,'player2')
+})
+
+test('C105 玉顆珊々月中落は月桂・跳躍型2体召喚とリーダー／味方2回復',()=>{
+  let s=startedGame()
+  const f=place(s,0,'C001',2,5);f.health=2;s.players[0].leaderHealth=12
+  s.players[0].hand=['C105'];s.players[0].pp=4
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[0].field.filter(x=>x.cardId==='token-yuegui-jumping').length,2)
+  assert.equal(s.players[0].field[0].health,4)
+  assert.equal(s.players[0].leaderHealth,14)
+})
+test('月桂・跳躍型のターン終了効果は敵に草2・自リーダー回復1',()=>{
+  let s=startedGame();place(s,0,'token-yuegui-jumping',0,3)
+  const e=place(s,1,'test-mage',0,8)
+  s.players[0].leaderHealth=12
+  s=engine.endTurn(s)
+  assert.equal(s.players[1].field.find(x=>x.instanceId===e.instanceId).health,6)
+  assert.equal(s.players[0].leaderHealth,13)
+})
+test('C106 ニャンコトレジャーは敵全体草1と2ターンのコレアンバー',()=>{
+  let s=startedGame()
+  const e=place(s,1,'test-mage',0,8)
+  s.players[0].hand=['C106'];s.players[0].pp=3
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[1].field[0].health,7)
+  assert.equal(s.players[0].amulets[0].cardId,'token-collei-amber')
+  assert.equal(s.players[0].amulets[0].turnsRemaining,2)
+  s=engine.endTurn(s)
+  assert.equal(s.players[1].field.find(x=>x.instanceId===e.instanceId).health,6)
+  assert.equal(s.players[0].amulets[0].turnsRemaining,1)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  assert.equal(s.players[1].field.find(x=>x.instanceId===e.instanceId).health,5)
+  assert.equal(s.players[0].amulets.length,0)
 })
