@@ -331,12 +331,13 @@ export function resolveReactionConsequence(
     // all friendly followers (including Chevreuse), with no trigger limit.
     const actorIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
     const actor = players[actorIndex]
-    if (actor && actor.id === state.currentPlayerId &&
-        actor.field.some(f => f.cardId === 'C022' && f.health > 0)) {
+    const chevreuseCount = actor && actor.id === state.currentPlayerId
+      ? actor.field.filter(f => f.cardId === 'C022' && f.health > 0).length : 0
+    if (chevreuseCount > 0) {
       players[actorIndex] = {
         ...actor,
         field: actor.field.map(f => f.health > 0
-          ? { ...f, attack: f.attack + 1 } : f),
+          ? { ...f, attack: f.attack + chevreuseCount } : f),
       }
     }
     const target = affected.field.find(f => f.instanceId === affectedInstanceId)
