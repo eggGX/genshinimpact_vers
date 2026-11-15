@@ -9,6 +9,7 @@ import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
+import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
@@ -257,6 +258,7 @@ function resolveDeaths(state: GameState): GameState {
       result = resolveLegendaryDestroy(result, ownerId, follower)
       result = resolveHydroAdvancedDestroy(result, ownerId, follower)
       result = cryoDestroy(result, ownerId, follower, resolveDeaths)
+      result = electroDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
@@ -316,6 +318,7 @@ function resolveTurnEffects(
       result = resolveHydroAdvancedTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveCryoTurnEnd(result, playerId, sourceId)
       result = cryoTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = electroTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
   }
@@ -378,6 +381,7 @@ export function playCard(
     next = resolvePyroSpell(next, playerId, card.id, targetId, resolveDeaths)
     next = resolveHydroSpell(next, playerId, card.id)
     next = cryoSpell(next, playerId, card.id, resolveDeaths)
+    next = electroSpell(next, playerId, card.id)
     return resolveDeaths(next)
   }
 
@@ -443,6 +447,7 @@ export function playCard(
     result = resolveHydroAdvancedPlay(result, playerId, card.id)
     result = resolveCryoPlay(result, playerId, card.id)
     result = cryoPlay(result, playerId, card.id, follower.instanceId, targetId)
+    result = electroPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
@@ -618,11 +623,13 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = cryoAttack(
-    resolveHydroAdvancedAttack(
-      resolveHydroAttack(
-        resolveLegendaryAttack(
-          applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  const buffed = electroAttack(
+    cryoAttack(
+      resolveHydroAdvancedAttack(
+        resolveHydroAttack(
+          resolveLegendaryAttack(
+            applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+          ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
     ), owner.id, attackerId
@@ -710,11 +717,13 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = cryoAttack(
-    resolveHydroAdvancedAttack(
-      resolveHydroAttack(
-        resolveLegendaryAttack(
-          applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  const buffed = electroAttack(
+    cryoAttack(
+      resolveHydroAdvancedAttack(
+        resolveHydroAttack(
+          resolveLegendaryAttack(
+            applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+          ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
     ), owner.id, attackerId
