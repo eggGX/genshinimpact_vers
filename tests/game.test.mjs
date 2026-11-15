@@ -4097,7 +4097,7 @@ test('STEP39 岩15枚のタイプ・ステータス・地域と対戦実装区�
   assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
   assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
   assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C086','C087','C088','C089','C090','C092','C093','C094','C096'])
+    ['C086','C087','C088','C089','C090','C092','C093','C094','C095','C096','C097'])
 })
 
 test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
@@ -4110,14 +4110,14 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
-test('STEP39 岩元素9枚がデッキ候補、未実装6枚はデッキに入らない',async()=>{
+test('STEP39 岩元素11枚がデッキ候補、未実装4枚はデッキに入らない',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of geoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C091','C095','C097','C098','C099','C100']
+  state.players[0].hand=['C091','C098','C099','C100']
   assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
 })
 
@@ -4306,4 +4306,71 @@ test('C090 天権崩玉は相手リーダーのシールドを先に削る',()=>
   state=engine.playCard(state,'player1',0)
   assert.equal(state.players[1].leaderHealth,19)
   assert.deepEqual(state.players[1].leaderShield,{normal:0,crystallize:0})
+})
+
+
+test('C095 凝光のファンファーレは結晶シールド2を付与し岩通常攻撃を持つ',()=>{
+  let state=startedGame()
+  state.players[0].pp=4;state.players[0].hand=['C095']
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].leaderShield.crystallize,2)
+  assert.equal(engine.getCard('C095').normalAttackElement,'geo')
+})
+
+test('C095 凝光のPP1スキルは璇璣屏を場へ追加しENを1得る',()=>{
+  let state=startedGame()
+  const ning=place(state,0,'C095',3,4)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,ning.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].amulets.length,1)
+  assert.equal(state.players[0].amulets[0].cardId,'token-jade-screen')
+  assert.equal(state.players[0].amulets[0].turnsRemaining,0)
+  assert.equal(engine.getCard('token-jade-screen').token,true)
+})
+
+test('C097 カチーナのファンファーレは結晶シールド2を付与',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C097']
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].leaderShield.crystallize,2)
+})
+
+test('C097 カチーナのPP1スキルはぐるぐるコマちゃんを場へ追加する',()=>{
+  let state=startedGame()
+  const kachina=place(state,0,'C097',2,4)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,kachina.instanceId,'skill')
+  assert.equal(state.players[0].amulets.length,1)
+  assert.equal(state.players[0].amulets[0].cardId,'token-spinning-turbo')
+  assert.equal(state.players[0].energy,1)
+})
+
+test('岩創造物召喚スキルは盤面5枠満杯では使用不可',()=>{
+  let state=startedGame()
+  const ning=place(state,0,'C095',3,4)
+  for(let i=0;i<4;i++)place(state,0,'C086',2,2)
+  state.players[0].pp=1
+  assert.equal(engine.canUseAbility(state,ning.instanceId,'skill'),false)
+  assert.equal(engine.activateAbility(state,ning.instanceId,'skill'),state)
+})
+
+test('岩創造物は召喚後の天権崩玉を8ヒットにする',()=>{
+  let state=startedGame()
+  const ning=place(state,0,'C095',3,4)
+  state.players[0].pp=5;state.players[0].hand=['C090']
+  state=engine.activateAbility(state,ning.instanceId,'skill')
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[1].leaderHealth,12)
+})
+
+test('岩創造物は通常カードと同様に場の5枠を占有する',()=>{
+  let state=startedGame()
+  const kachina=place(state,0,'C097',2,4)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,kachina.instanceId,'skill')
+  for(let i=0;i<3;i++)place(state,0,'C086',2,2)
+  state.players[0].hand=['C086'];state.players[0].pp=1
+  assert.equal(engine.canPlayCard(state,0),false)
 })
