@@ -5,14 +5,18 @@ import {
   attackLeader,
   canFollowerAttack,
   canPlayCard,
+  canUseAbility,
   confirmMulligan,
   createInitialGameState,
   endTurn,
   getCard,
   needsPlayTarget,
+  needsAbilityTarget,
+  useAbility,
   playCard,
 } from './game/engine'
 import type { Follower } from './game/types'
+import type { AbilityKind } from './game/engine'
 import './App.css'
 
 function App() {
@@ -21,6 +25,10 @@ function App() {
     useState<string | null>(null)
   const [selectedHandIndex, setSelectedHandIndex] =
     useState<number | null>(null)
+  const [selectedAbility, setSelectedAbility] = useState<{
+    followerId: string
+    kind: AbilityKind
+  } | null>(null)
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
 
@@ -41,6 +49,7 @@ function App() {
   const resetSelection = () => {
     setSelectedAttackerId(null)
     setSelectedHandIndex(null)
+    setSelectedAbility(null)
   }
 
   const handleReset = () => {
@@ -94,6 +103,20 @@ function App() {
     resetSelection()
   }
 
+  const handleUseAbility = (follower: Follower, kind: AbilityKind) => {
+    if (!canUseAbility(game, follower.instanceId, kind)) return
+    const card = getCard(follower.cardId)
+    if (!card) return
+    if (needsAbilityTarget(card, kind)) {
+      setSelectedAbility({ followerId: follower.instanceId, kind })
+      setSelectedAttackerId(null)
+      setSelectedHandIndex(null)
+      return
+    }
+    setGame(previous => useAbility(previous, follower.instanceId, kind))
+    resetSelection()
+  }
+
   const handleSelectAttacker = (follower: Follower) => {
     if (game.winnerId !== null) return
     if (!canFollowerAttack(follower)) return
@@ -118,6 +141,13 @@ function App() {
           targetId
         )
       )
+      resetSelection()
+      return
+    }
+
+    if (selectedAbility) {
+      const { followerId, kind } = selectedAbility
+      setGame(previous => useAbility(previous, followerId, kind, targetId))
       resetSelection()
       return
     }
@@ -160,12 +190,12 @@ function App() {
       isOpponent &&
       game.winnerId === null &&
       (selectedAttacker !== undefined ||
-        selectedHandIndex !== null)
+        selectedHandIndex !== null || selectedAbility !== null)
 
     return (
+      <div key={follower.instanceId} style={{ display: 'inline-flex', flexDirection: 'column', gap: 4 }}>
       <button
         type="button"
-        key={follower.instanceId}
         className={[
           'field-card',
           canAttack ? 'can-attack' : '',
@@ -226,6 +256,27 @@ function App() {
               : '攻撃不可'}
         </small>
       </button>
+      {!isOpponent && (card?.elementalSkill || card?.elementalBurst) && (
+        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+          {card.elementalSkill && (
+            <button type="button"
+              disabled={!canUseAbility(game, follower.instanceId, 'skill')}
+              onClick={() => handleUseAbility(follower, 'skill')}
+              title={card.elementalSkill.name}>
+              スキル{follower.skillUsed ? '済' : ''}
+            </button>
+          )}
+          {card.elementalBurst && (
+            <button type="button"
+              disabled={!canUseAbility(game, follower.instanceId, 'burst')}
+              onClick={() => handleUseAbility(follower, 'burst')}
+              title={card.elementalBurst.name}>
+              爆発 EN{card.elementalBurst.energyCost ?? 0}
+            </button>
+          )}
+        </div>
+      )}
+      </div>
     )
   }
 
@@ -382,7 +433,7 @@ function App() {
         </button>
 
         <div className="pp">
-          PP {opponent.pp} / {opponent.maxPp}
+          PP {opponent.pp} / {opponent.maxPp}　EN {opponent.energy} / 5
         </div>
         <div>デッキ：{opponent.deck.length}枚</div>
         <div>手札：{opponent.hand.length}枚</div>
@@ -416,7 +467,7 @@ function App() {
         </div>
 
         <div className="pp">
-          PP {currentPlayer.pp} / {currentPlayer.maxPp}
+          PP {currentPlayer.pp} / {currentPlayer.maxPp}　EN {currentPlayer.energy} / 5
         </div>
         <div>デッキ：{currentPlayer.deck.length}枚</div>
         <div>手札：{currentPlayer.hand.length}枚</div>
@@ -438,6 +489,8 @@ function App() {
       <div className="battle-message">
         {winner
           ? 'ゲーム終了'
+          : selectedAbility !== null
+            ? '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
             ? 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
