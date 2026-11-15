@@ -3510,3 +3510,210 @@ test('C067 オロルン：次の自分ターンに感電回数制限がリセッ
   state=engine.endTurn(state);state=engine.endTurn(state)
   assert.equal(state.players[0].field[0].electroChargedTriggersThisTurn,0)
 })
+
+test('STEP36 風元素C071-C085のカード名・コスト・レアリティを原本と照合',async()=>{
+  const {anemoCards}=await vite.ssrLoadModule('/src/data/cards/anemo.ts')
+  assert.deepEqual(anemoCards.map(c=>c.id),Array.from({length:15},(_,i)=>'C'+String(i+71).padStart(3,'0')))
+  assert.deepEqual(anemoCards.map(c=>c.name),[
+    '風スライム','モンド城','クク仔竜','風フライム',
+    '魔術・アストニシングシフト','禁・風霊作成・七五同構弐型',
+    'ヒルチャールレンジャー・風','ファデュイ・烈風の従者',
+    '生物錬金術師・スクロース','終末番の忍者・早柚',
+    '百年の先輩・ファルザン','綺影のエレガンス・リネット',
+    '北風騎士・ファルカ','護法夜叉・魈','久世浮傾・放浪者',
+  ])
+  assert.deepEqual(anemoCards.map(c=>c.cost),[1,2,2,3,4,4,5,6,3,3,4,3,8,5,5])
+  assert.deepEqual(anemoCards.map(c=>c.rarity),[
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')])
+  assert.ok(anemoCards.every(c=>c.element==='anemo'))
+})
+
+test('STEP36 風15枚のカードタイプ・ステータス・地域・対戦対応状況',async()=>{
+  const {anemoCards}=await vite.ssrLoadModule('/src/data/cards/anemo.ts')
+  assert.deepEqual(anemoCards.map(c=>c.type),[
+    'follower','amulet','follower','follower','spell','amulet',
+    'follower','follower','follower','follower','follower','follower',
+    'follower','follower','follower'])
+  assert.deepEqual(anemoCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
+    [2,2],[2,2],[2,3],[4,4],[5,5],[2,3],[2,4],[2,4],[2,3],
+    [4,7],[4,5],[3,5]])
+  assert.deepEqual(anemoCards.find(c=>c.id==='C083').traits,['西風騎士団'])
+  assert.deepEqual(anemoCards.find(c=>c.id==='C084').traits,['仙人'])
+  assert.deepEqual(anemoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    ['C071','C072','C073','C074','C077','C080','C082'])
+})
+
+test('STEP36 登録は85/115・風元素15枚の枠を充足・残り30枚',async()=>{
+  const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const report=validateProductionCards(productionCards)
+  assert.deepEqual(report.errors,[])
+  assert.equal(report.total,85)
+  assert.equal(report.slots.filter(s=>s.element==='anemo').reduce((n,s)=>n+s.remaining,0),0)
+  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),30)
+})
+
+test('STEP36 風元素7枚だけデッキ候補へ、残る8枚はdata_only',async()=>{
+  const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const {anemoCards}=await vite.ssrLoadModule('/src/data/cards/anemo.ts')
+  const pool=new Set(getDeckCardPool().map(c=>c.id))
+  for(const c of anemoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=['C075','C076','C078','C079','C081','C083','C084','C085']
+  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+})
+
+test('C071 風スライムは風元素生物として常時付着状態で出る',()=>{
+  let state=startedGame()
+  state.players[0].pp=1;state.players[0].hand=['C071']
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field[0].health,2)
+  assert.deepEqual(state.players[0].field[0].aura,[{element:'anemo'}])
+})
+
+test('C072 モンド城は2PPで場のアミュレット枠を1つ占有し、カウント3',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C072'];state.players[0].pp=2
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].amulets.length,1)
+  assert.equal(state.players[0].amulets[0].cardId,'C072')
+  assert.equal(state.players[0].amulets[0].turnsRemaining,3)
+  assert.deepEqual(state.players[0].hand,[])
+})
+
+test('C072 モンド城は自分のターン終了時に地域モンドのカードをランダム1枚サーチ',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C072']
+  state.players[0].deck=['C001','C027','C012','C073']
+  state=engine.playCard(state,'player1',0)
+  state=engine.endTurn(state)
+  assert.deepEqual(state.players[0].hand,['C012'])
+  assert.deepEqual(state.players[0].deck,['C001','C027','C073'])
+  assert.equal(state.players[0].amulets[0].turnsRemaining,2)
+})
+
+test('C072 モンド城は3回ターン終了で消滅・サーチ対象無しでも減少する',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C072']
+  state.players[0].deck=['C001']
+  state=engine.playCard(state,'player1',0)
+  for(let i=0;i<5;i++)state=engine.endTurn(state)
+  assert.deepEqual(state.players[0].amulets,[])
+  assert.deepEqual(state.players[0].hand,[])
+  assert.equal(state.players[0].deck.length,1)
+})
+
+test('C072 モンド城は場が埋まっていればプレイ不可',()=>{
+  const state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C072']
+  for(let i=0;i<5;i++)place(state,0,'C001',1,2)
+  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.playCard(state,'player1',0),state)
+})
+
+test('C073 クク仔竜の突進は登場ターンのフォロワー攻撃のみ可能',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C073']
+  state=engine.playCard(state,'player1',0)
+  const kuku=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,kuku.instanceId),state)
+  const enemy=place(state,1,'test-mage',0,7)
+  state=engine.attackFollower(state,kuku.instanceId,enemy.instanceId)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C074 風フライムは風元素常時付着・破壊時リーダー2ダメージ',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C074']
+  state=engine.playCard(state,'player1',0)
+  const specter=state.players[0].field[0]
+  assert.deepEqual(specter.aura,[{element:'anemo'}])
+  specter.health=1
+  const enemy=place(state,1,'test-mage',3,8)
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},enemy.instanceId,specter.instanceId)
+  assert.equal(state.players[1].leaderHealth,18)
+  assert.ok(state.players[0].graveyard.includes('C074'))
+})
+
+test('C074 風フライムのラストワードはリーダーシールドを先に消費',()=>{
+  let state=startedGame()
+  const specter=place(state,0,'C074',2,1)
+  const enemy=place(state,1,'test-mage',3,8)
+  state.players[1].leaderShield={normal:2,crystallize:0}
+  state=engine.attackFollower({...state,currentPlayerId:'player2'},enemy.instanceId,specter.instanceId)
+  assert.equal(state.players[1].leaderHealth,20)
+  assert.equal(state.players[1].leaderShield.normal,0)
+})
+
+test('C077 風レンジャーは突進し攻撃時にヒルチャールを1体召喚',()=>{
+  let state=startedGame()
+  state.players[0].pp=5;state.players[0].hand=['C077']
+  state=engine.playCard(state,'player1',0)
+  const ranger=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,ranger.instanceId),state)
+  const enemy=place(state,1,'test-mage',0,10)
+  state=engine.attackFollower(state,ranger.instanceId,enemy.instanceId)
+  assert.deepEqual(state.players[0].field.map(f=>f.cardId),['C077','C001'])
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C077 風レンジャーは場が5枠でも攻撃できるが追加召喚しない',()=>{
+  let state=startedGame()
+  const ranger=place(state,0,'C077',4,4)
+  for(let i=0;i<4;i++)place(state,0,'C001',1,2)
+  const foe=place(state,1,'test-mage',0,10)
+  state=engine.attackFollower(state,ranger.instanceId,foe.instanceId)
+  assert.equal(state.players[0].field.length,5)
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C080 早柚は潜伏を持ちスキルPP1で風2・自身攻撃+1',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C080']
+  state=engine.playCard(state,'player1',0)
+  const sayu=state.players[0].field[0]
+  assert.ok(sayu.keywords.includes('stealth'))
+  const foe=place(state,1,'test-mage',0,8)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,sayu.instanceId,'skill',foe.instanceId)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'anemo'}].filter(()=>false))
+  assert.equal(state.players[0].field[0].attack,3)
+  assert.ok(state.players[0].field[0].keywords.includes('stealth'))
+})
+
+test('C082 リネットは突進・登場時デッキから風元素スペル1枚サーチ',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C082']
+  state.players[0].deck=['C001','C045','C075','C060']
+  state=engine.playCard(state,'player1',0)
+  assert.ok(state.players[0].field[0].keywords.includes('rush'))
+  assert.deepEqual(state.players[0].hand,['C075'])
+  assert.deepEqual(state.players[0].deck,['C001','C045','C060'])
+})
+
+test('C082 リネットの元素スキルはPP1・風2ダメージ・自身1回復',()=>{
+  let state=startedGame()
+  const lynette=place(state,0,'C082',2,2)
+  lynette.maxHealth=3
+  state.players[0].pp=1
+  const enemy=place(state,1,'test-mage',0,8)
+  state=engine.activateAbility(state,lynette.instanceId,'skill',enemy.instanceId)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].field[0].health,3)
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C082 リネットはデッキに風スペルが無くてもプレイ可能でデッキ切れ敗北しない',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C082'];state.players[0].deck=[]
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.winnerId,null)
+  assert.equal(state.players[0].field[0].cardId,'C082')
+})
