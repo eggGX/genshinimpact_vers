@@ -147,6 +147,8 @@ export interface Player {
   name: string
   leaderHealth: number
   leaderMaxHealth: number
+  /** Normal / crystallize shields held by the leader (each capped at 10). */
+  leaderShield?: Shield
   /** Burning turns applied to the leader by burgeon. */
   leaderBurningTurns?: number
   /** Leader elemental attachment (e.g. Barbara's healing crest). */
