@@ -245,3 +245,34 @@ export function resetAnemoTurnStatuses(state: GameState, ownerId: string): GameS
     }),
   }))
 }
+
+/** Cat-box engages an elemental opponent: pre-combat elemental damage to that opponent. */
+export function catBoxEngage(
+  state: GameState, ownerId: string, attackerId: string, defenderId: string,
+  deaths: DeathResolver
+): GameState {
+  const owner = state.players.find(p => p.id === ownerId)
+  const opponent = state.players.find(p => p.id !== ownerId)
+  if (!owner || !opponent || state.winnerId !== null) return state
+  const attacker = owner.field.find(f => f.instanceId === attackerId)
+  const defender = opponent.field.find(f => f.instanceId === defenderId)
+  if (!attacker || !defender) return state
+  const boxOnDefence = defender.cardId === 'token-surprising-cat-box'
+  const boxOnAttack = attacker.cardId === 'token-surprising-cat-box'
+  if (!boxOnDefence && !boxOnAttack) return state
+  const target = boxOnDefence ? attacker : defender
+  const element = getCard(target.cardId)?.element
+  if (!element || !selectable.includes(element as Element)) return state
+  const boxOwnerId = boxOnDefence ? opponent.id : owner.id
+  const outcome = resolveElementalDamage(target, 2, element)
+  const affectedIndex = state.players.findIndex(p => p.id === (boxOnDefence ? owner.id : opponent.id))
+  const players = [...state.players] as [Player, Player]
+  players[affectedIndex] = { ...players[affectedIndex],
+    field: players[affectedIndex].field.map(f => f.instanceId === target.instanceId
+      ? outcome.follower : f) }
+  let result = resolveReactionConsequence({ ...state, players },
+    affectedIndex, target.instanceId, outcome.reaction, outcome.reactedElement,
+    state.players.findIndex(p => p.id === boxOwnerId))
+  result = deaths(result)
+  return result
+}
