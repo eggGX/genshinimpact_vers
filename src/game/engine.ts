@@ -7,6 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
+import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 const deckCards = getDeckCardPool()
@@ -168,9 +169,9 @@ export function canPlayCard(
   const cardId = owner.hand[handIndex]
   const card = cardId ? getCard(cardId) : undefined
 
-  if (!card || card.type !== 'follower' || card.implementationStatus === 'data_only') return false
+  if (!card || !['follower', 'spell'].includes(card.type) || card.implementationStatus === 'data_only') return false
   if (owner.pp < card.cost) return false
-  if (owner.field.length >= MAX_FIELD_SIZE) return false
+  if (card.type === 'follower' && owner.field.length >= MAX_FIELD_SIZE) return false
 
   if (
     needsPlayTarget(card) &&
@@ -239,6 +240,7 @@ function resolveDeaths(state: GameState): GameState {
         follower.instanceId,
         resolveDeaths
       )
+      result = resolveNeutralDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
@@ -329,6 +331,21 @@ export function playCard(
     }
   }
 
+  if (card.type === 'spell') {
+    const players = [...state.players] as [Player, Player]
+    players[index] = {
+      ...player,
+      pp: player.pp - card.cost,
+      hand: player.hand.filter((_, i) => i !== handIndex),
+      graveyard: [...player.graveyard, card.id],
+    }
+    let next: GameState = { ...state, players }
+    next = resolveEffects(next, playerId, card.effects ?? [], 'on_play',
+      targetId, undefined, resolveDeaths)
+    if (next.winnerId !== null) return next
+    return resolveDeaths(resolveNeutralPlay(next, playerId, card))
+  }
+
   const follower: Follower = {
     instanceId: `follower-${nextInstanceId++}`,
     cardId: card.id,
@@ -344,9 +361,11 @@ export function playCard(
       normal: 0,
       crystallize: 0,
     },
-    canAttack: false,
+    canAttack: Boolean(card.keywords?.includes('storm') ||
+      card.keywords?.includes('rush')),
     hasAttacked: false,
-    keywords: [],
+    keywords: [...(card.keywords ?? []),
+      ...(card.keywords?.includes('rush') ? ['rush_only'] : [])],
   }
 
   const players = [...state.players] as [Player, Player]
@@ -373,6 +392,9 @@ export function playCard(
     resolveDeaths
   )
 
+  if (result.winnerId === null) {
+    result = resolveNeutralPlay(result, playerId, card)
+  }
   return resolveDeaths(result)
 }
 
@@ -486,23 +508,28 @@ export function attackFollower(
   if (!attacker || !defender || defender.health <= 0 ||
       defender.keywords.includes('intimidate')) return state
   if (!canFollowerAttack(attacker)) return state
+  if (isGuarded(enemy) && !defender.keywords.includes('guard') &&
+      !attacker.keywords.includes('ignore_guard')) return state
 
-  const attackDamage = Math.max(0, attacker.attack)
+  const buffed = applyNeutralAttackBuff(state, owner.id, attackerId)
+  const boostedOwner = buffed.players[index]
+  const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
+  const attackDamage = Math.max(0, boostedAttacker.attack)
   const counterDamage = Math.max(0, defender.attack)
   const attackerElement = getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
   const toAttacker = resolveElementalDamage(
-    attacker, counterDamage, defenderElement
+    boostedAttacker, counterDamage, defenderElement
   )
   const toDefender = resolveElementalDamage(
     defender, attackDamage, attackerElement
   )
-  const players = [...state.players] as [Player, Player]
+  const players = [...buffed.players] as [Player, Player]
   players[index] = {
-    ...owner,
-    field: owner.field.map(f =>
+    ...boostedOwner,
+    field: boostedOwner.field.map(f =>
       f.instanceId === attackerId
         ? { ...toAttacker.follower, hasAttacked: true }
         : f
@@ -515,7 +542,7 @@ export function attackFollower(
     ),
   }
 
-  let result = { ...state, players }
+  let result = { ...buffed, players }
   result = resolveReactionConsequence(
     result, enemyIndex, targetId, toDefender.reaction, toDefender.reactedElement, index
   )
@@ -548,20 +575,24 @@ export function attackLeader(
     f => f.instanceId === attackerId
   )
 
-  if (!attacker || !canFollowerAttack(attacker)) {
+  if (!attacker || !canFollowerAttack(attacker) ||
+      attacker.keywords.includes('rush_only') || isGuarded(enemy)) {
     return state
   }
 
+  const buffed = applyNeutralAttackBuff(state, owner.id, attackerId)
+  const boostedOwner = buffed.players[index]
+  const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const hp = Math.max(
     0,
-    enemy.leaderHealth - Math.max(0, attacker.attack)
+    enemy.leaderHealth - Math.max(0, boostedAttacker.attack)
   )
 
   const players = [...state.players] as [Player, Player]
 
   players[index] = {
-    ...owner,
-    field: owner.field.map(f =>
+    ...boostedOwner,
+    field: boostedOwner.field.map(f =>
       f.instanceId === attackerId
         ? { ...f, hasAttacked: true }
         : f
@@ -632,6 +663,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) {
     return result
   }
+
+  result = resolveNeutralTurnEnd(result, currentId)
+  if (result.winnerId !== null) return result
 
   // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
   // ダメージ・持続時間は暫定のテスト仕様。
@@ -727,6 +761,7 @@ export function endTurn(state: GameState): GameState {
     hasAttacked: false,
     skillUsed: false,
     burstUsed: false,
+    keywords: f.keywords.filter(keyword => keyword !== 'rush_only'),
   }))
 
   const draw = drawCard(next)
