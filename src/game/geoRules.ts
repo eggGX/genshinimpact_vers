@@ -131,8 +131,17 @@ export function geoEngage(
  */
 export function geoSpell(
   state: GameState, ownerId: string, cardId: string,
-  resolveDeaths: (state: GameState) => GameState
+  resolveDeaths: (state: GameState) => GameState,
+  targetId?: string
 ): GameState {
+  if (cardId === 'C091') {
+    const ally = state.players.find(p => p.id === ownerId)?.field.find(f => f.instanceId === targetId && f.health > 0)
+    if (!ally) return state
+    return update(state, ownerId, p => ({ ...p, field: p.field.map(f => f.instanceId === targetId ? {
+      ...f, attack: f.attack + 2,
+      keywords: [...new Set([...f.keywords.filter(k => !k.startsWith('normal_attack_')), 'normal_attack_geo', 'geo_sweep'])],
+    } : f) }))
+  }
   if (cardId !== 'C090' || state.winnerId !== null) return state
   const ownerIndex = state.players.findIndex(p => p.id === ownerId)
   if (ownerIndex < 0) return state
@@ -213,4 +222,11 @@ export function geoTurnEnd(state: GameState, ownerId: string, sourceId: string):
     f.instanceId === sourceId && f.health > 0)
   if (source?.cardId !== 'C100') return state
   return update(state, ownerId, p => addLeaderShield(p, 1, 'crystallize'))
+}
+
+/** Attack-declaration trigger granted by the Geo spell C091. */
+export function geoSweepAttack(state: GameState, ownerId: string, attackerId: string,
+  deaths: (s: GameState) => GameState): GameState {
+  const attacker = state.players.find(p => p.id === ownerId)?.field.find(f => f.instanceId === attackerId && f.health > 0)
+  return attacker?.keywords.includes('geo_sweep') ? geoHitAll(state, ownerId, 1, deaths) : state
 }
