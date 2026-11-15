@@ -16,7 +16,7 @@ import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advance
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
-import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd } from './dendroRules'
+import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd, dendroLegendarySkill, dendroLegendaryBurst, dendroLegendaryAttack, dendroLumidouceTurnEnd } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
@@ -495,7 +495,7 @@ export function needsFriendlyAbilityTarget(card: Card, kind: AbilityKind): boole
 
 export function needsAbilityTarget(card: Card, kind: AbilityKind): boolean {
   const ability = kind === 'skill' ? card.elementalSkill : card.elementalBurst
-  return ((['C049','C099','C111','C112'].includes(card.id)) && kind === 'skill') || (ability?.effects ?? []).some(effect =>
+  return ((['C049','C099','C111','C112','C113','C115'].includes(card.id)) && kind === 'skill') || (ability?.effects ?? []).some(effect =>
     effect.target === 'selected_enemy_follower')
 }
 
@@ -521,7 +521,7 @@ export function canUseAbility(
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
   if (kind === 'skill' && card?.id === 'C083' && !owner.hand.some(id =>
       ['pyro', 'hydro', 'cryo', 'electro'].includes(getCard(id)?.element ?? ''))) return false
-  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097', 'C100', 'C098', 'C109'].includes(card?.id ?? '') &&
+  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097', 'C100', 'C098', 'C109', 'C114'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'skill' && card?.id === 'C069' &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
@@ -619,6 +619,7 @@ export function activateAbility(
     result = geoSkill(result, owner.id, followerId, card.id)
     if (card.id === 'C099') result = geoNaviaSkill(result, owner.id, targetId)
     result = dendroGoldSkill(result, owner.id, followerId, card.id, targetId)
+    result = dendroLegendarySkill(result, owner.id, followerId, card.id, targetId)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
@@ -629,6 +630,7 @@ export function activateAbility(
     result = geoBurst(result, owner.id, card.id, resolveDeaths)
     if(card.id==='C098')result=geoChioriBurst(result,owner.id,resolveDeaths)
     if (card.id === 'C099') result = geoNaviaBurst(result, owner.id, resolveDeaths)
+    result = dendroLegendaryBurst(result, owner.id, card.id, resolveDeaths)
   }
   return resolveDeaths(result)
 }
@@ -700,7 +702,7 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const swept = geoSweepAttack(declared, owner.id, attackerId, resolveDeaths)
+  const swept = dendroLegendaryAttack(geoSweepAttack(declared, owner.id, attackerId, resolveDeaths), owner.id, attackerId, resolveDeaths)
   if (swept.winnerId !== null || !swept.players[index].field.some(f => f.instanceId === attackerId && f.health > 0)) return swept
   // Attack declaration consumes the attack even if its triggered AoE destroys the target.
   if (!swept.players[enemyIndex].field.some(f => f.instanceId === targetId && f.health > 0)) {
@@ -818,6 +820,8 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
+  const triggered = dendroLegendaryAttack(declared, owner.id, attackerId, resolveDeaths)
+  if (triggered.winnerId !== null || !triggered.players[index].field.some(f=>f.instanceId===attackerId&&f.health>0)) return triggered
   const buffed = dendroAttack(geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
@@ -827,7 +831,7 @@ export function attackLeader(
       resolveHydroAdvancedAttack(
         resolveHydroAttack(
           resolveLegendaryAttack(
-            applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+            applyNeutralAttackBuff(triggered, owner.id, attackerId), owner.id, attackerId
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
@@ -950,6 +954,9 @@ export function endTurn(state: GameState): GameState {
   result = dendroColleiAmberTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
+  result = dendroLumidouceTurnEnd(result, currentId, resolveDeaths)
+  if (result.winnerId !== null) return result
+
   result = advancedAnemoAmuletsTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
   result = advancedAnemoBothTurnEnd(result, resolveDeaths)
@@ -1054,6 +1061,7 @@ export function endTurn(state: GameState): GameState {
     skillUsesThisTurn: 0,
     electroChargedTriggersThisTurn: 0,
     swirlDrawsThisTurn: 0,
+    dendroBurningTriggersThisTurn: 0,
     geoShieldTriggersThisTurn: 0,
     keywords: f.keywords.filter(keyword => keyword !== 'rush_only'),
   }))
