@@ -1,0 +1,79 @@
+.library-page {
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  color: #f0f5fa;
+  background: linear-gradient(155deg, #14293d, #193c3a);
+  font-family: sans-serif;
+}
+.library-header, .library-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.library-header h1 { margin-bottom: 4px; }
+.library-header button {
+  padding: 11px 19px;
+  background: #365b77;
+  color: white;
+  border: 1px solid #9dbbc2;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.library-status, .library-progress, .library-cards {
+  border: 1px solid #779198;
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 20px;
+  background: #203744;
+}
+.library-status p { margin-bottom: 0; color: #b7ccd4; }
+.library-table-wrap { overflow-x: auto; }
+.library-progress table { width: 100%; border-collapse: collapse; text-align: center; min-width: 560px; }
+.library-progress th, .library-progress td {
+  border-bottom: 1px solid #4d6975;
+  padding: 10px;
+}
+.library-progress th:first-child { text-align: left; }
+.library-errors { border: 1px solid #d99882; border-radius: 8px; margin-top: 12px; padding: 10px; }
+.library-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.library-filters label { display: flex; flex-direction: column; gap: 6px; }
+.library-filters input, .library-filters select {
+  min-width: 145px;
+  font: inherit;
+  background: #f3f6fa;
+  color: #182c3c;
+  border-radius: 6px;
+  border: 1px solid #aec2cf;
+  padding: 8px;
+}
+.library-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 12px;
+}
+.library-entry {
+  min-height: 160px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid #bea05c;
+  background: #304e65;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 7px;
+  text-align: left;
+  cursor: pointer;
+}
+.library-entry.selected { border-color: #8eeaba; background: #315e61; }
+.library-entry strong { font-size: 16px; }
+.library-entry small { color: #c7dce7; }
+.library-details { margin-top: 16px; padding: 16px; border: 1px solid #6c9594; border-radius: 8px; }
+@media (max-width: 640px) {
+  .library-page { padding: 12px; }
+  .library-filters label { flex: 1 1 140px; }
+  .library-filters select, .library-filters input { width: 100%; box-sizing: border-box; }
+}
