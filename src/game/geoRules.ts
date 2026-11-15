@@ -2,6 +2,7 @@ import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { addLeaderShield, healLeader, damageLeader } from './leaderShield'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { summonFollowers } from './neutralRules'
 
 let nextLiyueHarborId = 1
 let nextGeoConstructId = 1
@@ -82,6 +83,12 @@ export function geoPlay(state: GameState, ownerId: string, cardId: string): Game
   if (cardId === 'C095' || cardId === 'C097') {
     return gainGeoCrystallize(state, ownerId, 2)
   }
+  if (cardId === 'C098') {
+    const p=state.players.find(p=>p.id===ownerId)
+    const constructs=['token-jade-screen','token-spinning-turbo','token-solar-isotoma']
+    return p && ((p.amulets??[]).some(a=>constructs.includes(a.cardId)) || p.field.some(f=>f.health>0 && constructs.includes(f.cardId)))
+      ? summonFollowers(state,ownerId,'token-tamoto',1) : state
+  }
   if (cardId !== 'C096') return state
   return update(state, ownerId, p => ({
     ...p, field: p.field.map(f => getCard(f.cardId)?.element === 'geo' && f.health > 0
@@ -95,6 +102,7 @@ export function geoSkill(state: GameState, ownerId: string, sourceId: string, ca
   if (cardId === 'C095') return createGeoConstruct(state, ownerId, 'token-jade-screen')
   if (cardId === 'C097') return createGeoConstruct(state, ownerId, 'token-spinning-turbo')
   if (cardId === 'C100') return createGeoConstruct(state, ownerId, 'token-solar-isotoma')
+  if (cardId === 'C098') return summonFollowers(state,ownerId,'token-tamoto',1)
   if (cardId === 'C094') return update(state, ownerId, p => ({
     ...addLeaderShield(p, 3),
     field: p.field.map(f => f.instanceId === sourceId ? grantShield(f, 'normal', 3) : f),
@@ -232,12 +240,22 @@ export function geoBurst(state: GameState, ownerId: string, cardId: string,
   return result
 }
 
-export function geoTurnEnd(state: GameState, ownerId: string, sourceId: string): GameState {
+export function geoTurnEnd(state: GameState, ownerId: string, sourceId: string,
+  deaths: (s: GameState) => GameState): GameState {
   if (state.winnerId !== null) return state
   const source = state.players.find(p => p.id === ownerId)?.field.find(f =>
     f.instanceId === sourceId && f.health > 0)
-  if (source?.cardId !== 'C100') return state
-  return gainGeoCrystallize(state, ownerId, 1)
+  if (source?.cardId === 'C100') return gainGeoCrystallize(state, ownerId, 1)
+  if (source?.cardId !== 'token-tamoto') return state
+  const i=state.players.findIndex(p=>p.id===ownerId)
+  if(i<0)return state
+  const foe=state.players[1-i]
+  const available=foe.field.filter(f=>f.health>0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
+  if(!available.length)return state
+  const target=available[Math.floor(Math.random()*available.length)]
+  const hit=resolveElementalDamage(target,2,'geo')
+  const updated=update(state,foe.id,p=>({...p,field:p.field.map(f=>f.instanceId===target.instanceId?hit.follower:f)}))
+  return deaths(resolveReactionConsequence(updated,1-i,target.instanceId,hit.reaction,hit.reactedElement,i))
 }
 
 /** Attack-declaration trigger granted by the Geo spell C091. */
@@ -289,4 +307,27 @@ export function geoNaviaCrestsTurnEnd(state: GameState, ownerId: string,
   return update(result, ownerId, p => ({ ...p, crests: (p.crests ?? []).map(c =>
     c.id === 'C099' ? { ...c, turnsRemaining: c.turnsRemaining - 1 } : c
   ).filter(c => c.turnsRemaining > 0) }))
+}
+
+/** Chiori: Geo 3 AoE and one random Geo 2 strike per Tamoto. */
+export function geoChioriBurst(state: GameState, ownerId: string,
+  deaths: (s: GameState) => GameState): GameState {
+  const i=state.players.findIndex(p=>p.id===ownerId)
+  if(i<0 || state.winnerId!==null)return state
+  let result=geoHitAll(state,ownerId,3,deaths)
+  const count=result.players[i].field.filter(f=>f.health>0 && f.cardId==='token-tamoto').length
+  for(let n=0;n<count && result.winnerId===null;n++){
+    const foe=result.players[1-i]
+    const targets=foe.field.filter(f=>f.health>0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
+    const choice=Math.floor(Math.random()*(targets.length+1))
+    if(choice===0){
+      const damaged=damageLeader(foe,2)
+      result={...update(result,foe.id,()=>damaged),winnerId:damaged.leaderHealth===0?ownerId:result.winnerId}
+    }else{
+      const victim=targets[choice-1],hit=resolveElementalDamage(victim,2,'geo')
+      const updated=update(result,foe.id,p=>({...p,field:p.field.map(f=>f.instanceId===victim.instanceId?hit.follower:f)}))
+      result=deaths(resolveReactionConsequence(updated,1-i,victim.instanceId,hit.reaction,hit.reactedElement,i))
+    }
+  }
+  return result
 }
