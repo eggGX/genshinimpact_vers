@@ -1,6 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { summonFollowers } from './neutralRules'
-import { damageLeader } from './leaderShield'
+import { damageLeader, healLeader } from './leaderShield'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 let nextHydroAmuletId = 1
@@ -206,13 +206,13 @@ export function resolveHydroAdvancedTurnEnd(
   }
   if (source.cardId === 'C039') {
     return updatePlayer(state, ownerId, p => ({
-      ...p, leaderHealth: Math.min(p.leaderMaxHealth, p.leaderHealth + 2),
+      ...p, ...healLeader(p, 2),
     }))
   }
   if (source.cardId === 'token-hydro-jellyfish') {
     let result = updatePlayer(state, ownerId, p => ({
       ...p,
-      leaderHealth: Math.min(p.leaderMaxHealth, p.leaderHealth + 1),
+      ...healLeader(p, 1),
       field: p.field.map(f => f.health > 0 ? {
         ...f, health: Math.min(f.maxHealth, f.health + 1),
       } : f),
@@ -242,7 +242,7 @@ export function resolveHydroPermanentsTurnEnd(
     if (result.winnerId !== null) break
     result = updatePlayer(result, ownerId, p => ({
       ...p,
-      leaderHealth: Math.min(p.leaderMaxHealth, p.leaderHealth + 3),
+      ...healLeader(p, 3),
       leaderAura: (p.leaderAura ?? []).some(a => a.element === 'hydro')
         ? p.leaderAura : [...(p.leaderAura ?? []), { element: 'hydro' }],
       crests: (p.crests ?? []).map((c, i) => i === crestIndex ? {
@@ -296,6 +296,6 @@ export function resolveHydroAdvancedAttack(state: GameState, ownerId: string, so
   if (!player?.field.some(f => f.instanceId === sourceId &&
     f.health > 0 && f.keywords.includes('attack_heal_2'))) return state
   return updatePlayer(state, ownerId, p => ({
-    ...p, leaderHealth: Math.min(p.leaderMaxHealth, p.leaderHealth + 2),
+    ...p, ...healLeader(p, 2),
   }))
 }
