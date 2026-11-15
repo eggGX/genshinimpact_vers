@@ -91,7 +91,9 @@ function App() {
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
-    if (needsPlayTarget(card) || needsFriendlyPlayTarget(card)) {
+    const saraWithoutAlly = card.id === 'C066' &&
+      !currentPlayer.field.some(f => f.health > 0 && getCard(f.cardId)?.element === 'electro')
+    if (!saraWithoutAlly && (needsPlayTarget(card) || needsFriendlyPlayTarget(card))) {
       setSelectedHandIndex(previous =>
         previous === handIndex ? null : handIndex
       )
