@@ -2762,3 +2762,250 @@ test('氷蛍はトークンカードであり通常のデッキに登録され�
   assert.equal(cicin.token,true)
   assert.equal(getDeckCardPool().some(c=>c.id===cicin.id),false)
 })
+
+test('STEP33 氷9枚の実装状態とスキル・爆発コストを原本照合', async()=>{
+  const {cryoCards}=await vite.ssrLoadModule('/src/data/cards/cryo.ts')
+  assert.equal(cryoCards.length,15)
+  assert.equal(cryoCards.filter(c=>c.implementationStatus==='playable').length,15)
+  const ids=['C049','C051','C052','C053','C054','C055']
+  assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.ppCost),[2,1,1,1,1,1])
+  assert.deepEqual(['C053','C054','C055'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,3,3])
+})
+
+test('C044 霜の精：味方を選び+2攻撃、本人も指定可能、無指定不可',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C044'];state.players[0].pp=3
+  const ally=place(state,0,'C001',1,2)
+  assert.equal(engine.needsFriendlyPlayTarget(engine.getCard('C044')),true)
+  assert.equal(engine.playCard(state,'player1',0),state)
+  let next=engine.playCard(state,'player1',0,ally.instanceId)
+  assert.equal(next.players[0].field[0].attack,3)
+  assert.equal(next.players[0].field[1].attack,2)
+  next=engine.playCard(state,'player1',0,'self')
+  assert.equal(next.players[0].field[0].attack,1)
+  assert.equal(next.players[0].field[1].attack,4)
+})
+
+test('C045 凛冽なる輪舞：カウント3、毎自ターン終了で氷2を2回',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C045'];state.players[0].pp=3
+  place(state,1,'test-mage',1,18)
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].crests[0].turnsRemaining,3)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,14)
+  assert.equal(state.players[0].crests[0].turnsRemaining,2)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,10)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.deepEqual(state.players[0].crests,[])
+})
+
+test('C045 クレストは対象が無い時もカウントダウンし消滅',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C045'];state.players[0].pp=3
+  state=engine.playCard(state,'player1',0)
+  for(let i=0;i<5;i++)state=engine.endTurn(state)
+  assert.deepEqual(state.players[0].crests,[])
+  assert.equal(state.players[1].leaderHealth,20)
+})
+
+test('C046 星流揺籠の夢：全味方＋リーダーにシールド2、敵全員に氷1',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C046'];state.players[0].pp=4
+  place(state,0,'C001',1,3)
+  place(state,1,'test-mage',1,8)
+  place(state,1,'test-mage',1,7)
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].leaderShield.normal,2)
+  assert.equal(state.players[0].field[0].shield.normal,2)
+  assert.deepEqual(state.players[1].field.map(f=>f.health),[7,6])
+  assert.deepEqual(state.players[0].graveyard,['C046'])
+})
+
+test('共通リーダーシールドは通常攻撃を先に軽減し、残りのみHPへ',()=>{
+  const state=startedGame()
+  const attacker=place(state,0,'C001',4,3)
+  state.players[1].leaderShield={normal:2,crystallize:1}
+  const next=engine.attackLeader(state,attacker.instanceId)
+  assert.equal(next.players[1].leaderHealth,19)
+  assert.deepEqual(next.players[1].leaderShield,{normal:0,crystallize:0})
+})
+
+test('C049 ディオナ：登場時リーダーへ通常シールド2',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C049'];state.players[0].pp=3
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].leaderShield.normal,2)
+})
+
+test('C049 ディオナ：スキルは選択した敵＋もう1体へ氷2、シールド2',()=>{
+  let state=startedGame()
+  const diona=place(state,0,'C049',2,4)
+  const a=place(state,1,'test-mage',1,7)
+  const b=place(state,1,'test-mage',1,6)
+  state.players[0].pp=2
+  assert.equal(engine.needsAbilityTarget(engine.getCard('C049'),'skill'),true)
+  state=engine.activateAbility(state,diona.instanceId,'skill',b.instanceId)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.deepEqual(state.players[1].field.map(f=>f.health),[5,4])
+  assert.equal(state.players[0].leaderShield.normal,2)
+  assert.equal(state.players[1].field[0].instanceId,a.instanceId)
+})
+
+test('C051 レイラ：守護、ターン終了時氷1・PP1スキル盾3',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C051'];state.players[0].pp=4
+  place(state,1,'test-mage',1,7)
+  state=engine.playCard(state,'player1',0)
+  const layla=state.players[0].field[0]
+  assert.ok(layla.keywords.includes('guard'))
+  state=engine.activateAbility(state,layla.instanceId,'skill')
+  assert.equal(state.players[0].leaderShield.normal,3)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C052 シャルロット：登場時1枚引き、スキル氷2＋攻撃-1',()=>{
+  let state=startedGame()
+  state.players[0].pp=5;state.players[0].hand=['C052'];state.players[0].deck=['C001']
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].hand,['C001'])
+  const charlotte=state.players[0].field[0]
+  assert.equal(engine.getCard('C052').normalAttackElement,'cryo')
+  const foe=place(state,1,'test-mage',3,8)
+  state=engine.activateAbility(state,charlotte.instanceId,'skill',foe.instanceId)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[1].field[0].attack,2)
+  assert.equal(state.players[0].energy,1)
+})
+
+test('C052 シャルロット：空デッキのファンファーレはデッキ切れ敗北',()=>{
+  let state=startedGame()
+  state.players[0].pp=4;state.players[0].hand=['C052'];state.players[0].deck=[]
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.winnerId,'player2')
+})
+
+test('C053 甘雨：攻撃時に相手リーダーへ1、通常攻撃は別に解決',()=>{
+  let state=startedGame()
+  const ganyu=place(state,0,'C053',3,5)
+  const foe=place(state,1,'test-mage',0,8)
+  state=engine.attackFollower(state,ganyu.instanceId,foe.instanceId)
+  assert.equal(state.players[1].leaderHealth,19)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C053 甘雨：スキルは守護0/3の氷蓮を召喚',()=>{
+  let state=startedGame()
+  const ganyu=place(state,0,'C053',3,5)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,ganyu.instanceId,'skill')
+  assert.equal(state.players[0].energy,1)
+  const lotus=state.players[0].field[1]
+  assert.equal(lotus.cardId,'token-cryo-ice-lotus')
+  assert.deepEqual([lotus.attack,lotus.health],[0,3])
+  assert.ok(lotus.keywords.includes('guard'))
+})
+
+test('氷蓮は破壊時に敵フォロワー全員へ氷1を与える',()=>{
+  let state=startedGame()
+  const lotus=place(state,0,'token-cryo-ice-lotus',0,1)
+  lotus.keywords=['guard']
+  const foe=place(state,1,'test-mage',2,7)
+  place(state,1,'test-mage',1,6)
+  state=engine.attackFollower(state,lotus.instanceId,foe.instanceId)
+  assert.equal(state.players[0].field.length,0)
+  assert.deepEqual(state.players[1].field.map(f=>f.health),[6,5])
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'cryo'}])
+})
+
+test('C053 甘雨：爆発は敵全体に氷2＋3ターン×2回クレスト',()=>{
+  let state=startedGame()
+  const ganyu=place(state,0,'C053',3,5)
+  state.players[0].energy=3
+  place(state,1,'test-mage',0,18)
+  state=engine.activateAbility(state,ganyu.instanceId,'burst')
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[1].field[0].health,16)
+  assert.equal(state.players[0].crests[0].id,'C053')
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,12)
+  assert.equal(state.players[0].crests[0].turnsRemaining,2)
+})
+
+test('C054 シトラリ：潜伏＋氷通常攻撃、自ターン終了でリーダー盾2',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C054'];state.players[0].pp=5
+  state=engine.playCard(state,'player1',0)
+  assert.ok(state.players[0].field[0].keywords.includes('stealth'))
+  assert.equal(engine.getCard('C054').normalAttackElement,'cryo')
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].leaderShield.normal,2)
+})
+
+test('C054 シトラリ：PP1スキルでイツパパ1/3を召喚',()=>{
+  let state=startedGame()
+  const citlali=place(state,0,'C054',2,5)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,citlali.instanceId,'skill')
+  assert.equal(state.players[0].field[1].cardId,'token-cryo-itzpapa')
+  assert.deepEqual([state.players[0].field[1].attack,state.players[0].field[1].health],[1,3])
+})
+
+test('イツパパ：ターン終了時のランダム氷1とリーダー盾1',()=>{
+  let state=startedGame()
+  place(state,0,'token-cryo-itzpapa',1,3)
+  place(state,1,'test-mage',0,7)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[0].leaderShield.normal,1)
+})
+
+test('C054 シトラリ：爆発EN3で敵全員氷3＋リーダー盾3',()=>{
+  let state=startedGame()
+  const citlali=place(state,0,'C054',2,5)
+  state.players[0].energy=3
+  place(state,1,'test-mage',0,9)
+  state=engine.activateAbility(state,citlali.instanceId,'burst')
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[0].leaderShield.normal,3)
+})
+
+test('C055 神里綾華：突進・スキル全敵氷1・自身に氷通常攻撃',()=>{
+  let state=startedGame()
+  state.players[0].pp=6;state.players[0].hand=['C055']
+  state=engine.playCard(state,'player1',0)
+  const ayaka=state.players[0].field[0]
+  place(state,1,'test-mage',0,9)
+  place(state,1,'test-mage',0,8)
+  assert.equal(engine.attackLeader(state,ayaka.instanceId),state)
+  state=engine.activateAbility(state,ayaka.instanceId,'skill')
+  assert.deepEqual(state.players[1].field.map(f=>f.health),[8,7])
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_cryo'))
+})
+
+test('C055 神里綾華：爆発EN3で敵一体に氷2×5回（対象を毎回再抽選）',()=>{
+  let state=startedGame()
+  const ayaka=place(state,0,'C055',4,5)
+  state.players[0].energy=3
+  place(state,1,'test-mage',0,12)
+  state=engine.activateAbility(state,ayaka.instanceId,'burst')
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[1].field[0].health,2)
+})
+
+test('リーダーシールドは最大10で止まり、ダメージで通常シールドから減る',async()=>{
+  const {addLeaderShield,damageLeader}=await vite.ssrLoadModule('/src/game/leaderShield.ts')
+  let p=startedGame().players[0]
+  p=addLeaderShield(p,8)
+  p=addLeaderShield(p,8)
+  assert.equal(p.leaderShield.normal,10)
+  p=damageLeader(p,12)
+  assert.equal(p.leaderShield.normal,0)
+  assert.equal(p.leaderHealth,18)
+})
