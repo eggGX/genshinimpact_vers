@@ -105,7 +105,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
             const enabled=deck.cards.length<DECK_SIZE&&count<MAX_CARD_COPIES
             return <div key={card.id} className="deck-card-row">
               <div className="deck-card-details">
-                <strong>{card.cost}PP　{card.name}</strong>
+                <strong>{card.cost}PP {card.name}</strong>
                 <small>{card.element==='none'?'無元素':names[card.element as PlayableElement]}・{rarityNames[card.rarity]}・{cardTypeNames[card.type]}</small>
                 <span className="deck-card-description">{card.description||'能力なし'}</span>
               </div>
@@ -121,7 +121,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
       </section>
 
       <section className="deck-selected" aria-label="現在のデッキ">
-        <h2>デッキ　{deck.cards.length} / {DECK_SIZE}枚</h2>
+        <h2>デッキ {deck.cards.length} / {DECK_SIZE}枚</h2>
         <div className="deck-progress" role="progressbar"
           aria-label="デッキ枚数" aria-valuenow={deck.cards.length} aria-valuemin={0}
           aria-valuemax={DECK_SIZE}>
@@ -134,7 +134,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
             </div>}
         <div className="deck-selected-list">
           {entries.map(({card,id,count})=><div className="deck-selected-row" key={id}>
-            <span>{card?.cost}PP　{card?.name}　×{count}</span>
+            <span>{card?.cost}PP {card?.name} ×{count}</span>
             <button type="button" onClick={()=>remove(id)}
               aria-label={card?.name+'を1枚外す'}>－</button>
           </div>)}
