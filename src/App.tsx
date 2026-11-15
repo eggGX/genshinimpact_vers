@@ -21,6 +21,7 @@ import type { Follower } from './game/types'
 import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
+import { CardArtwork } from './components/CardArtwork'
 import { DeckBuilder } from './components/DeckBuilder'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
@@ -320,6 +321,7 @@ function App() {
           }
         }}
       >
+        {card && <CardArtwork cardId={card.id} name={card.name} className="card-artwork--field" />}
         <strong>
           {card?.name ?? '不明なカード'}
         </strong>
@@ -571,6 +573,7 @@ function App() {
                   }}
                 >
                   <span>コスト {card.cost}</span>
+                  <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
                   <strong>{card.name}</strong>
                   <span>
                     {card.type === 'follower'
@@ -804,6 +807,7 @@ function App() {
               <span className="card-cost">
                 {card.cost}
               </span>
+              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--hand" />
               <strong>{card.name}</strong>
               <span>
                 {card.type === 'follower'
