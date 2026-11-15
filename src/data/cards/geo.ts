@@ -86,7 +86,7 @@ export const geoCards: Card[] = [
       "璃月"
     ],
     "description": "ランダムな敵フォロワーまたは相手リーダーに岩元素1ダメージ×4回。自分の場に岩創造物があるなら追加で4回。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C091",
