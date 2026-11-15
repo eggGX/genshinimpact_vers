@@ -7,7 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
-import { resolvePyroDestroy } from './pyroRules'
+import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
@@ -144,7 +144,7 @@ export function confirmMulligan(
  * プレイ時の対象選択判定
  */
 export function needsPlayTarget(card: Card): boolean {
-  return (card.effects ?? []).some(
+  return card.id === 'C018' || (card.effects ?? []).some(
     effect =>
       effect.trigger === 'on_play' &&
       effect.target === 'selected_enemy_follower'
@@ -170,13 +170,13 @@ export function canPlayCard(
   const cardId = owner.hand[handIndex]
   const card = cardId ? getCard(cardId) : undefined
 
-  if (!card || !['follower', 'spell'].includes(card.type) || card.implementationStatus === 'data_only') return false
+  if (!card || !['follower', 'spell', 'amulet'].includes(card.type) || card.implementationStatus === 'data_only') return false
   if (owner.pp < card.cost) return false
-  if (card.type === 'follower' && owner.field.length >= MAX_FIELD_SIZE) return false
+  if (card.type !== 'spell' && owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
 
   if (
     needsPlayTarget(card) &&
-    !enemy.field.some(f => f.health > 0 && !f.keywords.includes('aura'))
+    !enemy.field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
   ) {
     return false
   }
@@ -327,7 +327,7 @@ export function playCard(
 
     if (
       !targetId ||
-      !enemy.field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura'))
+      !enemy.field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
     ) {
       return state
     }
@@ -345,7 +345,20 @@ export function playCard(
     next = resolveEffects(next, playerId, card.effects ?? [], 'on_play',
       targetId, undefined, resolveDeaths)
     if (next.winnerId !== null) return next
-    return resolveDeaths(resolveNeutralPlay(next, playerId, card))
+    next = resolveNeutralPlay(next, playerId, card)
+    if (next.winnerId !== null) return next
+    next = resolvePyroSpell(next, playerId, card.id, targetId, resolveDeaths)
+    return resolveDeaths(next)
+  }
+
+  if (card.type === 'amulet') {
+    const players = [...state.players] as [Player, Player]
+    players[index] = {
+      ...player,
+      pp: player.pp - card.cost,
+      hand: player.hand.filter((_, i) => i !== handIndex),
+    }
+    return resolvePyroAmuletPlay({ ...state, players }, playerId)
   }
 
   const follower: Follower = {
@@ -508,12 +521,22 @@ export function attackFollower(
   )
 
   if (!attacker || !defender || defender.health <= 0 ||
-      defender.keywords.includes('intimidate')) return state
+      defender.keywords.includes('intimidate') ||
+      defender.keywords.includes('stealth')) return state
   if (!canFollowerAttack(attacker)) return state
   if (isGuarded(enemy) && !defender.keywords.includes('guard') &&
       !attacker.keywords.includes('ignore_guard')) return state
 
-  const buffed = applyNeutralAttackBuff(state, owner.id, attackerId)
+  const declared: GameState = {
+    ...state,
+    players: state.players.map((p, i) => i !== index ? p : ({
+      ...p,
+      field: p.field.map(f => f.instanceId === attackerId
+        ? { ...f, keywords: f.keywords.filter(k => k !== 'stealth') }
+        : f),
+    })) as [Player, Player],
+  }
+  const buffed = applyNeutralAttackBuff(declared, owner.id, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = Math.max(0, boostedAttacker.attack)
@@ -551,7 +574,8 @@ export function attackFollower(
   result = resolveReactionConsequence(
     result, index, attackerId, toAttacker.reaction, toAttacker.reactedElement, enemyIndex
   )
-  return resolveDeaths(result)
+  result = resolveDeaths(result)
+  return resolvePyroAttackAfter(result, owner.id, attackerId)
 }
 
 /**
@@ -582,7 +606,16 @@ export function attackLeader(
     return state
   }
 
-  const buffed = applyNeutralAttackBuff(state, owner.id, attackerId)
+  const declared: GameState = {
+    ...state,
+    players: state.players.map((p, i) => i !== index ? p : ({
+      ...p,
+      field: p.field.map(f => f.instanceId === attackerId
+        ? { ...f, keywords: f.keywords.filter(k => k !== 'stealth') }
+        : f),
+    })) as [Player, Player],
+  }
+  const buffed = applyNeutralAttackBuff(declared, owner.id, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const hp = Math.max(
@@ -606,11 +639,11 @@ export function attackLeader(
     leaderHealth: hp,
   }
 
-  return {
+  return resolvePyroAttackAfter({
     ...state,
     players,
     winnerId: hp === 0 ? owner.id : null,
-  }
+  }, owner.id, attackerId)
 }
 
 /**
@@ -667,6 +700,9 @@ export function endTurn(state: GameState): GameState {
   }
 
   result = resolveNeutralTurnEnd(result, currentId)
+  if (result.winnerId !== null) return result
+
+  result = resolvePyroTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
   // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
