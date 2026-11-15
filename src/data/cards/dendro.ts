@@ -230,7 +230,7 @@ export const dendroCards: Card[] = [
       "レンジャー"
     ],
     "description": "【攻撃時】ランダム敵フォロワー1体に草元素1ダメージ。【元素スキル：識果榴弾】PP1：敵フォロワー1体に草元素2ダメージ、攻撃力-1。【元素爆発：造生・蔓纏いの矢】エネルギー3：ランダムな敵フォロワーまたはリーダーに草元素2ダメージ×4回。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "elementalSkill": {
       "name": "識果榴弾",
       "ppCost": 1,
@@ -255,7 +255,7 @@ export const dendroCards: Card[] = [
       "フォンテーヌ"
     ],
     "description": "【元素スキル：撰香】PP1：「ルミドゥースの瓶」1つを場に出す。【元素爆発：香の軌跡】エネルギー3：敵フォロワーすべてに草元素2ダメージ。相手の場に燃焼状態フォロワーがいるなら追加で草元素2ダメージ。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "elementalSkill": {
       "name": "撰香",
       "ppCost": 1,
@@ -283,7 +283,7 @@ export const dendroCards: Card[] = [
       "懸木の民"
     ],
     "description": "【突進】【自分のターン中】自分が燃焼反応を起こすたび自身+1/+0（最大2回/ターン）。【元素スキル：懸狩り・遊猟】PP1：敵フォロワー1体に草元素3ダメージ。【元素爆発：偉大なる聖龍を崇拝せよ】エネルギー3：敵フォロワーすべてに草元素2ダメージ、相手リーダーに草元素3ダメージ。",
-    "implementationStatus": "data_only",
+    "implementationStatus": "playable",
     "keywords": [
       "rush"
     ],
