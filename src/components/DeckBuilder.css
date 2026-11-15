@@ -33,3 +33,5 @@
 .deck-selected-row button{min-width:38px;padding:5px}
 .deck-builder-back{margin-top:14px}
 @media(max-width:850px){.deck-builder{padding:12px}.deck-builder-columns{grid-template-columns:1fr}.deck-card-pool,.deck-selected-list{max-height:none}}
+
+.deck-card-row:has(.card-artwork) { align-items: center; }
