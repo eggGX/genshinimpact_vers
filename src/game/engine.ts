@@ -350,8 +350,11 @@ export function playCard(
   const card = getCard(cardId)!
 
   if (card.id === 'C066') {
-    if (!targetId || !player.field.some(f => f.instanceId === targetId &&
-      f.health > 0 && getCard(f.cardId)?.element === 'electro')) return state
+    const choices = player.field.filter(f => f.health > 0 &&
+      getCard(f.cardId)?.element === 'electro')
+    if (choices.length && (!targetId ||
+        !choices.some(f => f.instanceId === targetId))) return state
+    if (!choices.length && targetId) return state
   } else if (needsFriendlyPlayTarget(card) &&
       (targetId !== 'self' && (!targetId ||
         !player.field.some(f => f.instanceId === targetId && f.health > 0)))) {
