@@ -11,6 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
+import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage } from './geoRules'
 import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
@@ -410,6 +411,7 @@ export function playCard(
     if (card.id === 'C016') return resolvePyroAmuletPlay(next, playerId)
     if (card.id === 'C072') return resolveAnemoAmuletPlay(next, playerId, card.id)
     if (card.id === 'C076') return advancedAnemoAmuletPlay(next, playerId, card.id)
+    if (card.id === 'C087') return geoAmuletPlay(next, playerId, card.id)
     return next
   }
 
@@ -469,6 +471,7 @@ export function playCard(
     result = advancedElectroPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = resolveAnemoPlay(result, playerId, card.id)
     result = advancedAnemoPlay(result, playerId, card.id, follower.instanceId, targetId)
+    result = geoPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
@@ -602,6 +605,7 @@ export function activateAbility(
     result = advancedElectroSkill(result, owner.id, followerId, card.id, targetId, resolveDeaths)
     result = resolveAnemoSkill(result, owner.id, followerId, card.id)
     result = advancedAnemoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
+    result = geoSkill(result, owner.id, followerId, card.id)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
@@ -662,6 +666,7 @@ export function attackFollower(
       !attacker.keywords.includes('ignore_guard') &&
       !attacker.keywords.includes('plunge_attack')) return state
 
+  state = geoEngage(state, owner.id, attackerId, targetId)
   state = catBoxEngage(state, owner.id, attackerId, targetId, resolveDeaths)
   if (state.winnerId !== null) return state
   owner = state.players[index]
@@ -679,7 +684,8 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = advancedAnemoAttack(
+  const buffed = geoAttack(
+    advancedAnemoAttack(
     resolveAnemoAttack(
     advancedElectroAttack(
     electroAttack(
@@ -691,6 +697,7 @@ export function attackFollower(
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
+    ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
@@ -784,7 +791,8 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = advancedAnemoAttack(
+  const buffed = geoAttack(
+    advancedAnemoAttack(
     resolveAnemoAttack(
     advancedElectroAttack(
     electroAttack(
@@ -796,6 +804,7 @@ export function attackLeader(
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
+    ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
@@ -900,6 +909,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = resolveAnemoAmuletsTurnEnd(result, currentId)
+  if (result.winnerId !== null) return result
+
+  result = geoAmuletsTurnEnd(result, currentId)
   if (result.winnerId !== null) return result
 
   result = advancedAnemoAmuletsTurnEnd(result, currentId, resolveDeaths)
