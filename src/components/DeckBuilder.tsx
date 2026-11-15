@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CardArtwork } from './CardArtwork'
 import { productionCards } from '../data/productionCards'
 import {
   DECK_SIZE, MAX_CARD_COPIES, MAX_DECK_ELEMENTS, SELECTABLE_ELEMENTS,
@@ -104,6 +105,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
             const count=counts.get(card.id)??0
             const enabled=deck.cards.length<DECK_SIZE&&count<MAX_CARD_COPIES
             return <div key={card.id} className="deck-card-row">
+              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--list" />
               <div className="deck-card-details">
                 <strong>{card.cost}PP {card.name}</strong>
                 <small>{card.element==='none'?'無元素':names[card.element as PlayableElement]}・{rarityNames[card.rarity]}・{cardTypeNames[card.type]}</small>
