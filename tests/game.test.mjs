@@ -1646,6 +1646,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
   const { productionTokens } = await vite.ssrLoadModule('/src/data/productionTokens.ts')
   const { getDeckCardPool, getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.deepEqual(productionTokens.map(t => [t.name,t.cost,t.attack,t.health]), [
+    ['ハト', 1, 1, 1],
     ['ウサギ伯爵', 1, 0, 3], ['グゥオパァー', 2, 1, 3],
     ['ファニーハット・キャット', 5, 5, 5],
     ['水圧装置', 1, undefined, undefined],
@@ -1658,22 +1659,23 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['オズ', 3, 3, 3],
     ['殺生櫻', 1, undefined, undefined],
     ['ビックラキャット・ボックス', 3, 0, 8],
-    ['璇璣屏', 0, undefined, undefined],
-    ['ぐるぐるコマちゃん', 0, undefined, undefined],
-    ['陽華', 0, undefined, undefined],
+    ['璇璣屏', 2, undefined, undefined],
+    ['ぐるぐるコマちゃん', 2, undefined, undefined],
+    ['陽華', 2, undefined, undefined],
     ['たもと', 2, 1, 3],
     ['月桂・跳躍型', 2, 0, 3],
     ['コレアンバー', 0, undefined, undefined],
     ['草霊', 2, 2, 2],
     ['月桂・投擲型', 2, 0, 3],
     ['ルミドゥースの瓶', 2, undefined, undefined],
+    ['草原核', 0, 0, 1],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
     assert.equal(getCard(card.id).name, card.name)
     assert.equal(getDeckCardPool().some(c => c.id === card.id), false)
   }
-  assert.deepEqual(productionTokens[0].keywords, ['guard', 'damage_cap_1'])
+  assert.deepEqual(productionTokens.find(t => t.id === 'token-baron-bunny').keywords, ['guard', 'damage_cap_1'])
 })
 
 test('C019 アンバー：ファンファーレで敵1体へ炎2ダメージと付着', () => {
