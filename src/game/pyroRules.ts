@@ -1,5 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
+import { damageLeader } from './leaderShield'
 import { summonFollowers } from './neutralRules'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
@@ -50,8 +51,9 @@ function dealLeaderDamage(state: GameState, targetIndex: number, amount: number)
   if (state.winnerId !== null) return state
   const players = [...state.players] as [Player, Player]
   const target = players[targetIndex]
-  const hp = Math.max(0, target.leaderHealth - amount)
-  players[targetIndex] = { ...target, leaderHealth: hp }
+  const damaged = damageLeader(target, amount)
+  const hp = damaged.leaderHealth
+  players[targetIndex] = damaged
   return {
     ...state,
     players,
