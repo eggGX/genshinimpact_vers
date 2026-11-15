@@ -2322,3 +2322,273 @@ test('STEP31：水元素14枚は対戦対応、対象未確定のC030のみ使�
     assert.equal(engine.canPlayCard(state,i),true)
   }
 })
+
+test('STEP31 6枚の水ゴールド・レジェンドに確定したスキル/爆発とPP/ENを登録',async()=>{
+  const ids=['C034','C035','C037','C038','C039','C040']
+  assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.ppCost),[2,1,1,1,1,1])
+  assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.name),[
+    '公演、開始♪','古華剣・画雨籠山','名称未設定','水中幻願','海月の誓い','魔王武装・狂瀾'])
+  assert.deepEqual(['C038','C039','C040'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,3,4])
+  assert.equal(engine.getCard('C030').implementationStatus,'data_only')
+})
+
+test('C034 バーバラ：ターン終了で味方全員1回復、本人の通常攻撃は水',()=>{
+  const state=startedGame()
+  const barbara=place(state,0,'C034',2,4)
+  barbara.maxHealth=5
+  const ally=place(state,0,'C001',1,1);ally.maxHealth=4
+  const next=engine.endTurn(state)
+  assert.equal(next.players[0].field[0].health,5)
+  assert.equal(next.players[0].field[1].health,2)
+  assert.equal(engine.getCard('C034').normalAttackElement,'hydro')
+})
+
+test('C034 歌声の環：スキルPP2・EN+1、クレスト3ターンで自リーダー3回復と水付着',()=>{
+  let state=startedGame()
+  const barbara=place(state,0,'C034',2,5)
+  state.players[0].pp=2;state.players[0].leaderHealth=8
+  state=engine.activateAbility(state,barbara.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].crests[0].turnsRemaining,3)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth,11)
+  assert.deepEqual(state.players[0].leaderAura,[{element:'hydro'}])
+  assert.equal(state.players[0].crests[0].turnsRemaining,2)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth,17)
+  assert.deepEqual(state.players[0].crests,[])
+})
+
+test('C035 行秋：ファンファーレで1枚引き、手札上限ならドローだけ消費',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C035'];state.players[0].deck=['C001','C026']
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].hand,['C001'])
+  assert.deepEqual(state.players[0].deck,['C026'])
+  const full=startedGame()
+  full.players[0].pp=3
+  full.players[0].hand=['C035',...Array(8).fill('C001')]
+  full.players[0].deck=['C026']
+  const next=engine.playCard(full,'player1',0)
+  assert.equal(next.players[0].hand.length,8)
+  assert.equal(next.players[0].deck.length,0)
+})
+
+test('C035 行秋：デッキ切れのファンファーレは即敗北',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C035'];state.players[0].deck=[]
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.winnerId,'player2')
+})
+
+test('C035 行秋：スキルで2回攻撃・突進・水攻撃、登場ターンの敵リーダーは攻撃不可',()=>{
+  let state=startedGame()
+  state.players[0].pp=4;state.players[0].hand=['C035'];state.players[0].deck=['C001']
+  state=engine.playCard(state,'player1',0)
+  const xing=state.players[0].field[0]
+  state=engine.activateAbility(state,xing.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(engine.attackLeader(state,xing.instanceId),state)
+  let enemy=place(state,1,'test-mage',0,12)
+  state=engine.attackFollower(state,xing.instanceId,enemy.instanceId)
+  assert.equal(state.players[1].field[0].health,10)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'hydro'}])
+  assert.equal(engine.canFollowerAttack(state.players[0].field[0]),true)
+  enemy=state.players[1].field[0]
+  state=engine.attackFollower(state,xing.instanceId,enemy.instanceId)
+  assert.equal(state.players[1].field[0].health,8)
+  assert.equal(engine.canFollowerAttack(state.players[0].field[0]),false)
+})
+
+test('C035 行秋：次ターンは2回攻撃でリーダーに攻撃可能',()=>{
+  let state=startedGame()
+  const xing=place(state,0,'C035',2,3)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,xing.instanceId,'skill')
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  state=engine.attackLeader(state,xing.instanceId)
+  state=engine.attackLeader(state,xing.instanceId)
+  assert.equal(state.players[1].leaderHealth,16)
+  assert.equal(state.players[0].field[0].attacksThisTurn,2)
+})
+
+test('C037 アイノ：登場時に水圧装置を出し場の5枠を共有する',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C037']
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field.length,1)
+  assert.equal(state.players[0].amulets[0].cardId,'token-hydro-pressure-device')
+  assert.equal(state.players[0].amulets[0].turnsRemaining,2)
+  const full=startedGame()
+  full.players[0].pp=3;full.players[0].hand=['C037']
+  for(let i=0;i<4;i++)place(full,0,'C001',1,2)
+  const next=engine.playCard(full,'player1',0)
+  assert.equal(next.players[0].field.length,5)
+  assert.equal(next.players[0].amulets?.length??0,0)
+})
+
+test('C037 アイノ：スキルPP1で水2ダメージと全水圧装置カウント+1',()=>{
+  let state=startedGame()
+  const aino=place(state,0,'C037',2,4)
+  state.players[0].amulets=[{instanceId:'device1',cardId:'token-hydro-pressure-device',turnsRemaining:2}]
+  state.players[0].pp=1
+  const target=place(state,1,'test-mage',0,7)
+  state=engine.activateAbility(state,aino.instanceId,'skill',target.instanceId)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.equal(state.players[0].amulets[0].turnsRemaining,3)
+  assert.equal(state.players[0].energy,1)
+})
+
+test('水圧装置：ターン終了で敵一体に水1・カウント減少、0で消滅',()=>{
+  let state=startedGame()
+  state.players[0].amulets=[{instanceId:'d1',cardId:'token-hydro-pressure-device',turnsRemaining:2}]
+  place(state,1,'test-mage',0,7)
+  state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.equal(state.players[0].amulets[0].turnsRemaining,1)
+  state=engine.endTurn(state);state=engine.endTurn(state)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[0].amulets,[])
+})
+
+test('C038 モナ：スキルPP1で守護0/2の虚影を召喚',()=>{
+  let state=startedGame()
+  const mona=place(state,0,'C038',2,4)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,mona.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  const phantom=state.players[0].field[1]
+  assert.deepEqual([phantom.cardId,phantom.attack,phantom.health],['token-hydro-phantom',0,2])
+  assert.ok(phantom.keywords.includes('guard'))
+})
+
+test('虚影：破壊時にランダムな敵フォロワーへ水2ダメージ',()=>{
+  let state=startedGame()
+  const phantom=place(state,0,'token-hydro-phantom',0,1)
+  phantom.keywords=['guard']
+  const enemy=place(state,1,'test-mage',2,8)
+  state=engine.attackFollower(state,phantom.instanceId,enemy.instanceId)
+  assert.equal(state.players[0].field.length,0)
+  assert.equal(state.players[1].field[0].health,6)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'hydro'}])
+})
+
+test('C038 モナ：爆発EN3で敵全体水2・残存敵に次のダメージ+2',()=>{
+  let state=startedGame()
+  const mona=place(state,0,'C038',2,4)
+  state.players[0].energy=3
+  const enemy=place(state,1,'test-mage',0,9)
+  const enemy2=place(state,1,'test-mage',0,1)
+  state=engine.activateAbility(state,mona.instanceId,'burst')
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[1].field.length,1)
+  assert.equal(state.players[1].field[0].health,7)
+  assert.ok(state.players[1].field[0].keywords.includes('next_damage_plus_2'))
+  assert.ok(state.players[1].graveyard.includes(enemy2.cardId))
+  assert.equal(state.players[1].field[0].instanceId,enemy.instanceId)
+})
+
+test('モナの「次に受けるダメージ+2」は一度のみ、シールドにも適用',async()=>{
+  const {resolveElementalDamage}=await vite.ssrLoadModule('/src/game/elemental.ts')
+  const f=place(startedGame(),1,'test-mage',0,10)
+  f.keywords=['next_damage_plus_2']
+  f.shield.normal=2
+  const first=resolveElementalDamage(f,1,'hydro').follower
+  assert.equal(first.shield.normal,0)
+  assert.equal(first.health,9)
+  assert.ok(!first.keywords.includes('next_damage_plus_2'))
+  const second=resolveElementalDamage(first,1,'hydro').follower
+  assert.equal(second.health,8)
+})
+
+test('C039 心海：ターン終了時に自リーダーを2回復',()=>{
+  let state=startedGame()
+  state.players[0].leaderHealth=12
+  place(state,0,'C039',2,6)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth,14)
+})
+
+test('C039 心海：スキルPP1で化海月0/4を召喚、ターン終了で回復と水1',()=>{
+  let state=startedGame()
+  const kokomi=place(state,0,'C039',2,6)
+  state.players[0].leaderHealth=12
+  state.players[0].pp=1
+  const ally=place(state,0,'C001',1,1);ally.maxHealth=3
+  place(state,1,'test-mage',0,6)
+  state=engine.activateAbility(state,kokomi.instanceId,'skill')
+  assert.deepEqual([state.players[0].field[2].cardId,state.players[0].field[2].health],
+    ['token-hydro-jellyfish',4])
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth,15)
+  assert.equal(state.players[0].field.find(f=>f.instanceId===ally.instanceId).health,2)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C039 心海：爆発EN3で自身+2/0・守護・突進・攻撃時自リーダー2回復',()=>{
+  let state=startedGame()
+  const kokomi=place(state,0,'C039',2,6)
+  state.players[0].energy=3
+  state.players[0].leaderHealth=12
+  state=engine.activateAbility(state,kokomi.instanceId,'burst')
+  const boosted=state.players[0].field[0]
+  assert.equal(boosted.attack,4)
+  assert.ok(boosted.keywords.includes('guard'))
+  assert.ok(boosted.keywords.includes('rush'))
+  assert.equal(boosted.canAttack,true)
+  assert.equal(engine.attackLeader(state,kokomi.instanceId),state)
+  const target=place(state,1,'test-mage',0,9)
+  state=engine.attackFollower(state,kokomi.instanceId,target.instanceId)
+  assert.equal(state.players[0].leaderHealth,14)
+  assert.equal(state.players[1].field[0].health,5)
+})
+
+test('C040 タルタリヤ：スキルで2回攻撃・突進・水攻撃、PP1とEN+1',()=>{
+  let state=startedGame()
+  const childe=place(state,0,'C040',4,5)
+  childe.canAttack=false
+  state.players[0].pp=1
+  const enemy=place(state,1,'test-mage',0,12)
+  state=engine.activateAbility(state,childe.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(engine.attackLeader(state,childe.instanceId),state)
+  state=engine.attackFollower(state,childe.instanceId,enemy.instanceId)
+  state=engine.attackFollower(state,childe.instanceId,enemy.instanceId)
+  assert.equal(state.players[1].field[0].health,4)
+  assert.equal(engine.canFollowerAttack(state.players[0].field[0]),false)
+})
+
+test('C040 タルタリヤ：爆発EN4で未攻撃なら敵全体・リーダー水3',()=>{
+  let state=startedGame()
+  const childe=place(state,0,'C040',4,5)
+  state.players[0].energy=4
+  place(state,1,'test-mage',0,8)
+  state=engine.activateAbility(state,childe.instanceId,'burst')
+  assert.equal(state.players[1].field[0].health,5)
+  assert.equal(state.players[1].leaderHealth,17)
+  assert.equal(state.players[0].energy,0)
+})
+
+test('C040 タルタリヤ：攻撃済みなら爆発のダメージが5',()=>{
+  let state=startedGame()
+  const childe=place(state,0,'C040',4,5)
+  const enemy=place(state,1,'test-mage',0,12)
+  state=engine.attackFollower(state,childe.instanceId,enemy.instanceId)
+  assert.equal(state.players[0].field[0].hasAttacked,true)
+  state.players[0].energy=4
+  state=engine.activateAbility(state,childe.instanceId,'burst')
+  assert.equal(state.players[1].field[0].health,3)
+  assert.equal(state.players[1].leaderHealth,15)
+})
+
+test('トークン3種とカードレジストリ：水圧装置はアミュレット、虚影・化海月はデッキ除外',()=>{
+  const ids=['token-hydro-pressure-device','token-hydro-phantom','token-hydro-jellyfish']
+  assert.deepEqual(ids.map(id=>engine.getCard(id).type),['amulet','follower','follower'])
+  const status=ids.map(id=>engine.getCard(id).token)
+  assert.deepEqual(status,[true,true,true])
+})
