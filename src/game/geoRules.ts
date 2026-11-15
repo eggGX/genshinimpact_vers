@@ -23,13 +23,13 @@ export function gainGeoCrystallize(state: GameState, ownerId: string, amount: nu
 }
 
 
-/** The initial Geo constructs occupy amulet slots with no countdown. */
+/** Geo constructs are 3-turn countdown amulets per Ver.1.0.1. */
 function createGeoConstruct(state: GameState, ownerId: string, cardId: string): GameState {
   return update(state, ownerId, p => {
     if (p.field.length + (p.amulets?.length ?? 0) >= 5) return p
     return { ...p, amulets: [...(p.amulets ?? []), {
       instanceId: `geo-construct-${nextGeoConstructId++}`,
-      cardId, turnsRemaining: 0,
+      cardId, turnsRemaining: 3,
     }] }
   })
 }
@@ -54,25 +54,57 @@ export function geoAmuletPlay(state: GameState, ownerId: string, cardId: string)
   }))
 }
 
-/** Resolve in placement order; cards with Liyue as one of several regions qualify. */
-export function geoAmuletsTurnEnd(state: GameState, ownerId: string): GameState {
+/** Geo amulets resolve in the order they occupy the field, then tick down. */
+export function geoAmuletsTurnEnd(
+  state: GameState, ownerId: string,
+  deaths: (s: GameState) => GameState
+): GameState {
   if (state.winnerId !== null) return state
   const ids = (state.players.find(p => p.id === ownerId)?.amulets ?? [])
-    .filter(a => a.cardId === 'C087').map(a => a.instanceId)
+    .filter(a => ['C087', 'token-jade-screen', 'token-spinning-turbo',
+      'token-solar-isotoma'].includes(a.cardId)).map(a => a.instanceId)
   let result = state
   for (const id of ids) {
-    result = update(result, ownerId, p => {
-      const matches = p.deck.map((cardId, index) => ({ cardId, index }))
-        .filter(({ cardId }) => getCard(cardId)?.region?.includes('璃月'))
-      const chosen = matches[Math.floor(Math.random() * matches.length)]
-      return { ...p,
-        deck: chosen ? p.deck.filter((_, i) => i !== chosen.index) : p.deck,
-        hand: chosen && p.hand.length < 9 ? [...p.hand, chosen.cardId] : p.hand,
-        amulets: (p.amulets ?? []).map(a => a.instanceId === id
-          ? { ...a, turnsRemaining: a.turnsRemaining - 1 } : a)
-          .filter(a => a.turnsRemaining > 0),
+    if (result.winnerId !== null) break
+    const owner = result.players.find(p => p.id === ownerId)
+    const amulet = owner?.amulets?.find(a => a.instanceId === id)
+    if (!amulet) continue
+    if (amulet.cardId === 'C087') {
+      result = update(result, ownerId, p => {
+        const matches = p.deck.map((cardId, index) => ({ cardId, index }))
+          .filter(({ cardId }) => getCard(cardId)?.region?.includes('璃月'))
+        const chosen = matches[Math.floor(Math.random() * matches.length)]
+        return { ...p,
+          deck: chosen ? p.deck.filter((_, i) => i !== chosen.index) : p.deck,
+          hand: chosen && p.hand.length < 9 ? [...p.hand, chosen.cardId] : p.hand,
+        }
+      })
+    } else if (amulet.cardId === 'token-jade-screen') {
+      result = gainGeoCrystallize(result, ownerId, 2)
+    } else {
+      const index = result.players.findIndex(p => p.id === ownerId)
+      const enemy = result.players[1-index]
+      const targets = enemy.field.filter(f => f.health > 0)
+      if (targets.length > 0) {
+        const target = targets[Math.floor(Math.random() * targets.length)]
+        const damage = amulet.cardId === 'token-spinning-turbo' ? 2 : 1
+        const hit = resolveElementalDamage(target, damage, 'geo')
+        const changed = update(result, enemy.id, p => ({
+          ...p, field: p.field.map(f => f.instanceId === target.instanceId ? hit.follower : f),
+        }))
+        result = deaths(resolveReactionConsequence(changed, 1-index, target.instanceId,
+          hit.reaction, hit.reactedElement, index))
       }
-    })
+      if (result.winnerId === null && amulet.cardId === 'token-solar-isotoma') {
+        result = gainGeoCrystallize(result, ownerId, 1)
+      }
+    }
+    if (result.winnerId !== null) break
+    result = update(result, ownerId, p => ({
+      ...p, amulets: (p.amulets ?? []).map(a => a.instanceId === id
+        ? { ...a, turnsRemaining: a.turnsRemaining - 1 } : a)
+        .filter(a => a.turnsRemaining > 0),
+    }))
   }
   return result
 }
