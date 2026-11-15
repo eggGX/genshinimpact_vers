@@ -90,7 +90,7 @@ export function cryoSpell(state: GameState, ownerId: string, id: string, deaths:
   return result
 }
 
-/** PP-cost skills. C049 first selects a primary enemy; secondary target is the earliest other enemy. */
+/** PP-cost skills. C049 receives one or two explicitly selected enemy IDs. */
 export function cryoSkill(
   state: GameState, ownerId: string, cardId: string, sourceId: string,
   targetId: string | undefined, deaths: DeathResolver
@@ -101,10 +101,8 @@ export function cryoSkill(
     if (i < 0) return state
     const viable = state.players[1 - i].field.filter(f =>
       f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
-    const selected = viable.find(f => f.instanceId === targetId)
-    // One target is enough if there is only one. Resolve sequentially.
-    const ids = [selected, ...viable.filter(f => f.instanceId !== targetId)]
-      .filter((f): f is Follower => Boolean(f)).slice(0, 2).map(f => f.instanceId)
+    const ids = (targetId?.split('|') ?? [])
+      .filter(id => viable.some(f => f.instanceId === id))
     let result = state
     for (const id of ids) result = deaths(cryoHit(result, ownerId, id, 2))
     return edit(result, ownerId, p => addLeaderShield(p, 2))
