@@ -11,7 +11,7 @@ import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hy
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
 import { resolveAnemoAmuletPlay, resolveAnemoAmuletsTurnEnd, resolveAnemoDestroy, resolveAnemoAttack, resolveAnemoPlay, resolveAnemoSkill } from './anemoRules'
-import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell, geoBurst, geoTurnEnd } from './geoRules'
+import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEngage, geoSpell, geoBurst, geoTurnEnd, geoSweepAttack } from './geoRules'
 import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
@@ -156,7 +156,7 @@ export function confirmMulligan(
  */
 /** A self-buff fanfare can choose an existing ally or the new follower itself. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044', 'C066', 'C081'].includes(card.id)
+  return ['C021', 'C044', 'C066', 'C081', 'C091'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
@@ -398,7 +398,7 @@ export function playCard(
     next = electroSpell(next, playerId, card.id)
     next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
     next = advancedAnemoSpell(next, playerId, card.id)
-    next = geoSpell(next, playerId, card.id, resolveDeaths)
+    next = geoSpell(next, playerId, card.id, resolveDeaths, targetId)
     return resolveDeaths(next)
   }
 
@@ -687,6 +687,9 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
+  const swept = geoSweepAttack(declared, owner.id, attackerId, resolveDeaths)
+  if (swept.winnerId !== null || !swept.players[index].field.some(f => f.instanceId === attackerId && f.health > 0) ||
+      !swept.players[enemyIndex].field.some(f => f.instanceId === targetId && f.health > 0)) return swept
   const buffed = geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
@@ -696,7 +699,7 @@ export function attackFollower(
       resolveHydroAdvancedAttack(
         resolveHydroAttack(
           resolveLegendaryAttack(
-            applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+            applyNeutralAttackBuff(swept, owner.id, attackerId), owner.id, attackerId
           ), owner.id, attackerId
         ), owner.id, attackerId
       ), owner.id, attackerId
@@ -715,7 +718,8 @@ export function attackFollower(
     ? 'electro' : boostedAttacker.keywords.includes('normal_attack_cryo')
       ? 'cryo' : boostedAttacker.keywords.includes('normal_attack_hydro')
         ? 'hydro' : boostedAttacker.keywords.includes('normal_attack_pyro')
-          ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
+          ? 'pyro' : boostedAttacker.keywords.includes('normal_attack_geo')
+          ? 'geo' : getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
