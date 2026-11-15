@@ -8,6 +8,7 @@ import type {
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack } from './hydroRules'
+import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
@@ -251,6 +252,7 @@ function resolveDeaths(state: GameState): GameState {
       result = resolveNeutralDestroy(result, ownerId, follower)
       result = resolvePyroDestroy(result, ownerId, follower)
       result = resolveLegendaryDestroy(result, ownerId, follower)
+      result = resolveHydroAdvancedDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
@@ -307,6 +309,7 @@ function resolveTurnEffects(
     if (result.winnerId === null && trigger === 'turn_end') {
       result = resolvePyroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveHydroTurnEnd(result, playerId, sourceId)
+      result = resolveHydroAdvancedTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
   }
@@ -430,6 +433,7 @@ export function playCard(
   if (result.winnerId === null) {
     result = resolveNeutralPlay(result, playerId, card)
     result = resolvePyroGoldPlay(result, playerId, card.id, follower.instanceId, targetId)
+    result = resolveHydroAdvancedPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
@@ -462,7 +466,7 @@ export function canUseAbility(
       : follower.skillUsed)
     : follower.burstUsed)) return false
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
-  if (kind === 'skill' && (card?.id === 'C019' || card?.id === 'C020') &&
+  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'burst' && owner.energy < (ability.energyCost ?? 0)) return false
   if (card && needsAbilityTarget(card, kind) && !state.players[1 - index].field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))) {
@@ -527,8 +531,12 @@ export function activateAbility(
       result = { ...result, players }
     }
   }
-  if (result.winnerId === null && kind === 'burst' && card.id === 'C024') {
-    result = transformLyney(result, index, followerId)
+  if (result.winnerId === null && kind === 'skill') {
+    result = resolveHydroAdvancedSkill(result, owner.id, followerId, card.id)
+  }
+  if (result.winnerId === null && kind === 'burst') {
+    if (card.id === 'C024') result = transformLyney(result, index, followerId)
+    result = resolveHydroAdvancedBurst(result, owner.id, followerId, card.id, resolveDeaths)
   }
   return resolveDeaths(result)
 }
@@ -541,7 +549,9 @@ export function canFollowerAttack(
     !follower.keywords.includes('frozen') &&
     !follower.keywords.includes('cannot_attack') &&
     follower.canAttack &&
-    !follower.hasAttacked
+    (follower.keywords.includes('double_attack')
+      ? (follower.attacksThisTurn ?? (follower.hasAttacked ? 1 : 0)) < 2
+      : !follower.hasAttacked)
   )
 }
 
@@ -588,17 +598,20 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = resolveHydroAttack(
-    resolveLegendaryAttack(
-      applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  const buffed = resolveHydroAdvancedAttack(
+    resolveHydroAttack(
+      resolveLegendaryAttack(
+        applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+      ), owner.id, attackerId
     ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
   const counterDamage = effectiveAttack(state, enemy.id, defender)
-  const attackerElement = boostedAttacker.keywords.includes('normal_attack_pyro')
-    ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
+  const attackerElement = boostedAttacker.keywords.includes('normal_attack_hydro')
+    ? 'hydro' : boostedAttacker.keywords.includes('normal_attack_pyro')
+      ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
@@ -613,7 +626,9 @@ export function attackFollower(
     ...boostedOwner,
     field: boostedOwner.field.map(f =>
       f.instanceId === attackerId
-        ? { ...toAttacker.follower, hasAttacked: true }
+        ? { ...toAttacker.follower, hasAttacked: true,
+          attacksThisTurn: (boostedAttacker.attacksThisTurn ??
+            (boostedAttacker.hasAttacked ? 1 : 0)) + 1 }
         : f
     ),
   }
@@ -672,9 +687,11 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = resolveHydroAttack(
-    resolveLegendaryAttack(
-      applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  const buffed = resolveHydroAdvancedAttack(
+    resolveHydroAttack(
+      resolveLegendaryAttack(
+        applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+      ), owner.id, attackerId
     ), owner.id, attackerId
   )
   const boostedOwner = buffed.players[index]
@@ -690,7 +707,8 @@ export function attackLeader(
     ...boostedOwner,
     field: boostedOwner.field.map(f =>
       f.instanceId === attackerId
-        ? { ...f, hasAttacked: true }
+        ? { ...f, hasAttacked: true,
+          attacksThisTurn: (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0)) + 1 }
         : f
     ),
   }
@@ -764,6 +782,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = resolvePyroTurnEnd(result, currentId, resolveDeaths)
+  if (result.winnerId !== null) return result
+
+  result = resolveHydroPermanentsTurnEnd(result, currentId, resolveDeaths)
   if (result.winnerId !== null) return result
 
   // 燃焼：持ち主のターン終了時に1ダメージ、残りターンを1減らす。
@@ -858,6 +879,7 @@ export function endTurn(state: GameState): GameState {
     ...f,
     canAttack: true,
     hasAttacked: false,
+    attacksThisTurn: 0,
     skillUsed: false,
     burstUsed: false,
     skillUsesThisTurn: 0,
