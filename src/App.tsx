@@ -18,8 +18,10 @@ import {
 import type { Follower } from './game/types'
 import type { AbilityKind } from './game/engine'
 import './App.css'
+import { CardLibrary } from './components/CardLibrary'
 
 function App() {
+  const [showCardLibrary, setShowCardLibrary] = useState(false)
   const [game, setGame] = useState(createInitialGameState)
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
@@ -302,15 +304,24 @@ function App() {
     </div>
   )
 
+  if (showCardLibrary) {
+    return <CardLibrary onBack={() => setShowCardLibrary(false)} />
+  }
+
   if (game.phase === 'mulligan') {
     return (
       <div className="game">
         <header className="game-header">
           <h1>原神カードゲーム</h1>
           <span>ゲーム準備</span>
-          <button type="button" onClick={handleReset}>
-            ゲームリセット
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" onClick={() => setShowCardLibrary(true)}>
+              カード一覧
+            </button>
+            <button type="button" onClick={handleReset}>
+              ゲームリセット
+            </button>
+          </div>
         </header>
 
         <main
