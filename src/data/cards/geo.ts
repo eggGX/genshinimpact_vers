@@ -99,7 +99,7 @@ export const geoCards: Card[] = [
       "モンド"
     ],
     "description": "自分のフォロワー1体を+2/+0し、【元素攻撃：岩】【攻撃時：敵フォロワーすべてに岩元素1ダメージ】を付与。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable"
   },
   {
     "id": "C092",
