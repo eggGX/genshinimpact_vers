@@ -1,6 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader } from './leaderShield'
+import { damageLeader, healLeader } from './leaderShield'
 import { summonFollowers } from './neutralRules'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
@@ -136,7 +136,7 @@ export function resolvePyroTurnEnd(
     if (!(owner.amulets ?? []).some(a => a.instanceId === amuletId)) continue
     result = updateOwner(result, ownerId, player => ({
       ...player,
-      leaderHealth: Math.min(player.leaderMaxHealth, player.leaderHealth + 2),
+      ...healLeader(player, 2),
       field: player.field.map(f => ({
         ...f, attack: f.attack + 1,
       })),
