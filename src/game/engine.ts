@@ -9,6 +9,8 @@ import { testCards } from '../data/testCards'
 import { resolveEffects } from './effects'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
+const deckCards = testCards.filter(card => !card.token)
+
 const cardDatabase = new Map<string, Card>(
   testCards.map(card => [card.id, card])
 )
@@ -36,7 +38,7 @@ function createTestDeck(): string[] {
   return shuffle(
     Array.from(
       { length: DECK_SIZE },
-      (_, i) => testCards[i % testCards.length].id
+      (_, i) => deckCards[i % deckCards.length].id
     )
   )
 }
@@ -383,6 +385,7 @@ export function canFollowerAttack(
   return (
     follower.health > 0 &&
     !follower.keywords.includes('frozen') &&
+    !follower.keywords.includes('cannot_attack') &&
     follower.canAttack &&
     !follower.hasAttacked
   )
@@ -448,10 +451,10 @@ export function attackFollower(
 
   let result = { ...state, players }
   result = resolveReactionConsequence(
-    result, enemyIndex, targetId, toDefender.reaction, toDefender.reactedElement
+    result, enemyIndex, targetId, toDefender.reaction, toDefender.reactedElement, index
   )
   result = resolveReactionConsequence(
-    result, index, attackerId, toAttacker.reaction, toAttacker.reactedElement
+    result, index, attackerId, toAttacker.reaction, toAttacker.reactedElement, enemyIndex
   )
   return resolveDeaths(result)
 }
@@ -584,6 +587,47 @@ export function endTurn(state: GameState): GameState {
   })) as [Player, Player]
   result = resolveDeaths({ ...result, players: burnPlayers })
   if (result.winnerId !== null) return result
+
+  // 草原核：持ち主のターン終了時、草原核1個につき自陣ランダム1体へ2ダメージ。
+  // 草原核自身も候補に含め、複数核は順番に解決する。
+  const coreOwner = result.players[currentIndex]
+  const cores = coreOwner.field.filter(f => f.cardId === 'dendro-core')
+  let coreState = result
+  for (const core of cores) {
+    if (coreState.winnerId !== null) break
+    const current = coreState.players[currentIndex]
+    if (!current.field.some(f => f.instanceId === core.instanceId)) continue
+    const candidates = current.field.filter(f => f.health > 0)
+    if (candidates.length === 0) break
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)]
+    const players = [...coreState.players] as [Player, Player]
+    players[currentIndex] = {
+      ...current,
+      field: current.field.map(f =>
+        f.instanceId === chosen.instanceId ? absorbDamage(f, 2) : f),
+    }
+    coreState = resolveDeaths({ ...coreState, players })
+  }
+  result = coreState
+  if (result.winnerId !== null) return result
+
+  // 烈開花が与えたリーダー燃焼：自ターン終了時に1ダメージ、3回で終了。
+  const burningLeader = result.players[currentIndex]
+  if ((burningLeader.leaderBurningTurns ?? 0) > 0) {
+    const hp = Math.max(0, burningLeader.leaderHealth - 1)
+    const players = [...result.players] as [Player, Player]
+    players[currentIndex] = {
+      ...burningLeader,
+      leaderHealth: hp,
+      leaderBurningTurns: (burningLeader.leaderBurningTurns ?? 0) - 1,
+    }
+    result = {
+      ...result,
+      players,
+      winnerId: hp === 0 ? players[nextIndex].id : result.winnerId,
+    }
+    if (result.winnerId !== null) return result
+  }
 
   // 凍結は持ち主のターン終了時に解除（次の自分のターン1回を行動不可）。
   // 将来の元素スキル・元素爆発も同じ frozen キーワードを参照する。
