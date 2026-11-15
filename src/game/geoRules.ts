@@ -4,6 +4,19 @@ import { addLeaderShield, healLeader, damageLeader } from './leaderShield'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 let nextLiyueHarborId = 1
+let nextGeoConstructId = 1
+
+/** The initial Geo constructs occupy amulet slots with no countdown. */
+function createGeoConstruct(state: GameState, ownerId: string, cardId: string): GameState {
+  return update(state, ownerId, p => {
+    if (p.field.length + (p.amulets?.length ?? 0) >= 5) return p
+    return { ...p, amulets: [...(p.amulets ?? []), {
+      instanceId: `geo-construct-${nextGeoConstructId++}`,
+      cardId, turnsRemaining: 0,
+    }] }
+  })
+}
+
 
 function update(state: GameState, ownerId: string, modify: (p: Player) => Player): GameState {
   const index = state.players.findIndex(p => p.id === ownerId)
@@ -49,7 +62,11 @@ export function geoAmuletsTurnEnd(state: GameState, ownerId: string): GameState 
 
 /** C096 Gorou: play buff includes Gorou and all existing Geo followers. */
 export function geoPlay(state: GameState, ownerId: string, cardId: string): GameState {
-  if (cardId !== 'C096' || state.winnerId !== null) return state
+  if (state.winnerId !== null) return state
+  if (cardId === 'C095' || cardId === 'C097') {
+    return update(state, ownerId, p => addLeaderShield(p, 2, 'crystallize'))
+  }
+  if (cardId !== 'C096') return state
   return update(state, ownerId, p => ({
     ...p, field: p.field.map(f => getCard(f.cardId)?.element === 'geo' && f.health > 0
       ? { ...f, health: f.health + 1, maxHealth: f.maxHealth + 1 } : f),
@@ -59,6 +76,8 @@ export function geoPlay(state: GameState, ownerId: string, cardId: string): Game
 /** C094 Noelle shields herself and her leader; C096 buffs every friendly Geo follower. */
 export function geoSkill(state: GameState, ownerId: string, sourceId: string, cardId: string): GameState {
   if (state.winnerId !== null) return state
+  if (cardId === 'C095') return createGeoConstruct(state, ownerId, 'token-jade-screen')
+  if (cardId === 'C097') return createGeoConstruct(state, ownerId, 'token-spinning-turbo')
   if (cardId === 'C094') return update(state, ownerId, p => ({
     ...addLeaderShield(p, 3),
     field: p.field.map(f => f.instanceId === sourceId ? grantShield(f, 'normal', 3) : f),
