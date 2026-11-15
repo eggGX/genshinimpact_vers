@@ -247,7 +247,17 @@ export function resolveReactionConsequence(
   reactedElement?: ElementType,
   sourceOwnerIndex?: number
 ): GameState {
-  if (!reaction || ['vaporize', 'melt', 'frozen', 'superconduct', 'burning', 'quicken'].includes(reaction)) {
+  if (reaction === 'burning') {
+    const index=sourceOwnerIndex ?? (1-affectedOwnerIndex)
+    const owner=state.players[index]
+    if (!owner || owner.id!==state.currentPlayerId) return state
+    const players=[...state.players] as [Player,Player]
+    players[index]={...owner,field:owner.field.map(f=>f.cardId==='C115'&&f.health>0&&
+      (f.dendroBurningTriggersThisTurn??0)<2?{...f,attack:f.attack+1,
+        dendroBurningTriggersThisTurn:(f.dendroBurningTriggersThisTurn??0)+1}:f)}
+    return {...state,players}
+  }
+  if (!reaction || ['vaporize', 'melt', 'frozen', 'superconduct', 'quicken'].includes(reaction)) {
     // これらの状態変化は resolveElementalDamage 側で完了する
     return state
   }
