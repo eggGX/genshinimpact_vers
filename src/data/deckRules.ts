@@ -65,15 +65,29 @@ export function validateDeck(deck: DeckDefinition): string[] {
 
 export function createStarterDeck(elements: readonly PlayableElement[]): DeckDefinition {
   const selected = [...elements].filter(e => SELECTABLE_ELEMENTS.includes(e)).slice(0, 3)
-  const available = productionCards.filter(card =>
-    getDeckCard(card.id) && (card.element === 'none' || selected.includes(card.element as PlayableElement)))
+  const available = productionCards.filter(card => getDeckCard(card.id))
+  const buckets = (['none', ...selected] as ElementType[])
+    .map(element => available.filter(card => card.element === element))
+  const pointers = buckets.map(() => 0)
+  const copies = new Map<string,number>()
   const cards: string[] = []
-  // Rotating through eligible cards avoids putting all first draws into a single element.
-  for (let copy = 0; copy < MAX_CARD_COPIES && cards.length < DECK_SIZE; copy++) {
-    for (const card of available) {
-      if (cards.length === DECK_SIZE) break
-      cards.push(card.id)
+  // Distribute the initial sample across neutral and the chosen elements.
+  // Actual deck construction remains fully editable by each player.
+  while (cards.length < DECK_SIZE) {
+    let added = false
+    for (let i = 0; i < buckets.length && cards.length < DECK_SIZE; i++) {
+      const bucket = buckets[i]
+      for (let j = 0; j < bucket.length; j++) {
+        const card = bucket[pointers[i] % bucket.length]
+        pointers[i]++
+        if ((copies.get(card.id) ?? 0) >= MAX_CARD_COPIES) continue
+        cards.push(card.id)
+        copies.set(card.id, (copies.get(card.id) ?? 0) + 1)
+        added = true
+        break
+      }
     }
+    if (!added) break
   }
   return { elements: selected, cards }
 }
