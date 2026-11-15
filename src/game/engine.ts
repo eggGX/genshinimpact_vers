@@ -667,7 +667,9 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = applyNeutralAttackBuff(declared, owner.id, attackerId)
+  const buffed = resolveLegendaryAttack(
+    applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const hp = Math.max(
