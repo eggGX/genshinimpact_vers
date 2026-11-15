@@ -734,7 +734,8 @@ export function attackFollower(
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
-  const counterDamage = effectiveAttack(state, enemy.id, defender)
+  const currentDefender = swept.players[enemyIndex].field.find(f => f.instanceId === targetId)!
+  const counterDamage = effectiveAttack(swept, enemy.id, currentDefender)
   const attackerElement = boostedAttacker.keywords.includes('normal_attack_anemo')
     ? 'anemo' : boostedAttacker.keywords.includes('normal_attack_electro')
     ? 'electro' : boostedAttacker.keywords.includes('normal_attack_cryo')
@@ -749,7 +750,7 @@ export function attackFollower(
     boostedAttacker, counterDamage, defenderElement
   )
   const toDefender = resolveElementalDamage(
-    defender, attackDamage, attackerElement
+    currentDefender, attackDamage, attackerElement
   )
   const players = [...buffed.players] as [Player, Player]
   players[index] = {
