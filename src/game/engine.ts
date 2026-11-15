@@ -5,15 +5,11 @@ import type {
   GameState,
   Player,
 } from './types'
-import { testCards } from '../data/testCards'
+import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
-const deckCards = testCards.filter(card => !card.token)
-
-const cardDatabase = new Map<string, Card>(
-  testCards.map(card => [card.id, card])
-)
+const deckCards = getDeckCardPool()
 
 const DECK_SIZE = 40
 const INITIAL_HAND_SIZE = 4
@@ -75,9 +71,7 @@ export function createInitialGameState(): GameState {
   }
 }
 
-export function getCard(cardId: string): Card | undefined {
-  return cardDatabase.get(cardId)
-}
+export { getCard } from '../data/cardRegistry'
 
 /**
  * マリガン
