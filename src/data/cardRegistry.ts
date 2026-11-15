@@ -1,5 +1,4 @@
 import type { Card } from '../game/types'
-import { testCards } from './testCards'
 import { productionCards } from './productionCards'
 import { productionTokens } from './productionTokens'
 
@@ -14,7 +13,7 @@ export function createCardRegistry(cards: readonly Card[]): ReadonlyMap<string, 
   return registry
 }
 
-const cards = [...testCards, ...productionCards, ...productionTokens]
+const cards = [...productionCards, ...productionTokens]
 export const cardRegistry = createCardRegistry(cards)
 
 export function getCard(cardId: string): Card | undefined {
@@ -23,8 +22,7 @@ export function getCard(cardId: string): Card | undefined {
 
 /** Tokens and unimplemented formal cards can be resolved from the catalogue but never enter starting decks. */
 export function getDeckCardPool(): Card[] {
-  // Regular games must never draw the engine's test fixtures.
-  // Test cards remain in cardRegistry for isolated regression tests.
+  // Only the 115 official cards can enter normal decks.
   return productionCards.filter(card => !card.token && card.implementationStatus === 'playable')
 }
 
