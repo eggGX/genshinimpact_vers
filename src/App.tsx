@@ -189,7 +189,7 @@ function App() {
 
     const isFriendlyTarget = !isOpponent &&
       selectedHandIndex !== null &&
-      currentPlayer.hand[selectedHandIndex] === 'C021'
+      ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex])
 
     const isSelected =
       follower.instanceId === selectedAttackerId
@@ -248,6 +248,9 @@ function App() {
         )}
         {follower.keywords.includes('next_damage_plus_2') && (
           <small>次の被ダメージ+2（モナの星命定軌）</small>
+        )}
+        {follower.keywords.includes('normal_attack_cryo') && (
+          <small>【元素攻撃：氷】</small>
         )}
         {follower.keywords.includes('normal_attack_hydro') && (
           <small>【元素攻撃：水】</small>
@@ -520,6 +523,9 @@ function App() {
             残り{amulet.turnsRemaining}ターン
           </div>
         ))}
+        {opponent.leaderShield && (
+          <div>リーダーシールド：通常 {opponent.leaderShield.normal} ／ 結晶 {opponent.leaderShield.crystallize}</div>
+        )}
         {(opponent.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{opponent.leaderBurningTurns}ターン</div>
         )}
@@ -567,6 +573,9 @@ function App() {
             {crest.id === 'C010' && `（発動済み：${crest.usedElements.join('・') || 'なし'}）`}
           </div>
         ))}
+        {currentPlayer.leaderShield && (
+          <div>リーダーシールド：通常 {currentPlayer.leaderShield.normal} ／ 結晶 {currentPlayer.leaderShield.crystallize}</div>
+        )}
         {(currentPlayer.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{currentPlayer.leaderBurningTurns}ターン</div>
         )}
@@ -587,21 +596,21 @@ function App() {
           : selectedAbility !== null
             ? '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
-            ? currentPlayer.hand[selectedHandIndex] === 'C021'
-              ? 'ベネットのファンファーレ：味方フォロワーか「自身」を選択してください'
+            ? ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex])
+              ? '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
               : 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
               ? '攻撃対象を選択してください'
               : 'カードをプレイするか、攻撃可能なフォロワーを選択してください'}
       </div>
 
-      {selectedHandIndex !== null && currentPlayer.hand[selectedHandIndex] === 'C021' && (
+      {selectedHandIndex !== null && ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex]) && (
         <button type="button" onClick={() => {
           setGame(previous => playCard(previous, previous.currentPlayerId,
             selectedHandIndex, 'self'))
           resetSelection()
         }}>
-          ベネット自身を強化して召喚
+          自身を強化して召喚
         </button>
       )}
 
