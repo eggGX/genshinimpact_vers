@@ -189,5 +189,8 @@ export const productionTokens: Card[] = [
     cost: 0,
     token: true,
     description: '岩創造物。アルベドの元素スキルで召喚。未確定の持続ターン・追加能力は設定しない。',
+  },  { id:'token-tamoto', name:'たもと', type:'follower', rarity:'bronze',
+    element:'geo', cost:2, attack:1, health:3, token:true,
+    description:'【自分のターン終了時】ランダムな敵フォロワー1体に岩元素2ダメージ。',
   },
 ]
