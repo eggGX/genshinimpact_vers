@@ -557,3 +557,133 @@ test('燃焼ダメージもシールドで吸収してHPを減らさない', () 
   assert.equal(next.players[0].field[0].health,10)
   assert.equal(next.players[0].field[0].shield.normal,0)
 })
+
+test('開花：水＋草の反応で攻撃側に0/1草原核を生成し攻撃不可', async () => {
+  const { resolveElementalDamage, resolveReactionConsequence } =
+    await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const target = place(state, 1, 'test-mage', 1, 10)
+  target.aura = [{ element: 'hydro' }]
+  const result = resolveElementalDamage(target, 1, 'dendro')
+  assert.equal(result.reaction, 'bloom')
+  assert.deepEqual(result.follower.aura, [])
+  state.players[1].field[0] = result.follower
+  const next = resolveReactionConsequence(state, 1, target.instanceId, 'bloom', result.reactedElement, 0)
+  const core = next.players[0].field[0]
+  assert.equal(core.cardId, 'dendro-core')
+  assert.equal(core.attack, 0)
+  assert.equal(core.health, 1)
+  assert.equal(engine.canFollowerAttack(core), false)
+})
+
+test('再開花：既存の草原核の体力と最大体力が1増加する', async () => {
+  const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  let state = startedGame()
+  state = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
+  const old = state.players[0].field[0]
+  state = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
+  assert.equal(state.players[0].field.length, 1)
+  assert.equal(state.players[0].field[0].instanceId, old.instanceId)
+  assert.equal(state.players[0].field[0].health, 2)
+  assert.equal(state.players[0].field[0].maxHealth, 2)
+})
+
+test('草原核は自分のフィールド5枠を超えて生成されない', async () => {
+  const { resolveReactionConsequence } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  for (let i = 0; i < 5; i++) place(state, 0, 'test-slime', 1, 2)
+  const next = resolveReactionConsequence(state, 1, 'dummy', 'bloom', 'hydro', 0)
+  assert.equal(next.players[0].field.length, 5)
+  assert.equal(next.players[0].field.some(f => f.cardId === 'dendro-core'), false)
+})
+
+test('烈開花：炎で草原核を破壊し持ち主リーダーを3ターン燃焼にする', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-slime', 1, 4)
+  const core = place(state, 1, 'dendro-core', 0, 1)
+  core.keywords = ['cannot_attack']
+  core.shield = { normal: 5, crystallize: 2 }
+  const next = engine.attackFollower(state, attacker.instanceId, core.instanceId)
+  assert.equal(next.players[1].field.length, 0)
+  assert.ok(next.players[1].graveyard.includes('dendro-core'))
+  assert.equal(next.players[1].leaderBurningTurns, 3)
+})
+
+test('超開花：雷で草原核を破壊し自陣別フォロワーに3ダメージ', async () => {
+  const { resolveElementalDamage, resolveReactionConsequence } =
+    await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const core = place(state, 1, 'dendro-core', 0, 1)
+  core.keywords = ['cannot_attack']
+  const target = place(state, 1, 'test-mage', 1, 8)
+  const outcome = resolveElementalDamage(core, 1, 'electro')
+  assert.equal(outcome.reaction, 'hyperbloom')
+  state.players[1].field[0] = outcome.follower
+  const next = resolveReactionConsequence(state, 1, core.instanceId, outcome.reaction)
+  assert.equal(next.players[1].field[0].health, 0)
+  assert.equal(next.players[1].field[1].health, 5)
+  assert.equal(target.health, 8)
+})
+
+test('草原核への物理攻撃はシールドで防げる', async () => {
+  const { createDendroCore, grantShield, resolveElementalDamage } =
+    await vite.ssrLoadModule('/src/game/elemental.ts')
+  const core = grantShield(createDendroCore(), 'normal', 2)
+  const hit = resolveElementalDamage(core, 1)
+  assert.equal(hit.reaction, null)
+  assert.equal(hit.follower.health, 1)
+  assert.equal(hit.follower.shield.normal, 1)
+})
+
+test('草原核のターン終了時自傷2ダメージは通常シールドから吸収する', async () => {
+  const { createDendroCore } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const core = createDendroCore()
+  core.shield.normal = 2
+  state.players[0].field.push(core)
+  const next = engine.endTurn(state)
+  assert.equal(next.players[0].field.length, 1)
+  assert.equal(next.players[0].field[0].health, 1)
+  assert.equal(next.players[0].field[0].shield.normal, 0)
+})
+
+test('草原核の自傷で破壊されたトークンも墓場に送られる', async () => {
+  const { createDendroCore } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  state.players[0].field.push(createDendroCore())
+  const next = engine.endTurn(state)
+  assert.equal(next.players[0].field.length, 0)
+  assert.deepEqual(next.players[0].graveyard, ['dendro-core'])
+})
+
+test('烈開花によるリーダー燃焼は3回の持ち主ターン終了時にダメージ', () => {
+  let state = startedGame()
+  state.players[0].leaderBurningTurns = 3
+  for (let i = 0; i < 6; i++) state = engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth, 17)
+  assert.equal(state.players[0].leaderBurningTurns, 0)
+  state = engine.endTurn(state)
+  state = engine.endTurn(state)
+  assert.equal(state.players[0].leaderHealth, 17)
+})
+
+test('草の術師による実際のファンファーレ開花で草原核が生成される', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-dendro-caster']
+  const target = place(state, 1, 'test-mage', 1, 6)
+  target.aura = [{ element: 'hydro' }]
+  const next = engine.playCard(state, 'player1', 0, target.instanceId)
+  assert.equal(next.players[0].field.length, 2)
+  assert.equal(next.players[0].field[1].cardId, 'dendro-core')
+  assert.equal(next.players[1].field[0].health, 5)
+})
+
+test('草原核トークンは通常のランダムデッキに含まれない', () => {
+  for (let i = 0; i < 8; i++) {
+    const state = engine.createInitialGameState()
+    for (const player of state.players) {
+      assert.equal([...player.hand, ...player.deck].includes('dendro-core'), false)
+    }
+  }
+})
