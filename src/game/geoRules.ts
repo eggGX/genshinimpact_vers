@@ -78,6 +78,7 @@ export function geoSkill(state: GameState, ownerId: string, sourceId: string, ca
   if (state.winnerId !== null) return state
   if (cardId === 'C095') return createGeoConstruct(state, ownerId, 'token-jade-screen')
   if (cardId === 'C097') return createGeoConstruct(state, ownerId, 'token-spinning-turbo')
+  if (cardId === 'C100') return createGeoConstruct(state, ownerId, 'token-solar-isotoma')
   if (cardId === 'C094') return update(state, ownerId, p => ({
     ...addLeaderShield(p, 3),
     field: p.field.map(f => f.instanceId === sourceId ? grantShield(f, 'normal', 3) : f),
@@ -167,4 +168,49 @@ export function geoSpell(
     }
   }
   return result
+}
+
+/** Deal one Geo elemental hit to each opponent follower (with reactions and deaths). */
+export function geoHitAll(state: GameState, ownerId: string, amount: number,
+  deaths: (s: GameState) => GameState): GameState {
+  const source = state.players.findIndex(p => p.id === ownerId)
+  if (source < 0) return state
+  const ids = state.players[1 - source].field.map(f => f.instanceId)
+  let result = state
+  for (const id of ids) {
+    if (result.winnerId !== null) break
+    const foe = result.players[1 - source]
+    const target = foe.field.find(f => f.instanceId === id && f.health > 0)
+    if (!target) continue
+    const hit = resolveElementalDamage(target, amount, 'geo')
+    result = update(result, foe.id, p => ({
+      ...p, field: p.field.map(f => f.instanceId === id ? hit.follower : f),
+    }))
+    result = resolveReactionConsequence(result, 1 - source, id,
+      hit.reaction, hit.reactedElement, source)
+    result = deaths(result)
+  }
+  return result
+}
+
+export function geoBurst(state: GameState, ownerId: string, cardId: string,
+  deaths: (s: GameState) => GameState): GameState {
+  if (cardId !== 'C100' || state.winnerId !== null) return state
+  let result = geoHitAll(state, ownerId, 2, deaths)
+  const p = result.players.find(p => p.id === ownerId)
+  if (p && ((p.amulets ?? []).some(a =>
+    ['token-jade-screen','token-spinning-turbo','token-solar-isotoma'].includes(a.cardId)) ||
+    p.field.some(f => f.health > 0 &&
+      ['token-jade-screen','token-spinning-turbo','token-solar-isotoma'].includes(f.cardId)))) {
+    result = geoHitAll(result, ownerId, 2, deaths)
+  }
+  return result
+}
+
+export function geoTurnEnd(state: GameState, ownerId: string, sourceId: string): GameState {
+  if (state.winnerId !== null) return state
+  const source = state.players.find(p => p.id === ownerId)?.field.find(f =>
+    f.instanceId === sourceId && f.health > 0)
+  if (source?.cardId !== 'C100') return state
+  return update(state, ownerId, p => addLeaderShield(p, 1, 'crystallize'))
 }
