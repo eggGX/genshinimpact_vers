@@ -568,7 +568,7 @@ function App() {
         {(opponent.amulets ?? []).map(amulet => (
           <div key={amulet.instanceId}>
             アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
-            {amulet.turnsRemaining > 0 ? `残り${amulet.turnsRemaining}ターン` : '岩創造物（持続期間未確定）'}
+            {amulet.turnsRemaining > 0 ? `残り${amulet.turnsRemaining}ターン` : '残り0ターン'}
           </div>
         ))}
         {(opponent.bondOfLife ?? 0) > 0 && <div>命の契約：{opponent.bondOfLife}</div>}
@@ -612,7 +612,7 @@ function App() {
         {(currentPlayer.amulets ?? []).map(amulet => (
           <div key={amulet.instanceId}>
             アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
-            {amulet.turnsRemaining > 0 ? `残り${amulet.turnsRemaining}ターン` : '岩創造物（持続期間未確定）'}
+            {amulet.turnsRemaining > 0 ? `残り${amulet.turnsRemaining}ターン` : '残り0ターン'}
           </div>
         ))}
         {(currentPlayer.crests ?? []).map((crest, index) => (
