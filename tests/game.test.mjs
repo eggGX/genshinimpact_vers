@@ -2132,3 +2132,189 @@ test('C025 胡桃：HP10以下の攻撃力+2は反撃時にも適用され、HP�
   next = engine.attackFollower(healthy,attacker2.instanceId,healthy.players[1].field[0].instanceId)
   assert.equal(next.players[0].field[0].health,7)
 })
+
+test('STEP30 水元素C026-C040のカード名・コスト・レアリティは確定資料どおり', async () => {
+  const { hydroCards } = await vite.ssrLoadModule('/src/data/cards/hydro.ts')
+  assert.deepEqual(hydroCards.map(c=>c.id),
+    Array.from({length:15},(_,i)=>'C'+String(26+i).padStart(3,'0')))
+  assert.deepEqual(hydroCards.map(c=>c.name),[
+    '水スライム','ヒルチャールシャーマン・水','コホラ仔竜','アビスの魔術師・水',
+    '古華剣・裁雨留虹','シャイニングミラクル♪','重甲ヤドカニ','ヒルチャールレンジャー・水',
+    'みんなのアイドル・バーバラ','少壮気鋭・行秋','アアル村の守護者・キャンディス',
+    '発明家・アイノ','占星術師・モナ','現人神の巫女・珊瑚宮心海',
+    '執行官第十一位・タルタリヤ',
+  ])
+  assert.deepEqual(hydroCards.map(c=>c.cost),[1,3,2,3,2,3,4,5,4,3,4,3,4,5,5])
+  assert.deepEqual(hydroCards.map(c=>c.rarity),[
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')
+  ])
+  assert.ok(hydroCards.every(c=>c.element==='hydro'))
+})
+
+test('STEP30 水元素15枚のカードタイプ・フォロワーステータスと登録状況', async () => {
+  const { hydroCards }=await vite.ssrLoadModule('/src/data/cards/hydro.ts')
+  assert.deepEqual(hydroCards.map(c=>c.type),[
+    'follower','follower','follower','follower','spell','spell',
+    'follower','follower','follower','follower','follower','follower',
+    'follower','follower','follower'
+  ])
+  assert.deepEqual(hydroCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
+    [2,2],[1,4],[2,2],[2,2],[2,5],[4,4],
+    [2,5],[2,3],[3,5],[2,4],[2,4],[2,6],[4,5]
+  ])
+  assert.deepEqual(hydroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    ['C026','C027','C028','C029','C031','C032','C033','C036'])
+  const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const pool = new Set(getDeckCardPool().map(c=>c.id))
+  for(const c of hydroCards) assert.equal(pool.has(c.id),c.implementationStatus==='playable')
+})
+
+test('STEP30 正式登録40/115と残75枚、元素別枠超過なし',async()=>{
+  const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const report=validateProductionCards(productionCards)
+  assert.deepEqual(report.errors,[])
+  assert.equal(report.total,40)
+  assert.equal(report.slots.filter(s=>s.element==='hydro').reduce((n,s)=>n+s.remaining,0),0)
+  assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),75)
+  assert.equal(report.ready,false)
+})
+
+test('C030 対象未確定の効果は未実装として誤って対戦で使用されない',()=>{
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=['C030']
+  assert.equal(engine.getCard('C030').implementationStatus,'data_only')
+  assert.match(engine.getCard('C030').description,/要確認/)
+  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.playCard(state,'player1',0),state)
+})
+
+test('C026 水スライムは元素生物の水元素を常時付着した状態で出す',()=>{
+  let state=startedGame()
+  state.players[0].pp=1; state.players[0].hand=['C026']
+  state=engine.playCard(state,'player1',0)
+  assert.deepEqual(state.players[0].field[0].aura,[{element:'hydro'}])
+  assert.equal(state.players[0].field[0].health,2)
+})
+
+test('C027 水シャーマンは自分のターン終了時に全味方フォロワーを1回復',()=>{
+  const state=startedGame()
+  place(state,0,'C027',1,4)
+  const f=place(state,0,'C001',2,3)
+  f.maxHealth=5
+  const full=place(state,0,'C001',1,2)
+  const next=engine.endTurn(state)
+  assert.equal(next.players[0].field.find(x=>x.instanceId===f.instanceId).health,4)
+  assert.equal(next.players[0].field.find(x=>x.instanceId===full.instanceId).health,2)
+  assert.equal(next.players[1].leaderHealth,20)
+})
+
+test('C028 コホラ仔竜の突進は登場ターンのフォロワー攻撃のみ可能',()=>{
+  let state=startedGame()
+  state.players[0].pp=2;state.players[0].hand=['C028']
+  state=engine.playCard(state,'player1',0)
+  const dragon=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,dragon.instanceId),state)
+  const victim=place(state,1,'C001',1,4)
+  const next=engine.attackFollower(state,dragon.instanceId,victim.instanceId)
+  assert.equal(next.players[1].field[0].health,2)
+})
+
+test('C029 水アビス魔術師はファンファーレでシールド3と水通常攻撃',()=>{
+  let state=startedGame()
+  state.players[0].pp=3;state.players[0].hand=['C029']
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].field[0].shield.normal,3)
+  const target=place(state,1,'test-mage',1,6)
+  state.players[0].field[0].canAttack=true
+  const next=engine.attackFollower(state,state.players[0].field[0].instanceId,target.instanceId)
+  assert.deepEqual(next.players[1].field[0].aura,[{element:'hydro'}])
+})
+
+test('C031 シャイニングミラクルは全味方とリーダー2回復・カード1枚ドロー',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C031'];state.players[0].pp=3
+  state.players[0].leaderHealth=14
+  state.players[0].deck=['C001','C026']
+  const a=place(state,0,'C001',1,2)
+  a.maxHealth=5
+  const b=place(state,0,'C001',1,4)
+  b.maxHealth=5
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.players[0].leaderHealth,16)
+  assert.equal(state.players[0].field[0].health,4)
+  assert.equal(state.players[0].field[1].health,5)
+  assert.deepEqual(state.players[0].hand,['C001'])
+  assert.deepEqual(state.players[0].deck,['C026'])
+  assert.deepEqual(state.players[0].graveyard,['C031'])
+})
+
+test('C031 ドロー時のデッキ切れは回復後でも即敗北',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C031'];state.players[0].pp=3
+  state.players[0].deck=[]
+  state=engine.playCard(state,'player1',0)
+  assert.equal(state.winnerId,'player2')
+})
+
+test('C032 重甲ヤドカニは守護で、毎自ターン終了時に通常シールド2',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C032'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  assert.ok(state.players[0].field[0].keywords.includes('guard'))
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].shield.normal,2)
+  state=engine.endTurn(state)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].shield.normal,4)
+})
+
+test('C033 水レンジャーは突進し攻撃時にヒルチャール1体を召喚',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C033'];state.players[0].pp=5
+  state=engine.playCard(state,'player1',0)
+  const ranger=state.players[0].field[0]
+  assert.equal(engine.attackLeader(state,ranger.instanceId),state)
+  const enemy=place(state,1,'test-mage',1,10)
+  state=engine.attackFollower(state,ranger.instanceId,enemy.instanceId)
+  assert.deepEqual(state.players[0].field.map(f=>f.cardId),['C033','C001'])
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C033 水レンジャー攻撃時の召喚は場が満員なら不発、攻撃自体は成立',()=>{
+  let state=startedGame()
+  const ranger=place(state,0,'C033',4,4)
+  for(let i=0;i<4;i++)place(state,0,'C001',1,2)
+  const enemy=place(state,1,'test-mage',1,8)
+  state=engine.attackFollower(state,ranger.instanceId,enemy.instanceId)
+  assert.equal(state.players[0].field.length,5)
+  assert.equal(state.players[1].field[0].health,4)
+})
+
+test('C036 キャンディスは守護持ち、スキルPP1で自身シールド3＋敵に水2',()=>{
+  let state=startedGame()
+  state.players[0].hand=['C036'];state.players[0].pp=4
+  state=engine.playCard(state,'player1',0)
+  const candace=state.players[0].field[0]
+  const enemy=place(state,1,'test-mage',1,7)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,candace.instanceId,'skill',enemy.instanceId)
+  assert.ok(state.players[0].field[0].keywords.includes('guard'))
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].field[0].shield.normal,3)
+  assert.equal(state.players[1].field[0].health,5)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'hydro'}])
+})
+
+test('水元素未対応のゴールド・レジェンドは登録データから参照できるが対戦使用不可',()=>{
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=['C034','C035','C037','C038','C039','C040']
+  for(let i=0;i<state.players[0].hand.length;i++){
+    assert.ok(engine.getCard(state.players[0].hand[i]).description.length>0)
+    assert.equal(engine.canPlayCard(state,i),false)
+  }
+})
