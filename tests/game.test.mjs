@@ -2361,7 +2361,7 @@ test('C034 歌声の環：スキルPP2・EN+1、クレスト3ターンで自リ�
   assert.deepEqual(state.players[0].crests,[])
 })
 
-test('C035 行秋：ファンファーレで1枚引き、手札上限ならドローだけ消費',()=>{
+test('C035 行秋：ファンファーレで1枚引き、手札の最大9枚を守る',()=>{
   let state=startedGame()
   state.players[0].pp=3;state.players[0].hand=['C035'];state.players[0].deck=['C001','C026']
   state=engine.playCard(state,'player1',0)
@@ -2372,7 +2372,8 @@ test('C035 行秋：ファンファーレで1枚引き、手札上限ならド�
   full.players[0].hand=['C035',...Array(8).fill('C001')]
   full.players[0].deck=['C026']
   const next=engine.playCard(full,'player1',0)
-  assert.equal(next.players[0].hand.length,8)
+  assert.equal(next.players[0].hand.length,9)
+  assert.equal(next.players[0].hand.at(-1),'C026')
   assert.equal(next.players[0].deck.length,0)
 })
 
@@ -2532,6 +2533,7 @@ test('C039 心海：スキルPP1で化海月0/4を召喚、ターン終了で回
 test('C039 心海：爆発EN3で自身+2/0・守護・突進・攻撃時自リーダー2回復',()=>{
   let state=startedGame()
   const kokomi=place(state,0,'C039',2,6)
+  kokomi.canAttack=false
   state.players[0].energy=3
   state.players[0].leaderHealth=12
   state=engine.activateAbility(state,kokomi.instanceId,'burst')
