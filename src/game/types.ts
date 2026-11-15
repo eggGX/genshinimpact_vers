@@ -127,6 +127,8 @@ export interface Follower {
   hasAttacked: boolean
   /** Number of declared attacks this turn; double-attack followers may declare two. */
   attacksThisTurn?: number
+  /** Number of own-turn electro-charged triggers credited to this Ororon. */
+  electroChargedTriggersThisTurn?: number
   keywords: string[]
 }
 
