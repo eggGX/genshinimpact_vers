@@ -302,4 +302,17 @@ export const testCards: Card[] = [
       ],
     },
   },
+  {
+    id: 'neutral-dove',
+    name: 'ハト',
+    type: 'follower',
+    rarity: 'bronze',
+    element: 'none',
+    token: true,
+    keywords: ['storm'],
+    cost: 1,
+    attack: 1,
+    health: 1,
+    description: '【疾走】',
+  },
 ]
