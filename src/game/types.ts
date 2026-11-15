@@ -131,6 +131,7 @@ export interface Follower {
   electroChargedTriggersThisTurn?: number
   swirlDrawsThisTurn?: number
   geoShieldTriggersThisTurn?: number
+  dendroBurningTriggersThisTurn?: number
   keywords: string[]
 }
 
