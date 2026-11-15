@@ -55,7 +55,7 @@ export function summonFollowers(
     field: [
       ...player.field,
       ...Array.from(
-        { length: Math.min(Math.max(0, count), MAX_FIELD - player.field.length) },
+        { length: Math.min(Math.max(0, count), Math.max(0, MAX_FIELD - player.field.length - (player.amulets?.length ?? 0))) },
         () => createSummonedFollower(cardId, keywords)
       ),
     ],
