@@ -194,6 +194,11 @@ function App() {
             付着：{follower.aura.map(a => a.element).join('・')}
           </small>
         )}
+        {follower.keywords.includes('frozen') && (
+          <small style={{ color: '#aee1ff', fontWeight: 'bold' }}>
+            凍結中（攻撃不可）
+          </small>
+        )}
 
         <small>
           {isOpponent
