@@ -105,3 +105,138 @@
   border-radius: 12px;
   background: #38546a;
 }
+
+
+.card-slot {
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 100px;
+  height: auto;
+  padding: 12px;
+}
+
+.field-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 90px;
+  min-height: 110px;
+  padding: 10px 5px;
+  border: 2px solid #c9a75c;
+  border-radius: 10px;
+  background: #38546a;
+  color: white;
+  text-align: center;
+}
+
+.field-card strong {
+  font-size: 13px;
+}
+
+.field-card span {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.hand-card {
+  position: relative;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+}
+
+.hand-card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hand-card:not(:disabled):hover {
+  transform: translateY(-10px);
+  background: #456b83;
+}
+
+.card-cost {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  color: #8ce8b3;
+  font-weight: bold;
+}
+
+
+/* 戦闘システム */
+
+.field-card {
+  cursor: default;
+  font-family: inherit;
+}
+
+.field-card:disabled {
+  opacity: 1;
+  color: white;
+}
+
+.field-card.can-attack {
+  cursor: pointer;
+  border-color: #70df8a;
+  box-shadow: 0 0 10px #70df8a66;
+}
+
+.field-card.can-attack:hover {
+  transform: translateY(-5px);
+}
+
+.field-card.selected-card {
+  border-color: #ffd24d;
+  background: #71602a;
+  box-shadow: 0 0 18px #ffd24d;
+}
+
+.field-card.attack-target,
+.leader-button.attack-target {
+  cursor: crosshair;
+  border-color: #ff6969;
+  box-shadow: 0 0 12px #ff696988;
+}
+
+.field-card.attack-target:hover,
+.leader-button.attack-target:hover {
+  background: #7a3840;
+}
+
+.leader-button {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.leader-button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.end-turn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.battle-message {
+  padding: 12px;
+  text-align: center;
+  color: #e3c67d;
+  font-weight: bold;
+}
+
+.winner-banner {
+  margin: 16px auto;
+  padding: 18px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  background: #3f653b;
+  border: 2px solid #e3c67d;
+  border-radius: 12px;
+}
