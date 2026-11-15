@@ -267,9 +267,11 @@ export function resolveReactionConsequence(
   if (!affected) return state
 
   if (reaction === 'bloom') {
-    // Bloom belongs to the player who triggered the reaction.
-    // If a core already exists, rebloom strengthens that core by +1 health.
-    const ownerIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
+    // Canonical Ver.1.0.1: the core appears on the opponent's field
+    // relative to the player who triggered Bloom.
+    // sourceOwnerIndex is the trigger side, even if the reaction target changes.
+    const triggerIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
+    const ownerIndex = 1 - triggerIndex
     const owner = players[ownerIndex]
     const oldCore = owner.field.find(f => f.cardId === 'dendro-core')
     if (oldCore) {
@@ -278,7 +280,7 @@ export function resolveReactionConsequence(
         field: owner.field.map(f => f.instanceId === oldCore.instanceId
           ? { ...f, health: f.health + 1, maxHealth: f.maxHealth + 1 } : f),
       }
-    } else if (owner.field.length < 5) {
+    } else if (owner.field.length + (owner.amulets?.length ?? 0) < 5) {
       players[ownerIndex] = {
         ...owner,
         field: [...owner.field, createDendroCore()],
