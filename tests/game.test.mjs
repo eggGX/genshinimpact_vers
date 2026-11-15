@@ -4213,6 +4213,7 @@ test('C093 岩ヴィシャップは守護、交戦時に自リーダー結晶シ
   state=engine.playCard(state,'player1',0)
   assert.ok(state.players[0].field[0].keywords.includes('guard'))
   const vishap=state.players[0].field[0]
+  vishap.canAttack=true // 次の自分ターン以降の交戦を再現
   const foe=place(state,1,'test-mage',2,9)
   state=engine.attackFollower(state,vishap.instanceId,foe.instanceId)
   assert.equal(state.players[0].leaderShield.crystallize,2)
