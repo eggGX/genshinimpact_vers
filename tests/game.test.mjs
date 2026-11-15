@@ -4100,7 +4100,7 @@ test('STEP39 岩15枚のタイプ・ステータス・地域と対戦実装区�
   assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
   assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
   assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C086','C087','C088','C089','C090','C092','C093','C094','C095','C096','C097','C100'])
+    ['C086','C087','C088','C089','C090','C091','C092','C093','C094','C095','C096','C097','C100'])
 })
 
 test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
@@ -4113,14 +4113,14 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
-test('STEP39 岩元素12枚がデッキ候補、未実装3枚はデッキに入らない',async()=>{
+test('STEP39 岩元素13枚がデッキ候補、未実装2枚はデッキに入らない',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of geoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C091','C098','C099']
+  state.players[0].hand=['C098','C099']
   assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
 })
 
@@ -4398,4 +4398,19 @@ test('C100 アルベドは自ターン終了時結晶シールド1獲得',()=>{
   let s=startedGame();place(s,0,'C100',3,5)
   s=engine.endTurn(s)
   assert.equal(s.players[0].leaderShield.crystallize,1)
+})
+
+test('C091 大掃除は指定味方を強化し攻撃時敵全体へ岩1',()=>{
+  let s=startedGame();const ally=place(s,0,'C001',2,5)
+  s.players[0].hand=['C091'];s.players[0].pp=3
+  s=engine.playCard(s,'player1',0,ally.instanceId)
+  assert.equal(s.players[0].field[0].attack,4)
+  assert.ok(s.players[0].field[0].keywords.includes('normal_attack_geo'))
+  const e=place(s,1,'test-mage',0,8), other=place(s,1,'test-mage',0,8)
+  s=engine.attackFollower(s,ally.instanceId,e.instanceId)
+  assert.equal(s.players[1].field.find(f=>f.instanceId===other.instanceId).health,7)
+})
+test('C091 大掃除は対象指定なしではPPも手札も変化しない',()=>{
+  let s=startedGame();place(s,0,'C001',2,4);s.players[0].pp=3;s.players[0].hand=['C091']
+  assert.equal(engine.playCard(s,'player1',0),s)
 })
