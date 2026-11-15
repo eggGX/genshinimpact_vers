@@ -6,6 +6,7 @@ import type {
   GameState,
   Player,
 } from './types'
+import { applyElementalAura } from './elemental'
 
 /**
  * 効果を順番に実行する。
@@ -132,10 +133,10 @@ function applyEffect(
           : 0
 
         if (effect.type === 'damage') {
-          return {
-            ...follower,
-            health: follower.health - value,
-          }
+          return applyElementalAura(
+            { ...follower, health: follower.health - value },
+            effect.element
+          )
         }
 
         return {
