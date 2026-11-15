@@ -1,0 +1,26 @@
+.card-artwork {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 6px;
+  pointer-events: none;
+  user-select: none;
+}
+.card-artwork--field {
+  max-height: 125px;
+}
+.card-artwork--hand {
+  max-height: 108px;
+}
+.card-artwork--mulligan {
+  max-height: 138px;
+}
+.card-artwork--list {
+  width: 58px;
+  max-height: 78px;
+  flex-shrink: 0;
+}
+.card-artwork--library {
+  max-height: 180px;
+}
