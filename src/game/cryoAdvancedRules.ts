@@ -1,5 +1,4 @@
 import type { Follower, GameState, Player } from './types'
-import { getCard } from '../data/cardRegistry'
 import { addLeaderShield, damageLeader } from './leaderShield'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 import { summonFollowers } from './neutralRules'
@@ -174,16 +173,11 @@ export function cryoCrestsEnd(state: GameState, ownerId: string, deaths: DeathRe
     for (let j = 0; j < 2 && result.winnerId === null; j++) {
       result = randomCryo(result, ownerId, 2, deaths)
     }
-    const index = (result.players.find(p => p.id === ownerId)?.crests ?? []).indexOf(crest)
-    // Locate by identity where available, otherwise by original occurrence.
-    result = edit(result, ownerId, p => {
-      let seen = 0
-      return { ...p, crests: (p.crests ?? []).map(c => {
-        if (c.id !== crest.id) return c
-        if (seen++ === Math.max(0, index)) return { ...c, turnsRemaining: c.turnsRemaining - 1 }
-        return c
-      }).filter(c => c.turnsRemaining > 0) }
-    })
+    result = edit(result, ownerId, p => ({
+      ...p, crests: (p.crests ?? []).map(c => c === crest
+        ? { ...c, turnsRemaining: c.turnsRemaining - 1 } : c)
+        .filter(c => c.turnsRemaining > 0),
+    }))
   }
   return result
 }
