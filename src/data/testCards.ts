@@ -275,4 +275,31 @@ export const testCards: Card[] = [
       }],
     },
   },
+  {
+    id: 'test-chain-caster',
+    name: '連鎖の術師',
+    type: 'follower',
+    rarity: 'gold',
+    element: 'pyro',
+    cost: 2,
+    attack: 1,
+    health: 4,
+    description: 'スキル：敵1体に炎2ダメージ、その後敵リーダーに2ダメージ。',
+    elementalSkill: {
+      name: '連続詠唱',
+      effects: [
+        { type: 'damage', trigger: 'skill', target: 'selected_enemy_follower', value: 2, element: 'pyro' },
+        { type: 'damage', trigger: 'skill', target: 'enemy_leader', value: 2 },
+        { type: 'damage', trigger: 'skill', target: 'selected_enemy_follower', value: 2, element: 'pyro' },
+      ],
+    },
+    elementalBurst: {
+      name: '終焉の詠唱',
+      energyCost: 2,
+      effects: [
+        { type: 'damage', trigger: 'burst', target: 'enemy_leader', value: 20 },
+        { type: 'heal', trigger: 'burst', target: 'enemy_leader', value: 20 },
+      ],
+    },
+  },
 ]
