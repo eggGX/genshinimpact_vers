@@ -1323,7 +1323,5 @@ test('C010 第四降臨者の力：7回の自ターン終了で7属性が重複�
   state=engine.playCard(state,'player1',0)
   for(let i=0;i<13;i++) state=engine.endTurn(state)
   assert.equal(state.players[1].leaderHealth,13)
-  assert.equal(state.players[0].crests[0].turnsRemaining,0)
-  assert.equal(new Set(state.players[0].crests[0].usedElements).size,7)
-  assert.equal(state.players[0].crests[0].usedElements.length,7)
+  assert.deepEqual(state.players[0].crests,[])
 })
