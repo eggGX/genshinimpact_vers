@@ -258,3 +258,8 @@
 .deck-start:disabled{opacity:.4;cursor:not-allowed}
 .deck-setup-note{text-align:center}
 @media(max-width:670px){.deck-setup-grid{grid-template-columns:1fr}.deck-setup{padding:12px}}
+
+/* Cards with artwork grow to accommodate a portrait illustration. */
+.field-card:has(.card-artwork) { width: 112px; min-height: 176px; }
+.hand-card:has(.card-artwork) { width: 128px; height: 205px; gap: 7px; }
+.game button:has(.card-artwork--mulligan) { height: auto; min-height: 245px; }
