@@ -203,5 +203,11 @@ export const productionTokens: Card[] = [
     type: 'amulet', rarity: 'bronze', element: 'dendro',
     cost: 0, token: true,
     description: '【カウントダウン2】【自分のターン終了時】敵フォロワーすべてに草元素1ダメージ。',
+  },  {
+    id: 'token-dendro-spirit', name: '草霊',
+    type: 'follower', rarity: 'bronze', element: 'dendro',
+    cost: 2, attack: 2, health: 2, token: true,
+    normalAttackElement: 'dendro',
+    description: '【元素攻撃：草】',
   },
 ]
