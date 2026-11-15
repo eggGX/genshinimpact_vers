@@ -7,6 +7,7 @@ import type {
 } from './types'
 import { testCards } from '../data/testCards'
 import { resolveEffects } from './effects'
+import { applyElementalAura } from './elemental'
 
 const cardDatabase = new Map<string, Card>(
   testCards.map(card => [card.id, card])
@@ -418,6 +419,8 @@ export function attackFollower(
 
   const attackDamage = Math.max(0, attacker.attack)
   const counterDamage = Math.max(0, defender.attack)
+  const attackerElement = getCard(attacker.cardId)?.normalAttackElement
+  const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   const players = [...state.players] as [Player, Player]
 
@@ -425,11 +428,11 @@ export function attackFollower(
     ...owner,
     field: owner.field.map(f =>
       f.instanceId === attackerId
-        ? {
+        ? applyElementalAura({
             ...f,
             health: f.health - counterDamage,
             hasAttacked: true,
-          }
+          }, defenderElement)
         : f
     ),
   }
@@ -438,10 +441,10 @@ export function attackFollower(
     ...enemy,
     field: enemy.field.map(f =>
       f.instanceId === targetId
-        ? {
+        ? applyElementalAura({
             ...f,
             health: f.health - attackDamage,
-          }
+          }, attackerElement)
         : f
     ),
   }
