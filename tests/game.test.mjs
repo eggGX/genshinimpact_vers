@@ -1134,3 +1134,196 @@ test('正式無元素カード10枚はデッキに入りフォロワーとスペ
   assert.equal(engine.canPlayCard(state,0),true)
   assert.equal(engine.canPlayCard(state,1),true)
 })
+
+test('C001 ヒルチャール：PP1で1/2が登場し能力なし', () => {
+  const state = startedGame()
+  state.players[0].pp = 1
+  state.players[0].hand = ['C001']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].pp, 0)
+  assert.equal(next.players[0].field[0].cardId, 'C001')
+  assert.equal(next.players[0].field[0].attack, 1)
+  assert.equal(next.players[0].field[0].health, 2)
+})
+
+test('C002 宝盗団：デッキのブロンズを1枚検索して手札へ加える', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['C002']
+  state.players[0].deck = ['C003', 'C006', 'C001']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].hand.length, 1)
+  assert.ok(['C001', 'C003'].includes(next.players[0].hand[0]))
+  assert.equal(next.players[0].deck.length, 2)
+  assert.equal(next.players[0].field[0].cardId, 'C002')
+})
+
+test('C002 宝盗団：デッキにブロンズがなければ検索は不発', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['C002']
+  state.players[0].deck = ['C006']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].hand.length, 0)
+  assert.deepEqual(next.players[0].deck, ['C006'])
+})
+
+test('C003 遺跡守衛：守護がいると敵リーダーや非守護への攻撃を禁止', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'C001', 3, 5)
+  const guard = place(state, 1, 'C003', 1, 8)
+  guard.keywords = ['guard']
+  const ordinary = place(state, 1, 'C001', 1, 5)
+  assert.equal(engine.attackLeader(state, attacker.instanceId), state)
+  assert.equal(engine.attackFollower(state, attacker.instanceId, ordinary.instanceId), state)
+  const next = engine.attackFollower(state, attacker.instanceId, guard.instanceId)
+  assert.equal(next.players[1].field[0].health, 5)
+})
+
+test('C004 ワイルドハント：登場時に同名を召喚し分身はファンファーレを連鎖しない', () => {
+  const state = startedGame()
+  state.players[0].pp = 4
+  state.players[0].hand = ['C004']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].field.length, 2)
+  assert.deepEqual(next.players[0].field.map(f => f.cardId), ['C004', 'C004'])
+  assert.ok(next.players[0].field[1].keywords.includes('no_last_word'))
+})
+
+test('C004 ワイルドハント：本体の破壊で分身を召喚、分身はラストワード無し', () => {
+  const state = startedGame()
+  const main = place(state, 0, 'C004', 2, 1)
+  const opponent = place(state, 1, 'test-hilichurl', 2, 8)
+  let next = engine.attackFollower(state, main.instanceId, opponent.instanceId)
+  assert.equal(next.players[0].field.length, 1)
+  assert.equal(next.players[0].field[0].cardId, 'C004')
+  assert.ok(next.players[0].field[0].keywords.includes('no_last_word'))
+  // 分身が次に破壊されても再召喚しない
+  const copy = next.players[0].field[0]
+  next.players[0].field[0] = {...copy, canAttack:true}
+  next = engine.attackFollower(next, copy.instanceId, opponent.instanceId)
+  assert.equal(next.players[0].field.length, 0)
+})
+
+test('C005 ヒルチャール強襲：スペルはフィールドを消費せず最大4体召喚', () => {
+  const state = startedGame()
+  state.players[0].pp = 4
+  state.players[0].hand = ['C005']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].pp, 0)
+  assert.equal(next.players[0].field.length, 4)
+  assert.ok(next.players[0].field.every(f=>f.cardId==='C001'))
+  assert.deepEqual(next.players[0].graveyard, ['C005'])
+})
+
+test('C005 ヒルチャール強襲：既存3体なら残り2枠のみ召喚', () => {
+  const state = startedGame()
+  state.players[0].pp = 4
+  state.players[0].hand = ['C005']
+  for(let i=0;i<3;i++) place(state,0,'C001',1,2)
+  const next = engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].field.length,5)
+  assert.equal(next.players[0].field.filter(f=>f.cardId==='C001').length,5)
+})
+
+test('C006 エラ・マスク：味方ヒルチャール全員に永続+1/+1', () => {
+  const state = startedGame()
+  state.players[0].pp = 3
+  state.players[0].hand = ['C006']
+  const a = place(state,0,'C001',1,2)
+  place(state,0,'C003',4,6)
+  const next = engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].field[0].instanceId,a.instanceId)
+  assert.deepEqual([next.players[0].field[0].attack,next.players[0].field[0].health],[2,3])
+  assert.deepEqual([next.players[0].field[1].attack,next.players[0].field[1].health],[4,6])
+})
+
+test('C007 ティミー：ハト2体は1/1疾走で召喚ターンから攻撃可能', () => {
+  const state = startedGame()
+  state.players[0].pp = 3
+  state.players[0].hand = ['C007']
+  const next = engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].field.length,3)
+  const doves=next.players[0].field.filter(f=>f.cardId==='neutral-dove')
+  assert.equal(doves.length,2)
+  assert.ok(doves.every(f=>f.attack===1&&f.health===1&&f.canAttack&&f.keywords.includes('storm')))
+  const after = engine.attackLeader(next,doves[0].instanceId)
+  assert.equal(after.players[1].leaderHealth,19)
+})
+
+test('C007 ティミー：ハトがいないターン終了時に自身を+1/+1', () => {
+  const state=startedGame()
+  const timmy=place(state,0,'C007',1,1)
+  const next=engine.endTurn(state)
+  const result=next.players[0].field.find(f=>f.instanceId===timmy.instanceId)
+  assert.equal(result.attack,2)
+  assert.equal(result.health,2)
+})
+
+test('C008 ヒルチャール暴徒：突進は登場ターンに敵フォロワーのみ攻撃可能', () => {
+  const state=startedGame()
+  state.players[0].pp=4
+  state.players[0].hand=['C008']
+  const enemy=place(state,1,'test-mage',1,8)
+  const summoned=engine.playCard(state,'player1',0)
+  const attacker=summoned.players[0].field[0]
+  assert.equal(engine.attackLeader(summoned,attacker.instanceId),summoned)
+  assert.equal(engine.canFollowerAttack(attacker),true)
+  const next=engine.attackFollower(summoned,attacker.instanceId,enemy.instanceId)
+  assert.equal(next.players[1].field[0].health,5)
+})
+
+test('C008 ヒルチャール暴徒：味方ヒルチャールがいる攻撃時に+1攻撃', () => {
+  const state=startedGame()
+  const attacker=place(state,0,'C008',3,4)
+  place(state,0,'C001',1,2)
+  const enemy=place(state,1,'test-mage',1,8)
+  const next=engine.attackFollower(state,attacker.instanceId,enemy.instanceId)
+  assert.equal(next.players[0].field[0].attack,4)
+  assert.equal(next.players[1].field[0].health,4)
+})
+
+test('C009 パイモンのへそくり：ドロー1＋最大PP+1、現PPは回復しない', () => {
+  const state=startedGame()
+  state.players[0].maxPp=5
+  state.players[0].pp=4
+  state.players[0].hand=['C009']
+  state.players[0].deck=['C001','C003']
+  const next=engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].maxPp,6)
+  assert.equal(next.players[0].pp,1)
+  assert.deepEqual(next.players[0].hand,['C001'])
+  assert.deepEqual(next.players[0].deck,['C003'])
+})
+
+test('C009 パイモンのへそくり：空デッキからのドローは即敗北', () => {
+  const state=startedGame()
+  state.players[0].pp=3
+  state.players[0].hand=['C009']
+  state.players[0].deck=[]
+  const next=engine.playCard(state,'player1',0)
+  assert.equal(next.winnerId,'player2')
+})
+
+test('C010 第四降臨者の力：EN+3で最大5、カウントダウン7付与', () => {
+  const state=startedGame()
+  state.players[0].pp=5
+  state.players[0].energy=4
+  state.players[0].hand=['C010']
+  const next=engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].energy,5)
+  assert.equal(next.players[0].crests[0].turnsRemaining,7)
+  assert.deepEqual(next.players[0].crests[0].usedElements,[])
+})
+
+test('C010 第四降臨者の力：7回の自ターン終了で7属性が重複せずリーダー7ダメ', () => {
+  let state=startedGame()
+  state.players[0].pp=5
+  state.players[0].hand=['C010']
+  state=engine.playCard(state,'player1',0)
+  for(let i=0;i<13;i++) state=engine.endTurn(state)
+  assert.equal(state.players[1].leaderHealth,13)
+  assert.equal(state.players[0].crests[0].turnsRemaining,0)
+  assert.equal(new Set(state.players[0].crests[0].usedElements).size,7)
+  assert.equal(state.players[0].crests[0].usedElements.length,7)
+})
