@@ -195,9 +195,9 @@ function App() {
       (selectedAttacker === undefined || !isGuarded(opponent) ||
         follower.keywords.includes('guard')) &&
       (selectedAttacker !== undefined
-        ? !follower.keywords.includes('intimidate')
+        ? !follower.keywords.includes('intimidate') && !follower.keywords.includes('stealth')
         : selectedHandIndex !== null || selectedAbility !== null
-          ? !follower.keywords.includes('aura')
+          ? !follower.keywords.includes('aura') && !follower.keywords.includes('stealth')
           : false)
 
     return (
@@ -240,6 +240,9 @@ function App() {
         )}
         {follower.keywords.includes('storm') && (
           <small>【疾走】登場ターンから攻撃可能</small>
+        )}
+        {follower.keywords.includes('stealth') && (
+          <small>【潜伏】攻撃・対象指定不可（攻撃時解除）</small>
         )}
         {follower.keywords.includes('aura') && (
           <small>【オーラ】効果の対象に選べない</small>
@@ -479,6 +482,12 @@ function App() {
         <div>デッキ：{opponent.deck.length}枚</div>
         <div>手札：{opponent.hand.length}枚</div>
         <div>墓場：{opponent.graveyard.length}枚</div>
+        {(opponent.amulets ?? []).map(amulet => (
+          <div key={amulet.instanceId}>
+            アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
+            残り{amulet.turnsRemaining}ターン
+          </div>
+        ))}
         {(opponent.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{opponent.leaderBurningTurns}ターン</div>
         )}
@@ -513,10 +522,17 @@ function App() {
         <div>デッキ：{currentPlayer.deck.length}枚</div>
         <div>手札：{currentPlayer.hand.length}枚</div>
         <div>墓場：{currentPlayer.graveyard.length}枚</div>
+        {(currentPlayer.amulets ?? []).map(amulet => (
+          <div key={amulet.instanceId}>
+            アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
+            残り{amulet.turnsRemaining}ターン
+          </div>
+        ))}
         {(currentPlayer.crests ?? []).map((crest, index) => (
           <div key={index}>
-            クレスト【第四降臨者の力】残り{crest.turnsRemaining}ターン
-            （発動済み：{crest.usedElements.join('・') || 'なし'}）
+            クレスト【{getCard(crest.id)?.name ?? crest.id}】
+            残り{crest.turnsRemaining}ターン
+            {crest.id === 'C010' && `（発動済み：${crest.usedElements.join('・') || 'なし'}）`}
           </div>
         ))}
         {(currentPlayer.leaderBurningTurns ?? 0) > 0 && (
