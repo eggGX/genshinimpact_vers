@@ -965,7 +965,9 @@ test('正式カードとテストカードの登録元が分離されている',
   const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
   const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.equal(productionCards.length, 25)
-  assert.equal(getAllCards().length, testCards.length + productionCards.length)
+  const { productionTokens } = await vite.ssrLoadModule('/src/data/productionTokens.ts')
+  assert.equal(getAllCards().length,
+    testCards.length + productionCards.length + productionTokens.length)
 })
 
 test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () => {
@@ -1372,16 +1374,16 @@ test('炎元素15枚は原本どおり種類・地域・二つ名・効果説明
   assert.equal(pyroCards.find(c=>c.id==='C025').region[0],'璃月')
 })
 
-test('炎元素はシルバーまで8枚対戦可能、未実装7枚はデッキ候補から除外', async () => {
+test('炎元素はゴールドまで12枚対戦可能、未実装レジェンド3枚を除外', async () => {
   const { pyroCards }=await vite.ssrLoadModule('/src/data/cards/pyro.ts')
   const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.deepEqual(pyroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C011','C012','C013','C014','C015','C016','C017','C018'])
+    ['C011','C012','C013','C014','C015','C016','C017','C018','C019','C020','C021','C022'])
   const pool=getDeckCardPool().map(c=>c.id)
   for(const c of pyroCards) assert.equal(pool.includes(c.id), c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C019']
+  state.players[0].hand=['C023']
   assert.equal(engine.canPlayCard(state,0),false)
 })
 
