@@ -161,4 +161,24 @@ export const productionTokens: Card[] = [
     description: '【守護】【自分のターン終了時】ランダムな敵フォロワー1体に風元素2ダメージ。【交戦時】交戦相手が炎/水/氷/雷属性カードなら同属性2ダメージ。',
   },
 
+  {
+    id: 'token-jade-screen',
+    name: '璇璣屏',
+    type: 'amulet',
+    rarity: 'bronze',
+    element: 'geo',
+    cost: 0,
+    token: true,
+    description: '岩創造物。凝光のスキルで召喚する。追加能力・持続時間は未確定。',
+  },
+  {
+    id: 'token-spinning-turbo',
+    name: 'ぐるぐるコマちゃん',
+    type: 'amulet',
+    rarity: 'bronze',
+    element: 'geo',
+    cost: 0,
+    token: true,
+    description: '岩創造物。カチーナのスキルで召喚する。追加能力・持続時間は未確定。',
+  },
 ]
