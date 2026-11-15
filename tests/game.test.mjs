@@ -180,3 +180,23 @@ test('異なる元素の重なりは保持するが反応を起こさない（ST
   assert.deepEqual(cryo.aura.map(a => a.element), ['hydro', 'cryo'])
   assert.equal(cryo.health, 4)
 })
+
+test('訓練兵は登場時に自身を2/2から3/4に強化する', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-trainee']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].field[0].attack, 3)
+  assert.equal(next.players[0].field[0].health, 4)
+  assert.equal(next.players[0].field[0].maxHealth, 4)
+})
+
+test('雷の術師は選択した敵の攻撃力を1下げ、体力は変えない', () => {
+  const state = startedGame()
+  state.players[0].pp = 3
+  state.players[0].hand = ['test-electro-mage']
+  const target = place(state, 1, 'test-hilichurl', 2, 2)
+  const next = engine.playCard(state, 'player1', 0, target.instanceId)
+  assert.equal(next.players[1].field[0].attack, 1)
+  assert.equal(next.players[1].field[0].health, 2)
+})
