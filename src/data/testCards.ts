@@ -73,4 +73,24 @@ export const testCards: Card[] = [
       },
     ],
   },
+  {
+    id: 'test-shaman',
+    name: 'ヒルチャールの祈祷師',
+    type: 'follower',
+    rarity: 'silver',
+    element: 'none',
+    cost: 2,
+    attack: 1,
+    health: 3,
+    description:
+      '自分のターン終了時、自分のリーダーを1回復。',
+    effects: [
+      {
+        type: 'heal',
+        trigger: 'turn_end',
+        target: 'own_leader',
+        value: 1,
+      },
+    ],
+  },
 ]

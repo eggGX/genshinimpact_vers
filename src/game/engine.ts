@@ -137,12 +137,7 @@ export function confirmMulligan(
   }
 }
 
-/**
- * 選択対象が必要なファンファーレか
- */
-export function needsPlayTarget(
-  card: Card
-): boolean {
+export function needsPlayTarget(card: Card): boolean {
   return (card.effects ?? []).some(
     effect =>
       effect.trigger === 'on_play' &&
@@ -150,9 +145,6 @@ export function needsPlayTarget(
   )
 }
 
-/**
- * プレイ可能か
- */
 export function canPlayCard(
   state: GameState,
   handIndex: number
@@ -187,14 +179,14 @@ export function canPlayCard(
 }
 
 /**
- * 破壊処理。
- * 同時に破壊されたフォロワーを先にすべて除去し、
- * ターンプレイヤー優先・フィールド配置順で効果を解決。
+ * 破壊処理とラストワード
+ *
+ * 同時破壊はターンプレイヤー優先、
+ * 同じプレイヤー内では配置順で処理する。
  */
 function resolveDeaths(state: GameState): GameState {
   let result = state
 
-  // 連鎖破壊への安全上限
   for (let pass = 0; pass < 100; pass++) {
     const activeIndex = result.players.findIndex(
       p => p.id === result.currentPlayerId
@@ -252,7 +244,59 @@ function resolveDeaths(state: GameState): GameState {
 }
 
 /**
- * カードをプレイし、ファンファーレを実行
+ * ターン開始・終了時の自動効果
+ *
+ * まず発動対象を配置順で確定する。
+ * その後、順番に効果を解決する。
+ */
+function resolveTurnEffects(
+  state: GameState,
+  playerId: string,
+  trigger: 'turn_start' | 'turn_end'
+): GameState {
+  const player = state.players.find(
+    p => p.id === playerId
+  )
+
+  if (!player) return state
+
+  const sourceIds = player.field.map(
+    follower => follower.instanceId
+  )
+
+  let result = state
+
+  for (const sourceId of sourceIds) {
+    if (result.winnerId !== null) break
+
+    const currentOwner = result.players.find(
+      p => p.id === playerId
+    )
+
+    // 効果解決前に場を離れたカードは発動しない
+    const source = currentOwner?.field.find(
+      follower => follower.instanceId === sourceId
+    )
+
+    if (!source || source.health <= 0) continue
+
+    const card = getCard(source.cardId)
+
+    result = resolveEffects(
+      result,
+      playerId,
+      card?.effects ?? [],
+      trigger
+    )
+
+    result = resolveDeaths(result)
+  }
+
+  return result
+}
+
+/**
+ * フォロワーをプレイする
  */
 export function playCard(
   state: GameState,
@@ -289,8 +333,11 @@ export function playCard(
     attack: card.attack ?? 0,
     health: card.health ?? 1,
     maxHealth: card.health ?? 1,
+
+    // 暫定。正式な元素EN管理は後で修正する。
     energy: 0,
     maxEnergy: 5,
+
     aura: [],
     shield: {
       normal: 0,
@@ -457,6 +504,9 @@ export function attackLeader(
   }
 }
 
+/**
+ * 1枚ドロー
+ */
 function drawCard(player: Player): {
   player: Player
   deckOut: boolean
@@ -481,20 +531,35 @@ function drawCard(player: Player): {
 }
 
 /**
- * ターン終了と次ターン開始
+ * ターン終了・次ターン開始
  */
 export function endTurn(state: GameState): GameState {
   if (state.phase !== 'main') return state
   if (state.winnerId !== null) return state
 
-  const index = state.players.findIndex(
+  const currentIndex = state.players.findIndex(
     p => p.id === state.currentPlayerId
   )
-  if (index < 0) return state
+  if (currentIndex < 0) return state
 
-  const nextIndex = 1 - index
+  const nextIndex = 1 - currentIndex
+  const currentId = state.players[currentIndex].id
+  const nextId = state.players[nextIndex].id
 
-  const players = state.players.map(p => ({
+  // 1. 現在のプレイヤーのターン終了時効果
+  let result = resolveTurnEffects(
+    state,
+    currentId,
+    'turn_end'
+  )
+
+  // 終了時効果で勝負が決まったらターンを進めない
+  if (result.winnerId !== null) {
+    return result
+  }
+
+  // 2. 次のプレイヤーへ交代
+  const players = result.players.map(p => ({
     ...p,
     field: p.field.map(f => ({ ...f })),
   })) as [Player, Player]
@@ -503,6 +568,7 @@ export function endTurn(state: GameState): GameState {
 
   next.maxPp = Math.min(MAX_PP, next.maxPp + 1)
   next.pp = next.maxPp
+
   next.field = next.field.map(f => ({
     ...f,
     canAttack: true,
@@ -512,12 +578,23 @@ export function endTurn(state: GameState): GameState {
   const draw = drawCard(next)
   players[nextIndex] = draw.player
 
-  return {
-    ...state,
+  result = {
+    ...result,
     players,
-    turn: state.turn + 1,
-    currentPlayerId: next.id,
+    turn: result.turn + 1,
+    currentPlayerId: nextId,
     phase: 'main',
-    winnerId: draw.deckOut ? players[index].id : null,
+    winnerId: draw.deckOut ? currentId : null,
   }
+
+  if (result.winnerId !== null) {
+    return result
+  }
+
+  // 3. 次のプレイヤーのターン開始時効果
+  return resolveTurnEffects(
+    result,
+    nextId,
+    'turn_start'
+  )
 }
