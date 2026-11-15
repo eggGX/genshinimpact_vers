@@ -29,6 +29,7 @@ export function grantShield(
 
 export function absorbDamage(follower: Follower, amount: number): Follower {
   let remaining = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0
+  if (follower.keywords.includes('damage_cap_1') && remaining >= 2) remaining = 1
   const normalUsed = Math.min(Math.max(0, follower.shield.normal), remaining)
   remaining -= normalUsed
   const crystallizeUsed = Math.min(Math.max(0, follower.shield.crystallize), remaining)
