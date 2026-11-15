@@ -1651,6 +1651,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['水圧装置', 1, undefined, undefined],
     ['虚影', 1, 0, 2],
     ['化海月', 2, 0, 4],
+    ['氷蛍', 1, 1, 1],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -2173,12 +2174,12 @@ test('STEP30 水元素15枚のカードタイプ・フォロワーステータ�
   for(const c of hydroCards) assert.equal(pool.has(c.id),c.implementationStatus==='playable')
 })
 
-test('STEP30 正式登録40/115と残75枚、元素別枠超過なし',async()=>{
+test('STEP30 構築済み水元素15枚と正式登録総数を照合',async()=>{
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,40)
+  assert.equal(report.total,55)
   assert.equal(report.slots.filter(s=>s.element==='hydro').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),60)
   assert.equal(report.ready,false)
