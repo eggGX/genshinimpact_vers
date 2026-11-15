@@ -922,3 +922,48 @@ test('複数効果中の元素反応でも後続効果と使用済み状態が�
   assert.equal(next.players[1].leaderHealth, 18)
   assert.equal(next.players[0].field[0].skillUsed, true)
 })
+
+test('カード登録台帳：既存のテストカードがすべて検索できる', async () => {
+  const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
+  const { getCard, getAllCards, cardRegistry } =
+    await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.equal(cardRegistry.size, getAllCards().length)
+  for (const card of testCards) {
+    assert.equal(getCard(card.id)?.name, card.name)
+    assert.equal(engine.getCard(card.id)?.name, card.name)
+  }
+  assert.equal(getCard('card-does-not-exist'), undefined)
+})
+
+test('カード登録台帳：IDの重複はエラーとして検出される', async () => {
+  const { createCardRegistry } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const card = engine.getCard('test-slime')
+  assert.throws(() => createCardRegistry([card, card]), /Duplicate card ID/)
+  assert.throws(() => createCardRegistry([{ ...card, id: ' ' }]), /Card ID/)
+})
+
+test('カード登録台帳：トークンは検索可能でもデッキ候補に含まれない', async () => {
+  const { getCard, getDeckCardPool } =
+    await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const pool = getDeckCardPool()
+  assert.equal(getCard('dendro-core')?.token, true)
+  assert.ok(pool.length > 0)
+  assert.equal(pool.some(card => card.id === 'dendro-core'), false)
+  assert.ok(pool.every(card => !card.token))
+})
+
+test('カード登録台帳：元素生物とバウンス用のカード情報も維持される', async () => {
+  const { getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.equal(getCard('test-hydro-elemental')?.elementalCreature, true)
+  assert.equal(getCard('test-hydro-elemental')?.element, 'hydro')
+  assert.equal(getCard('test-hilichurl')?.cost, 2)
+  assert.equal(getCard('test-elemental-caster')?.elementalBurst?.energyCost, 2)
+})
+
+test('正式カードとテストカードの登録元が分離されている', async () => {
+  const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
+  const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.equal(productionCards.length, 0)
+  assert.equal(getAllCards().length, testCards.length + productionCards.length)
+})
