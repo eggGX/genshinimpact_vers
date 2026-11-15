@@ -63,6 +63,8 @@ export interface Card {
   normalAttackElement?: ElementType
   /** 元素生物は自身の元素が常時付着する（風・岩も含む） */
   elementalCreature?: boolean
+  /** Tokens are not shuffled into the 40-card test deck. */
+  token?: boolean
   id: string
   name: string
   type: CardType
@@ -114,6 +116,8 @@ export interface Player {
   name: string
   leaderHealth: number
   leaderMaxHealth: number
+  /** Burning turns applied to the leader by burgeon. */
+  leaderBurningTurns?: number
 
   pp: number
   maxPp: number
