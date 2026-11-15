@@ -458,3 +458,102 @@ test('結晶：岩で反応すると攻撃側の結晶シールドが1増加す�
   assert.equal(next.players[0].field[0].shield.crystallize,1)
   assert.equal(next.players[0].field[0].instanceId,caster.instanceId)
 })
+
+test('シールド：通常から消費し、その後に結晶、残りだけHP減少', async () => {
+  const { absorbDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const unit = place(state, 0, 'test-shield-guard', 1, 10)
+  unit.shield = { normal: 3, crystallize: 4 }
+  const a = absorbDamage(unit, 5)
+  assert.equal(a.health, 10)
+  assert.deepEqual(a.shield, { normal: 0, crystallize: 2 })
+  const b = absorbDamage(a, 4)
+  assert.equal(b.health, 8)
+  assert.deepEqual(b.shield, { normal: 0, crystallize: 0 })
+})
+
+test('シールド：各種類の最大値は10、負の付与は無視', async () => {
+  const { grantShield } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const unit = place(state, 0, 'test-shield-guard', 1, 10)
+  const a = grantShield(unit, 'normal', 20)
+  const b = grantShield(a, 'crystallize', 30)
+  assert.deepEqual(b.shield, { normal: 10, crystallize: 10 })
+  assert.deepEqual(grantShield(b, 'normal', -5).shield, b.shield)
+})
+
+test('シールド兵の登場時効果は通常シールド3を付与する', () => {
+  const state = startedGame()
+  state.players[0].pp = 2
+  state.players[0].hand = ['test-shield-guard']
+  const next = engine.playCard(state, 'player1', 0)
+  assert.equal(next.players[0].field[0].shield.normal, 3)
+})
+
+test('通常攻撃と反撃の両方でシールドが吸収する', () => {
+  const state = startedGame()
+  const attacker = place(state, 0, 'test-hilichurl', 3, 5)
+  const target = place(state, 1, 'test-shield-guard', 2, 5)
+  attacker.shield = { normal: 2, crystallize: 1 }
+  target.shield = { normal: 1, crystallize: 1 }
+  const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
+  assert.equal(next.players[0].field[0].health, 5)
+  assert.deepEqual(next.players[0].field[0].shield, {normal:0, crystallize:1})
+  assert.equal(next.players[1].field[0].health, 4)
+  assert.deepEqual(next.players[1].field[0].shield, {normal:0, crystallize:0})
+})
+
+test('元素ダメージは反応計算後の合計値をシールドで吸収する', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const unit = place(state, 1, 'test-mage', 1, 10)
+  unit.aura = [{element:'hydro'}]
+  unit.shield = {normal:3, crystallize:2}
+  const result = resolveElementalDamage(unit, 2, 'pyro')
+  assert.equal(result.reaction,'vaporize')
+  assert.equal(result.damage,4)
+  assert.equal(result.follower.health,10)
+  assert.deepEqual(result.follower.shield, {normal:0, crystallize:1})
+  assert.deepEqual(result.follower.aura, [])
+})
+
+test('元素生物：登場時から固有元素を持つ（水・風・岩）', () => {
+  for(const [id,element] of [['test-hydro-elemental','hydro'],['test-anemo-elemental','anemo'],['test-geo-elemental','geo']]) {
+    const state = startedGame()
+    state.players[0].pp = 2
+    state.players[0].hand = [id]
+    const next = engine.playCard(state, 'player1', 0)
+    assert.deepEqual(next.players[0].field[0].aura, [{element}])
+  }
+})
+
+test('元素生物：反応後に固有元素付着を復元し別元素は残さない', async () => {
+  const { resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  const unit = place(state, 1, 'test-hydro-elemental', 1, 10)
+  unit.aura = [{element:'hydro'}]
+  const result = resolveElementalDamage(unit, 1, 'pyro')
+  assert.equal(result.reaction, 'vaporize')
+  assert.deepEqual(result.follower.aura, [{element:'hydro'}])
+})
+
+test('元素生物：風・岩の固有付着は元素反応後も保持', async () => {
+  const { restoreInherentAura, resolveElementalDamage } = await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state = startedGame()
+  for (const [id,element] of [['test-anemo-elemental','anemo'],['test-geo-elemental','geo']]) {
+    const unit = place(state, 1, id, 1, 10)
+    assert.deepEqual(restoreInherentAura(unit).aura, [{element}])
+    const result = resolveElementalDamage(restoreInherentAura(unit), 1, 'hydro')
+    assert.deepEqual(result.follower.aura[0], {element})
+  }
+})
+
+test('燃焼ダメージもシールドで吸収してHPを減らさない', () => {
+  const state = startedGame()
+  const unit = place(state, 0, 'test-mage', 1, 10)
+  unit.shield = { normal: 1, crystallize: 0 }
+  unit.keywords = ['burning:1']
+  const next = engine.endTurn(state)
+  assert.equal(next.players[0].field[0].health,10)
+  assert.equal(next.players[0].field[0].shield.normal,0)
+})
