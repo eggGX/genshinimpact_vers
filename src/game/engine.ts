@@ -16,7 +16,7 @@ import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advance
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
-import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack } from './dendroRules'
+import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
@@ -330,6 +330,7 @@ function resolveTurnEffects(
       result = advancedAnemoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = geoTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = dendroTokenTurnEnd(result, playerId, sourceId, resolveDeaths)
+      result = dendroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
   }
@@ -481,6 +482,7 @@ export function playCard(
     result = advancedAnemoPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = geoPlay(result, playerId, card.id)
     result = dendroPlay(result, playerId, card.id)
+    result = dendroGoldPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
@@ -493,7 +495,7 @@ export function needsFriendlyAbilityTarget(card: Card, kind: AbilityKind): boole
 
 export function needsAbilityTarget(card: Card, kind: AbilityKind): boolean {
   const ability = kind === 'skill' ? card.elementalSkill : card.elementalBurst
-  return ((card.id === 'C049' || card.id === 'C099') && kind === 'skill') || (ability?.effects ?? []).some(effect =>
+  return ((['C049','C099','C111','C112'].includes(card.id)) && kind === 'skill') || (ability?.effects ?? []).some(effect =>
     effect.target === 'selected_enemy_follower')
 }
 
@@ -519,7 +521,7 @@ export function canUseAbility(
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
   if (kind === 'skill' && card?.id === 'C083' && !owner.hand.some(id =>
       ['pyro', 'hydro', 'cryo', 'electro'].includes(getCard(id)?.element ?? ''))) return false
-  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097', 'C100', 'C098'].includes(card?.id ?? '') &&
+  if (kind === 'skill' && ['C019', 'C020', 'C038', 'C039', 'C053', 'C054', 'C064', 'C095', 'C097', 'C100', 'C098', 'C109'].includes(card?.id ?? '') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
   if (kind === 'skill' && card?.id === 'C069' &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
@@ -616,6 +618,7 @@ export function activateAbility(
     result = advancedAnemoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
     result = geoSkill(result, owner.id, followerId, card.id)
     if (card.id === 'C099') result = geoNaviaSkill(result, owner.id, targetId)
+    result = dendroGoldSkill(result, owner.id, followerId, card.id, targetId)
   }
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
