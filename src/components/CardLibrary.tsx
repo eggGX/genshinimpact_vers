@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CardArtwork } from './CardArtwork'
 import { getAllCards } from '../data/cardRegistry'
 import { productionCards } from '../data/productionCards'
 import { ELEMENT_ORDER, RARITY_ORDER, validateProductionCards } from '../data/cardValidation'
@@ -138,6 +139,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
               <span>コスト {card.cost} ／ {ELEMENT_LABELS[card.element]}</span>
               <strong>{card.name}</strong>
               <span>{RARITY_LABELS[card.rarity]}</span>
+              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--library" />
               {card.type === 'follower' && <span>{card.attack} / {card.health}</span>}
               <small>{card.token ? 'トークン（デッキ不可）' : '正式'}</small>
               {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
@@ -148,6 +150,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
         {selected && (
           <article className="library-details">
             <h3>{selected.name}</h3>
+            <CardArtwork cardId={selected.id} name={selected.name} className="card-artwork--library" />
             <p>{selected.description || '説明は未登録です。'}</p>
             <p>ID：{selected.id} ／ タイプ：{selected.type}</p>
             {selected.region && <p>地域：{selected.region.join('／')}</p>}
