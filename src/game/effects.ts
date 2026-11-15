@@ -118,6 +118,7 @@ function applyEffect(
     }
 
     let reaction: ReturnType<typeof resolveElementalDamage>['reaction'] = null
+    let reactedElement: ReturnType<typeof resolveElementalDamage>['reactedElement']
 
     players[targetIndex] = {
       ...targetPlayer,
