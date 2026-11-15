@@ -290,7 +290,6 @@ export const anemoCards: Card[] = [
     "normalAttackElement": "anemo",
     "elementalSkill": {"name":"羽画・風姿華歌","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"狂言・式楽伍番","energyCost":3,"effects":[]},
-    "implementationStatus": "playable",
-    "normalAttackElement": "anemo"
+    "implementationStatus": "playable"
   }
 ]
