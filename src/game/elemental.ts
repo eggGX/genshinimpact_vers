@@ -1,11 +1,12 @@
-import type { ElementType, Follower } from './types'
+import type { ElementType, Follower, GameState, Player } from './types'
+import { testCards } from '../data/testCards'
 
-export type AmplifyingReaction = 'vaporize' | 'melt'
+export type ElementalReaction = 'vaporize' | 'melt' | 'electro_charged' | 'overloaded' | 'frozen'
 
 export interface ElementalDamageResult {
   follower: Follower
   damage: number
-  reaction: AmplifyingReaction | null
+  reaction: ElementalReaction | null
 }
 
 /**
@@ -34,17 +35,13 @@ export function applyElementalAura(
 function reactionFor(
   attached: ElementType,
   incoming: ElementType
-): AmplifyingReaction | null {
-  if (
-    (attached === 'pyro' && incoming === 'hydro') ||
-    (attached === 'hydro' && incoming === 'pyro')
-  ) return 'vaporize'
-
-  if (
-    (attached === 'pyro' && incoming === 'cryo') ||
-    (attached === 'cryo' && incoming === 'pyro')
-  ) return 'melt'
-
+): ElementalReaction | null {
+  const pair = [attached, incoming]
+  if (pair.includes('pyro') && pair.includes('hydro')) return 'vaporize'
+  if (pair.includes('pyro') && pair.includes('cryo')) return 'melt'
+  if (pair.includes('hydro') && pair.includes('electro')) return 'electro_charged'
+  if (pair.includes('pyro') && pair.includes('electro')) return 'overloaded'
+  if (pair.includes('hydro') && pair.includes('cryo')) return 'frozen'
   return null
 }
 
@@ -75,12 +72,18 @@ export function resolveElementalDamage(
       incomingElement
     )
 
-    const damage = base + (reaction === 'melt' ? 3 : 2)
+    const damage = base +
+      (reaction === 'melt' ? 3 : reaction === 'vaporize' ? 2 : 0)
+    const remainingAuras = follower.aura.filter((_, i) => i !== index)
+    const keywords = reaction === 'frozen'
+      ? [...new Set([...follower.keywords, 'frozen'])]
+      : follower.keywords
     return {
       follower: {
         ...follower,
         health: follower.health - damage,
-        aura: follower.aura.filter((_, i) => i !== index),
+        aura: remainingAuras,
+        keywords,
       },
       damage,
       reaction,
@@ -97,4 +100,64 @@ export function resolveElementalDamage(
     damage: base,
     reaction: null,
   }
+}
+
+/**
+ * 反応による副次効果。
+ * 感電：対象以外の敵フォロワー（配置順の先頭）へ1、なければ敵リーダーへ1。
+ * 過負荷：反応対象の元カードのコストが5以下なら手札に戻す。
+ * 凍結：keywordsに'frozen'を付ける（通常攻撃不可）。
+ * 対象選択UI・解除タイミングは今後拡張する。
+ */
+export function resolveReactionConsequence(
+  state: GameState,
+  affectedOwnerIndex: number,
+  affectedInstanceId: string,
+  reaction: ElementalReaction | null
+): GameState {
+  if (!reaction || reaction === 'vaporize' || reaction === 'melt' ||
+      reaction === 'frozen') return state
+
+  const players = [...state.players] as [Player, Player]
+  const affected = players[affectedOwnerIndex]
+
+  if (reaction === 'overloaded') {
+    const target = affected.field.find(f => f.instanceId === affectedInstanceId)
+    const card = target && testCards.find(c => c.id === target.cardId)
+    if (!target || !card || card.cost > 5 || target.health <= 0) return state
+    players[affectedOwnerIndex] = {
+      ...affected,
+      field: affected.field.filter(f => f.instanceId !== affectedInstanceId),
+      hand: affected.hand.length < 9
+        ? [...affected.hand, target.cardId]
+        : affected.hand,
+    }
+    return { ...state, players }
+  }
+
+  if (reaction === 'electro_charged') {
+    const other = affected.field.find(
+      f => f.instanceId !== affectedInstanceId && f.health > 0
+    )
+    if (other) {
+      players[affectedOwnerIndex] = {
+        ...affected,
+        field: affected.field.map(f =>
+          f.instanceId === other.instanceId
+            ? { ...f, health: f.health - 1 }
+            : f
+        ),
+      }
+      return { ...state, players }
+    }
+
+    const hp = Math.max(0, affected.leaderHealth - 1)
+    players[affectedOwnerIndex] = { ...affected, leaderHealth: hp }
+    return {
+      ...state,
+      players,
+      winnerId: hp === 0 ? state.players[1 - affectedOwnerIndex].id : state.winnerId,
+    }
+  }
+  return state
 }
