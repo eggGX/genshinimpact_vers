@@ -237,7 +237,9 @@ export const geoCards: Card[] = [
       "稲妻"
     ],
     "description": "【ファンファーレ】自分の場に岩創造物があるなら「たもと」1体召喚。【元素スキル：羽袖一触】PP1：「たもと」1体召喚。【元素爆発：二刀の型・比翼】エネルギー3：敵フォロワーすべてに岩元素3ダメージ。自分の「たもと」1体につき追加でランダムな敵フォロワーまたはリーダーに岩元素2ダメージ。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable",
+    "elementalSkill": {"name":"羽袖一触","ppCost":1,"effects":[]},
+    "elementalBurst": {"name":"二刀の型・比翼","energyCost":3,"effects":[]}
   },
   {
     "id": "C099",
