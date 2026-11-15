@@ -964,7 +964,7 @@ test('正式カードとテストカードの登録元が分離されている',
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
   const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(productionCards.length, 10)
+  assert.equal(productionCards.length, 25)
   assert.equal(getAllCards().length, testCards.length + productionCards.length)
 })
 
@@ -984,15 +984,15 @@ test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () 
   }
 })
 
-test('正式カード未登録時はエラーなし・予定115枚が不足と判定', async () => {
+test('正式25枚登録時はエラーなし・予定90枚が不足と判定', async () => {
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 10)
+  assert.equal(report.total, 25)
   assert.equal(report.plannedTotal, 115)
   assert.equal(report.slots.length, 32)
-  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 105)
+  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 90)
   assert.equal(report.ready, false)
 })
 
@@ -1111,14 +1111,14 @@ test('無元素カードの説明には確定した能力を保持し未実装�
   assert.match(neutralCards[9].description, /カウントダウン7/)
 })
 
-test('正式無元素10枚登録後の枚数は10/115で残り105枚', async () => {
+test('無元素10枚と炎15枚の登録数は25/115で残り90枚', async () => {
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 10)
+  assert.equal(report.total, 25)
   assert.equal(report.plannedTotal, 115)
-  assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),105)
+  assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),90)
   assert.equal(report.slots.filter(s => s.element === 'none').every(s => s.remaining === 0),true)
   assert.equal(report.ready,false)
 })
@@ -1324,4 +1324,120 @@ test('C010 第四降臨者の力：7回の自ターン終了で7属性が重複�
   for(let i=0;i<13;i++) state=engine.endTurn(state)
   assert.equal(state.players[1].leaderHealth,13)
   assert.deepEqual(state.players[0].crests,[])
+})
+
+test('正式炎カードC011-C025は15枚・B4/S4/G4/L3で原本の名前とコストを保持', async () => {
+  const { pyroCards } = await vite.ssrLoadModule('/src/data/cards/pyro.ts')
+  assert.deepEqual(pyroCards.map(c => c.id),
+    Array.from({length:15}, (_, i)=>'C'+String(11+i).padStart(3,'0')))
+  assert.deepEqual(pyroCards.map(c=>c.name), [
+    '炎スライム','ヒルチャール射手・炎','ドドコ','アビスの魔術師・炎',
+    '旋火輪','素晴らしい旅','ファデュイ・デットエージェント・炎','双界の炎',
+    '偵察騎士・アンバー','万民百味・香菱','ペニー冒険団・ベネット',
+    '特巡隊隊長・シュヴルーズ','闇夜の英雄・ディルック',
+    '幻惑のトリック・リネ','往生堂堂主・胡桃',
+  ])
+  assert.deepEqual(pyroCards.map(c=>c.cost), [1,2,2,3,4,3,4,4,3,3,3,4,5,4,4])
+  assert.deepEqual(pyroCards.map(c=>c.rarity), [
+    ...Array(4).fill('bronze'),...Array(4).fill('silver'),
+    ...Array(4).fill('gold'),...Array(3).fill('legendary')
+  ])
+  assert.ok(pyroCards.every(c=>c.element==='pyro'))
+})
+
+test('炎元素15枚の登録で正式カードは25/115、残り90枚', async () => {
+  const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const result=validateProductionCards(productionCards)
+  assert.equal(result.total,25)
+  assert.equal(result.slots.filter(s=>s.element==='pyro').reduce((n,s)=>n+s.remaining,0),0)
+  assert.equal(result.slots.reduce((n,s)=>n+s.remaining,0),90)
+  assert.deepEqual(result.errors,[])
+})
+
+test('炎元素15枚は原本どおり種類・地域・二つ名・効果説明を保持', async () => {
+  const { pyroCards }=await vite.ssrLoadModule('/src/data/cards/pyro.ts')
+  assert.deepEqual(pyroCards.map(c=>c.type),[
+    'follower','follower','follower','follower',
+    'spell','amulet','follower','spell',
+    'follower','follower','follower','follower',
+    'follower','follower','follower',
+  ])
+  assert.deepEqual(pyroCards.filter(c=>c.type==='follower').map(c=>[c.attack,c.health]),[
+    [2,2],[2,2],[1,2],[2,2],[3,2],
+    [2,3],[2,3],[2,4],[3,4],[4,5],[2,3],[3,4],
+  ])
+  assert.equal(pyroCards.find(c=>c.id==='C023').description.includes('1ターン最大3回'),true)
+  assert.equal(pyroCards.find(c=>c.id==='C024').traits[0],'ファデュイ')
+  assert.equal(pyroCards.find(c=>c.id==='C025').region[0],'璃月')
+})
+
+test('炎元素は基本4枚のみ対戦可能、未実装11枚はデッキ候補から除外', async () => {
+  const { pyroCards }=await vite.ssrLoadModule('/src/data/cards/pyro.ts')
+  const { getDeckCardPool }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.deepEqual(pyroCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
+    ['C011','C012','C013','C014'])
+  const pool=getDeckCardPool().map(c=>c.id)
+  for(const c of pyroCards) assert.equal(pool.includes(c.id), c.implementationStatus==='playable')
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=['C015']
+  assert.equal(engine.canPlayCard(state,0),false)
+})
+
+test('C011 炎スライムは登場時に炎元素が常時付着する', () => {
+  const state=startedGame()
+  state.players[0].pp=1
+  state.players[0].hand=['C011']
+  const next=engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].field[0].cardId,'C011')
+  assert.deepEqual(next.players[0].field[0].aura,[{element:'pyro'}])
+})
+
+test('C012 炎射手はファンファーレで対象1体に炎1ダメージと付着', () => {
+  const state=startedGame()
+  state.players[0].pp=2
+  state.players[0].hand=['C012']
+  const target=place(state,1,'test-mage',1,5)
+  const next=engine.playCard(state,'player1',0,target.instanceId)
+  assert.equal(next.players[1].field[0].health,4)
+  assert.deepEqual(next.players[1].field[0].aura,[{element:'pyro'}])
+})
+
+test('C012 炎射手は対象選択できない敵だけならプレイ不可', () => {
+  const state=startedGame()
+  state.players[0].pp=2
+  state.players[0].hand=['C012']
+  const target=place(state,1,'test-mage',1,5)
+  target.keywords=['aura']
+  assert.equal(engine.canPlayCard(state,0),false)
+  assert.equal(engine.playCard(state,'player1',0,target.instanceId),state)
+})
+
+test('C013 ドドコは破壊時にランダムな敵1体に炎2ダメージ', () => {
+  const state=startedGame()
+  const dodoco=place(state,0,'C013',1,1)
+  const enemy=place(state,1,'test-mage',2,7)
+  const next=engine.attackFollower(state,dodoco.instanceId,enemy.instanceId)
+  assert.equal(next.players[0].field.length,0)
+  assert.equal(next.players[1].field[0].health,4)
+  assert.deepEqual(next.players[1].field[0].aura,[{element:'pyro'}])
+})
+
+test('C013 ドドコのラストワードは敵フォロワーがいなければ不発', () => {
+  const state=startedGame()
+  const dodoco=place(state,0,'C013',1,1)
+  dodoco.health=0
+  // ターン終了処理は通常の破壊処理を呼ぶ
+  const next=engine.endTurn(state)
+  assert.equal(next.players[1].leaderHealth,20)
+})
+
+test('C014 炎アビスの魔術師は登場時通常シールド3・通常攻撃は炎', () => {
+  const state=startedGame()
+  state.players[0].pp=3
+  state.players[0].hand=['C014']
+  const next=engine.playCard(state,'player1',0)
+  assert.equal(next.players[0].field[0].shield.normal,3)
+  assert.equal(engine.getCard('C014').normalAttackElement,'pyro')
 })
