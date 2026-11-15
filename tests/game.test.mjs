@@ -1600,3 +1600,28 @@ test('C018 双界の炎：対象無し・潜伏・オーラには使用不可', 
   assert.equal(next.players[1].field.some(f => f.instanceId === hidden.instanceId), true)
   assert.equal(next.players[0].leaderHealth, 18)
 })
+
+test('共通召喚はアミュレットも含めた場の5枠上限を守る', () => {
+  let state = startedGame()
+  state.players[0].hand = ['C016', 'C005']
+  state.players[0].pp = 10
+  state = engine.playCard(state, 'player1', 0)
+  assert.equal(state.players[0].amulets.length, 1)
+  state = engine.playCard(state, 'player1', 0)
+  assert.equal(state.players[0].field.length, 4)
+  assert.equal(state.players[0].field.length + state.players[0].amulets.length, 5)
+})
+
+test('潜伏中の敵フォロワーはスキルとファンファーレの選択対象にならない', () => {
+  const state = startedGame()
+  state.players[0].hand = ['C012']
+  state.players[0].pp = 2
+  const hidden = place(state, 1, 'C017', 3, 5)
+  hidden.keywords = ['stealth']
+  assert.equal(engine.canPlayCard(state, 0), false)
+  assert.equal(engine.playCard(state, 'player1', 0, hidden.instanceId), state)
+  state.players[0].energy = 3
+  const caster = place(state, 0, 'test-elemental-caster', 1, 4)
+  assert.equal(engine.canUseAbility(state, caster.instanceId, 'burst'), false)
+  assert.equal(engine.activateAbility(state, caster.instanceId, 'burst', hidden.instanceId), state)
+})
