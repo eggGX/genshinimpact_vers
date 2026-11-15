@@ -65,6 +65,8 @@ export interface CharacterAbility {
   effects: CardEffect[]
   /** Only bursts consume shared energy; skills gain one energy. */
   energyCost?: number
+  /** PP paid when activating a skill, in addition to the shared +1 energy gain. */
+  ppCost?: number
 }
 
 export interface Card {
