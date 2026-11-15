@@ -1,6 +1,7 @@
 import type { Card } from '../game/types'
 import { testCards } from './testCards'
 import { productionCards } from './productionCards'
+import { productionTokens } from './productionTokens'
 
 /** Data-driven card catalogue shared by the game engine and elemental rules. */
 export function createCardRegistry(cards: readonly Card[]): ReadonlyMap<string, Card> {
@@ -13,7 +14,7 @@ export function createCardRegistry(cards: readonly Card[]): ReadonlyMap<string, 
   return registry
 }
 
-const cards = [...testCards, ...productionCards]
+const cards = [...testCards, ...productionCards, ...productionTokens]
 export const cardRegistry = createCardRegistry(cards)
 
 export function getCard(cardId: string): Card | undefined {
