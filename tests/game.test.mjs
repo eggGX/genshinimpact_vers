@@ -967,3 +967,102 @@ test('正式カードとテストカードの登録元が分離されている',
   assert.equal(productionCards.length, 0)
   assert.equal(getAllCards().length, testCards.length + productionCards.length)
 })
+
+test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () => {
+  const { ELEMENT_ORDER, RARITY_ORDER, PLANNED_CARD_COUNTS, PLANNED_TOTAL } =
+    await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  assert.equal(PLANNED_TOTAL, 115)
+  assert.equal(ELEMENT_ORDER.length, 8)
+  assert.equal(RARITY_ORDER.length, 4)
+  assert.deepEqual(PLANNED_CARD_COUNTS.none, {
+    bronze: 4, silver: 4, gold: 2, legendary: 0,
+  })
+  for (const element of ELEMENT_ORDER.filter(e => e !== 'none')) {
+    assert.deepEqual(PLANNED_CARD_COUNTS[element], {
+      bronze: 4, silver: 4, gold: 4, legendary: 3,
+    })
+  }
+})
+
+test('正式カード未登録時はエラーなし・予定115枚が不足と判定', async () => {
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const report = validateProductionCards(productionCards)
+  assert.deepEqual(report.errors, [])
+  assert.equal(report.total, 0)
+  assert.equal(report.plannedTotal, 115)
+  assert.equal(report.slots.length, 32)
+  assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 115)
+  assert.equal(report.ready, false)
+})
+
+test('カード検証：重複IDと空ID・空名前を検出', async () => {
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const base = engine.getCard('test-slime')
+  const report = validateProductionCards([
+    { ...base, id: 'a', name: '1' },
+    { ...base, id: 'a', name: '2' },
+    { ...base, id: ' ', name: '' },
+  ])
+  assert.ok(report.errors.some(e => e.includes('重複')))
+  assert.ok(report.errors.some(e => e.includes('ID')))
+  assert.ok(report.errors.some(e => e.includes('名前')))
+  assert.equal(report.ready, false)
+})
+
+test('カード検証：元素別・レアリティ別の枠超過を検出', async () => {
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const base = engine.getCard('test-slime')
+  const cards = Array.from({ length: 5 }, (_, n) => ({ ...base, id: `pyro-b-${n}` }))
+  const report = validateProductionCards(cards)
+  assert.ok(report.errors.some(e => e.includes('上限4枚')))
+  assert.equal(report.slots.find(s => s.element === 'pyro' && s.rarity === 'bronze').registered, 5)
+})
+
+test('カード検証：コスト・攻撃力・体力とトークン禁止を検出', async () => {
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const base = engine.getCard('test-slime')
+  const report = validateProductionCards([
+    { ...base, cost: -1, attack: -2, health: 0, token: true },
+  ])
+  for (const marker of ['コスト', '攻撃力', '体力', 'トークン']) {
+    assert.ok(report.errors.some(e => e.includes(marker)), marker)
+  }
+})
+
+test('カード検証：スキルと爆発のトリガー・必要ENを検査', async () => {
+  const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
+  const base = engine.getCard('test-elemental-caster')
+  const bad = {
+    ...base,
+    id: 'bad-ability',
+    elementalSkill: { name: '', effects: [{ type: 'heal', trigger: 'burst', target: 'own_leader', value: 1 }] },
+    elementalBurst: { name: '爆発', energyCost: 9, effects: [{ type: 'damage', trigger: 'skill', target: 'enemy_leader', value: 1 }] },
+  }
+  const report = validateProductionCards([bad])
+  assert.ok(report.errors.some(e => e.includes('元素スキル')))
+  assert.ok(report.errors.some(e => e.includes('元素爆発')))
+})
+
+test('カード検索：元素・レアリティ・ID部分一致で絞り込める', async () => {
+  const { filterCards } = await vite.ssrLoadModule('/src/data/cardFilters.ts')
+  const cards = [
+    engine.getCard('test-slime'),
+    engine.getCard('test-elemental-caster'),
+    engine.getCard('test-electro-caster'),
+  ]
+  const result = filterCards(cards, {
+    element: 'hydro', rarity: 'legendary', origin: 'all', search: 'elemental',
+  }, new Set())
+  assert.deepEqual(result.map(card => card.id), ['test-elemental-caster'])
+})
+
+test('カード検索：正式／テスト用の区分を分離', async () => {
+  const { filterCards } = await vite.ssrLoadModule('/src/data/cardFilters.ts')
+  const cards = [engine.getCard('test-slime'), engine.getCard('test-hilichurl')]
+  const prodIds = new Set(['test-slime'])
+  const filters = { element: 'all', rarity: 'all', origin: 'production', search: '' }
+  assert.deepEqual(filterCards(cards, filters, prodIds).map(card => card.id), ['test-slime'])
+  assert.deepEqual(filterCards(cards, { ...filters, origin: 'test' }, prodIds).map(card => card.id), ['test-hilichurl'])
+  assert.deepEqual(filterCards(cards, { ...filters, origin: 'all', search: 'ヒル' }, prodIds).map(card => card.id), ['test-hilichurl'])
+})
