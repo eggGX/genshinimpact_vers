@@ -189,6 +189,12 @@ function App() {
           {follower.attack} / {follower.health}
         </span>
 
+        {follower.aura.length > 0 && (
+          <small style={{ color: '#9fe7ff' }}>
+            付着：{follower.aura.map(a => a.element).join('・')}
+          </small>
+        )}
+
         <small>
           {isOpponent
             ? '敵フォロワー'
