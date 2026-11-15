@@ -180,7 +180,9 @@ export const geoCards: Card[] = [
       "璃月七星"
     ],
     "description": "【元素攻撃：岩】【ファンファーレ】自リーダー結晶シールド2。【元素スキル：璇璣屏】PP1：「璇璣屏」1つを場に出す。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable",
+    "normalAttackElement": "geo",
+    "elementalSkill": {"name":"璇璣屏","ppCost":1,"effects":[]}
   },
   {
     "id": "C096",
@@ -218,7 +220,8 @@ export const geoCards: Card[] = [
       "こだまの子"
     ],
     "description": "【ファンファーレ】自リーダー結晶シールド2。【元素スキル：いけ、ぐるぐるコマちゃん！】PP1：「ぐるぐるコマちゃん」1つを場に出す。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable",
+    "elementalSkill": {"name":"いけ、ぐるぐるコマちゃん！","ppCost":1,"effects":[]}
   },
   {
     "id": "C098",
