@@ -6,7 +6,7 @@ import type {
   GameState,
   Player,
 } from './types'
-import { resolveElementalDamage } from './elemental'
+import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 /**
  * 効果を順番に実行する。
@@ -117,6 +117,8 @@ function applyEffect(
       return state
     }
 
+    let reaction: ReturnType<typeof resolveElementalDamage>['reaction'] = null
+
     players[targetIndex] = {
       ...targetPlayer,
       field: targetPlayer.field.map(follower => {
@@ -133,11 +135,13 @@ function applyEffect(
           : 0
 
         if (effect.type === 'damage') {
-          return resolveElementalDamage(
+          const outcome = resolveElementalDamage(
             follower,
             value,
             effect.element
-          ).follower
+          )
+          reaction = outcome.reaction
+          return outcome.follower
         }
 
         return {
@@ -150,10 +154,12 @@ function applyEffect(
       }),
     }
 
-    return {
-      ...state,
-      players,
-    }
+    return resolveReactionConsequence(
+      { ...state, players },
+      targetIndex,
+      instanceId,
+      reaction
+    )
   }
 
   // リーダー対象の効果
