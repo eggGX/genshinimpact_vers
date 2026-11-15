@@ -4397,7 +4397,7 @@ test('構築ルール: 同名4枚・40枚未満・4元素・トークン・不�
     .some(x=>x.includes('正式カードではありません')))
   assert.ok(validateDeck({...base,cards:['test-elemental-caster',...base.cards.slice(1)]})
     .some(x=>x.includes('正式カードではありません')))
-  assert.ok(validateDeck({...base,elements:['pyro','hydro']})
+  assert.ok(validateDeck({...base,elements:['hydro','cryo']})
     .some(x=>x.includes('元素が選択されていません')))
 })
 test('対戦開始: 2人分の別々の正式40枚デッキをシャッフルして4枚ドロー',async()=>{
