@@ -20,9 +20,9 @@ export function getCard(cardId: string): Card | undefined {
   return cardRegistry.get(cardId)
 }
 
-/** Tokens can be resolved from the catalogue but never enter starting decks. */
+/** Tokens and unimplemented formal cards can be resolved from the catalogue but never enter starting decks. */
 export function getDeckCardPool(): Card[] {
-  return [...cardRegistry.values()].filter(card => !card.token)
+  return [...cardRegistry.values()].filter(card => !card.token && card.implementationStatus !== 'data_only')
 }
 
 /** Stable copy for listing, validation, and future deck building UIs. */
