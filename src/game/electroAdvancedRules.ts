@@ -1,4 +1,4 @@
-import type { Follower, GameState, Player } from './types'
+import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader } from './leaderShield'
 import { resolveElementalDamage, resolveReactionConsequence, absorbDamage } from './elemental'
@@ -168,7 +168,7 @@ export function advancedElectroBurst(
 }
 
 export function advancedElectroTurnEnd(
-  state: GameState, ownerId: string, sourceId: string, deaths: DeathResolver
+  state: GameState, ownerId: string, sourceId: string
 ): GameState {
   if (state.winnerId !== null) return state
   const owner = state.players.find(p => p.id === ownerId)
