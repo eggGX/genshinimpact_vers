@@ -208,6 +208,9 @@ function App() {
         {follower.keywords.filter(k => k.startsWith('quicken:')).map(k => (
           <small key={k}>原激化：残り{k.slice(8)}回</small>
         ))}
+        {follower.shield.normal > 0 && (
+          <small>通常シールド：{follower.shield.normal}</small>
+        )}
         {follower.shield.crystallize > 0 && (
           <small>結晶シールド：{follower.shield.crystallize}</small>
         )}
