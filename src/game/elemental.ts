@@ -330,7 +330,30 @@ export function resolveReactionConsequence(
         return resolveElementalDamage(f, 1, reactedElement).follower
       }),
     }
-    return { ...state, players }
+    let next: GameState = { ...state, players }
+    const attackerIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
+    const owner = next.players[attackerIndex]
+    // Sucrose: draw once for the first Swirl created on its owner's turn.
+    if (owner?.id === next.currentPlayerId) {
+      const sources = owner.field.filter(f => f.cardId === 'C079' && f.health > 0 &&
+        (f.swirlDrawsThisTurn ?? 0) < 1)
+      for (const source of sources) {
+        const players = [...next.players] as [Player, Player]
+        const current = players[attackerIndex]
+        const [drawn, ...deck] = current.deck
+        players[attackerIndex] = {
+          ...current,
+          deck: drawn ? deck : current.deck,
+          hand: drawn && current.hand.length < 9 ? [...current.hand, drawn] : current.hand,
+          field: current.field.map(f => f.instanceId === source.instanceId
+            ? { ...f, swirlDrawsThisTurn: (f.swirlDrawsThisTurn ?? 0) + 1 } : f),
+        }
+        next = { ...next, players,
+          winnerId: drawn ? next.winnerId : next.players[1 - attackerIndex].id }
+        if (next.winnerId !== null) break
+      }
+    }
+    return next
   }
 
   if (reaction === 'overloaded') {
