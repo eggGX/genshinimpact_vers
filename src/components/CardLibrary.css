@@ -77,3 +77,6 @@
   .library-filters label { flex: 1 1 140px; }
   .library-filters select, .library-filters input { width: 100%; box-sizing: border-box; }
 }
+
+.library-entry .card-artwork { margin: 5px auto; }
+.library-details .card-artwork { width: 144px; margin: 8px 0 12px; }
