@@ -16,7 +16,7 @@ import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advance
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
-import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd } from './dendroRules'
+import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
@@ -480,6 +480,7 @@ export function playCard(
     result = resolveAnemoPlay(result, playerId, card.id)
     result = advancedAnemoPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = geoPlay(result, playerId, card.id)
+    result = dendroPlay(result, playerId, card.id)
   }
   return resolveDeaths(result)
 }
@@ -706,7 +707,7 @@ export function attackFollower(
         attacksThisTurn: (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0)) + 1 } : f) }
     return { ...swept, players }
   }
-  const buffed = geoAttack(
+  const buffed = dendroAttack(geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
     advancedElectroAttack(
@@ -724,7 +725,7 @@ export function attackFollower(
     ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
-  )
+  ), owner.id, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
@@ -814,7 +815,7 @@ export function attackLeader(
         : f),
     })) as [Player, Player],
   }
-  const buffed = geoAttack(
+  const buffed = dendroAttack(geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
     advancedElectroAttack(
@@ -832,7 +833,7 @@ export function attackLeader(
     ), owner.id, attackerId
     ), owner.id, attackerId
     ), owner.id, attackerId
-  )
+  ), owner.id, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const damagedLeader = damageLeader(
