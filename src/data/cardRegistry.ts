@@ -23,7 +23,9 @@ export function getCard(cardId: string): Card | undefined {
 
 /** Tokens and unimplemented formal cards can be resolved from the catalogue but never enter starting decks. */
 export function getDeckCardPool(): Card[] {
-  return [...cardRegistry.values()].filter(card => !card.token && card.implementationStatus !== 'data_only')
+  // Regular games must never draw the engine's test fixtures.
+  // Test cards remain in cardRegistry for isolated regression tests.
+  return productionCards.filter(card => !card.token && card.implementationStatus === 'playable')
 }
 
 /** Stable copy for listing, validation, and future deck building UIs. */
