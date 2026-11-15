@@ -1661,6 +1661,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['璇璣屏', 0, undefined, undefined],
     ['ぐるぐるコマちゃん', 0, undefined, undefined],
     ['陽華', 0, undefined, undefined],
+    ['たもと', 2, 1, 3],
   ])
   for(const card of productionTokens) {
     assert.equal(card.token, true)
@@ -4100,7 +4101,7 @@ test('STEP39 岩15枚のタイプ・ステータス・地域と対戦実装区�
   assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
   assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
   assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C086','C087','C088','C089','C090','C091','C092','C093','C094','C095','C096','C097','C099','C100'])
+    ['C086','C087','C088','C089','C090','C091','C092','C093','C094','C095','C096','C097','C098','C099','C100'])
 })
 
 test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
@@ -4113,7 +4114,7 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
-test('STEP39 岩元素14枚がデッキ候補、未実装1枚はデッキに入らない',async()=>{
+test('STEP39 岩元素15枚すべてがデッキ候補として対戦使用可能',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
@@ -4121,7 +4122,7 @@ test('STEP39 岩元素14枚がデッキ候補、未実装1枚はデッキに入�
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C098']
-  assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
+  assert.equal(engine.canPlayCard(state,0),true)
 })
 
 test('C086 岩スライムは岩元素生物として岩を常時付着',()=>{
@@ -4447,4 +4448,34 @@ test('C099 ナヴィア爆発は岩1全体・結晶1・2回クレスト',()=>{
   s=engine.endTurn(s)
   assert.equal(s.players[1].field.find(f=>f.instanceId===e.instanceId).health,8)
   assert.equal(s.players[0].crests[0].turnsRemaining,1)
+})
+
+test('C098 千織は岩創造物があれば登場時たもと1体を召喚する',()=>{
+  let s=startedGame()
+  s.players[0].amulets=[{instanceId:'jade',cardId:'token-jade-screen',turnsRemaining:0}]
+  s.players[0].pp=5;s.players[0].hand=['C098']
+  s=engine.playCard(s,'player1',0)
+  assert.deepEqual(s.players[0].field.map(f=>f.cardId),['C098','token-tamoto'])
+})
+test('C098 千織のスキルはPP1でたもと召喚とEN+1',()=>{
+  let s=startedGame();const c=place(s,0,'C098',3,5)
+  s.players[0].pp=1
+  s=engine.activateAbility(s,c.instanceId,'skill')
+  assert.equal(s.players[0].energy,1)
+  assert.equal(s.players[0].field[1].cardId,'token-tamoto')
+})
+test('C098 千織爆発は全体岩3とたもと数の岩2追加',()=>{
+  let s=startedGame();const c=place(s,0,'C098',3,5)
+  place(s,0,'token-tamoto',1,3)
+  place(s,1,'test-mage',0,3)
+  s.players[0].energy=3
+  s=engine.activateAbility(s,c.instanceId,'burst')
+  assert.equal(s.players[1].field.length,0)
+  assert.equal(s.players[1].leaderHealth,18)
+})
+test('たもとの終了時効果は敵フォロワーに岩2',()=>{
+  let s=startedGame();place(s,0,'token-tamoto',1,3)
+  place(s,1,'test-mage',0,5)
+  s=engine.endTurn(s)
+  assert.equal(s.players[1].field[0].health,3)
 })
