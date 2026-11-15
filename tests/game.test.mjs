@@ -91,9 +91,9 @@ test('攻撃したフォロワーは同じターンに再度攻撃できない',
   assert.equal(again.players[1].leaderHealth, 19)
 })
 
-test('炎スライムの通常攻撃は生存した敵に炎元素を付着させる', () => {
+test('炎アビス魔術師の元素通常攻撃は生存した敵に炎元素を付着させる', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'C011', 1, 2)
+  const attacker = place(state, 0, 'C014', 1, 2)
   const target = place(state, 1, 'C001', 1, 4)
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
   assert.equal(next.players[1].field[0].health, 3)
@@ -169,9 +169,9 @@ test('元素のない攻撃では反応を起こさず、元の付着を維持�
   assert.deepEqual(result.follower.aura, [{ element: 'pyro' }])
 })
 
-test('炎スライムの通常攻撃で蒸発が発生する', () => {
+test('炎アビス魔術師の元素通常攻撃で蒸発が発生する', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'C011', 1, 6)
+  const attacker = place(state, 0, 'C014', 1, 6)
   const target = place(state, 1, 'C001', 1, 7)
   target.aura = [{ element: 'hydro' }]
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
@@ -181,7 +181,7 @@ test('炎スライムの通常攻撃で蒸発が発生する', () => {
 
 test('同時戦闘で片方に反応が発生しても双方の攻撃を処理する', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'C011', 2, 2)
+  const attacker = place(state, 0, 'C014', 2, 2)
   const target = place(state, 1, 'C011', 2, 4)
   target.aura = [{ element: 'hydro' }]
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
@@ -266,7 +266,7 @@ test('凍結したフォロワーは持ち主のターン終了まで攻撃不�
 
 test('通常攻撃中の反応はダメージの同時処理を維持する', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'C011', 1, 5)
+  const attacker = place(state, 0, 'C014', 1, 5)
   const target = place(state, 1, 'C001', 1, 5)
   target.aura = [{ element: 'electro' }]
   const next = engine.attackFollower(state, attacker.instanceId, target.instanceId)
@@ -430,7 +430,7 @@ test('草原核は自分のフィールド5枠を超えて生成されない', a
 
 test('烈開花：炎で草原核を破壊し持ち主リーダーを3ターン燃焼にする', () => {
   const state = startedGame()
-  const attacker = place(state, 0, 'C011', 1, 4)
+  const attacker = place(state, 0, 'C014', 1, 4)
   const core = place(state, 1, 'dendro-core', 0, 1)
   core.keywords = ['cannot_attack']
   core.shield = { normal: 5, crystallize: 2 }
@@ -516,16 +516,17 @@ test('オーラのフォロワーは通常攻撃対象には選べる', () => {
   assert.equal(next.players[1].field[0].health, 4)
 })
 
-test('カード登録台帳：既存のテストカードがすべて検索できる', async () => {
-  const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
-  const { getCard, getAllCards, cardRegistry } =
-    await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(cardRegistry.size, getAllCards().length)
-  for (const card of testCards) {
-    assert.equal(getCard(card.id)?.name, card.name)
-    assert.equal(engine.getCard(card.id)?.name, card.name)
-  }
-  assert.equal(getCard('card-does-not-exist'), undefined)
+test('カード登録台帳は正式115枚・トークン24種だけを含む',async()=>{
+  const { getCard,getAllCards,cardRegistry }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
+  assert.equal(productionCards.length,115)
+  assert.equal(productionTokens.length,24)
+  assert.equal(cardRegistry.size,139)
+  assert.equal(getAllCards().length,139)
+  for(const card of [...productionCards,...productionTokens])
+    assert.equal(getCard(card.id)?.name,card.name)
+  assert.equal(getCard('card-does-not-exist'),undefined)
 })
 
 test('カード登録台帳：IDの重複はエラーとして検出される', async () => {
@@ -545,14 +546,13 @@ test('カード登録台帳：トークンは検索可能でもデッキ候補�
   assert.ok(pool.every(card => !card.token))
 })
 
-test('正式カードとテストカードの登録元が分離されている', async () => {
-  const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
-  const { testCards } = await vite.ssrLoadModule('/src/data/testCards.ts')
-  const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(productionCards.length, 115)
-  const { productionTokens } = await vite.ssrLoadModule('/src/data/productionTokens.ts')
-  assert.equal(getAllCards().length,
-    testCards.length + productionCards.length + productionTokens.length)
+test('正式カードとトークンの登録元だけを使用する', async()=>{
+  const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
+  const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
+  const { getAllCards }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  assert.equal(productionCards.length,115)
+  assert.equal(productionTokens.length,24)
+  assert.equal(getAllCards().length,productionCards.length+productionTokens.length)
 })
 
 test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () => {
