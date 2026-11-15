@@ -129,6 +129,7 @@ export interface Follower {
   attacksThisTurn?: number
   /** Number of own-turn electro-charged triggers credited to this Ororon. */
   electroChargedTriggersThisTurn?: number
+  swirlDrawsThisTurn?: number
   keywords: string[]
 }
 
@@ -142,6 +143,7 @@ export interface AmuletState {
   instanceId: string
   cardId: string
   turnsRemaining: number
+  recordedElement?: ElementType
 }
 
 export interface Player {
@@ -155,6 +157,8 @@ export interface Player {
   leaderBurningTurns?: number
   /** Leader elemental attachment (e.g. Barbara's healing crest). */
   leaderAura?: ElementalAura[]
+  /** Healing absorption remaining from a Bond of Life. */
+  bondOfLife?: number
 
   pp: number
   maxPp: number
