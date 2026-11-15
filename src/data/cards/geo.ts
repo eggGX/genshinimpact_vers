@@ -273,6 +273,8 @@ export const geoCards: Card[] = [
       "西風騎士団"
     ],
     "description": "【自分のターン終了時】自リーダー結晶シールド1。【元素スキル：創生術・擬似陽華】PP1：「陽華」1つを場に出す。【元素爆発：誕生式・大地の潮】エネルギー3：敵フォロワーすべてに岩元素2ダメージ。自分の場に岩創造物があれば追加で岩元素2ダメージ。",
-    "implementationStatus": "data_only"
+    "implementationStatus": "playable",
+    "elementalSkill": {"name":"創生術・擬似陽華","ppCost":1,"effects":[]},
+    "elementalBurst": {"name":"誕生式・大地の潮","energyCost":3,"effects":[]}
   }
 ]
