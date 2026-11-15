@@ -1101,7 +1101,7 @@ test('無元素カードの説明には確定した能力を保持し未実装�
   for (const card of neutralCards) {
     assert.equal(card.element, 'none')
     assert.ok(card.description.length > 0)
-    assert.equal(card.implementationStatus, 'data_only')
+    assert.equal(card.implementationStatus, 'playable')
   }
   assert.match(neutralCards[2].description, /守護/)
   assert.match(neutralCards[3].description, /ラストワード/)
@@ -1123,14 +1123,14 @@ test('正式無元素10枚登録後の枚数は10/115で残り105枚', async () 
   assert.equal(report.ready,false)
 })
 
-test('未実装正式カードは参照可能だが対戦デッキに混ざらない', async () => {
+test('正式無元素カード10枚はデッキに入りフォロワーとスペルをプレイ可能', async () => {
   const { getCard, getDeckCardPool } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   assert.equal(getCard('C001').name,'ヒルチャール')
   assert.equal(getCard('C010').type,'spell')
-  assert.equal(getDeckCardPool().some(c => c.id.startsWith('C0')),false)
+  assert.equal(getDeckCardPool().filter(c => /^C00[1-9]$|^C010$/.test(c.id)).length,10)
   const state = startedGame()
   state.players[0].hand = ['C001', 'C005']
   state.players[0].pp = 10
-  assert.equal(engine.canPlayCard(state,0),false)
-  assert.equal(engine.canPlayCard(state,1),false)
+  assert.equal(engine.canPlayCard(state,0),true)
+  assert.equal(engine.canPlayCard(state,1),true)
 })
