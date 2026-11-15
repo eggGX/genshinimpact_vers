@@ -29,6 +29,7 @@ export function grantShield(
 
 export function absorbDamage(follower: Follower, amount: number): Follower {
   let remaining = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0
+  if (remaining > 0 && follower.keywords.includes('next_damage_plus_2')) remaining += 2
   if (follower.keywords.includes('damage_cap_1') && remaining >= 2) remaining = 1
   const normalUsed = Math.min(Math.max(0, follower.shield.normal), remaining)
   remaining -= normalUsed
@@ -41,6 +42,9 @@ export function absorbDamage(follower: Follower, amount: number): Follower {
       normal: follower.shield.normal - normalUsed,
       crystallize: follower.shield.crystallize - crystallizeUsed,
     },
+    keywords: amount > 0
+      ? follower.keywords.filter(k => k !== 'next_damage_plus_2')
+      : follower.keywords,
   }
 }
 
@@ -143,8 +147,11 @@ export function resolveElementalDamage(
     ? Math.max(0, Math.trunc(baseDamage)) : 0
   const physicalBonus = (!incomingElement || incomingElement === 'none') &&
     follower.keywords.includes('superconduct') && base > 0 ? 2 : 0
+  const retainedKeywords = base > 0
+    ? follower.keywords.filter(k => k !== 'next_damage_plus_2')
+    : follower.keywords
   const physicalKeywords = physicalBonus
-    ? follower.keywords.filter(k => k !== 'superconduct') : follower.keywords
+    ? retainedKeywords.filter(k => k !== 'superconduct') : retainedKeywords
 
   // 激化の残り回数を優先消費し、同じ攻撃で再度原激化しない。
   if (base > 0 && (incomingElement === 'electro' || incomingElement === 'dendro')) {
