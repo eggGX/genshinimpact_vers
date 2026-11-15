@@ -4391,6 +4391,7 @@ test('C100 アルベドのスキルは陽華を盤面に設置しEN+1',()=>{
   s.players[0].pp=1
   s=engine.activateAbility(s,a.instanceId,'skill')
   assert.equal(s.players[0].amulets[0].cardId,'token-solar-isotoma')
+  assert.equal(s.players[0].amulets[0].turnsRemaining,3)
   assert.equal(s.players[0].energy,1)
 })
 test('C100 アルベドの爆発は岩創造物があると岩2+2',()=>{
@@ -4769,4 +4770,27 @@ test('C030は同じフォロワーへ複数回付与しても追加効果は1回
  const e=place(s,1,'test-mage',0,8)
  s=engine.attackFollower(s,ally.instanceId,e.instanceId)
  assert.equal(s.players[1].field[0].health,5)
+})
+
+test('岩創造物3種は3ターン継続、各ターン固有の効果が発動',()=>{
+ let s=startedGame()
+ s.players[0].amulets=[
+  {instanceId:'jade-audit',cardId:'token-jade-screen',turnsRemaining:3},
+  {instanceId:'turbo-audit',cardId:'token-spinning-turbo',turnsRemaining:3},
+  {instanceId:'solar-audit',cardId:'token-solar-isotoma',turnsRemaining:3},
+ ]
+ const e=place(s,1,'test-mage',0,10)
+ s=engine.endTurn(s)
+ assert.equal(s.players[0].leaderShield.crystallize,3)
+ assert.equal(s.players[1].field.find(f=>f.instanceId===e.instanceId).health,7)
+ assert.deepEqual(s.players[0].amulets.map(a=>a.turnsRemaining),[2,2,2])
+ for(let i=0;i<4;i++)s=engine.endTurn(s)
+ assert.equal(s.players[0].amulets.length,0)
+})
+test('岩創造物のターン終了効果はナヴィアの結晶シールド獲得時能力と連動',()=>{
+ let s=startedGame()
+ const navia=place(s,0,'C099',4,5)
+ s.players[0].amulets=[{instanceId:'jade-navia',cardId:'token-jade-screen',turnsRemaining:3}]
+ s=engine.endTurn(s)
+ assert.equal(s.players[0].field.find(f=>f.instanceId===navia.instanceId).attack,5)
 })
