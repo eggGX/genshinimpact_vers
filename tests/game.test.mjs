@@ -1861,3 +1861,259 @@ test('カード検証：元素スキルのPPコストは0以上の整数のみ',
     assert.ok(validateProductionCards([bad]).errors.some(e => e.includes('元素スキル')))
   }
 })
+
+test('STEP29 炎レジェンド3枚のスキル・爆発とPP/ENが原本どおり', async () => {
+  const { pyroCards } = await vite.ssrLoadModule('/src/data/cards/pyro.ts')
+  const legends = pyroCards.filter(c => c.rarity === 'legendary')
+  assert.deepEqual(legends.map(c => c.id), ['C023','C024','C025'])
+  assert.deepEqual(legends.map(c => c.implementationStatus), ['playable','playable','playable'])
+  assert.deepEqual(legends.map(c => c.elementalSkill.ppCost), [1,1,1])
+  assert.deepEqual(legends.map(c => c.elementalBurst.energyCost), [3,2,3])
+  assert.deepEqual(legends.map(c => [c.cost,c.attack,c.health]), [[5,4,5],[4,2,3],[4,3,4]])
+  assert.deepEqual(legends.map(c => c.elementalSkill.name),
+    ['逆焔の刃','ビウィルダー・ライト','蝶導来世'])
+  assert.deepEqual(legends.map(c => c.elementalBurst.name),
+    ['黎明','大魔術・ミラクルパレード','安神秘法'])
+})
+
+test('C023 ディルック：スキル1/2/3回目は炎3/4/5ダメージ、各PP1とEN+1', () => {
+  let state = startedGame()
+  const diluc = place(state,0,'C023',4,5)
+  state.players[0].pp=4
+  const target = place(state,1,'test-mage',1,20)
+  for (const [i,expectedHp] of [17,13,8].entries()) {
+    assert.equal(engine.canUseAbility(state,diluc.instanceId,'skill'),true)
+    state=engine.activateAbility(state,diluc.instanceId,'skill',target.instanceId)
+    assert.equal(state.players[1].field[0].health,expectedHp)
+    assert.equal(state.players[0].pp,3-i)
+    assert.equal(state.players[0].energy,i+1)
+    assert.equal(state.players[0].field[0].skillUsesThisTurn,i+1)
+  }
+  assert.equal(engine.canUseAbility(state,diluc.instanceId,'skill'),false)
+  assert.equal(engine.activateAbility(state,diluc.instanceId,'skill',target.instanceId),state)
+})
+
+test('C023 ディルック：使用回数は次の自分のターンにリセット', () => {
+  let state = startedGame()
+  const diluc=place(state,0,'C023',4,5)
+  state.players[0].pp=5
+  place(state,1,'test-mage',1,25)
+  state=engine.activateAbility(state,diluc.instanceId,'skill',state.players[1].field[0].instanceId)
+  assert.equal(state.players[0].field[0].skillUsesThisTurn,1)
+  state=engine.endTurn(state)
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].skillUsesThisTurn,0)
+  assert.equal(engine.canUseAbility(state,diluc.instanceId,'skill'),true)
+})
+
+test('C023 ディルック：元素爆発はEN3消費し敵全体とリーダーに炎3', () => {
+  let state=startedGame()
+  const diluc=place(state,0,'C023',4,5)
+  state.players[0].energy=4
+  const a=place(state,1,'test-mage',1,7)
+  const b=place(state,1,'test-mage',1,8)
+  b.aura=[{element:'hydro'}]
+  state=engine.activateAbility(state,diluc.instanceId,'burst')
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[1].leaderHealth,17)
+  assert.equal(state.players[1].field.find(f=>f.instanceId===a.instanceId).health,4)
+  assert.equal(state.players[1].field.find(f=>f.instanceId===b.instanceId).health,3)
+  assert.equal(state.players[0].field[0].burstUsed,true)
+})
+
+test('C023 ディルック：スキルと爆発は別枠で同じターンに使用できる', () => {
+  let state=startedGame()
+  const diluc=place(state,0,'C023',4,5)
+  state.players[0].energy=3
+  state.players[0].pp=1
+  const enemy=place(state,1,'test-mage',1,12)
+  state=engine.activateAbility(state,diluc.instanceId,'skill',enemy.instanceId)
+  state=engine.activateAbility(state,diluc.instanceId,'burst')
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[1].leaderHealth,17)
+  assert.equal(state.players[1].field[0].health,6)
+})
+
+test('C024 リネ：疾走で登場ターンからリーダーへ攻撃可能', () => {
+  let state=startedGame()
+  state.players[0].pp=4
+  state.players[0].hand=['C024']
+  state=engine.playCard(state,'player1',0)
+  const lyney=state.players[0].field[0]
+  assert.equal(lyney.keywords.includes('storm'),true)
+  assert.equal(lyney.canAttack,true)
+  state=engine.attackLeader(state,lyney.instanceId)
+  assert.equal(state.players[1].leaderHealth,18)
+})
+
+test('C024 リネ：味方炎カードが自身含め3枚以上なら攻撃時+1/+0', () => {
+  let state=startedGame()
+  const lyney=place(state,0,'C024',2,3)
+  const a=place(state,0,'C001',1,2)
+  place(state,0,'C019',2,3)
+  let next=engine.attackLeader(state,lyney.instanceId)
+  assert.equal(next.players[1].leaderHealth,18)
+  assert.equal(next.players[0].field.find(f=>f.instanceId===lyney.instanceId).attack,2)
+  state.players[0].field.find(f=>f.instanceId===a.instanceId).cardId='C011'
+  next=engine.attackLeader(state,lyney.instanceId)
+  assert.equal(next.players[1].leaderHealth,17)
+  assert.equal(next.players[0].field.find(f=>f.instanceId===lyney.instanceId).attack,3)
+})
+
+test('C024 リネ：元素スキルはPP1で炎2ダメージ、EN1獲得', () => {
+  let state=startedGame()
+  const lyney=place(state,0,'C024',2,3)
+  const enemy=place(state,1,'test-mage',1,6)
+  state.players[0].pp=1
+  state=engine.activateAbility(state,lyney.instanceId,'skill',enemy.instanceId)
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[1].field[0].health,4)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'pyro'}])
+})
+
+test('C024 リネ：爆発でファニーハット・キャットに変身し全状態をリセット', () => {
+  let state=startedGame()
+  const lyney=place(state,0,'C024',9,1)
+  lyney.shield={normal:5,crystallize:3}
+  lyney.aura=[{element:'hydro'}]
+  lyney.keywords=['storm','burning:2']
+  lyney.hasAttacked=true
+  lyney.skillUsed=true
+  lyney.skillUsesThisTurn=1
+  state.players[0].energy=3
+  state=engine.activateAbility(state,lyney.instanceId,'burst')
+  assert.equal(state.players[0].energy,1)
+  const cat=state.players[0].field[0]
+  assert.equal(cat.cardId,'token-funny-hat-cat')
+  assert.notEqual(cat.instanceId,lyney.instanceId)
+  assert.deepEqual([cat.attack,cat.health,cat.maxHealth],[5,5,5])
+  assert.deepEqual(cat.shield,{normal:0,crystallize:0})
+  assert.deepEqual(cat.aura,[])
+  assert.equal(cat.hasAttacked,false)
+  assert.equal(cat.skillUsed,false)
+  assert.equal(cat.burstUsed,false)
+  assert.equal(cat.canAttack,true)
+  for(const k of ['rush','aura','intimidate','rush_only']) assert.ok(cat.keywords.includes(k))
+  assert.deepEqual(state.players[0].graveyard,[])
+})
+
+test('ファニーハット・キャット：突進で敵フォロワー攻撃可能、リーダーは不可', () => {
+  const state=startedGame()
+  state.players[0].energy=2
+  const lyney=place(state,0,'C024',2,3)
+  let next=engine.activateAbility(state,lyney.instanceId,'burst')
+  const cat=next.players[0].field[0]
+  const enemy=place(next,1,'test-mage',1,9)
+  assert.equal(engine.attackLeader(next,cat.instanceId),next)
+  next=engine.attackFollower(next,cat.instanceId,enemy.instanceId)
+  assert.equal(next.players[1].field[0].health,4)
+})
+
+test('ファニーハット・キャット：次の自分ターン開始で破壊、リネを無ファンファーレ召喚', () => {
+  let state=startedGame()
+  const lyney=place(state,0,'C024',2,3)
+  state.players[0].energy=2
+  state=engine.activateAbility(state,lyney.instanceId,'burst')
+  assert.equal(state.players[0].field[0].cardId,'token-funny-hat-cat')
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].cardId,'token-funny-hat-cat')
+  state=engine.endTurn(state)
+  assert.equal(state.players[0].field[0].cardId,'C024')
+  assert.equal(state.players[0].field[0].attack,2)
+  assert.ok(state.players[0].graveyard.includes('token-funny-hat-cat'))
+  assert.equal(state.players[0].graveyard.includes('C024'),false)
+})
+
+test('ファニーハット・キャット：オーラと威圧が有効、破壊時にもリネを召喚', () => {
+  let state=startedGame()
+  const lyney=place(state,0,'C024',2,3)
+  state.players[0].energy=2
+  state=engine.activateAbility(state,lyney.instanceId,'burst')
+  const cat=state.players[0].field[0]
+  const enemy=place(state,1,'test-mage',1,8)
+  const p2={...state,currentPlayerId:'player2'}
+  assert.equal(engine.attackFollower(p2,enemy.instanceId,cat.instanceId),p2)
+  p2.players[1].hand=['C018'];p2.players[1].pp=4
+  assert.equal(engine.canPlayCard(p2,0),false)
+  // Destruction through a non-targeted combat result is represented by removing health.
+  p2.players[0].field[0].health=0
+  const next=engine.endTurn(p2)
+  assert.ok(next.players[0].field.some(f=>f.cardId==='C024'))
+})
+
+test('C025 胡桃：疾走とHP10以下限定の+2攻撃力', () => {
+  let state=startedGame()
+  state.players[0].hand=['C025']
+  state.players[0].pp=4
+  state.players[0].leaderHealth=11
+  state=engine.playCard(state,'player1',0)
+  const hutao=state.players[0].field[0]
+  assert.equal(hutao.canAttack,true)
+  let next=engine.attackLeader(state,hutao.instanceId)
+  assert.equal(next.players[1].leaderHealth,17)
+  const low=startedGame()
+  low.players[0].leaderHealth=10
+  const empowered=place(low,0,'C025',3,4)
+  next=engine.attackLeader(low,empowered.instanceId)
+  assert.equal(next.players[1].leaderHealth,15)
+  assert.equal(next.players[0].field[0].attack,3)
+})
+
+test('C025 胡桃：元素スキルはPP1とHP3を消費し自身+2攻撃、炎通常攻撃付与', () => {
+  let state=startedGame()
+  const hutao=place(state,0,'C025',3,4)
+  state.players[0].pp=1
+  state.players[0].leaderHealth=15
+  state=engine.activateAbility(state,hutao.instanceId,'skill')
+  assert.equal(state.players[0].pp,0)
+  assert.equal(state.players[0].energy,1)
+  assert.equal(state.players[0].leaderHealth,12)
+  assert.equal(state.players[0].field[0].attack,5)
+  assert.ok(state.players[0].field[0].keywords.includes('normal_attack_pyro'))
+  const target=place(state,1,'test-mage',1,9)
+  state=engine.attackFollower(state,hutao.instanceId,target.instanceId)
+  assert.deepEqual(state.players[1].field[0].aura,[{element:'pyro'}])
+})
+
+test('C025 胡桃：HPが3ならスキルの自傷ダメージで敗北する', () => {
+  let state=startedGame()
+  const hutao=place(state,0,'C025',3,4)
+  state.players[0].leaderHealth=3
+  state.players[0].pp=1
+  state=engine.activateAbility(state,hutao.instanceId,'skill')
+  assert.equal(state.winnerId,'player2')
+  assert.equal(state.players[0].leaderHealth,0)
+  assert.equal(state.players[0].field[0].attack,3)
+})
+
+test('C025 胡桃：元素爆発で敵リーダー炎4・自リーダーHP3回復、EN3消費', () => {
+  let state=startedGame()
+  const hutao=place(state,0,'C025',3,4)
+  state.players[0].energy=3
+  state.players[0].leaderHealth=13
+  state=engine.activateAbility(state,hutao.instanceId,'burst')
+  assert.equal(state.players[1].leaderHealth,16)
+  assert.equal(state.players[0].leaderHealth,16)
+  assert.equal(state.players[0].energy,0)
+  assert.equal(state.players[0].field[0].burstUsed,true)
+})
+
+test('C025 胡桃：爆発で相手を倒した後は回復を行わない', () => {
+  let state=startedGame()
+  const hutao=place(state,0,'C025',3,4)
+  state.players[0].energy=3
+  state.players[0].leaderHealth=10
+  state.players[1].leaderHealth=4
+  state=engine.activateAbility(state,hutao.instanceId,'burst')
+  assert.equal(state.winnerId,'player1')
+  assert.equal(state.players[0].leaderHealth,10)
+})
+
+test('変身トークンは登録済みだがデッキに入らない', async () => {
+  const { getDeckCardPool } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const card=engine.getCard('token-funny-hat-cat')
+  assert.deepEqual([card.cost,card.attack,card.health],[5,5,5])
+  assert.deepEqual(card.keywords,['rush','aura','intimidate'])
+  assert.equal(getDeckCardPool().some(c=>c.id===card.id),false)
+})
