@@ -1,6 +1,48 @@
 import type { ElementType, Follower, GameState, Player } from './types'
 import { testCards } from '../data/testCards'
 
+/** 元素生物の固有付着。風・岩も常時保持する。 */
+function inherentElement(follower: Follower): ElementType | undefined {
+  const card = testCards.find(c => c.id === follower.cardId)
+  return card?.elementalCreature ? card.element : undefined
+}
+
+export function restoreInherentAura(follower: Follower): Follower {
+  const element = inherentElement(follower)
+  if (!element || element === 'none' ||
+      follower.aura.some(aura => aura.element === element)) return follower
+  return { ...follower, aura: [...follower.aura, { element }] }
+}
+
+export function grantShield(
+  follower: Follower, type: 'normal' | 'crystallize', amount: number
+): Follower {
+  const add = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0
+  return {
+    ...follower,
+    shield: {
+      ...follower.shield,
+      [type]: Math.min(10, Math.max(0, follower.shield[type]) + add),
+    },
+  }
+}
+
+export function absorbDamage(follower: Follower, amount: number): Follower {
+  let remaining = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0
+  const normalUsed = Math.min(Math.max(0, follower.shield.normal), remaining)
+  remaining -= normalUsed
+  const crystallizeUsed = Math.min(Math.max(0, follower.shield.crystallize), remaining)
+  remaining -= crystallizeUsed
+  return {
+    ...follower,
+    health: follower.health - remaining,
+    shield: {
+      normal: follower.shield.normal - normalUsed,
+      crystallize: follower.shield.crystallize - crystallizeUsed,
+    },
+  }
+}
+
 export type ElementalReaction =
   | 'vaporize' | 'melt' | 'electro_charged' | 'overloaded' | 'frozen'
   | 'superconduct' | 'burning' | 'quicken' | 'swirl' | 'crystallize'
@@ -22,17 +64,17 @@ export function applyElementalAura(
 ): Follower {
   if (!element || element === 'none' ||
       element === 'anemo' || element === 'geo') {
-    return follower
+    return restoreInherentAura(follower)
   }
 
   if (follower.aura.some(aura => aura.element === element)) {
-    return follower
+    return restoreInherentAura(follower)
   }
 
-  return {
+  return restoreInherentAura({
     ...follower,
     aura: [...follower.aura, { element }],
-  }
+  })
 }
 
 function reactionFor(
@@ -79,7 +121,7 @@ export function resolveElementalDamage(
       return {
         follower: {
           ...follower,
-          health: follower.health - base - physicalBonus,
+          ...absorbDamage(follower, base + physicalBonus),
           keywords: [
             ...physicalKeywords.filter(k => !k.startsWith('quicken:')),
             ...(rest ? [`quicken:${rest}`] : []),
@@ -97,7 +139,7 @@ export function resolveElementalDamage(
     if (burning) {
       const turns = Number(burning.slice(8)) || 0
       return {
-        follower: { ...follower, health: follower.health - base,
+        follower: { ...absorbDamage(follower, base),
           keywords: [...physicalKeywords.filter(k => !k.startsWith('burning:')), `burning:${turns + 1}`] },
         damage: base,
         reaction: 'burning',
@@ -128,8 +170,8 @@ export function resolveElementalDamage(
       keywords = [...keywords.filter(k => !k.startsWith('quicken:')), 'quicken:2']
     }
     return {
-      follower: { ...follower, health: follower.health - damage,
-        aura: remainingAuras, keywords },
+      follower: restoreInherentAura({ ...absorbDamage(follower, damage),
+        aura: remainingAuras, keywords }),
       damage, reaction, reactedElement,
     }
   }
@@ -142,7 +184,7 @@ export function resolveElementalDamage(
       if (remaining > 0) keywords.push(`quicken:${remaining}`)
     }
   }
-  const damaged = { ...follower, health: follower.health - base - physicalBonus, keywords }
+  const damaged = { ...absorbDamage(follower, base + physicalBonus), keywords }
   return {
     follower: applyElementalAura(damaged, incomingElement),
     damage: base + physicalBonus,
@@ -222,7 +264,7 @@ export function resolveReactionConsequence(
       players[affectedOwnerIndex] = {
         ...affected,
         field: affected.field.map(f =>
-          f.instanceId === other.instanceId ? { ...f, health: f.health - 1 } : f),
+          f.instanceId === other.instanceId ? absorbDamage(f, 1) : f),
       }
       return { ...state, players }
     }
