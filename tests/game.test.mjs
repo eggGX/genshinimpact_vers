@@ -2183,7 +2183,7 @@ test('STEP30 構築済み水元素15枚と正式登録総数を照合',async()=>
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,55)
+  assert.equal(report.total,70)
   assert.equal(report.slots.filter(s=>s.element==='hydro').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),45)
   assert.equal(report.ready,false)
