@@ -125,6 +125,8 @@ export interface Follower {
 
   canAttack: boolean
   hasAttacked: boolean
+  /** Number of declared attacks this turn; double-attack followers may declare two. */
+  attacksThisTurn?: number
   keywords: string[]
 }
 
@@ -147,6 +149,8 @@ export interface Player {
   leaderMaxHealth: number
   /** Burning turns applied to the leader by burgeon. */
   leaderBurningTurns?: number
+  /** Leader elemental attachment (e.g. Barbara's healing crest). */
+  leaderAura?: ElementalAura[]
 
   pp: number
   maxPp: number
