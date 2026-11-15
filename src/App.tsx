@@ -4,10 +4,12 @@ import {
   attackFollower,
   attackLeader,
   canFollowerAttack,
+  canPlayCard,
   confirmMulligan,
   createInitialGameState,
   endTurn,
   getCard,
+  needsPlayTarget,
   playCard,
 } from './game/engine'
 import type { Follower } from './game/types'
@@ -15,74 +17,73 @@ import './App.css'
 
 function App() {
   const [game, setGame] = useState(createInitialGameState)
-
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
-
+  const [selectedHandIndex, setSelectedHandIndex] =
+    useState<number | null>(null)
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
 
   const currentPlayer = game.players.find(
-    player => player.id === game.currentPlayerId
+    p => p.id === game.currentPlayerId
   )!
-
   const opponent = game.players.find(
-    player => player.id !== game.currentPlayerId
+    p => p.id !== game.currentPlayerId
   )!
-
   const winner = game.players.find(
-    player => player.id === game.winnerId
+    p => p.id === game.winnerId
   )
 
   const selectedAttacker = currentPlayer.field.find(
-    follower => follower.instanceId === selectedAttackerId
+    f => f.instanceId === selectedAttackerId
   )
 
-  /**
-   * ゲームリセット
-   */
+  const resetSelection = () => {
+    setSelectedAttackerId(null)
+    setSelectedHandIndex(null)
+  }
+
   const handleReset = () => {
     setGame(createInitialGameState())
-    setSelectedAttackerId(null)
+    resetSelection()
     setMulliganSelection([])
   }
 
-  /**
-   * マリガンの選択切替
-   */
   const handleToggleMulligan = (index: number) => {
     setMulliganSelection(previous =>
       previous.includes(index)
-        ? previous.filter(value => value !== index)
+        ? previous.filter(i => i !== index)
         : [...previous, index]
     )
   }
 
-  /**
-   * マリガン確定
-   */
   const handleConfirmMulligan = () => {
     const indices = [...mulliganSelection]
-
     setGame(previous =>
       confirmMulligan(previous, indices)
     )
-
     setMulliganSelection([])
   }
 
-  /**
-   * ターン終了
-   */
   const handleEndTurn = () => {
     setGame(previous => endTurn(previous))
-    setSelectedAttackerId(null)
+    resetSelection()
   }
 
-  /**
-   * カードをプレイ
-   */
   const handlePlayCard = (handIndex: number) => {
+    if (!canPlayCard(game, handIndex)) return
+
+    const card = getCard(currentPlayer.hand[handIndex])
+    if (!card) return
+
+    if (needsPlayTarget(card)) {
+      setSelectedHandIndex(previous =>
+        previous === handIndex ? null : handIndex
+      )
+      setSelectedAttackerId(null)
+      return
+    }
+
     setGame(previous =>
       playCard(
         previous,
@@ -90,15 +91,14 @@ function App() {
         handIndex
       )
     )
+    resetSelection()
   }
 
-  /**
-   * 攻撃フォロワー選択
-   */
   const handleSelectAttacker = (follower: Follower) => {
     if (game.winnerId !== null) return
     if (!canFollowerAttack(follower)) return
 
+    setSelectedHandIndex(null)
     setSelectedAttackerId(previous =>
       previous === follower.instanceId
         ? null
@@ -106,24 +106,31 @@ function App() {
     )
   }
 
-  /**
-   * 敵フォロワー攻撃
-   */
-  const handleAttackFollower = (targetId: string) => {
+  const handleEnemyFollowerClick = (targetId: string) => {
+    if (selectedHandIndex !== null) {
+      const index = selectedHandIndex
+
+      setGame(previous =>
+        playCard(
+          previous,
+          previous.currentPlayerId,
+          index,
+          targetId
+        )
+      )
+      resetSelection()
+      return
+    }
+
     if (!selectedAttackerId) return
 
     const attackerId = selectedAttackerId
-
     setGame(previous =>
       attackFollower(previous, attackerId, targetId)
     )
-
-    setSelectedAttackerId(null)
+    resetSelection()
   }
 
-  /**
-   * 敵リーダー攻撃
-   */
   const handleAttackLeader = () => {
     if (!selectedAttackerId) return
 
@@ -132,13 +139,9 @@ function App() {
     setGame(previous =>
       attackLeader(previous, attackerId)
     )
-
-    setSelectedAttackerId(null)
+    resetSelection()
   }
 
-  /**
-   * フィールド上のフォロワー
-   */
   const renderFollower = (
     follower: Follower,
     isOpponent: boolean
@@ -155,23 +158,24 @@ function App() {
 
     const isTarget =
       isOpponent &&
-      selectedAttacker !== undefined &&
-      game.winnerId === null
+      game.winnerId === null &&
+      (selectedAttacker !== undefined ||
+        selectedHandIndex !== null)
 
     return (
       <button
         type="button"
+        key={follower.instanceId}
         className={[
           'field-card',
           canAttack ? 'can-attack' : '',
           isSelected ? 'selected-card' : '',
           isTarget ? 'attack-target' : '',
         ].filter(Boolean).join(' ')}
-        key={follower.instanceId}
         disabled={!canAttack && !isTarget}
         onClick={() => {
           if (isOpponent) {
-            handleAttackFollower(follower.instanceId)
+            handleEnemyFollowerClick(follower.instanceId)
           } else {
             handleSelectAttacker(follower)
           }
@@ -188,7 +192,7 @@ function App() {
         <small>
           {isOpponent
             ? '敵フォロワー'
-            : canFollowerAttack(follower)
+            : canAttack
               ? '攻撃可能'
               : '攻撃不可'}
         </small>
@@ -196,9 +200,6 @@ function App() {
     )
   }
 
-  /**
-   * フィールド表示
-   */
   const renderField = (
     followers: Follower[],
     isOpponent: boolean
@@ -206,22 +207,18 @@ function App() {
     <div className="card-slot">
       {followers.length === 0
         ? 'カード配置エリア'
-        : followers.map(follower =>
-            renderFollower(follower, isOpponent)
+        : followers.map(f =>
+            renderFollower(f, isOpponent)
           )}
     </div>
   )
 
-  /**
-   * マリガン画面
-   */
   if (game.phase === 'mulligan') {
     return (
       <div className="game">
         <header className="game-header">
           <h1>原神カードゲーム</h1>
           <span>ゲーム準備</span>
-
           <button type="button" onClick={handleReset}>
             ゲームリセット
           </button>
@@ -234,14 +231,9 @@ function App() {
             textAlign: 'center',
           }}
         >
-          <h2>
-            {currentPlayer.name} のマリガン
-          </h2>
+          <h2>{currentPlayer.name} のマリガン</h2>
 
-          <p>
-            交換したいカードを選択してください。
-          </p>
-
+          <p>交換したいカードを選択してください。</p>
           <p>
             選択枚数：{mulliganSelection.length} / 4
           </p>
@@ -255,63 +247,50 @@ function App() {
               margin: '35px 0',
             }}
           >
-            {currentPlayer.hand.map(
-              (cardId, index) => {
-                const card = getCard(cardId)
+            {currentPlayer.hand.map((cardId, index) => {
+              const card = getCard(cardId)
+              if (!card) return null
 
-                if (!card) return null
+              const selected =
+                mulliganSelection.includes(index)
 
-                const selected =
-                  mulliganSelection.includes(index)
-
-                return (
-                  <button
-                    type="button"
-                    key={index}
-                    onClick={() =>
-                      handleToggleMulligan(index)
-                    }
-                    style={{
-                      width: 155,
-                      height: 215,
-                      padding: 12,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: selected
-                        ? '#72592b'
-                        : '#38546a',
-                      color: 'white',
-                      border: selected
-                        ? '3px solid #ffd24d'
-                        : '3px solid #c9a75c',
-                      borderRadius: 12,
-                      cursor: 'pointer',
-                      boxShadow: selected
-                        ? '0 0 18px #ffd24d88'
-                        : 'none',
-                    }}
-                  >
-                    <span>
-                      コスト {card.cost}
-                    </span>
-
-                    <strong>{card.name}</strong>
-
-                    <span>
-                      {card.attack} / {card.health}
-                    </span>
-
-                    <span>
-                      {selected
-                        ? '交換する ✓'
-                        : 'キープ'}
-                    </span>
-                  </button>
-                )
-              }
-            )}
+              return (
+                <button
+                  type="button"
+                  key={index}
+                  onClick={() =>
+                    handleToggleMulligan(index)
+                  }
+                  style={{
+                    width: 155,
+                    height: 215,
+                    padding: 12,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: selected
+                      ? '#72592b'
+                      : '#38546a',
+                    color: 'white',
+                    border: selected
+                      ? '3px solid #ffd24d'
+                      : '3px solid #c9a75c',
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>コスト {card.cost}</span>
+                  <strong>{card.name}</strong>
+                  <span>
+                    {card.attack} / {card.health}
+                  </span>
+                  <span>
+                    {selected ? '交換する ✓' : 'キープ'}
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           <button
@@ -319,7 +298,6 @@ function App() {
             className="end-turn"
             style={{
               marginLeft: 0,
-              fontSize: 18,
               padding: '14px 35px',
             }}
             onClick={handleConfirmMulligan}
@@ -330,34 +308,19 @@ function App() {
           </button>
 
           <p style={{ marginTop: 25 }}>
-            デッキ残数：
-            {currentPlayer.deck.length}枚
-          </p>
-
-          <p style={{ color: '#a5bbc1' }}>
-            {currentPlayer.id === 'player1'
-              ? '確定後、プレイヤー2のマリガンに進みます。'
-              : '確定後、プレイヤー1のターンが始まります。'}
+            デッキ残数：{currentPlayer.deck.length}枚
           </p>
         </main>
       </div>
     )
   }
 
-  /**
-   * 通常の対戦画面
-   */
   return (
     <div className="game">
       <header className="game-header">
         <h1>原神カードゲーム</h1>
-
         <span>TURN {game.turn}</span>
-
-        <button
-          type="button"
-          onClick={handleReset}
-        >
+        <button type="button" onClick={handleReset}>
           ゲームリセット
         </button>
       </header>
@@ -368,7 +331,6 @@ function App() {
         </div>
       )}
 
-      {/* 相手プレイヤー */}
       <section className="player opponent">
         <button
           type="button"
@@ -384,32 +346,20 @@ function App() {
           onClick={handleAttackLeader}
         >
           <strong>{opponent.name}</strong>
-
           <span>
-            HP {opponent.leaderHealth}
-            {' / '}
-            {opponent.leaderMaxHealth}
+            HP {opponent.leaderHealth} /
+            {' '}{opponent.leaderMaxHealth}
           </span>
         </button>
 
         <div className="pp">
           PP {opponent.pp} / {opponent.maxPp}
         </div>
-
-        <div>
-          デッキ：{opponent.deck.length}枚
-        </div>
-
-        <div>
-          手札：{opponent.hand.length}枚
-        </div>
-
-        <div>
-          墓場：{opponent.graveyard.length}枚
-        </div>
+        <div>デッキ：{opponent.deck.length}枚</div>
+        <div>手札：{opponent.hand.length}枚</div>
+        <div>墓場：{opponent.graveyard.length}枚</div>
       </section>
 
-      {/* フィールド */}
       <section className="field">
         <div className="field-row">
           <p>{opponent.name} のフィールド</p>
@@ -424,33 +374,21 @@ function App() {
         </div>
       </section>
 
-      {/* 自分プレイヤー */}
       <section className="player self">
         <div className="leader">
           <strong>{currentPlayer.name}</strong>
-
           <span>
-            HP {currentPlayer.leaderHealth}
-            {' / '}
-            {currentPlayer.leaderMaxHealth}
+            HP {currentPlayer.leaderHealth} /
+            {' '}{currentPlayer.leaderMaxHealth}
           </span>
         </div>
 
         <div className="pp">
           PP {currentPlayer.pp} / {currentPlayer.maxPp}
         </div>
-
-        <div>
-          デッキ：{currentPlayer.deck.length}枚
-        </div>
-
-        <div>
-          手札：{currentPlayer.hand.length}枚
-        </div>
-
-        <div>
-          墓場：{currentPlayer.graveyard.length}枚
-        </div>
+        <div>デッキ：{currentPlayer.deck.length}枚</div>
+        <div>手札：{currentPlayer.hand.length}枚</div>
+        <div>墓場：{currentPlayer.graveyard.length}枚</div>
 
         <button
           type="button"
@@ -462,52 +400,54 @@ function App() {
         </button>
       </section>
 
-      {/* 操作案内 */}
       <div className="battle-message">
         {winner
           ? 'ゲーム終了'
-          : selectedAttacker
-            ? '攻撃対象を選択してください'
-            : '攻撃可能なフォロワーを選択してください'}
+          : selectedHandIndex !== null
+            ? 'ファンファーレの対象となる敵フォロワーを選択してください'
+            : selectedAttacker
+              ? '攻撃対象を選択してください'
+              : 'カードをプレイするか、攻撃可能なフォロワーを選択してください'}
       </div>
 
-      {/* 手札 */}
       <footer className="hand">
-        {currentPlayer.hand.map(
-          (cardId, index) => {
-            const card = getCard(cardId)
+        {currentPlayer.hand.map((cardId, index) => {
+          const card = getCard(cardId)
+          if (!card) return null
 
-            if (!card) return null
+          const playable = canPlayCard(game, index)
+          const selected = selectedHandIndex === index
 
-            const playable =
-              game.winnerId === null &&
-              card.type === 'follower' &&
-              card.cost <= currentPlayer.pp &&
-              currentPlayer.field.length < 5
-
-            return (
-              <button
-                type="button"
-                className="hand-card"
-                key={`${cardId}-${index}`}
-                disabled={!playable}
-                onClick={() =>
-                  handlePlayCard(index)
-                }
-              >
-                <span className="card-cost">
-                  {card.cost}
-                </span>
-
-                <strong>{card.name}</strong>
-
-                <span>
-                  {card.attack} / {card.health}
-                </span>
-              </button>
-            )
-          }
-        )}
+          return (
+            <button
+              type="button"
+              className={[
+                'hand-card',
+                selected ? 'selected-card' : '',
+              ].filter(Boolean).join(' ')}
+              key={`${cardId}-${index}`}
+              disabled={!playable}
+              onClick={() => handlePlayCard(index)}
+              style={{
+                borderColor: selected
+                  ? '#ffd24d'
+                  : undefined,
+                boxShadow: selected
+                  ? '0 0 16px #ffd24d'
+                  : undefined,
+              }}
+              title={card.description}
+            >
+              <span className="card-cost">
+                {card.cost}
+              </span>
+              <strong>{card.name}</strong>
+              <span>
+                {card.attack} / {card.health}
+              </span>
+            </button>
+          )
+        })}
       </footer>
     </div>
   )

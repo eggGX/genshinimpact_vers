@@ -20,9 +20,6 @@ const MAX_PP = 10
 
 let nextInstanceId = 1
 
-/**
- * 配列シャッフル
- */
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
 
@@ -34,25 +31,16 @@ function shuffle<T>(items: T[]): T[] {
   return result
 }
 
-/**
- * テスト用40枚デッキ
- */
 function createTestDeck(): string[] {
-  const cards = Array.from(
-    { length: DECK_SIZE },
-    (_, index) => testCards[index % testCards.length].id
+  return shuffle(
+    Array.from(
+      { length: DECK_SIZE },
+      (_, i) => testCards[i % testCards.length].id
+    )
   )
-
-  return shuffle(cards)
 }
 
-/**
- * プレイヤー初期化
- */
-function createPlayer(
-  id: string,
-  name: string
-): Player {
+function createPlayer(id: string, name: string): Player {
   const deck = createTestDeck()
   const hand = deck.splice(0, INITIAL_HAND_SIZE)
 
@@ -70,41 +58,23 @@ function createPlayer(
   }
 }
 
-/**
- * ゲーム開始
- */
 export function createInitialGameState(): GameState {
-  const player1 = createPlayer(
-    'player1',
-    'プレイヤー1'
-  )
-
-  const player2 = createPlayer(
-    'player2',
-    'プレイヤー2'
-  )
+  const p1 = createPlayer('player1', 'プレイヤー1')
+  const p2 = createPlayer('player2', 'プレイヤー2')
 
   return {
     turn: 1,
-    currentPlayerId: player1.id,
-    players: [player1, player2],
+    currentPlayerId: p1.id,
+    players: [p1, p2],
     phase: 'mulligan',
     winnerId: null,
   }
 }
 
-/**
- * カード情報取得
- */
-export function getCard(
-  cardId: string
-): Card | undefined {
+export function getCard(cardId: string): Card | undefined {
   return cardDatabase.get(cardId)
 }
 
-/**
- * マリガン確定
- */
 export function confirmMulligan(
   state: GameState,
   selectedIndices: number[]
@@ -112,116 +82,205 @@ export function confirmMulligan(
   if (state.phase !== 'mulligan') return state
   if (state.winnerId !== null) return state
 
-  const playerIndex = state.players.findIndex(
-    player => player.id === state.currentPlayerId
+  const index = state.players.findIndex(
+    p => p.id === state.currentPlayerId
   )
+  if (index < 0) return state
 
-  if (playerIndex === -1) return state
-
-  const player = state.players[playerIndex]
-
-  const indices = new Set(
+  const player = state.players[index]
+  const chosen = new Set(
     selectedIndices.filter(
-      index =>
-        Number.isInteger(index) &&
-        index >= 0 &&
-        index < player.hand.length
+      i =>
+        Number.isInteger(i) &&
+        i >= 0 &&
+        i < player.hand.length
     )
   )
 
-  const returnedCards = player.hand.filter(
-    (_, index) => indices.has(index)
+  const returned = player.hand.filter(
+    (_, i) => chosen.has(i)
   )
-
-  const keptCards = player.hand.filter(
-    (_, index) => !indices.has(index)
+  const kept = player.hand.filter(
+    (_, i) => !chosen.has(i)
   )
+  const deck = shuffle([...player.deck, ...returned])
 
-  const shuffledDeck = shuffle([
-    ...player.deck,
-    ...returnedCards,
-  ])
-
-  const replacementCards = shuffledDeck.slice(
-    0,
-    returnedCards.length
-  )
-
-  const remainingDeck = shuffledDeck.slice(
-    returnedCards.length
-  )
-
-  const updatedPlayer: Player = {
+  const updated: Player = {
     ...player,
-    hand: [...keptCards, ...replacementCards],
-    deck: remainingDeck,
+    hand: [...kept, ...deck.slice(0, returned.length)],
+    deck: deck.slice(returned.length),
   }
 
-  const nextPlayers = [...state.players] as [
-    Player,
-    Player,
-  ]
+  const players = [...state.players] as [Player, Player]
+  players[index] = updated
 
-  nextPlayers[playerIndex] = updatedPlayer
-
-  // プレイヤー1のマリガン完了
-  if (playerIndex === 0) {
+  if (index === 0) {
     return {
       ...state,
-      players: nextPlayers,
-      currentPlayerId: nextPlayers[1].id,
+      players,
+      currentPlayerId: players[1].id,
     }
   }
 
-  // 両者のマリガン完了
-  nextPlayers[0] = {
-    ...nextPlayers[0],
+  players[0] = {
+    ...players[0],
     pp: 1,
     maxPp: 1,
   }
 
   return {
     ...state,
-    players: nextPlayers,
-    currentPlayerId: nextPlayers[0].id,
+    players,
+    currentPlayerId: players[0].id,
     turn: 1,
     phase: 'main',
   }
 }
 
 /**
- * フォロワーをプレイする
+ * 選択対象が必要なファンファーレか
+ */
+export function needsPlayTarget(
+  card: Card
+): boolean {
+  return (card.effects ?? []).some(
+    effect =>
+      effect.trigger === 'on_play' &&
+      effect.target === 'selected_enemy_follower'
+  )
+}
+
+/**
+ * プレイ可能か
+ */
+export function canPlayCard(
+  state: GameState,
+  handIndex: number
+): boolean {
+  if (state.phase !== 'main') return false
+  if (state.winnerId !== null) return false
+
+  const owner = state.players.find(
+    p => p.id === state.currentPlayerId
+  )
+  const enemy = state.players.find(
+    p => p.id !== state.currentPlayerId
+  )
+
+  if (!owner || !enemy) return false
+
+  const cardId = owner.hand[handIndex]
+  const card = cardId ? getCard(cardId) : undefined
+
+  if (!card || card.type !== 'follower') return false
+  if (owner.pp < card.cost) return false
+  if (owner.field.length >= MAX_FIELD_SIZE) return false
+
+  if (
+    needsPlayTarget(card) &&
+    enemy.field.length === 0
+  ) {
+    return false
+  }
+
+  return true
+}
+
+/**
+ * 破壊処理。
+ * 同時に破壊されたフォロワーを先にすべて除去し、
+ * ターンプレイヤー優先・フィールド配置順で効果を解決。
+ */
+function resolveDeaths(state: GameState): GameState {
+  let result = state
+
+  // 連鎖破壊への安全上限
+  for (let pass = 0; pass < 100; pass++) {
+    const activeIndex = result.players.findIndex(
+      p => p.id === result.currentPlayerId
+    )
+    if (activeIndex < 0) return result
+
+    const order = [activeIndex, 1 - activeIndex]
+
+    const destroyed = order.flatMap(index =>
+      result.players[index].field
+        .filter(f => f.health <= 0)
+        .map(f => ({
+          ownerId: result.players[index].id,
+          follower: f,
+        }))
+    )
+
+    if (destroyed.length === 0) break
+
+    const players = result.players.map(player => {
+      const dead = player.field.filter(f => f.health <= 0)
+
+      return {
+        ...player,
+        field: player.field.filter(f => f.health > 0),
+        graveyard: [
+          ...player.graveyard,
+          ...dead.map(f => f.cardId),
+        ],
+      }
+    }) as [Player, Player]
+
+    result = {
+      ...result,
+      players,
+    }
+
+    for (const { ownerId, follower } of destroyed) {
+      if (result.winnerId !== null) break
+
+      const card = getCard(follower.cardId)
+
+      result = resolveEffects(
+        result,
+        ownerId,
+        card?.effects ?? [],
+        'on_destroy'
+      )
+    }
+
+    if (result.winnerId !== null) break
+  }
+
+  return result
+}
+
+/**
+ * カードをプレイし、ファンファーレを実行
  */
 export function playCard(
   state: GameState,
   playerId: string,
-  handIndex: number
+  handIndex: number,
+  targetId?: string
 ): GameState {
-  if (state.winnerId !== null) return state
-  if (state.phase !== 'main') return state
   if (state.currentPlayerId !== playerId) return state
+  if (!canPlayCard(state, handIndex)) return state
 
-  const playerIndex = state.players.findIndex(
-    player => player.id === playerId
+  const index = state.players.findIndex(
+    p => p.id === playerId
   )
+  if (index < 0) return state
 
-  if (playerIndex === -1) return state
-
-  const player = state.players[playerIndex]
+  const player = state.players[index]
   const cardId = player.hand[handIndex]
+  const card = getCard(cardId)!
 
-  if (!cardId) return state
+  if (needsPlayTarget(card)) {
+    const enemy = state.players[1 - index]
 
-  const card = getCard(cardId)
-
-  if (!card || card.type !== 'follower') {
-    return state
-  }
-
-  if (player.pp < card.cost) return state
-
-  if (player.field.length >= MAX_FIELD_SIZE) {
-    return state
+    if (
+      !targetId ||
+      !enemy.field.some(f => f.instanceId === targetId)
+    ) {
+      return state
+    }
   }
 
   const follower: Follower = {
@@ -230,11 +289,8 @@ export function playCard(
     attack: card.attack ?? 0,
     health: card.health ?? 1,
     maxHealth: card.health ?? 1,
-
-    // 元素ENは現段階では暫定
     energy: 0,
     maxEnergy: 5,
-
     aura: [],
     shield: {
       normal: 0,
@@ -245,69 +301,39 @@ export function playCard(
     keywords: [],
   }
 
-  const updatedPlayer: Player = {
+  const players = [...state.players] as [Player, Player]
+
+  players[index] = {
     ...player,
     pp: player.pp - card.cost,
-    hand: player.hand.filter(
-      (_, index) => index !== handIndex
-    ),
+    hand: player.hand.filter((_, i) => i !== handIndex),
     field: [...player.field, follower],
   }
 
-  const nextPlayers = [...state.players] as [
-    Player,
-    Player,
-  ]
-
-  nextPlayers[playerIndex] = updatedPlayer
-
-  const nextState: GameState = {
+  let result: GameState = {
     ...state,
-    players: nextPlayers,
+    players,
   }
 
-  // ファンファーレなどの登場時効果
-  return resolveEffects(
-    nextState,
+  result = resolveEffects(
+    result,
     playerId,
     card.effects ?? [],
-    'on_play'
+    'on_play',
+    targetId
   )
+
+  return resolveDeaths(result)
 }
 
-/**
- * 攻撃可能か判定
- */
 export function canFollowerAttack(
   follower: Follower
 ): boolean {
   return (
+    follower.health > 0 &&
     follower.canAttack &&
-    !follower.hasAttacked &&
-    follower.health > 0
+    !follower.hasAttacked
   )
-}
-
-/**
- * 破壊されたフォロワーを墓場へ
- */
-function removeDestroyedFollowers(
-  player: Player
-): Player {
-  const destroyed = player.field.filter(
-    follower => follower.health <= 0
-  )
-
-  return {
-    ...player,
-    field: player.field.filter(
-      follower => follower.health > 0
-    ),
-    graveyard: [
-      ...player.graveyard,
-      ...destroyed.map(follower => follower.cardId),
-    ],
-  }
 }
 
 /**
@@ -318,257 +344,180 @@ export function attackFollower(
   attackerId: string,
   targetId: string
 ): GameState {
-  if (
-    state.winnerId !== null ||
-    state.phase !== 'main'
-  ) {
-    return state
-  }
+  if (state.phase !== 'main') return state
+  if (state.winnerId !== null) return state
 
-  const attackerIndex = state.players.findIndex(
-    player => player.id === state.currentPlayerId
+  const index = state.players.findIndex(
+    p => p.id === state.currentPlayerId
   )
+  if (index < 0) return state
 
-  if (attackerIndex === -1) return state
+  const enemyIndex = 1 - index
+  const owner = state.players[index]
+  const enemy = state.players[enemyIndex]
 
-  const defenderIndex =
-    attackerIndex === 0 ? 1 : 0
-
-  const attackerPlayer = state.players[attackerIndex]
-  const defenderPlayer = state.players[defenderIndex]
-
-  const attacker = attackerPlayer.field.find(
-    follower => follower.instanceId === attackerId
+  const attacker = owner.field.find(
+    f => f.instanceId === attackerId
   )
-
-  const defender = defenderPlayer.field.find(
-    follower => follower.instanceId === targetId
+  const defender = enemy.field.find(
+    f => f.instanceId === targetId
   )
 
   if (!attacker || !defender) return state
   if (!canFollowerAttack(attacker)) return state
 
-  // 同時ダメージ
-  const attackerDamage = Math.max(
-    0,
-    attacker.attack
-  )
+  const attackDamage = Math.max(0, attacker.attack)
+  const counterDamage = Math.max(0, defender.attack)
 
-  const defenderDamage = Math.max(
-    0,
-    defender.attack
-  )
+  const players = [...state.players] as [Player, Player]
 
-  const updatedAttackerPlayer: Player = {
-    ...attackerPlayer,
-    field: attackerPlayer.field.map(follower =>
-      follower.instanceId === attackerId
+  players[index] = {
+    ...owner,
+    field: owner.field.map(f =>
+      f.instanceId === attackerId
         ? {
-            ...follower,
-            health:
-              follower.health - defenderDamage,
+            ...f,
+            health: f.health - counterDamage,
             hasAttacked: true,
           }
-        : follower
+        : f
     ),
   }
 
-  const updatedDefenderPlayer: Player = {
-    ...defenderPlayer,
-    field: defenderPlayer.field.map(follower =>
-      follower.instanceId === targetId
+  players[enemyIndex] = {
+    ...enemy,
+    field: enemy.field.map(f =>
+      f.instanceId === targetId
         ? {
-            ...follower,
-            health:
-              follower.health - attackerDamage,
+            ...f,
+            health: f.health - attackDamage,
           }
-        : follower
+        : f
     ),
   }
 
-  const nextPlayers = [...state.players] as [
-    Player,
-    Player,
-  ]
-
-  nextPlayers[attackerIndex] =
-    removeDestroyedFollowers(updatedAttackerPlayer)
-
-  nextPlayers[defenderIndex] =
-    removeDestroyedFollowers(updatedDefenderPlayer)
-
-  return {
+  return resolveDeaths({
     ...state,
-    players: nextPlayers,
-  }
+    players,
+  })
 }
 
 /**
- * 相手リーダーへの攻撃
+ * 相手リーダーへの通常攻撃
  */
 export function attackLeader(
   state: GameState,
   attackerId: string
 ): GameState {
-  if (
-    state.winnerId !== null ||
-    state.phase !== 'main'
-  ) {
-    return state
-  }
+  if (state.phase !== 'main') return state
+  if (state.winnerId !== null) return state
 
-  const attackerIndex = state.players.findIndex(
-    player => player.id === state.currentPlayerId
+  const index = state.players.findIndex(
+    p => p.id === state.currentPlayerId
   )
+  if (index < 0) return state
 
-  if (attackerIndex === -1) return state
+  const enemyIndex = 1 - index
+  const owner = state.players[index]
+  const enemy = state.players[enemyIndex]
 
-  const defenderIndex =
-    attackerIndex === 0 ? 1 : 0
-
-  const attackerPlayer = state.players[attackerIndex]
-  const defenderPlayer = state.players[defenderIndex]
-
-  const attacker = attackerPlayer.field.find(
-    follower => follower.instanceId === attackerId
+  const attacker = owner.field.find(
+    f => f.instanceId === attackerId
   )
 
   if (!attacker || !canFollowerAttack(attacker)) {
     return state
   }
 
-  const damage = Math.max(0, attacker.attack)
-
-  const remainingHealth = Math.max(
+  const hp = Math.max(
     0,
-    defenderPlayer.leaderHealth - damage
+    enemy.leaderHealth - Math.max(0, attacker.attack)
   )
 
-  const nextPlayers = [...state.players] as [
-    Player,
-    Player,
-  ]
+  const players = [...state.players] as [Player, Player]
 
-  nextPlayers[attackerIndex] = {
-    ...attackerPlayer,
-    field: attackerPlayer.field.map(follower =>
-      follower.instanceId === attackerId
-        ? {
-            ...follower,
-            hasAttacked: true,
-          }
-        : follower
+  players[index] = {
+    ...owner,
+    field: owner.field.map(f =>
+      f.instanceId === attackerId
+        ? { ...f, hasAttacked: true }
+        : f
     ),
   }
 
-  nextPlayers[defenderIndex] = {
-    ...defenderPlayer,
-    leaderHealth: remainingHealth,
+  players[enemyIndex] = {
+    ...enemy,
+    leaderHealth: hp,
   }
 
   return {
     ...state,
-    players: nextPlayers,
-    winnerId:
-      remainingHealth <= 0
-        ? attackerPlayer.id
-        : null,
+    players,
+    winnerId: hp === 0 ? owner.id : null,
   }
 }
 
-/**
- * 1枚ドロー
- */
 function drawCard(player: Player): {
   player: Player
   deckOut: boolean
 } {
   if (player.deck.length === 0) {
-    return {
-      player,
-      deckOut: true,
-    }
+    return { player, deckOut: true }
   }
 
-  const [drawnCard, ...remainingDeck] =
-    player.deck
-
-  if (player.hand.length >= MAX_HAND_SIZE) {
-    // 手札上限超過時は消滅（暫定）
-    return {
-      player: {
-        ...player,
-        deck: remainingDeck,
-      },
-      deckOut: false,
-    }
-  }
+  const [card, ...deck] = player.deck
 
   return {
     player: {
       ...player,
-      deck: remainingDeck,
-      hand: [...player.hand, drawnCard],
+      deck,
+      hand:
+        player.hand.length >= MAX_HAND_SIZE
+          ? player.hand
+          : [...player.hand, card],
     },
     deckOut: false,
   }
 }
 
 /**
- * ターン終了・次のプレイヤーへ
+ * ターン終了と次ターン開始
  */
-export function endTurn(
-  state: GameState
-): GameState {
-  if (state.winnerId !== null) return state
+export function endTurn(state: GameState): GameState {
   if (state.phase !== 'main') return state
+  if (state.winnerId !== null) return state
 
-  const nextPlayers = state.players.map(player => ({
-    ...player,
-    field: player.field.map(
-      follower => ({ ...follower })
-    ),
+  const index = state.players.findIndex(
+    p => p.id === state.currentPlayerId
+  )
+  if (index < 0) return state
+
+  const nextIndex = 1 - index
+
+  const players = state.players.map(p => ({
+    ...p,
+    field: p.field.map(f => ({ ...f })),
   })) as [Player, Player]
 
-  const currentIndex = nextPlayers.findIndex(
-    player => player.id === state.currentPlayerId
-  )
+  const next = players[nextIndex]
 
-  if (currentIndex === -1) return state
+  next.maxPp = Math.min(MAX_PP, next.maxPp + 1)
+  next.pp = next.maxPp
+  next.field = next.field.map(f => ({
+    ...f,
+    canAttack: true,
+    hasAttacked: false,
+  }))
 
-  const nextIndex =
-    currentIndex === 0 ? 1 : 0
-
-  const nextPlayer = nextPlayers[nextIndex]
-
-  nextPlayer.maxPp = Math.min(
-    MAX_PP,
-    nextPlayer.maxPp + 1
-  )
-  nextPlayer.pp = nextPlayer.maxPp
-
-  nextPlayer.field = nextPlayer.field.map(
-    follower => ({
-      ...follower,
-      canAttack: true,
-      hasAttacked: false,
-    })
-  )
-
-  // 次ターンのドロー
-  const drawResult = drawCard(nextPlayer)
-  nextPlayers[nextIndex] = drawResult.player
-
-  const winnerId = drawResult.deckOut
-    ? nextPlayers[currentIndex].id
-    : null
+  const draw = drawCard(next)
+  players[nextIndex] = draw.player
 
   return {
     ...state,
+    players,
     turn: state.turn + 1,
-    currentPlayerId: nextPlayer.id,
-    players: nextPlayers,
+    currentPlayerId: next.id,
     phase: 'main',
-    winnerId,
+    winnerId: draw.deckOut ? players[index].id : null,
   }
 }

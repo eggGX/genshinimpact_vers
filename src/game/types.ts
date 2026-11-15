@@ -1,8 +1,4 @@
 
-/**
- * 原神カードゲーム：基本型定義
- */
-
 export type ElementType =
   | 'none'
   | 'pyro'
@@ -24,40 +20,23 @@ export type CardType =
   | 'spell'
   | 'amulet'
 
-/**
- * 効果の発動タイミング
- * 将来、元素スキル・爆発なども追加する
- */
 export type EffectTrigger =
   | 'on_play'
   | 'on_destroy'
   | 'turn_start'
   | 'turn_end'
 
-/**
- * 効果対象
- * 今回はリーダーのみ対応
- */
 export type EffectTarget =
   | 'own_leader'
   | 'enemy_leader'
+  | 'selected_enemy_follower'
 
-/**
- * 共通カード効果
- */
-export type CardEffect =
-  | {
-      type: 'damage'
-      trigger: EffectTrigger
-      target: EffectTarget
-      value: number
-    }
-  | {
-      type: 'heal'
-      trigger: EffectTrigger
-      target: EffectTarget
-      value: number
-    }
+export type CardEffect = {
+  type: 'damage' | 'heal'
+  trigger: EffectTrigger
+  target: EffectTarget
+  value: number
+}
 
 export interface Card {
   id: string
@@ -74,7 +53,6 @@ export interface Card {
   traits?: string[]
   description?: string
   image?: string
-
   effects?: CardEffect[]
 }
 
@@ -96,7 +74,7 @@ export interface Follower {
   health: number
   maxHealth: number
 
-  // 暫定：正式な元素エネルギーは後で再設計
+  // 暫定データ。正式な元素ENは後で再設計
   energy: number
   maxEnergy: number
 

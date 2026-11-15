@@ -22,7 +22,16 @@ export const testCards: Card[] = [
     cost: 2,
     attack: 2,
     health: 2,
-    description: 'テスト用フォロワー',
+    description:
+      'ラストワード：自分のリーダーを2回復。',
+    effects: [
+      {
+        type: 'heal',
+        trigger: 'on_destroy',
+        target: 'own_leader',
+        value: 2,
+      },
+    ],
   },
   {
     id: 'test-mage',
@@ -40,6 +49,26 @@ export const testCards: Card[] = [
         type: 'damage',
         trigger: 'on_play',
         target: 'enemy_leader',
+        value: 2,
+      },
+    ],
+  },
+  {
+    id: 'test-archer',
+    name: '氷の射手',
+    type: 'follower',
+    rarity: 'silver',
+    element: 'cryo',
+    cost: 2,
+    attack: 1,
+    health: 2,
+    description:
+      'ファンファーレ：選択した敵フォロワーに2ダメージ。',
+    effects: [
+      {
+        type: 'damage',
+        trigger: 'on_play',
+        target: 'selected_enemy_follower',
         value: 2,
       },
     ],
