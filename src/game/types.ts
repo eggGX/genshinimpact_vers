@@ -117,6 +117,8 @@ export interface Follower {
 
   skillUsed: boolean
   burstUsed: boolean
+  /** Total skill activations in the current turn (Diluc can use three). */
+  skillUsesThisTurn?: number
 
   aura: ElementalAura[]
   shield: Shield
