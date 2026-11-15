@@ -16,6 +16,7 @@ import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advance
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 import { damageLeader } from './leaderShield'
+import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
@@ -264,6 +265,7 @@ function resolveDeaths(state: GameState): GameState {
       result = cryoDestroy(result, ownerId, follower, resolveDeaths)
       result = electroDestroy(result, ownerId, follower)
       result = resolveAnemoDestroy(result, ownerId, follower)
+      result = dendroDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
@@ -399,6 +401,7 @@ export function playCard(
     next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
     next = advancedAnemoSpell(next, playerId, card.id)
     next = geoSpell(next, playerId, card.id, resolveDeaths, targetId)
+    next = dendroSpell(next, playerId, card.id)
     return resolveDeaths(next)
   }
 
@@ -414,6 +417,7 @@ export function playCard(
     if (card.id === 'C072') return resolveAnemoAmuletPlay(next, playerId, card.id)
     if (card.id === 'C076') return advancedAnemoAmuletPlay(next, playerId, card.id)
     if (card.id === 'C087') return geoAmuletPlay(next, playerId, card.id)
+    if (card.id === 'C107') return dendroAmuletPlay(next, playerId, card.id)
     return next
   }
 
@@ -932,6 +936,9 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = geoAmuletsTurnEnd(result, currentId)
+  if (result.winnerId !== null) return result
+
+  result = dendroAmuletsTurnEnd(result, currentId)
   if (result.winnerId !== null) return result
 
   result = advancedAnemoAmuletsTurnEnd(result, currentId, resolveDeaths)
