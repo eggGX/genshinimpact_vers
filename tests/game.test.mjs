@@ -4100,7 +4100,7 @@ test('STEP39 岩15枚のタイプ・ステータス・地域と対戦実装区�
   assert.deepEqual(geoCards.find(c=>c.id==='C098').region,['フォンテーヌ','稲妻'])
   assert.deepEqual(geoCards.find(c=>c.id==='C100').traits,['西風騎士団'])
   assert.deepEqual(geoCards.filter(c=>c.implementationStatus==='playable').map(c=>c.id),
-    ['C086','C087','C088','C089','C090','C091','C092','C093','C094','C095','C096','C097','C100'])
+    ['C086','C087','C088','C089','C090','C091','C092','C093','C094','C095','C096','C097','C099','C100'])
 })
 
 test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
@@ -4113,14 +4113,14 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),15)
 })
 
-test('STEP39 岩元素13枚がデッキ候補、未実装2枚はデッキに入らない',async()=>{
+test('STEP39 岩元素14枚がデッキ候補、未実装1枚はデッキに入らない',async()=>{
   const {geoCards}=await vite.ssrLoadModule('/src/data/cards/geo.ts')
   const {getDeckCardPool}=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const pool=new Set(getDeckCardPool().map(c=>c.id))
   for(const c of geoCards)assert.equal(pool.has(c.id),c.implementationStatus==='playable')
   const state=startedGame()
   state.players[0].pp=10
-  state.players[0].hand=['C098','C099']
+  state.players[0].hand=['C098']
   assert.ok(state.players[0].hand.every((_,i)=>!engine.canPlayCard(state,i)))
 })
 
@@ -4413,4 +4413,38 @@ test('C091 大掃除は指定味方を強化し攻撃時敵全体へ岩1',()=>{
 test('C091 大掃除は対象指定なしではPPも手札も変化しない',()=>{
   let s=startedGame();place(s,0,'C001',2,4);s.players[0].pp=3;s.players[0].hand=['C091']
   assert.equal(engine.playCard(s,'player1',0),s)
+})
+
+test('C099 ナヴィアのスキルは結晶3消費して岩7、PP0、EN+1',()=>{
+  let s=startedGame(); const n=place(s,0,'C099',4,5)
+  s.players[0].leaderShield={normal:0,crystallize:3}
+  const e=place(s,1,'test-mage',0,10)
+  s=engine.activateAbility(s,n.instanceId,'skill',e.instanceId)
+  assert.equal(s.players[0].leaderShield.crystallize,0)
+  assert.equal(s.players[0].energy,1)
+  assert.equal(s.players[1].field[0].health,3)
+})
+test('C099 ナヴィアは自ターン中結晶獲得のたび最大3回攻撃+1',()=>{
+  let s=startedGame();const n=place(s,0,'C099',4,5)
+  const v=place(s,0,'C089',3,5)
+  for(let i=0;i<4;i++){
+    s.players[0].field.find(f=>f.instanceId===v.instanceId).hasAttacked=false
+    const enemy=place(s,1,'test-mage',0,100)
+    s=engine.attackFollower(s,v.instanceId,enemy.instanceId)
+  }
+  const navia=s.players[0].field.find(f=>f.instanceId===n.instanceId)
+  assert.equal(navia.attack,7)
+  assert.equal(navia.geoShieldTriggersThisTurn,3)
+})
+test('C099 ナヴィア爆発は岩1全体・結晶1・2回クレスト',()=>{
+  let s=startedGame();const n=place(s,0,'C099',4,5)
+  const e=place(s,1,'test-mage',0,10)
+  s.players[0].energy=3
+  s=engine.activateAbility(s,n.instanceId,'burst')
+  assert.equal(s.players[1].field[0].health,9)
+  assert.equal(s.players[0].leaderShield.crystallize,1)
+  assert.equal(s.players[0].crests[0].turnsRemaining,2)
+  s=engine.endTurn(s)
+  assert.equal(s.players[1].field.find(f=>f.instanceId===e.instanceId).health,8)
+  assert.equal(s.players[0].crests[0].turnsRemaining,1)
 })
