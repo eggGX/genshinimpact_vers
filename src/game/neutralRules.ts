@@ -160,7 +160,7 @@ export function resolveNeutralTurnEnd(state: GameState, ownerId: string): GameSt
   for (let i = 0; i < crests.length; i++) {
     const p = result.players.find(player => player.id === ownerId)
     const crest = p?.crests?.[i]
-    if (!crest || crest.turnsRemaining <= 0 || result.winnerId !== null) continue
+    if (!crest || crest.id !== 'C010' || crest.turnsRemaining <= 0 || result.winnerId !== null) continue
     const unused = CREST_ELEMENTS.filter(el => !crest.usedElements.includes(el))
     const element = unused[Math.floor(Math.random() * unused.length)]
     result = editPlayer(result, ownerId, player => ({
