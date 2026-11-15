@@ -7,7 +7,7 @@ import type {
 } from './types'
 import { testCards } from '../data/testCards'
 import { resolveEffects } from './effects'
-import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
 const cardDatabase = new Map<string, Card>(
   testCards.map(card => [card.id, card])
@@ -357,7 +357,7 @@ export function playCard(
     ...player,
     pp: player.pp - card.cost,
     hand: player.hand.filter((_, i) => i !== handIndex),
-    field: [...player.field, follower],
+    field: [...player.field, restoreInherentAura(follower)],
   }
 
   let result: GameState = {
@@ -574,7 +574,7 @@ export function endTurn(state: GameState): GameState {
       const count = Number(status.slice(8)) || 0
       return {
         ...f,
-        health: f.health - 1,
+        ...absorbDamage(f, 1),
         keywords: [
           ...f.keywords.filter(k => !k.startsWith('burning:')),
           ...(count > 1 ? [`burning:${count - 1}`] : []),
