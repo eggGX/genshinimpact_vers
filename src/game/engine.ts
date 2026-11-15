@@ -684,7 +684,7 @@ export function attackLeader(
     enemy.leaderHealth - effectiveAttack(buffed, owner.id, boostedAttacker)
   )
 
-  const players = [...state.players] as [Player, Player]
+  const players = [...buffed.players] as [Player, Player]
 
   players[index] = {
     ...boostedOwner,
@@ -701,7 +701,7 @@ export function attackLeader(
   }
 
   return resolvePyroAttackAfter({
-    ...state,
+    ...buffed,
     players,
     winnerId: hp === 0 ? owner.id : null,
   }, owner.id, attackerId)
