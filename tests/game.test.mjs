@@ -3602,7 +3602,8 @@ test('C072 モンド城は3回ターン終了で消滅・サーチ対象無し�
   state=engine.playCard(state,'player1',0)
   for(let i=0;i<5;i++)state=engine.endTurn(state)
   assert.deepEqual(state.players[0].amulets,[])
-  assert.deepEqual(state.players[0].hand,[])
+  // 通常ドロー2回分は手札に入る。モンド城によるサーチは0回。
+  assert.deepEqual(state.players[0].hand,['C001','C001'])
   assert.equal(state.players[0].deck.length,8)
 })
 
