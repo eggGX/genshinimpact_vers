@@ -33,17 +33,38 @@ function App() {
     follower => follower.instanceId === selectedAttackerId
   )
 
+  /**
+   * ゲームリセット
+   */
+  const handleReset = () => {
+    setGame(createInitialGameState())
+    setSelectedAttackerId(null)
+  }
+
+  /**
+   * ターン終了
+   */
   const handleEndTurn = () => {
     setGame(previous => endTurn(previous))
     setSelectedAttackerId(null)
   }
 
+  /**
+   * カードをプレイ
+   */
   const handlePlayCard = (handIndex: number) => {
     setGame(previous =>
-      playCard(previous, previous.currentPlayerId, handIndex)
+      playCard(
+        previous,
+        previous.currentPlayerId,
+        handIndex
+      )
     )
   }
 
+  /**
+   * 攻撃フォロワー選択
+   */
   const handleSelectAttacker = (follower: Follower) => {
     if (game.winnerId !== null) return
     if (!canFollowerAttack(follower)) return
@@ -55,26 +76,39 @@ function App() {
     )
   }
 
+  /**
+   * 敵フォロワーを攻撃
+   */
   const handleAttackFollower = (targetId: string) => {
     if (!selectedAttackerId) return
 
+    const attackerId = selectedAttackerId
+
     setGame(previous =>
-      attackFollower(previous, selectedAttackerId, targetId)
+      attackFollower(previous, attackerId, targetId)
     )
 
     setSelectedAttackerId(null)
   }
 
+  /**
+   * 敵リーダーを攻撃
+   */
   const handleAttackLeader = () => {
     if (!selectedAttackerId) return
 
+    const attackerId = selectedAttackerId
+
     setGame(previous =>
-      attackLeader(previous, selectedAttackerId)
+      attackLeader(previous, attackerId)
     )
 
     setSelectedAttackerId(null)
   }
 
+  /**
+   * フィールド上のフォロワー
+   */
   const renderFollower = (
     follower: Follower,
     isOpponent: boolean
@@ -113,7 +147,9 @@ function App() {
           }
         }}
       >
-        <strong>{card?.name ?? '不明なカード'}</strong>
+        <strong>
+          {card?.name ?? '不明なカード'}
+        </strong>
 
         <span>
           {follower.attack} / {follower.health}
@@ -130,6 +166,9 @@ function App() {
     )
   }
 
+  /**
+   * フィールド表示
+   */
   const renderField = (
     followers: Follower[],
     isOpponent: boolean
@@ -147,7 +186,15 @@ function App() {
     <div className="game">
       <header className="game-header">
         <h1>原神カードゲーム</h1>
+
         <span>TURN {game.turn}</span>
+
+        <button
+          type="button"
+          onClick={handleReset}
+        >
+          ゲームリセット
+        </button>
       </header>
 
       {winner && (
@@ -156,6 +203,7 @@ function App() {
         </div>
       )}
 
+      {/* 相手プレイヤー */}
       <section className="player opponent">
         <button
           type="button"
@@ -164,12 +212,17 @@ function App() {
             'leader-button',
             selectedAttacker ? 'attack-target' : '',
           ].filter(Boolean).join(' ')}
-          disabled={!selectedAttacker || game.winnerId !== null}
+          disabled={
+            !selectedAttacker ||
+            game.winnerId !== null
+          }
           onClick={handleAttackLeader}
         >
           <strong>{opponent.name}</strong>
           <span>
-            HP {opponent.leaderHealth} / {opponent.leaderMaxHealth}
+            HP {opponent.leaderHealth}
+            {' / '}
+            {opponent.leaderMaxHealth}
           </span>
         </button>
 
@@ -177,9 +230,12 @@ function App() {
           PP {opponent.pp} / {opponent.maxPp}
         </div>
 
+        <div>デッキ：{opponent.deck.length}枚</div>
+        <div>手札：{opponent.hand.length}枚</div>
         <div>墓場：{opponent.graveyard.length}枚</div>
       </section>
 
+      {/* フィールド */}
       <section className="field">
         <div className="field-row">
           <p>{opponent.name} のフィールド</p>
@@ -194,11 +250,14 @@ function App() {
         </div>
       </section>
 
+      {/* 自分プレイヤー */}
       <section className="player self">
         <div className="leader">
           <strong>{currentPlayer.name}</strong>
           <span>
-            HP {currentPlayer.leaderHealth} / {currentPlayer.leaderMaxHealth}
+            HP {currentPlayer.leaderHealth}
+            {' / '}
+            {currentPlayer.leaderMaxHealth}
           </span>
         </div>
 
@@ -206,7 +265,11 @@ function App() {
           PP {currentPlayer.pp} / {currentPlayer.maxPp}
         </div>
 
-        <div>墓場：{currentPlayer.graveyard.length}枚</div>
+        <div>デッキ：{currentPlayer.deck.length}枚</div>
+        <div>手札：{currentPlayer.hand.length}枚</div>
+        <div>
+          墓場：{currentPlayer.graveyard.length}枚
+        </div>
 
         <button
           className="end-turn"
@@ -217,6 +280,7 @@ function App() {
         </button>
       </section>
 
+      {/* 操作案内 */}
       <div className="battle-message">
         {winner
           ? 'ゲーム終了'
@@ -225,9 +289,11 @@ function App() {
             : '攻撃可能なフォロワーを選択してください'}
       </div>
 
+      {/* 手札 */}
       <footer className="hand">
         {currentPlayer.hand.map((cardId, index) => {
           const card = getCard(cardId)
+
           if (!card) return null
 
           const playable =
@@ -238,6 +304,7 @@ function App() {
 
           return (
             <button
+              type="button"
               className="hand-card"
               key={`${cardId}-${index}`}
               disabled={!playable}
@@ -246,7 +313,9 @@ function App() {
               <span className="card-cost">
                 {card.cost}
               </span>
+
               <strong>{card.name}</strong>
+
               <span>
                 {card.attack} / {card.health}
               </span>

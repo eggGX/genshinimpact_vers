@@ -13,7 +13,39 @@ const cardDatabase = new Map<string, Card>(
 
 let nextInstanceId = 1
 
+const DECK_SIZE = 40
+const INITIAL_HAND_SIZE = 4
+const MAX_HAND_SIZE = 9
+const MAX_FIELD_SIZE = 5
+const MAX_PP = 10
+
+/**
+ * テスト用40枚デッキを作成
+ */
+function createTestDeck(): string[] {
+  const deck = Array.from(
+    { length: DECK_SIZE },
+    (_, index) => testCards[index % testCards.length].id
+  )
+
+  // Fisher-Yates シャッフル
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const temp = deck[i]
+    deck[i] = deck[j]
+    deck[j] = temp
+  }
+
+  return deck
+}
+
+/**
+ * プレイヤーの初期状態
+ */
 function createPlayer(id: string, name: string): Player {
+  const deck = createTestDeck()
+  const hand = deck.splice(0, INITIAL_HAND_SIZE)
+
   return {
     id,
     name,
@@ -21,17 +53,16 @@ function createPlayer(id: string, name: string): Player {
     leaderMaxHealth: 20,
     pp: 0,
     maxPp: 0,
-    deck: [],
-    hand: [
-      'test-slime',
-      'test-hilichurl',
-      'test-mage',
-    ],
+    deck,
+    hand,
     field: [],
     graveyard: [],
   }
 }
 
+/**
+ * ゲーム開始
+ */
 export function createInitialGameState(): GameState {
   const player1 = createPlayer('player1', 'プレイヤー1')
   const player2 = createPlayer('player2', 'プレイヤー2')
@@ -48,10 +79,16 @@ export function createInitialGameState(): GameState {
   }
 }
 
+/**
+ * カード情報取得
+ */
 export function getCard(cardId: string): Card | undefined {
   return cardDatabase.get(cardId)
 }
 
+/**
+ * カードをプレイ
+ */
 export function playCard(
   state: GameState,
   playerId: string,
@@ -73,7 +110,7 @@ export function playCard(
   const card = getCard(cardId)
   if (!card || card.type !== 'follower') return state
   if (player.pp < card.cost) return state
-  if (player.field.length >= 5) return state
+  if (player.field.length >= MAX_FIELD_SIZE) return state
 
   const follower: Follower = {
     instanceId: `follower-${nextInstanceId++}`,
@@ -81,6 +118,7 @@ export function playCard(
     attack: card.attack ?? 0,
     health: card.health ?? 1,
     maxHealth: card.health ?? 1,
+    // 暫定。正式な元素EN管理は後で修正する
     energy: 0,
     maxEnergy: 5,
     aura: [],
@@ -110,16 +148,20 @@ export function playCard(
 }
 
 /**
- * フォロワーが攻撃可能か判定
+ * フォロワーの攻撃可否
  */
-export function canFollowerAttack(follower: Follower): boolean {
-  return follower.canAttack &&
+export function canFollowerAttack(
+  follower: Follower
+): boolean {
+  return (
+    follower.canAttack &&
     !follower.hasAttacked &&
     follower.health > 0
+  )
 }
 
 /**
- * フォロワーが破壊された場合の処理
+ * 破壊されたフォロワーを墓場へ移動
  */
 function removeDestroyedFollowers(player: Player): Player {
   const destroyed = player.field.filter(
@@ -170,11 +212,10 @@ export function attackFollower(
   if (!attacker || !defender) return state
   if (!canFollowerAttack(attacker)) return state
 
-  // 攻撃前の攻撃力をそれぞれ使用する
+  // 攻撃前の攻撃力を保存し、同時にダメージを与える
   const attackerDamage = Math.max(0, attacker.attack)
   const defenderDamage = Math.max(0, defender.attack)
 
-  // 同時ダメージ
   const updatedAttackerPlayer: Player = {
     ...attackerPlayer,
     field: attackerPlayer.field.map(follower =>
@@ -276,6 +317,45 @@ export function attackLeader(
 }
 
 /**
+ * カードを1枚ドロー
+ */
+function drawCard(player: Player): {
+  player: Player
+  deckOut: boolean
+} {
+  // デッキ切れ敗北
+  if (player.deck.length === 0) {
+    return {
+      player,
+      deckOut: true,
+    }
+  }
+
+  const [drawnCard, ...remainingDeck] = player.deck
+
+  // 手札上限9枚
+  // 超過カードは消滅させる（仮実装）
+  if (player.hand.length >= MAX_HAND_SIZE) {
+    return {
+      player: {
+        ...player,
+        deck: remainingDeck,
+      },
+      deckOut: false,
+    }
+  }
+
+  return {
+    player: {
+      ...player,
+      deck: remainingDeck,
+      hand: [...player.hand, drawnCard],
+    },
+    deckOut: false,
+  }
+}
+
+/**
  * ターン終了・次プレイヤーのターン開始
  */
 export function endTurn(state: GameState): GameState {
@@ -295,14 +375,28 @@ export function endTurn(state: GameState): GameState {
   const nextIndex = currentIndex === 0 ? 1 : 0
   const nextPlayer = nextPlayers[nextIndex]
 
-  nextPlayer.maxPp = Math.min(10, nextPlayer.maxPp + 1)
+  // PPを増加・回復
+  nextPlayer.maxPp = Math.min(
+    MAX_PP,
+    nextPlayer.maxPp + 1
+  )
   nextPlayer.pp = nextPlayer.maxPp
 
+  // 攻撃状態をリセット
   nextPlayer.field = nextPlayer.field.map(follower => ({
     ...follower,
     canAttack: true,
     hasAttacked: false,
   }))
+
+  // 次プレイヤーが1枚ドロー
+  const drawResult = drawCard(nextPlayer)
+  nextPlayers[nextIndex] = drawResult.player
+
+  // デッキ切れなら直前のプレイヤーの勝利
+  const winnerId = drawResult.deckOut
+    ? nextPlayers[currentIndex].id
+    : null
 
   return {
     ...state,
@@ -310,5 +404,6 @@ export function endTurn(state: GameState): GameState {
     currentPlayerId: nextPlayer.id,
     players: nextPlayers,
     phase: 'main',
+    winnerId,
   }
 }
