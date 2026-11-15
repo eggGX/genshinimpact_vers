@@ -7,6 +7,7 @@ import type {
 } from './types'
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { resolveEffects } from './effects'
+import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
@@ -248,6 +249,7 @@ function resolveDeaths(state: GameState): GameState {
       )
       result = resolveNeutralDestroy(result, ownerId, follower)
       result = resolvePyroDestroy(result, ownerId, follower)
+      result = resolveLegendaryDestroy(result, ownerId, follower)
     }
 
     if (result.winnerId !== null) break
@@ -451,7 +453,11 @@ export function canUseAbility(
       follower.keywords.includes('frozen')) return false
   const card = getCard(follower.cardId)
   const ability = kind === 'skill' ? card?.elementalSkill : card?.elementalBurst
-  if (!ability || (kind === 'skill' ? follower.skillUsed : follower.burstUsed)) return false
+  if (!ability || (kind === 'skill'
+    ? (card?.id === 'C023'
+      ? (follower.skillUsesThisTurn ?? (follower.skillUsed ? 1 : 0)) >= 3
+      : follower.skillUsed)
+    : follower.burstUsed)) return false
   if (kind === 'skill' && owner.pp < (ability.ppCost ?? 0)) return false
   if (kind === 'skill' && (card?.id === 'C019' || card?.id === 'C020') &&
       owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
@@ -490,16 +496,36 @@ export function activateAbility(
       f.instanceId === followerId
         ? { ...f,
             skillUsed: kind === 'skill' ? true : f.skillUsed,
+            skillUsesThisTurn: kind === 'skill'
+              ? (f.skillUsesThisTurn ?? (f.skillUsed ? 1 : 0)) + 1 : f.skillUsesThisTurn,
             burstUsed: kind === 'burst' ? true : f.burstUsed }
         : f),
   }
   let result: GameState = { ...state, players }
-  result = resolveEffects(
-    result, owner.id, ability.effects, kind, targetId, followerId,
-    resolveDeaths
-  )
+  if (card.id === 'C023' && kind === 'skill' && targetId) {
+    result = resolveDilucSkill(result, index, followerId, targetId)
+  } else if (card.id === 'C023' && kind === 'burst') {
+    result = resolveDilucBurst(result, owner.id, resolveDeaths)
+  } else {
+    result = resolveEffects(
+      result, owner.id, ability.effects, kind, targetId, followerId,
+      resolveDeaths
+    )
+  }
   if (result.winnerId === null && kind === 'skill') {
     result = resolvePyroGoldSkill(result, owner.id, card.id)
+    if (card.id === 'C025') {
+      const player = result.players[index]
+      const players = [...result.players] as [Player, Player]
+      players[index] = { ...player, field: player.field.map(f =>
+        f.instanceId === followerId
+          ? { ...f, keywords: [...f.keywords.filter(k => k !== 'normal_attack_pyro'),
+              'normal_attack_pyro'] } : f) }
+      result = { ...result, players }
+    }
+  }
+  if (result.winnerId === null && kind === 'burst' && card.id === 'C024') {
+    result = transformLyney(result, index, followerId)
   }
   return resolveDeaths(result)
 }
@@ -559,12 +585,15 @@ export function attackFollower(
         : f),
     })) as [Player, Player],
   }
-  const buffed = applyNeutralAttackBuff(declared, owner.id, attackerId)
+  const buffed = resolveLegendaryAttack(
+    applyNeutralAttackBuff(declared, owner.id, attackerId), owner.id, attackerId
+  )
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
-  const attackDamage = Math.max(0, boostedAttacker.attack)
+  const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
   const counterDamage = Math.max(0, defender.attack)
-  const attackerElement = getCard(attacker.cardId)?.normalAttackElement
+  const attackerElement = boostedAttacker.keywords.includes('normal_attack_pyro')
+    ? 'pyro' : getCard(attacker.cardId)?.normalAttackElement
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
@@ -643,7 +672,7 @@ export function attackLeader(
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const hp = Math.max(
     0,
-    enemy.leaderHealth - Math.max(0, boostedAttacker.attack)
+    enemy.leaderHealth - effectiveAttack(buffed, owner.id, boostedAttacker)
   )
 
   const players = [...state.players] as [Player, Player]
@@ -822,6 +851,7 @@ export function endTurn(state: GameState): GameState {
     hasAttacked: false,
     skillUsed: false,
     burstUsed: false,
+    skillUsesThisTurn: 0,
     keywords: f.keywords.filter(keyword => keyword !== 'rush_only'),
   }))
 
@@ -840,6 +870,10 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) {
     return result
   }
+
+  // The Funny Hat Cat's self-destruction resolves before other start effects.
+  result = resolveLegendaryTurnStart(result, nextId, resolveDeaths)
+  if (result.winnerId !== null) return result
 
   // 3. ターン開始時効果
   return resolveTurnEffects(
