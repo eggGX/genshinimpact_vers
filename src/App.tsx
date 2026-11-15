@@ -13,6 +13,7 @@ import {
   needsPlayTarget,
   needsFriendlyPlayTarget,
   needsAbilityTarget,
+  needsFriendlyAbilityTarget,
   activateAbility,
   playCard,
 } from './game/engine'
@@ -112,7 +113,7 @@ function App() {
     if (!canUseAbility(game, follower.instanceId, kind)) return
     const card = getCard(follower.cardId)
     if (!card) return
-    if (needsAbilityTarget(card, kind)) {
+    if (needsAbilityTarget(card, kind) || needsFriendlyAbilityTarget(card, kind)) {
       setSelectedAbility({ followerId: follower.instanceId, kind })
       setSelectedAttackerId(null)
       setSelectedHandIndex(null)
@@ -203,9 +204,17 @@ function App() {
       game.winnerId === null &&
       canFollowerAttack(follower)
 
+    const friendlyPlayId = selectedHandIndex === null
+      ? undefined : currentPlayer.hand[selectedHandIndex]
+    const friendlySkillId = selectedAbility
+      ? currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId
+      : undefined
     const isFriendlyTarget = !isOpponent &&
-      selectedHandIndex !== null &&
-      ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex])
+      ((selectedHandIndex !== null &&
+        ['C021', 'C044', 'C066'].includes(friendlyPlayId ?? '') &&
+        (friendlyPlayId !== 'C066' || card?.element === 'electro')) ||
+       (selectedAbility?.kind === 'skill' && friendlySkillId === 'C066' &&
+        card?.element === 'electro'))
 
     const isSelected =
       follower.instanceId === selectedAttackerId
@@ -214,7 +223,8 @@ function App() {
       isOpponent &&
       game.winnerId === null &&
       (selectedAttacker === undefined || !isGuarded(opponent) ||
-        follower.keywords.includes('guard')) &&
+        follower.keywords.includes('guard') ||
+        selectedAttacker.keywords.includes('plunge_attack')) &&
       (selectedAttacker !== undefined
         ? !follower.keywords.includes('intimidate') && !follower.keywords.includes('stealth')
         : selectedHandIndex !== null || selectedAbility !== null
@@ -241,6 +251,10 @@ function App() {
               selectedHandIndex, follower.instanceId
             ))
             resetSelection()
+          } else if (isFriendlyTarget && selectedAbility) {
+            const { followerId, kind } = selectedAbility
+            setGame(previous => activateAbility(previous, followerId, kind, follower.instanceId))
+            resetSelection()
           } else {
             handleSelectAttacker(follower)
           }
@@ -264,6 +278,12 @@ function App() {
         )}
         {follower.keywords.includes('next_damage_plus_2') && (
           <small>次の被ダメージ+2（モナの星命定軌）</small>
+        )}
+        {follower.keywords.includes('normal_attack_electro') && (
+          <small>【元素攻撃：雷】</small>
+        )}
+        {follower.keywords.includes('plunge_attack') && (
+          <small>【落下攻撃】守護無視・攻撃後敵全体雷1</small>
         )}
         {follower.keywords.includes('normal_attack_cryo') && (
           <small>【元素攻撃：氷】</small>
@@ -610,12 +630,16 @@ function App() {
         {winner
           ? 'ゲーム終了'
           : selectedAbility !== null
-            ? selectedAbility.firstTargetId
+            ? currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId === 'C066'
+              ? '九条裟羅：強化する味方雷元素フォロワーを選択してください'
+              : selectedAbility.firstTargetId
               ? 'ディオナのスキル：2体目の敵フォロワーを選択してください'
               : '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
-            ? ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex])
-              ? '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
+            ? ['C021', 'C044', 'C066'].includes(currentPlayer.hand[selectedHandIndex])
+              ? currentPlayer.hand[selectedHandIndex] === 'C066'
+                ? '九条裟羅：他の味方雷元素フォロワーを選択してください'
+                : '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
               : 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
               ? '攻撃対象を選択してください'
