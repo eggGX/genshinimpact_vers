@@ -22,6 +22,8 @@ export type EffectTrigger =
   | 'on_destroy'
   | 'turn_start'
   | 'turn_end'
+  | 'skill'
+  | 'burst'
 
 export type EffectTarget =
   | 'own_leader'
@@ -58,6 +60,13 @@ export type CardEffect =
       healthChange: number
     }
 
+export interface CharacterAbility {
+  name: string
+  effects: CardEffect[]
+  /** Only bursts consume shared energy; skills gain one energy. */
+  energyCost?: number
+}
+
 export interface Card {
   /** 通常攻撃の属性。省略時は物理（無元素） */
   normalAttackElement?: ElementType
@@ -79,6 +88,8 @@ export interface Card {
   description?: string
   image?: string
   effects?: CardEffect[]
+  elementalSkill?: CharacterAbility
+  elementalBurst?: CharacterAbility
 }
 
 export interface ElementalAura {
@@ -99,9 +110,8 @@ export interface Follower {
   health: number
   maxHealth: number
 
-  // 暫定。元素エネルギーは正式仕様に合わせて変更予定
-  energy: number
-  maxEnergy: number
+  skillUsed: boolean
+  burstUsed: boolean
 
   aura: ElementalAura[]
   shield: Shield
@@ -121,6 +131,8 @@ export interface Player {
 
   pp: number
   maxPp: number
+  /** Shared elemental energy, 0 to 5. */
+  energy: number
 
   deck: string[]
   hand: string[]
