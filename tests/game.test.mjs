@@ -2200,7 +2200,7 @@ test('STEP30 構築済み水元素15枚と正式登録総数を照合',async()=>
   assert.equal(report.ready,true)
 })
 
-test('C030 対象未確定の効果は未実装として誤って対戦で使用されない',()=>{
+test.skip('旧C030未確定仕様テスト（Ver.1.0.1で確定済み）',()=>{
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C030']
@@ -4725,4 +4725,46 @@ test('C115 キィニチの燃焼反応による強化は自ターン最大2回',
  for(let i=0;i<3;i++)s=resolveReactionConsequence(s,1,'missing','burning',undefined,0)
  assert.equal(s.players[0].field[0].attack,6)
  assert.equal(s.players[0].field[0].dendroBurningTriggersThisTurn,2)
+})
+
+test('C030の正式効果：味方指定で水1攻撃時能力を付与し対象未指定は拒否',()=>{
+ let s=startedGame();const ally=place(s,0,'C001',2,4)
+ s.players[0].pp=2;s.players[0].hand=['C030']
+ assert.equal(engine.playCard(s,'player1',0),s)
+ s=engine.playCard(s,'player1',0,ally.instanceId)
+ assert.equal(s.players[0].pp,0)
+ assert.ok(s.players[0].field[0].keywords.includes('raincutter_on_attack'))
+ assert.ok(s.players[0].graveyard.includes('C030'))
+})
+test('C030攻撃時は通常戦闘より先に敵フォロワーに水1、通常攻撃も追加',()=>{
+ let s=startedGame();const ally=place(s,0,'C001',2,4),foe=place(s,1,'test-mage',0,6)
+ s.players[0].pp=2;s.players[0].hand=['C030']
+ s=engine.playCard(s,'player1',0,ally.instanceId)
+ s=engine.attackFollower(s,ally.instanceId,foe.instanceId)
+ assert.equal(s.players[1].field[0].health,3)
+})
+test('C030攻撃時の水1で対象を破壊したら通常攻撃は行わず攻撃回数を消費',()=>{
+ let s=startedGame();const ally=place(s,0,'C001',2,4),foe=place(s,1,'test-mage',0,1)
+ s.players[0].pp=2;s.players[0].hand=['C030']
+ s=engine.playCard(s,'player1',0,ally.instanceId)
+ s=engine.attackFollower(s,ally.instanceId,foe.instanceId)
+ assert.equal(s.players[1].field.length,0)
+ assert.equal(s.players[0].field[0].hasAttacked,true)
+ assert.equal(s.players[0].field[0].health,4)
+})
+test('C030リーダー攻撃でも先に水1、通常攻撃を加算',()=>{
+ let s=startedGame();const ally=place(s,0,'C001',2,4)
+ s.players[0].pp=2;s.players[0].hand=['C030']
+ s=engine.playCard(s,'player1',0,ally.instanceId)
+ s=engine.attackLeader(s,ally.instanceId)
+ assert.equal(s.players[1].leaderHealth,17)
+})
+test('C030は同じフォロワーへ複数回付与しても追加効果は1回分',()=>{
+ let s=startedGame();const ally=place(s,0,'C001',2,4)
+ s.players[0].pp=4;s.players[0].hand=['C030','C030']
+ s=engine.playCard(s,'player1',0,ally.instanceId)
+ s=engine.playCard(s,'player1',0,ally.instanceId)
+ const e=place(s,1,'test-mage',0,8)
+ s=engine.attackFollower(s,ally.instanceId,e.instanceId)
+ assert.equal(s.players[1].field[0].health,5)
 })
