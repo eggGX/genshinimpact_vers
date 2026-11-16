@@ -47,12 +47,11 @@ export function damageLeaderWithReaction(player: Player, amount: number, element
   const index = element && !quickenHit ? auras.findIndex(aura => leaderReaction(aura.element, element) !== null) : -1
   const reactedElement = index >= 0 ? auras[index].element : undefined
   const reaction = reactedElement && element ? leaderReaction(reactedElement, element) : null
-  const nextAuras = quickenHit ? auras
-    : index >= 0
-    ? auras.filter((_, i) => i !== index)
-    : incoming && !auras.some(a => a.element === incoming)
-      ? [...auras, { element: incoming }]
-      : auras
+  // Leaders display at most one attached element. Unreactive incoming
+  // elements replace the old aura rather than silently stacking two icons.
+  const nextAuras = quickenHit ? auras.slice(0, 1)
+    : index >= 0 ? []
+    : incoming ? [{ element: incoming }] : auras.slice(0, 1)
 
   const physical = !element || element === 'none'
   const bonus = reaction === 'vaporize' || reaction === 'melt' || reaction === 'overloaded' ? 1 : 0
