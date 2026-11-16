@@ -4541,3 +4541,40 @@ test('元素アイコン：7元素の切り出し番号と無元素の専用画�
   assert.equal(getElementVisual('none').label,'無元素')
   assert.ok(Object.values(ELEMENT_VISUALS).every(v=>v.label&&v.color))
 })
+
+test('カード詳細：カード一覧の正式カード・トークンを個別に詳細表示できる', async () => {
+  const React = await import('react')
+  const { renderToStaticMarkup } = await import('react-dom/server')
+  const { CardDetail } = await vite.ssrLoadModule('/src/components/CardDetail.tsx')
+  const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const cards = getAllCards()
+  assert.equal(cards.length, 139)
+  for (const [index, card] of cards.entries()) {
+    const markup = renderToStaticMarkup(React.createElement(CardDetail, {
+      card, onClose: () => {}, position: index + 1, total: cards.length,
+    }))
+    assert.ok(markup.includes(card.name), card.id)
+    assert.ok(markup.includes('カード能力'), card.id)
+    assert.ok(markup.includes(card.id), card.id)
+    if (card.type === 'follower') {
+      assert.ok(markup.includes('攻撃力 / 体力'), card.id)
+    }
+    if (card.elementalSkill) assert.ok(markup.includes(card.elementalSkill.name), card.id)
+    if (card.elementalBurst) assert.ok(markup.includes(card.elementalBurst.name), card.id)
+    if (card.token) assert.ok(markup.includes('トークン（デッキ採用不可）'), card.id)
+  }
+})
+
+test('カード詳細：画像未登録のカードでも内容が表示される', async () => {
+  const React = await import('react')
+  const { renderToStaticMarkup } = await import('react-dom/server')
+  const { CardDetail } = await vite.ssrLoadModule('/src/components/CardDetail.tsx')
+  const { getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+  const card = getCard('C001')
+  const html = renderToStaticMarkup(React.createElement(CardDetail, {
+    card, onClose: () => {}, position: 1, total: 139,
+  }))
+  assert.match(html,/イラスト未登録/)
+  assert.match(html,/ヒルチャール/)
+  assert.match(html,/能力なし/)
+})
