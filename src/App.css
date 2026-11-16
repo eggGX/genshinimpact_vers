@@ -573,3 +573,25 @@
   .leader-aura-icons .aura-icon-holder{width:23px;height:23px;}
   .leader-aura-icons .element-icon-emblem{width:19px;height:19px;}
 }
+
+
+/* Traveler portraits and selected element icons on the deck selection screen. */
+.deck-setup-player{display:flex;align-items:center;gap:12px;}
+.deck-setup-avatar{
+  position:relative;display:grid;place-items:center;flex:none;
+  width:52px;height:52px;overflow:hidden;border-radius:50%;
+  border:2px solid #dfc382;background:radial-gradient(circle at 30% 20%,#56727a,#192b3b 75%);
+  box-shadow:0 0 15px #ddb7694d;color:#f8e6be;font-size:18px;font-weight:800;
+}
+.deck-setup-avatar img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;
+}
+.deck-setup-elements{
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;min-height:36px;
+  margin:10px 0;color:#ebf4f6;
+}
+.deck-setup-element-icons{display:inline-flex;align-items:center;flex-wrap:wrap;gap:9px;}
+@media(max-width:560px){
+  .deck-setup-avatar{width:42px;height:42px;}
+  .deck-setup-player{gap:9px;}
+}
