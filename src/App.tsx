@@ -584,12 +584,28 @@ function App() {
         <p>各プレイヤーの40枚デッキを編集できます。使用元素は最大3種類、無元素は自由に採用可能、同じカードは3枚までです。</p>
         <div className="deck-setup-grid">
           {decks.map((deck, index) => <section key={index} className="deck-setup-card">
-            <h3>プレイヤー{index + 1}（{index === 0 ? '自分' : '相手'}）</h3>
+            <h3 className="deck-setup-player">
+              <span className="deck-setup-avatar" aria-label={index === 0 ? '空' : '蛍'}>
+                <img
+                  src={`https://upload-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_${index === 0 ? 'PlayerBoy' : 'PlayerGirl'}.png`}
+                  alt={index === 0 ? '空' : '蛍'}
+                  onError={event => { event.currentTarget.style.display = 'none' }}
+                />
+                <span aria-hidden="true">{index === 0 ? '空' : '蛍'}</span>
+              </span>
+              <span>プレイヤー{index + 1}（{index === 0 ? '自分' : '相手'}）</span>
+            </h3>
             <strong>{deck.cards.length} / 40枚</strong>
-            <p>元素：{deck.elements.length ? deck.elements.map(e => ({
-              pyro:'炎', hydro:'水', cryo:'氷', electro:'雷',
-              anemo:'風', geo:'岩', dendro:'草',
-            }[e])).join('・') : '未選択'} ＋ 無元素</p>
+            <div className="deck-setup-elements">
+              <span>元素：</span>
+              {deck.elements.length
+                ? <span className="deck-setup-element-icons">
+                    {deck.elements.filter(element => element !== 'none').map(element =>
+                      <ElementIcon key={element} element={element} size="md" />
+                    )}
+                  </span>
+                : <span>未選択</span>}
+            </div>
             {errors[index].length === 0
               ? <p className="deck-setup-valid">構築完了</p>
               : <p className="deck-setup-warning">{errors[index][0]}</p>}
