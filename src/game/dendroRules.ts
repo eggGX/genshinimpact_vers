@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader, healLeader, addLeaderShield } from './leaderShield'
@@ -210,7 +211,7 @@ function dendroRandomFollower(state: GameState, ownerId: string, amount: number)
   const foe = state.players.find(p => p.id !== ownerId)
   const choices = foe?.field.filter(f => f.health > 0) ?? []
   if (!choices.length) return state
-  return dendroHitTarget(state, ownerId, choices[Math.floor(Math.random()*choices.length)].instanceId, amount)
+  return captureFrame(dendroHitTarget(state, ownerId, choices[Math.floor(Math.random()*choices.length)].instanceId, amount), 'ランダム草元素ダメージ')
 }
 
 function dendroTutor(state: GameState, ownerId: string, spellOnly: boolean): GameState {
