@@ -587,7 +587,7 @@ function App() {
             <h3 className="deck-setup-player">
               <span className="deck-setup-avatar" aria-label={index === 0 ? '空' : '蛍'}>
                 <img
-                  src={`https://upload-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_${index === 0 ? 'PlayerBoy' : 'PlayerGirl'}.png`}
+                  src={`${import.meta.env.BASE_URL}images/travelers/${index === 0 ? 'aether-icon.webp' : 'lumine-icon.webp'}`}
                   alt={index === 0 ? '空' : '蛍'}
                   onError={event => { event.currentTarget.style.display = 'none' }}
                 />
