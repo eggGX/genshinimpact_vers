@@ -587,15 +587,27 @@ function App() {
     return <CardLibrary onBack={() => setShowCardLibrary(false)} />
   }
 
+  // Keep the online lobby mounted while the deck editor is open.
+  // Its room code, Firebase polling and participant role must survive navigation.
+  if (showFriendLobby && !matchStarted) {
+    return <>
+      <div style={{ display: editingPlayer !== null ? 'none' : undefined }}>
+        <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
+          deck={decks[0]} onEditDeck={() => setEditingPlayer(0)} />
+      </div>
+      {editingPlayer !== null && <DeckBuilder
+        title="フレンド対戦：自分のデッキ"
+        deck={decks[editingPlayer]}
+        onChange={deck => updateDeck(editingPlayer, deck)}
+        onBack={() => setEditingPlayer(null)}
+      />}
+    </>
+  }
+
   if (editingPlayer !== null) {
     return <DeckBuilder title={editingPlayer === 0 ? 'プレイヤー1（自分）' : 'プレイヤー2（相手）'}
       deck={decks[editingPlayer]} onChange={deck => updateDeck(editingPlayer, deck)}
       onBack={() => setEditingPlayer(null)} />
-  }
-
-  if (showFriendLobby && !matchStarted) {
-    return <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
-      deck={decks[0]} onEditDeck={() => setEditingPlayer(0)} />
   }
 
   if (!matchStarted) {
