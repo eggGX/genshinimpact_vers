@@ -167,7 +167,7 @@ function App({ online }: { online?: {
   } : localGame
   const onlineCanAct = !online || (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
-    !online.pending && !online.match.winnerId)
+    !online.pending && !online.match.winnerId && !playbackLock.current && !playback)
   const onlineSend = (action: OnlineAction) => {
     if (online && onlineCanAct) online.onAction(action)
   }
