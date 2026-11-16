@@ -788,7 +788,7 @@ function App() {
           disabled={
             !selectedAttacker ||
             game.winnerId !== null ||
-            isGuarded(opponent) ||
+            (isGuarded(opponent) && !selectedAttacker.keywords.includes('plunge_attack')) ||
             (selectedAttacker.keywords.includes('rush_only') && !selectedAttacker.keywords.includes('storm'))
           }
           onClick={handleAttackLeader}
