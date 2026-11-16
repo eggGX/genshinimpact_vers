@@ -19,3 +19,33 @@
 .online-match-message{font-size:18px!important;color:#ffe0a5!important;text-align:center}
 .online-match-note{margin-top:16px!important;font-size:11px!important;color:#aabdc1!important}
 @media(max-width:650px){.online-match-players,.online-match-actions{grid-template-columns:1fr}}
+
+
+/* The online board reuses the same illustrated card, hand and battlefield
+   classes as the local Shadowverse-style game. */
+.friend-match-session{max-width:1200px;width:min(1200px,96vw)}
+.friend-match-session .friend-match-session-banner{padding:12px;border:0;background:transparent;margin:12px -6px}
+.online-battle{width:100%;max-width:1160px;margin:12px auto;text-align:center;padding:10px 12px 26px;border-radius:20px;background:radial-gradient(ellipse at 50% 35%,#27465a 0%,#122637 53%,#091722 100%);border:1px solid #947a52;box-shadow:0 20px 36px #0006;overflow:hidden}
+.online-battle-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;color:#eed9ab;font-family:serif;letter-spacing:.08em}
+.online-battle .online-player{padding:10px 8px}
+.online-battle .leader{margin:8px auto}
+.online-battle .online-resource{margin:5px;font-size:12px;color:#d8d4c8}
+.online-battle .online-field{margin:10px auto}
+.online-battle .online-card-slot{min-height:160px;justify-content:center;gap:8px;display:flex;flex-wrap:wrap;align-items:center}
+.online-battle .online-card-slot .follower-wrapper{min-width:100px;max-width:130px}
+.online-battle .online-card-slot .field-card{min-height:128px}
+.online-battle .online-card-slot .card-artwork{max-height:95px;max-width:94px;object-fit:cover}
+.online-battle .online-amulet{border:1px solid #a98a5d;border-radius:8px;padding:14px 10px;font-size:12px;background:#20313c}
+.online-battle .online-empty{color:#9d9f9b;font-size:12px}
+.online-battle .online-follower-actions{display:flex;gap:3px;justify-content:center}
+.online-battle .online-follower-actions button{font-size:10px;padding:5px 6px;flex:1}
+.online-battle .online-stats{font-size:13px;font-weight:800;color:#b5f0ce}
+.online-battle .battle-message{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px}
+.online-battle .battle-message button{font-size:11px;padding:7px 10px}
+.online-battle .online-hand{margin-top:6px}
+.online-battle .online-hand .hand-cards{gap:8px;flex-wrap:wrap;padding:12px 5px}
+.online-battle .online-hand .hand-card{min-width:100px;max-width:135px;flex:0 1 118px}
+.online-battle .online-hand .card-artwork{max-height:90px;object-fit:cover}
+.online-battle .end-turn{margin:10px auto}
+.online-battle .leader-button:disabled{opacity:1}
+@media(max-width:620px){.online-battle{padding:5px}.online-battle .online-card-slot{min-height:120px;gap:3px}.online-battle .online-card-slot .follower-wrapper{min-width:65px;max-width:93px}.online-battle .online-hand .hand-card{min-width:66px;max-width:92px;flex:1 1 76px}.online-battle .online-hand .hand-cards{gap:3px}}
