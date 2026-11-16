@@ -1,8 +1,8 @@
 import { captureFrame } from './presentation'
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader, healLeader } from './leaderShield'
-import { resolveElementalDamage, resolveReactionConsequence, absorbDamage } from './elemental'
+import { healLeader } from './leaderShield'
+import { resolveElementalDamage, resolveReactionConsequence, absorbDamage, resolveLeaderElementalHit } from './elemental'
 import { summonFollowers } from './neutralRules'
 
 type DeathResolver = (state: GameState) => GameState
@@ -148,9 +148,7 @@ export function advancedElectroBurst(
       const options = enemy.field.filter(f => f.health > 0)
       const index = Math.floor(Math.random() * (options.length + 1))
       if (index === options.length) {
-        const damaged = damageLeader(enemy, 2, 'electro')
-        result = edit(result, enemy.id, () => damaged)
-        if (damaged.leaderHealth === 0) result = { ...result, winnerId: ownerId }
+        result = resolveLeaderElementalHit(result, result.players.findIndex(p=>p.id===enemy.id), 2, 'electro')
       } else {
         result = deaths(hit(result, ownerId, options[index].instanceId, 2))
       }
