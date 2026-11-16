@@ -539,3 +539,37 @@
 .field-card>.element-icon{margin:1px auto;}
 .hand-card>.element-icon{position:absolute;right:2px;top:2px;z-index:2;}
 .amulet-card>.element-icon{margin:2px auto;}
+
+/* Elemental attachments live ABOVE the card, not mixed with abilities.
+   All badges are visual-only so the card remains directly clickable. */
+.follower-wrapper {position:relative;}
+.follower-aura-icons {
+  position:absolute;z-index:8;top:-23px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:2px;
+  pointer-events:none;white-space:nowrap;
+}
+.follower-aura-icons .aura-icon-holder,
+.leader-aura-icons .aura-icon-holder {
+  display:grid;place-items:center;
+  border-radius:50%;background:#0d2335d9;
+  border:1px solid #e8cd87;
+  box-shadow:0 0 10px #edc87482,0 4px 9px #000a;
+}
+.follower-aura-icons .aura-icon-holder{width:32px;height:32px;}
+.follower-aura-icons .element-icon-emblem{width:27px;height:27px;}
+.leader {position:relative;}
+.leader-aura-icons {
+  position:absolute;z-index:8;top:-18px;left:50%;transform:translateX(-50%);
+  display:flex;gap:3px;align-items:center;justify-content:center;
+  white-space:nowrap;pointer-events:none;
+}
+.leader-aura-icons .aura-icon-holder{width:28px;height:28px;}
+.leader-aura-icons .element-icon-emblem{width:23px;height:23px;}
+@media(max-width:760px){
+  .follower-aura-icons{top:-18px;}
+  .follower-aura-icons .aura-icon-holder{width:24px;height:24px;}
+  .follower-aura-icons .element-icon-emblem{width:21px;height:21px;}
+  .leader-aura-icons{top:-14px;}
+  .leader-aura-icons .aura-icon-holder{width:23px;height:23px;}
+  .leader-aura-icons .element-icon-emblem{width:19px;height:19px;}
+}
