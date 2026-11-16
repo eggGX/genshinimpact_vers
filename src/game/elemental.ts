@@ -500,8 +500,6 @@ export function resolveLeaderElementalHit(
   let next: GameState = { ...state, players,
     winnerId: hit.player.leaderHealth <= 0 ? players[1 - affectedIndex].id : state.winnerId }
   if (next.winnerId !== null || !hit.reaction) return next
-  const opponent = players[1 - affectedIndex]
-
   if (hit.reaction === 'bloom') {
     // Same placement as follower Bloom: the triggering player's opponent.
     const ownerIndex = 1 - sourceOwnerIndex
