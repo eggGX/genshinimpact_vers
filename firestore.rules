@@ -9,19 +9,33 @@ service cloud.firestore {
 
       allow create: if request.auth != null
         && roomCode.matches('[A-HJ-NP-Z2-9]{8}')
-        && request.resource.data.keys().hasOnly(['hostUid', 'guestUid', 'status'])
+        && request.resource.data.keys().hasOnly(['hostUid', 'guestUid', 'status', 'hostReady', 'guestReady'])
         && request.resource.data.hostUid == request.auth.uid
         && request.resource.data.guestUid == ''
-        && request.resource.data.status == 'waiting';
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.hostReady == false
+        && request.resource.data.guestReady == false;
 
       // Exactly one authenticated guest can fill the empty slot.
       // No caller may change hostUid, status, or previously assigned guestUid.
-      allow update: if request.auth != null
-        && resource.data.hostUid != request.auth.uid
-        && resource.data.guestUid == ''
-        && resource.data.status == 'waiting'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestUid'])
-        && request.resource.data.guestUid == request.auth.uid;
+      allow update: if request.auth != null && (
+        // Claim the vacant guest seat once.
+        (resource.data.hostUid != request.auth.uid
+          && resource.data.guestUid == ''
+          && resource.data.status == 'waiting'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestUid'])
+          && request.resource.data.guestUid == request.auth.uid)
+        ||
+        // Each player can change only their own readiness; no deck data stored.
+        (resource.data.guestUid != ''
+          && resource.data.hostUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostReady'])
+          && request.resource.data.hostReady is bool)
+        ||
+        (resource.data.guestUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestReady'])
+          && request.resource.data.guestReady is bool)
+      );
 
       allow delete: if false;
     }
