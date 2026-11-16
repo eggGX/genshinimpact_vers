@@ -41,7 +41,7 @@ test('Firestore rules can be deployed along with Hosting', () => {
   assert.equal(firebase.firestore.rules, 'firestore.rules')
 })
 test('online session explicitly distinguishes match start from live card play', () => {
-  assert.match(lobby, /手札・山札・マリガン・カード操作の同期はまだ未実装です/)
+  assert.match(lobby, /既存のローカル対戦UIとの統合は開発中です/)
   assert.match(lobby, /対戦セッションを開始しました/)
 })
 
