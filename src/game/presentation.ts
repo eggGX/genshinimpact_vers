@@ -83,6 +83,15 @@ export function describePresentationChange(
     if (before.leaderHealth !== after.leaderHealth) {
       changes.push(`${life(before)} → ${after.leaderHealth}`)
     }
+    if (before.leaderFrozenNextTurn !== after.leaderFrozenNextTurn) {
+      changes.push(`${after.name} リーダー凍結：${after.leaderFrozenNextTurn ? '次ターンの使用可能PP－1' : '解除'}`)
+    }
+    if (before.leaderSuperconduct !== after.leaderSuperconduct) {
+      changes.push(`${after.name} リーダー超電導：${after.leaderSuperconduct ? '次の物理ダメージ＋1' : '消費'}`)
+    }
+    if ((before.leaderBurningTurns ?? 0) !== (after.leaderBurningTurns ?? 0)) {
+      changes.push(`${after.name} リーダー燃焼：残り${after.leaderBurningTurns ?? 0}ターン`)
+    }
     const previousAmulets = new Set((before.amulets ?? []).map(a => a.instanceId))
     const nextAmulets = new Set((after.amulets ?? []).map(a => a.instanceId))
     for (const amulet of after.amulets ?? []) {
