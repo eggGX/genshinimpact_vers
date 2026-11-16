@@ -831,7 +831,7 @@ export function attackLeader(
   )
 
   if (!attacker || !canFollowerAttack(attacker) ||
-      attacker.keywords.includes('rush_only') ||
+      (attacker.keywords.includes('rush_only') && !attacker.keywords.includes('storm')) ||
       (isGuarded(enemy) && !attacker.keywords.includes('plunge_attack'))) {
     return state
   }
