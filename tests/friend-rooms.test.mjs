@@ -28,6 +28,18 @@ test('Firestore rule forbids anonymous reads and any game state writes', () => {
   assert.match(rules, /affectedKeys\(\)\.hasOnly\(\['guestUid'\]\)/)
   assert.match(rules, /allow read, write: if false/)
 })
+test('each friend can update only their own readiness flag', () => {
+  assert.match(transport, /setFriendRoomReady/)
+  assert.match(transport, /updateMask.fieldPaths=\\$\\{field\\}/)
+  assert.match(rules, /affectedKeys\\(\\)\\.hasOnly\\(\\['hostReady'\\]\\)/)
+  assert.match(rules, /affectedKeys\\(\\)\\.hasOnly\\(\\['guestReady'\\]\\)/)
+  assert.match(lobby, /このデッキで準備完了/)
+  assert.match(lobby, /deckErrors\.length > 0/)
+})
+test('Firestore rules can be deployed along with Hosting', () => {
+  const firebase = JSON.parse(read('firebase.json'))
+  assert.equal(firebase.firestore.rules, 'firestore.rules')
+})
 test('lobby never claims online gameplay is available yet', () => {
   assert.match(lobby, /対戦アクションの同期はまだ有効化していません/)
 })
