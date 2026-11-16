@@ -1,5 +1,19 @@
 import { getFriendMatchIdToken } from './firebaseRooms'
+import type { OnlineAction } from '../../server/src/matchActions'
 
+export interface OnlineFollowerView {
+  instanceId: string
+  cardId: string
+  attack: number
+  health: number
+  maxHealth: number
+  canAttack: boolean
+  hasAttacked: boolean
+  attacksThisTurn?: number
+  skillUsed: boolean
+  burstUsed: boolean
+  keywords: string[]
+}
 export interface OnlinePlayerView {
   id: string
   name: string
@@ -11,7 +25,7 @@ export interface OnlinePlayerView {
   handCount: number
   deckCount: number
   hand?: string[]
-  field: unknown[]
+  field: OnlineFollowerView[]
   graveyard: string[]
 }
 export interface OnlineMatchView {
@@ -28,10 +42,9 @@ const address = import.meta.env.VITE_MATCH_SERVER_URL?.trim().replace(/\/$/, '')
 export function isMatchServerConfigured(): boolean {
   return Boolean(address && /^https:\/\//.test(address))
 }
-async function requestMatch(code: string, method: 'GET' | 'POST', body?: object): Promise<OnlineMatchView> {
+async function requestMatch(code: string, method: 'GET' | 'POST', endpoint: 'state' | 'mulligan' | 'action', body?: object): Promise<OnlineMatchView> {
   if (!isMatchServerConfigured()) throw new Error('対戦サーバーがまだ設定されていません。')
   const token = await getFriendMatchIdToken()
-  const endpoint = method === 'GET' ? 'state' : 'mulligan'
   const response = await fetch(`${address}/rooms/${encodeURIComponent(code)}/${endpoint}`, {
     method,
     headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
@@ -47,8 +60,13 @@ async function requestMatch(code: string, method: 'GET' | 'POST', body?: object)
   return payload as OnlineMatchView
 }
 export function fetchOnlineMatch(code: string): Promise<OnlineMatchView> {
-  return requestMatch(code, 'GET')
+  return requestMatch(code, 'GET', 'state')
 }
 export function submitOnlineMulligan(code: string, revision: number, indices: number[]): Promise<OnlineMatchView> {
-  return requestMatch(code, 'POST', { revision, indices })
+  return requestMatch(code, 'POST', 'mulligan', { revision, indices })
+}
+
+/** Commands are validated and executed exclusively by the trusted server. */
+export function submitOnlineAction(code: string, revision: number, action: OnlineAction): Promise<OnlineMatchView> {
+  return requestMatch(code, 'POST', 'action', { revision, action })
 }
