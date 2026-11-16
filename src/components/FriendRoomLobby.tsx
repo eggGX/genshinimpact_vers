@@ -190,8 +190,8 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
         <h3>対戦セッションを開始しました</h3>
         <div className="friend-code-display">{room.code}</div>
         <div className="friend-room-players">
-          <span>プレイヤー1（ホスト） <strong>{role === 'host' ? 'あなた' : '対戦相手'}</strong></span>
-          <span>プレイヤー2（ゲスト） <strong>{role === 'guest' ? 'あなた' : '対戦相手'}</strong></span>
+          <span>空（ホスト） <strong>{role === 'host' ? 'あなた' : '対戦相手'}</strong></span>
+          <span>蛍（ゲスト） <strong>{role === 'guest' ? 'あなた' : '対戦相手'}</strong></span>
         </div>
         {isMatchServerConfigured() ? <div className="friend-match-session-banner">
           {!onlineMatch ? <p>対戦サーバーから状態を取得しています。</p> : <>
@@ -199,7 +199,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
             <p>自分の山札：{onlineMatch.players[onlineMatch.seat].deckCount}枚　
               相手の手札：{onlineMatch.players[1 - onlineMatch.seat].handCount}枚
             </p>
-            {onlineMatch.phase === 'mulligan' && onlineMatch.currentPlayerId === `player${onlineMatch.seat + 1}`
+            {onlineMatch.phase === 'mulligan' && !onlineMatch.mulliganReady[onlineMatch.seat]
               ? <div className="friend-mulligan">
                   <p>交換するカードを選択してください（最大4枚）。</p>
                   <div className="friend-mulligan-cards">
@@ -217,7 +217,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
                   </button>
                 </div>
               : onlineMatch.phase === 'mulligan'
-                ? <p>相手のマリガン確定を待っています。</p>
+                ? <p>マリガン確定済み。相手のマリガン完了を待っています。</p>
                 : <OnlineMatchBoard match={onlineMatch} pending={pending}
                     onAction={action => { void sendMatchAction(action) }} />}
           </>}
