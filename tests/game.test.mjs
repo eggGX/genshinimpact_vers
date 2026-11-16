@@ -1069,7 +1069,9 @@ test('C015 と C010 のクレストは別処理で発動する', () => {
   }]
   const played = engine.playCard(state, 'player1', 0)
   const next = engine.endTurn(played)
-  assert.equal(next.players[1].leaderHealth, 18)
+  // C010 uses a random element. C015's Pyro hit can react with it,
+  // so the total damage can exceed the unreacted two points.
+  assert.ok(next.players[1].leaderHealth <= 18 && next.players[1].leaderHealth >= 15)
   assert.equal(next.players[0].crests.find(c => c.id === 'C010').turnsRemaining, 6)
   assert.equal(next.players[0].crests.find(c => c.id === 'C015').turnsRemaining, 1)
 })
@@ -1714,7 +1716,7 @@ test('STEP30 水元素C026-C040のカード名・コスト・レアリティは�
     Array.from({length:15},(_,i)=>'C'+String(26+i).padStart(3,'0')))
   assert.deepEqual(hydroCards.map(c=>c.name),[
     '水スライム','ヒルチャールシャーマン・水','コホラ仔竜','アビスの魔術師・水',
-    '古華剣・裁雨留虹','シャイニングミラクル♪','重甲ヤドカニ','ヒルチャールレンジャー・水',
+    '古華剣・裁雨留虹','シャイニングミラクル♪','堅盾重甲ヤドカニ','ヒルチャールレンジャー・水',
     'みんなのアイドル・バーバラ','少壮気鋭・行秋','アアル村の守護者・キャンディス',
     '発明家・アイノ','占星術師・モナ','現人神の巫女・珊瑚宮心海',
     '執行官第十一位・タルタリヤ',
@@ -1890,6 +1892,8 @@ test('STEP42：水元素15枚はすべて対戦対応（C030を含む）',()=>{
   const state=startedGame()
   state.players[0].pp=10
   state.players[0].hand=['C030','C034','C035','C037','C038','C039','C040']
+  // C030 targets an existing friendly follower. Validate it with a legal target.
+  place(state, 0, 'C001', 1, 2)
   assert.equal(engine.canPlayCard(state,0),true)
   for(let i=1;i<state.players[0].hand.length;i++){
     assert.ok(engine.getCard(state.players[0].hand[i]).description.length>0)
@@ -4570,13 +4574,14 @@ test('カード詳細：画像未登録のカードでも内容が表示され�
   const { renderToStaticMarkup } = await import('react-dom/server')
   const { CardDetail } = await vite.ssrLoadModule('/src/components/CardDetail.tsx')
   const { getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  const card = getCard('C001')
+  // C001 now has registered art. Use a card whose artwork is still absent.
+  const card = getCard('C013')
   const html = renderToStaticMarkup(React.createElement(CardDetail, {
     card, onClose: () => {}, position: 1, total: 139,
   }))
   assert.match(html,/イラスト未登録/)
-  assert.match(html,/ヒルチャール/)
-  assert.match(html,/能力なし/)
+  assert.match(html,/ドドコ/)
+  assert.match(html,/カード能力/)
 })
 
 test('リーダー元素付着：炎通常攻撃でリーダーに炎付着し物理攻撃では付着しない',async()=>{
