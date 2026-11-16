@@ -305,6 +305,12 @@ function App() {
           isTarget ? 'attack-target' : '',
         ].filter(Boolean).join(' ')}
         disabled={!canAttack && !isTarget && !isFriendlyTarget}
+        title={[`カード：${card?.name ?? follower.cardId}`, card?.description,
+          follower.aura.length ? `元素付着：${follower.aura.map(a => a.element).join('、')}` : '',
+          follower.shield.normal ? `通常シールド：${follower.shield.normal}` : '',
+          follower.shield.crystallize ? `結晶シールド：${follower.shield.crystallize}` : '',
+          follower.keywords.join(' / ')
+        ].filter(Boolean).join('\n')}
         onClick={() => {
           if (isOpponent) {
             handleEnemyFollowerClick(follower.instanceId)
@@ -327,6 +333,16 @@ function App() {
         <strong>
           {card?.name ?? '不明なカード'}
         </strong>
+        <span className="field-keywords" aria-label="カード状態">
+          {follower.keywords.includes('guard') && <span title="守護" className="keyword-pill">守</span>}
+          {follower.keywords.includes('storm') && <span title="疾走" className="keyword-pill">疾</span>}
+          {follower.keywords.includes('rush_only') && <span title="突進" className="keyword-pill">突</span>}
+          {follower.keywords.includes('aura') && <span title="オーラ" className="keyword-pill">護</span>}
+          {follower.keywords.includes('frozen') && <span title="凍結" className="keyword-pill keyword-pill--cryo">氷</span>}
+          {follower.shield.normal > 0 && <span title={`通常シールド ${follower.shield.normal}`} className="keyword-pill">盾{follower.shield.normal}</span>}
+          {follower.shield.crystallize > 0 && <span title={`結晶シールド ${follower.shield.crystallize}`} className="keyword-pill">晶{follower.shield.crystallize}</span>}
+          {follower.aura.map((a,i)=><span key={i} title={`元素付着：${a.element}`} className="keyword-pill keyword-pill--aura">✧</span>)}
+        </span>
 
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
 
@@ -510,13 +526,7 @@ function App() {
           </div>
         </header>
 
-        <main
-          style={{
-            maxWidth: 850,
-            margin: '60px auto',
-            textAlign: 'center',
-          }}
-        >
+        <main className="mulligan-scene">
           <h2>{currentPlayer.name} のマリガン</h2>
 
           <p>交換したいカードを選択してください。</p>
@@ -524,15 +534,7 @@ function App() {
             選択枚数：{mulliganSelection.length} / 4
           </p>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-              gap: 16,
-              margin: '35px 0',
-            }}
-          >
+          <div className="mulligan-cards">
             {currentPlayer.hand.map((cardId, index) => {
               const card = getCard(cardId)
               if (!card) return null
@@ -547,24 +549,10 @@ function App() {
                   onClick={() =>
                     handleToggleMulligan(index)
                   }
-                  style={{
-                    width: 155,
-                    height: 215,
-                    padding: 12,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: selected
-                      ? '#72592b'
-                      : '#38546a',
-                    color: 'white',
-                    border: selected
-                      ? '3px solid #ffd24d'
-                      : '3px solid #c9a75c',
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                  }}
+                  className={[
+                    'mulligan-card', `card-element--${card.element}`,
+                    `card-rarity--${card.rarity}`, selected ? 'selected' : '',
+                  ].filter(Boolean).join(' ')}
                 >
                   <span>コスト {card.cost}</span>
                   <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
@@ -584,11 +572,7 @@ function App() {
 
           <button
             type="button"
-            className="end-turn"
-            style={{
-              marginLeft: 0,
-              padding: '14px 35px',
-            }}
+            className="end-turn mulligan-confirm"
             onClick={handleConfirmMulligan}
           >
             {mulliganSelection.length === 0
