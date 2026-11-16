@@ -68,8 +68,8 @@ test('client requests actions without writing complete game state', () => {
   assert.match(frontend, /submitOnlineAction\(code: string, revision: number, action: OnlineAction\)/)
   assert.match(frontend, /requestMatch\(code, 'POST', 'action', \{ revision, action \}\)/)
   assert.match(lobby, /submitOnlineAction\(room.code, onlineMatch.revision, action\)/)
-  assert.match(app, /Array\(p\.handCount\)\.fill\('hidden'\)/)
-  assert.match(app, /Array\(p\.deckCount\)\.fill\('hidden'\)/)
+  assert.match(app, /Array<string>\(p\.handCount\)\.fill\('hidden'\)/)
+  assert.match(app, /Array<string>\(p\.deckCount\)\.fill\('hidden'\)/)
 })
 
 test('online battle reuses the exact local battle scene with server commands', () => {
