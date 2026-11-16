@@ -46,7 +46,7 @@ test('online session explicitly distinguishes match start from live card play', 
 })
 
 test('online deck editor preserves mounted lobby and room state', () => {
-  assert.match(app, /if \(showFriendLobby && !matchStarted\) \{/)
+  assert.match(app, /if \(!online && showFriendLobby && !matchStarted\) \{/)
   assert.match(app, /display: editingPlayer !== null \? 'none' : undefined/)
   assert.match(app, /<FriendRoomLobby onBack=/)
   assert.match(app, /フレンド対戦：自分のデッキ/)
