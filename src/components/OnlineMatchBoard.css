@@ -1,0 +1,21 @@
+.online-match-board{margin:18px 0;text-align:left;color:#ebebdb}
+.online-match-board h3{margin:0 0 7px;color:#f2d9a0}
+.online-match-board h4{margin:0 0 7px;color:#dfd0a6}
+.online-match-board p{margin:6px 0}
+.online-match-players{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.online-match-players section,.online-match-actions section{padding:13px;border:1px solid #54756f;background:#122d37;border-radius:10px}
+.online-match-field{display:flex;flex-wrap:wrap;gap:5px;font-size:11px;margin-top:8px}
+.online-match-field span{padding:5px 7px;background:#0e222c;border:1px solid #456e68;border-radius:6px}
+.online-match-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.online-match-actions label{display:block;font-size:12px;margin:11px 0}
+.online-match-actions select{display:block;width:100%;padding:7px;border:1px solid #8fa9a0;background:#0c212d;color:#fff4d4;border-radius:7px;margin-top:5px}
+.online-match-hand{display:grid;gap:6px;margin:12px 0}
+.online-match-hand button{display:flex;align-items:center;justify-content:space-between;gap:7px;margin:0;text-align:left;padding:9px;font-size:12px}
+.online-match-hand button.selected{background:#346e60;border-color:#9fe7c8}
+.online-match-hand small{white-space:nowrap;color:#edd6a5}
+.online-match-buttons{display:flex;flex-wrap:wrap;gap:5px}
+.online-match-buttons button{margin:4px 0;flex:1}
+.online-match-end-turn{width:100%;margin-top:16px!important;background:#986f39!important}
+.online-match-message{font-size:18px!important;color:#ffe0a5!important;text-align:center}
+.online-match-note{margin-top:16px!important;font-size:11px!important;color:#aabdc1!important}
+@media(max-width:650px){.online-match-players,.online-match-actions{grid-template-columns:1fr}}
