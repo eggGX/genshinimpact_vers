@@ -237,8 +237,8 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
         <div className="friend-code-display">{room.code}</div>
         <button type="button" onClick={() => void navigator.clipboard.writeText(room.code)}>コードをコピー</button>
         <div className="friend-room-players">
-          <span>プレイヤー1（ホスト） <strong>{room.hostReady ? '準備完了' : '準備待ち'}</strong></span>
-          <span>プレイヤー2（ゲスト） <strong>{!room.guestUid ? '参加待ち' : room.guestReady ? '準備完了' : '準備待ち'}</strong></span>
+          <span>空（ホスト） <strong>{room.hostReady ? '準備完了' : '準備待ち'}</strong></span>
+          <span>蛍（ゲスト） <strong>{!room.guestUid ? '参加待ち' : room.guestReady ? '準備完了' : '準備待ち'}</strong></span>
         </div>
         <div className="friend-deck-selection">
           <h3>自分のデッキ</h3>
