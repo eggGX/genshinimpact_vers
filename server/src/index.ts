@@ -125,6 +125,8 @@ function projectState(stored: Stored, seat: 0 | 1) {
       crests: player.crests ?? [],
       leaderAura: player.leaderAura ?? [],
       leaderShield: player.leaderShield ?? { normal: 0, crystallize: 0 },
+      leaderBurningTurns: player.leaderBurningTurns ?? 0,
+      bondOfLife: player.bondOfLife ?? 0,
     })),
   }
 }
