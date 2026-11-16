@@ -674,7 +674,7 @@ function App() {
 
       {playback && <div className="battle-playback" role="status" aria-live="polite">
         <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
-          <span>戦闘演出　{playback.index + 1} / {playback.frames.length}</span>
+          <span>戦闘演出 {playback.index + 1} / {playback.frames.length}</span>
         </div>
         <strong className="battle-playback-description">{playback.frames[playback.index].label}</strong>
         <div className="battle-playback-controls">
