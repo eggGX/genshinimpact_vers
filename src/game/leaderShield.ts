@@ -65,10 +65,10 @@ export function damageLeaderWithReaction(player: Player, amount: number, element
       leaderShield: { normal: current.normal - normal, crystallize: current.crystallize - crystallize },
       leaderHealth: Math.max(0, player.leaderHealth - remaining),
       leaderSuperconduct: reaction === 'superconduct'
-        ? true : physical && amount > 0 ? false : player.leaderSuperconduct,
-      leaderFrozenNextTurn: reaction === 'frozen' ? true : player.leaderFrozenNextTurn,
+        ? true : physical && amount > 0 ? false : (player.leaderSuperconduct ?? false),
+      leaderFrozenNextTurn: reaction === 'frozen' ? true : (player.leaderFrozenNextTurn ?? false),
       leaderBurningTurns: reaction === 'burning'
-        ? (player.leaderBurningTurns ?? 0) + 1 : player.leaderBurningTurns,
+        ? (player.leaderBurningTurns ?? 0) + 1 : (player.leaderBurningTurns ?? 0),
     },
     reaction,
     reactedElement,
