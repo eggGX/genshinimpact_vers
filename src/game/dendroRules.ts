@@ -1,9 +1,9 @@
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader, healLeader, addLeaderShield } from './leaderShield'
+import { healLeader, addLeaderShield } from './leaderShield'
 import { summonFollowers } from './neutralRules'
-import { resolveElementalDamage, resolveReactionConsequence, grantShield , resolveLeaderElementalHit } from './elemental'
+import { resolveElementalDamage, resolveReactionConsequence, grantShield, resolveLeaderElementalHit } from './elemental'
 
 let nextDendroAmuletId = 1
 
