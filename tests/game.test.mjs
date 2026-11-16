@@ -4532,11 +4532,12 @@ test('演出トレース：元素反応名が実際の解決結果から記録�
   assert.equal(traced.players[1].leaderHealth,state.players[1].leaderHealth)
 })
 
-test('元素アイコン：7元素の切り出し番号と無元素フォールバックが揃っている',async()=>{
+test('元素アイコン：7元素の切り出し番号と無元素の専用画像が揃っている',async()=>{
   const {ELEMENT_VISUALS,getElementVisual}=await vite.ssrLoadModule('/src/data/elementIcons.ts')
   const order=['pyro','hydro','cryo','electro','anemo','geo','dendro']
   assert.deepEqual(order.map(e=>getElementVisual(e).spriteIndex),[0,1,2,3,4,5,6])
   assert.equal(getElementVisual('none').spriteIndex,undefined)
+  assert.equal(getElementVisual('none').image,'/elements/none.png')
   assert.equal(getElementVisual('none').label,'無元素')
   assert.ok(Object.values(ELEMENT_VISUALS).every(v=>v.label&&v.color))
 })
