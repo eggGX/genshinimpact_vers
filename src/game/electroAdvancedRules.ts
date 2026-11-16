@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader, healLeader } from './leaderShield'
@@ -37,7 +38,7 @@ function randomHit(
   const opponent = state.players.find(p => p.id !== ownerId)
   const targets = opponent?.field.filter(f => f.health > 0 && f.instanceId !== excluding) ?? []
   if (!targets.length || state.winnerId !== null) return state
-  return deaths(hit(state, ownerId, targets[Math.floor(Math.random() * targets.length)].instanceId, value))
+  return captureFrame(deaths(hit(state, ownerId, targets[Math.floor(Math.random() * targets.length)].instanceId, value)), 'ランダム雷元素ダメージ')
 }
 
 function allHit(state: GameState, ownerId: string, value: number, deaths: DeathResolver): GameState {
