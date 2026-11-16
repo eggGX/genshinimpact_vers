@@ -34,6 +34,9 @@ export interface OnlinePlayerView {
   graveyard: string[]
   leaderAura?: ElementalAura[]
   leaderShield?: Shield
+  leaderBurningTurns?: number
+  bondOfLife?: number
+  crests?: Array<{id:string;turnsRemaining:number;usedElements:ElementalAura['element'][]}>
 }
 export interface OnlineMatchView {
   revision: number
