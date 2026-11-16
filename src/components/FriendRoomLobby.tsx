@@ -78,12 +78,12 @@ export function FriendRoomLobby({ onBack }: { onBack: () => void }) {
         <div className="friend-code-display">{room.code}</div>
         <button type="button" onClick={() => void navigator.clipboard.writeText(room.code)}>コードをコピー</button>
         <div className="friend-room-players">
-          <span>プレイヤー1（ホスト） <strong>接続済み</strong></span>
+          <span>プレイヤー1（ホスト） <strong>登録済み</strong></span>
           <span>プレイヤー2（ゲスト） <strong>{room.guestUid ? '参加済み' : '参加待ち'}</strong></span>
         </div>
         {pollError && <p className="friend-room-error">接続を再確認しています。通信状況をご確認ください。</p>}
         <p className="friend-room-notice">{room.guestUid
-          ? '2人の接続を確認しました。次の段階で対戦同期と非公開情報の分離を実装します。'
+          ? '2人の参加登録を確認しました。次の段階で対戦同期と非公開情報の分離を実装します。'
           : 'フレンドにコードを伝えて参加してもらってください。接続状況は自動更新されます。'}</p>
         <button type="button" onClick={() => { setRoom(null); setRole(null); setError('') }}>ロビーを離れる</button>
       </section>}
