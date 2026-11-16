@@ -61,9 +61,38 @@ test('Repeated leader Freezes reduce only one usable PP on next turn', () => {
   assert.equal(state.players[1].pp, state.players[1].maxPp)
 })
 
-test('Quicken cannot be triggered on leaders, and both auras remain', () => {
-  const next = hit('dendro','electro',1)
-  assert.deepEqual(next.players[1].leaderAura?.map(a => a.element), ['dendro','electro'])
+test('Quicken on leaders consumes Electro and Dendro aura and grants two charges', () => {
+  for (const [attached, incoming] of [['dendro','electro'], ['electro','dendro']]) {
+    const next = hit(attached, incoming, 1)
+    assert.deepEqual(next.players[1].leaderAura, [])
+    assert.equal(next.players[1].leaderQuickenCharges, 2)
+    assert.equal(next.players[1].leaderHealth, 19)
+    assert.ok(next.presentationFrames === undefined || Array.isArray(next.presentationFrames))
+  }
+})
+
+test('Leader Quicken charges are consumed by the next two positive Electro/Dendro hits', () => {
+  const quickened = hit('dendro','electro',1)
+  const one = resolveLeaderElementalHit(quickened, 1, 1, 'dendro', 0)
+  assert.equal(one.players[1].leaderQuickenCharges, 1)
+  assert.deepEqual(one.players[1].leaderAura, [])
+  const two = resolveLeaderElementalHit(one, 1, 1, 'electro', 0)
+  assert.equal(two.players[1].leaderQuickenCharges, 0)
+  assert.deepEqual(two.players[1].leaderAura, [])
+  const three = resolveLeaderElementalHit(two, 1, 1, 'dendro', 0)
+  assert.deepEqual(three.players[1].leaderAura?.map(a => a.element), ['dendro'])
+  assert.equal(three.players[1].leaderQuickenCharges, 0)
+})
+
+test('Unreactive incoming elements replace leader aura instead of stacking', () => {
+  const state = hit('dendro','cryo',1)
+  assert.deepEqual(state.players[1].leaderAura?.map(a => a.element), ['cryo'])
+  const repeated = resolveLeaderElementalHit(state,1,1,'cryo',0)
+  assert.deepEqual(repeated.players[1].leaderAura?.map(a => a.element), ['cryo'])
+  const next = resolveLeaderElementalHit(repeated,1,1,'dendro',0)
+  assert.deepEqual(next.players[1].leaderAura?.map(a => a.element), ['dendro'])
+  const physical = resolveLeaderElementalHit(next,1,1,undefined,0)
+  assert.deepEqual(physical.players[1].leaderAura?.map(a => a.element), ['dendro'])
 })
 
 test('Leader Burning deals 1 on own turn end and uses one turn of duration', () => {
