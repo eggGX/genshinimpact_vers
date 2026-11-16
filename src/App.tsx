@@ -116,7 +116,9 @@ function App() {
           highlightedFollowers.add(follower.instanceId)
         }
       }
-      if (oldPlayer.leaderHealth !== newPlayer.leaderHealth) {
+      if (oldPlayer.leaderHealth !== newPlayer.leaderHealth ||
+          (oldPlayer.leaderAura ?? []).map(a=>a.element).join() !==
+          (newPlayer.leaderAura ?? []).map(a=>a.element).join()) {
         highlightedLeaders.add(newPlayer.id)
       }
     }
@@ -371,7 +373,14 @@ function App() {
         ? `${follower.instanceId}-hit-${playback?.index}`
         : follower.instanceId}
         className={['follower-wrapper',
-          highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : ''].join(' ')}>
+          highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : '',
+          follower.aura.length ? 'follower-has-aura' : ''].join(' ')}>
+      {follower.aura.length > 0 && <div className="follower-aura-icons"
+        aria-label={`元素付着：${follower.aura.map(a=>a.element).join('、')}`}>
+        {follower.aura.map((a,i)=><span key={i} className="aura-icon-holder">
+          <ElementIcon element={a.element} size="md" />
+        </span>)}
+      </div>}
       <button
         type="button"
         className={[
@@ -420,16 +429,11 @@ function App() {
           {follower.keywords.includes('frozen') && <span title="凍結" className="keyword-pill keyword-pill--cryo">氷</span>}
           {follower.shield.normal > 0 && <span title={`通常シールド ${follower.shield.normal}`} className="keyword-pill">盾{follower.shield.normal}</span>}
           {follower.shield.crystallize > 0 && <span title={`結晶シールド ${follower.shield.crystallize}`} className="keyword-pill">晶{follower.shield.crystallize}</span>}
-          {follower.aura.map((a,i)=><span key={i} className="keyword-element-aura"><ElementIcon element={a.element} size="xs" /></span>)}
+
         </span>
 
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
 
-        {follower.aura.length > 0 && (
-          <small style={{ color: '#9fe7ff' }}>
-            付着：{follower.aura.map(a => a.element).join('・')}
-          </small>
-        )}
         {follower.keywords.includes('double_attack') && (
           <small>【2回攻撃】このターンの攻撃：{follower.attacksThisTurn ?? (follower.hasAttacked ? 1 : 0)}/2回</small>
         )}
@@ -744,6 +748,12 @@ function App() {
           }
           onClick={handleAttackLeader}
         >
+          {(opponent.leaderAura?.length ?? 0) > 0 && <span className="leader-aura-icons"
+            aria-label={`リーダー元素付着：${opponent.leaderAura?.map(a=>a.element).join('、')}`}>
+            {opponent.leaderAura?.map((a,i)=><span key={i} className="aura-icon-holder">
+              <ElementIcon element={a.element} size="sm" />
+            </span>)}
+          </span>}
           <span className="leader-avatar" aria-hidden="true">✧</span>
           <span className="leader-caption">{opponent.name}</span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{opponent.leaderHealth}</strong><small>/{opponent.leaderMaxHealth}</small></span>
@@ -785,6 +795,12 @@ function App() {
         <div className="player-side-label"><span className="side-label-dot" /> YOU <strong>{currentPlayer.name}</strong></div>
         <div key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
           className={highlightedLeaders.has(currentPlayer.id) ? 'leader leader-hit' : 'leader'}>
+          {(currentPlayer.leaderAura?.length ?? 0) > 0 && <span className="leader-aura-icons"
+            aria-label={`リーダー元素付着：${currentPlayer.leaderAura?.map(a=>a.element).join('、')}`}>
+            {currentPlayer.leaderAura?.map((a,i)=><span key={i} className="aura-icon-holder">
+              <ElementIcon element={a.element} size="sm" />
+            </span>)}
+          </span>}
           <span className="leader-avatar" aria-hidden="true">✦</span>
           <span className="leader-caption">{currentPlayer.name}</span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
