@@ -1,0 +1,39 @@
+/* Compact, public crest status markers for both leader panels. */
+.crest-tray{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:3px 6px;border:1px solid #b59a6777;border-radius:9px;
+  background:linear-gradient(130deg,#253947,#111f31);color:#e7d9b7;
+  min-height:32px;max-width:100%;position:relative;
+}
+.crest-tray-label{font:700 9px 'Cinzel',serif;letter-spacing:.08em;color:#eac98e;}
+.crest-tray-icons{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.crest-button{
+  position:relative;display:grid;place-items:center;
+  width:34px;height:34px;flex:0 0 34px;border-radius:50%;
+  padding:2px;cursor:pointer;border:2px solid #cbb078;
+  background:radial-gradient(circle,#466071,#111c2a);
+  box-shadow:0 1px 4px #0009,inset 0 0 5px #f4d9a045;
+}
+.crest-button:hover,.crest-button:focus-visible,.crest-button--selected{
+  border-color:#ffe5ae;box-shadow:0 0 0 2px #d3b26e66,0 0 12px #f1bd7355;outline:none;
+}
+.crest-emblem{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden;}
+.crest-emblem>img{height:100%;width:100%;object-fit:cover;}
+.crest-emblem-fallback{display:grid;place-items:center;position:relative;}
+.crest-emblem-fallback .element-icon{opacity:.8;}
+.crest-emblem-symbol{position:absolute;inset:0;display:grid;place-items:center;
+  font-size:16px;color:#fff2d3;text-shadow:0 1px 4px #050a13,0 0 4px #0c1220;}
+.crest-turn-count{position:absolute;bottom:-5px;right:-6px;display:grid;place-items:center;
+  background:#131d30;border:1px solid #efd39b;border-radius:9px;min-width:17px;height:17px;padding:0 2px;
+  color:#fff7dc;font:bold 11px 'Cinzel',serif;box-shadow:0 1px 5px #000a;}
+.crest-detail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  width:100%;font-size:11px;border-top:1px solid #aa947344;padding-top:6px;color:#ded8c7;}
+.crest-detail-name{font-weight:800;color:#f3dbac;}
+.crest-detail-turns{white-space:nowrap;color:#bfd4cf;}
+.crest-detail p{flex-basis:100%;margin:2px 0;font-size:11px;line-height:1.45;}
+.crest-used-elements{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+@media(max-width:680px){
+  .crest-tray{gap:5px;padding:3px 5px;}
+  .crest-button{width:31px;height:31px;flex-basis:31px;}
+  .crest-turn-count{min-width:15px;height:15px;font-size:10px;}
+}
