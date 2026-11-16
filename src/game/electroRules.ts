@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader } from './leaderShield'
@@ -73,7 +74,7 @@ export function electroTurnEnd(
       ...p, field: p.field.map(f => f.instanceId === sourceId ? grantShield(f, 'normal', 2) : f),
     }))
   }
-  if (source.cardId === 'token-oz') return deaths(electroHitRandom(state, ownerId, 3))
+  if (source.cardId === 'token-oz') return captureFrame(deaths(electroHitRandom(state, ownerId, 3)), 'オズ：ランダム雷3ダメージ')
   return state
 }
 
