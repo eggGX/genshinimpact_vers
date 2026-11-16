@@ -43,3 +43,11 @@ test('Firestore rules can be deployed along with Hosting', () => {
 test('lobby never claims online gameplay is available yet', () => {
   assert.match(lobby, /対戦アクションの同期はまだ有効化していません/)
 })
+
+test('online deck editor preserves mounted lobby and room state', () => {
+  assert.match(app, /if \(showFriendLobby && !matchStarted\) \{/)
+  assert.match(app, /display: editingPlayer !== null \? 'none' : undefined/)
+  assert.match(app, /<FriendRoomLobby onBack=/)
+  assert.match(app, /フレンド対戦：自分のデッキ/)
+  assert.match(app, /onBack=\{\(\) => setEditingPlayer\(null\)\}/)
+})
