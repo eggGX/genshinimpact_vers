@@ -872,8 +872,6 @@ export function attackLeader(
     buffed, enemyIndex, effectiveAttack(buffed, owner.id, boostedAttacker),
     normalAttackElement(boostedAttacker), index
   )
-  const hp = leaderResolved.players[enemyIndex].leaderHealth
-
   const players = [...leaderResolved.players] as [Player, Player]
 
   players[index] = {
@@ -889,7 +887,7 @@ export function attackLeader(
   let result = resolvePyroAttackAfter({
     ...leaderResolved,
     players,
-    winnerId: hp === 0 ? owner.id : null,
+    winnerId: leaderResolved.winnerId,
   }, owner.id, attackerId)
   result = advancedElectroAttackAfter(result, owner.id, attackerId, resolveDeaths)
   return advancedAnemoAttackAfter(result, owner.id, attackerId)
