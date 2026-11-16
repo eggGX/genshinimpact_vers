@@ -30,7 +30,10 @@ export function ElementIcon({ element, size = 'sm', withLabel = false, className
             onError={() => setFailedImage(visual.image ?? null)} />
         : showSprite
           ? <span className="element-icon-sprite"
-              style={{ backgroundPositionY: `${(visual.spriteIndex ?? 0) * 100 / 6}%` }} />
+              style={{
+                backgroundImage: `url("${import.meta.env.BASE_URL}elements/elements-sprite.png")`,
+                backgroundPositionY: `${(visual.spriteIndex ?? 0) * 100 / 6}%`,
+              }} />
           : <span className="element-icon-symbol">{visual.symbol}</span>}
     </span>
     {withLabel && <span className="element-icon-label">{visual.label}</span>}
