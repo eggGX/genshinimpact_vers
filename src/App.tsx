@@ -29,7 +29,7 @@ import { DeckBuilder } from './components/DeckBuilder'
 import { FriendRoomLobby } from './components/FriendRoomLobby'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
-import type { OnlineMatchView, OnlinePlayerView } from './online/matchClient'
+import type { OnlineMatchView, OnlinePlayerView, OnlinePresentationEvent, OnlinePresentationSnapshot } from './online/matchClient'
 import type { OnlineAction } from '../server/src/matchActions'
 
 type BothDecks = [DeckDefinition, DeckDefinition]
@@ -81,6 +81,19 @@ function projectOnlinePlayer(p: OnlinePlayerView, isSelf: boolean): Player {
   }
 }
 
+function projectOnlineSnapshot(snapshot: OnlinePresentationSnapshot, seat: 0 | 1): GameState {
+  return {
+    turn: snapshot.turn,
+    phase: snapshot.phase,
+    currentPlayerId: snapshot.currentPlayerId,
+    winnerId: snapshot.winnerId,
+    players: [
+      projectOnlinePlayer(snapshot.players[0], seat === 0),
+      projectOnlinePlayer(snapshot.players[1], seat === 1),
+    ],
+  }
+}
+
 function App({ online }: { online?: {
   match: OnlineMatchView
   pending: boolean
@@ -96,6 +109,8 @@ function App({ online }: { online?: {
   const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number } | null>(null)
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
+  const lastOnlineRevision = useRef<number | null>(null)
+  const onlinePlaybackQueue = useRef<OnlinePresentationEvent[]>([])
 
   useEffect(() => {
     if (!playback) return
@@ -103,6 +118,16 @@ function App({ online }: { online?: {
       setPlayback(previous => {
         if (!previous) return null
         if (previous.index + 1 >= previous.frames.length) {
+          const nextEvent = online ? onlinePlaybackQueue.current.shift() : undefined
+          if (nextEvent && online) {
+            return {
+              frames: nextEvent.frames.map(frame => ({
+                label: frame.label,
+                state: projectOnlineSnapshot(frame.state, online.match.seat),
+              })),
+              index: 0,
+            }
+          }
           playbackLock.current = false
           return null
         }
@@ -147,6 +172,37 @@ function App({ online }: { online?: {
     if (online && onlineCanAct) online.onAction(action)
   }
   const shownGame = playback ? playback.frames[playback.index].state : game
+  // The opponent can complete several actions between polls. Queue every
+  // retained server event by revision and replay it with the local animation UI.
+  useEffect(() => {
+    if (!online) return
+    const revision = online.match.revision
+    const previouslySeen = lastOnlineRevision.current
+    if (previouslySeen === null || revision < previouslySeen) {
+      lastOnlineRevision.current = revision
+      return
+    }
+    if (revision === previouslySeen) return
+    lastOnlineRevision.current = revision
+    const newEvents = (online.match.history ?? [])
+      .filter(event => event.revision > previouslySeen && event.revision <= revision)
+      .sort((a,b) => a.revision - b.revision)
+    if (newEvents.length === 0) return
+    const [first, ...remaining] = newEvents
+    onlinePlaybackQueue.current.push(...remaining)
+    if (playbackLock.current) {
+      onlinePlaybackQueue.current.unshift(first)
+      return
+    }
+    playbackLock.current = true
+    setPlayback({
+      frames: first.frames.map(frame => ({
+        label: frame.label,
+        state: projectOnlineSnapshot(frame.state, online.match.seat),
+      })),
+      index: 0,
+    })
+  }, [online?.match.revision, online?.match.history, online?.match.seat])
   const highlightedFollowers = new Set<string>()
   const highlightedLeaders = new Set<string>()
   if (playback && playback.index > 0) {
@@ -195,6 +251,7 @@ function App({ online }: { online?: {
 
   const skipPlayback = () => {
     playbackLock.current = false
+    onlinePlaybackQueue.current = []
     setPlayback(null)
   }
   const [inspectedCard, setInspectedCard] = useState<
@@ -863,6 +920,11 @@ function App({ online }: { online?: {
         </div>
       </header>
 
+      {online && online.match.phase === 'main' && (online.match.history?.length ?? 0) > 0 && <details className="online-action-history">
+        <summary>対戦行動履歴（直近{online.match.history?.length}件）</summary>
+        <ol>{[...(online.match.history ?? [])].reverse().map(event =>
+          <li key={event.revision}>{event.title}</li>)}</ol>
+      </details>}
       {playback && <div className="battle-playback" role="status" aria-live="polite">
         <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
           <span>戦闘演出 {playback.index + 1} / {playback.frames.length}</span>
