@@ -623,3 +623,35 @@
   .leader-aura-status .aura-icon-holder{width:24px;height:24px;}
   .leader-aura-status .element-icon-emblem{width:20px;height:20px;}
 }
+
+
+/* Battle PP: current / spent / not yet unlocked are three distinct states. */
+.pp-resource-head{gap:10px;}
+.pp-values{display:flex;align-items:stretch;gap:6px;font-variant-numeric:tabular-nums;}
+.pp-current,.pp-max{
+  display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:7px;
+  border:1px solid;white-space:nowrap;
+}
+.pp-current{color:#b8f6dd;border-color:#50be9a;background:#134536cc;}
+.pp-max{color:#ffe1a0;border-color:#cfa95f;background:#594016b8;box-shadow:0 0 9px #d6aa3930;}
+.pp-values small,.resource-head .pp-values small{
+  font:700 10px 'Noto Sans JP',sans-serif;color:inherit;
+}
+.pp-values strong,.resource-head .pp-values strong{
+  font:800 18px 'Cinzel',sans-serif;color:inherit;
+}
+.pp-gem.spent{
+  background:linear-gradient(135deg,#375f59,#1c3837);border-color:#739d8c;
+  box-shadow:inset 0 0 5px #0006;
+}
+.pp-gem.locked{
+  background:#101c28;border-color:#344453;opacity:.45;
+  box-shadow:inset 0 0 5px #040a12;
+}
+@media(max-width:760px){
+  .pp-resource-head{flex-wrap:wrap;}
+  .pp-values{gap:4px;}
+  .pp-current,.pp-max{padding:2px 5px;gap:3px;}
+  .pp-values small,.resource-head .pp-values small{font-size:9px;}
+  .pp-values strong,.resource-head .pp-values strong{font-size:15px;}
+}
