@@ -17,13 +17,13 @@ import { geoAmuletPlay, geoAmuletsTurnEnd, geoPlay, geoSkill, geoAttack, geoEnga
 import { advancedAnemoSpell, advancedAnemoAmuletPlay, advancedAnemoPlay, advancedAnemoSkill, advancedAnemoBurst, advancedAnemoTurnEnd, advancedAnemoBothTurnEnd, advancedAnemoAmuletsTurnEnd, advancedAnemoAttack, advancedAnemoAttackAfter, resetAnemoTurnStatuses, catBoxEngage } from './anemoAdvancedRules'
 import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advancedElectroBurst, advancedElectroTurnEnd, electroAmuletsTurnEnd, advancedElectroAttack, advancedElectroAttackAfter } from './electroAdvancedRules'
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
-import { damageLeader } from './leaderShield'
+
 import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd, dendroLegendarySkill, dendroLegendaryBurst, dendroLegendaryAttack, dendroLumidouceTurnEnd } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
-import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 
 /** Resolve temporary elemental infusions before the card's printed normal attack element. */
 function normalAttackElement(follower: Follower) {
@@ -868,13 +868,13 @@ export function attackLeader(
   ), owner.id, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
-  const damagedLeader = damageLeader(
-    buffed.players[enemyIndex], effectiveAttack(buffed, owner.id, boostedAttacker),
-    normalAttackElement(boostedAttacker)
+  const leaderResolved = resolveLeaderElementalHit(
+    buffed, enemyIndex, effectiveAttack(buffed, owner.id, boostedAttacker),
+    normalAttackElement(boostedAttacker), index
   )
-  const hp = damagedLeader.leaderHealth
+  const hp = leaderResolved.players[enemyIndex].leaderHealth
 
-  const players = [...buffed.players] as [Player, Player]
+  const players = [...leaderResolved.players] as [Player, Player]
 
   players[index] = {
     ...boostedOwner,
@@ -886,10 +886,8 @@ export function attackLeader(
     ),
   }
 
-  players[enemyIndex] = damagedLeader
-
   let result = resolvePyroAttackAfter({
-    ...buffed,
+    ...leaderResolved,
     players,
     winnerId: hp === 0 ? owner.id : null,
   }, owner.id, attackerId)
@@ -1089,7 +1087,10 @@ export function endTurn(state: GameState): GameState {
   const next = players[nextIndex]
 
   next.maxPp = Math.min(MAX_PP, next.maxPp + 1)
-  next.pp = next.maxPp
+  // A leader can only lose one usable PP on their next turn from Freeze.
+  // Maximum PP keeps growing normally. The pending flag is consumed once.
+  next.pp = Math.max(0, next.maxPp - (next.leaderFrozenNextTurn ? 1 : 0))
+  next.leaderFrozenNextTurn = false
 
   next.field = next.field.map(f => ({
     ...f,
