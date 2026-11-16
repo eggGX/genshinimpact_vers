@@ -398,7 +398,7 @@ function App({ online }: { online?: {
     const card = getCard(follower.cardId)
 
     const canAttack =
-      !isOpponent &&
+      !isOpponent && onlineCanAct &&
       game.winnerId === null &&
       canFollowerAttack(follower)
 
@@ -419,7 +419,7 @@ function App({ online }: { online?: {
       follower.instanceId === selectedAttackerId
 
     const isTarget =
-      isOpponent &&
+      isOpponent && onlineCanAct &&
       game.winnerId === null &&
       (selectedAttacker === undefined || !isGuarded(opponent) ||
         follower.keywords.includes('guard') ||
@@ -462,14 +462,16 @@ function App({ online }: { online?: {
           if (isOpponent) {
             handleEnemyFollowerClick(follower.instanceId)
           } else if (isFriendlyTarget && selectedHandIndex !== null) {
-            animateAction(previous => playCard(
+            if (online) onlineSend({type:'play',handIndex:selectedHandIndex,targetId:follower.instanceId})
+            else animateAction(previous => playCard(
               previous, previous.currentPlayerId,
               selectedHandIndex, follower.instanceId
             ), '味方フォロワーを指定してプレイ')
             resetSelection()
           } else if (isFriendlyTarget && selectedAbility) {
             const { followerId, kind } = selectedAbility
-            animateAction(previous => activateAbility(previous, followerId, kind, follower.instanceId), '味方フォロワーへの元素能力')
+            if (online) onlineSend({type:'ability',followerId,kind,targetId:follower.instanceId})
+            else animateAction(previous => activateAbility(previous, followerId, kind, follower.instanceId), '味方フォロワーへの元素能力')
             resetSelection()
           } else {
             handleSelectAttacker(follower)
@@ -569,7 +571,7 @@ function App({ online }: { online?: {
         <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
           {card.elementalSkill && (
             <button type="button"
-              disabled={!canUseAbility(game, follower.instanceId, 'skill')}
+              disabled={!onlineCanAct || !canUseAbility(game, follower.instanceId, 'skill')}
               onClick={() => handleUseAbility(follower, 'skill')}
               title={card.elementalSkill.name}>
               スキル PP{card.elementalSkill.ppCost ?? 0}
@@ -580,7 +582,7 @@ function App({ online }: { online?: {
           )}
           {card.elementalBurst && (
             <button type="button"
-              disabled={!canUseAbility(game, follower.instanceId, 'burst')}
+              disabled={!onlineCanAct || !canUseAbility(game, follower.instanceId, 'burst')}
               onClick={() => handleUseAbility(follower, 'burst')}
               title={card.elementalBurst.name}>
               爆発 EN{card.elementalBurst.energyCost ?? 0}
@@ -792,15 +794,15 @@ function App({ online }: { online?: {
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
         <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button type="button" onClick={() => setShowCardLibrary(true)}>
+          {!online && <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
-          </button>
-          <button type="button" onClick={() => { setMatchStarted(false); resetSelection() }}>
+          </button>}
+          {!online && <button type="button" onClick={() => { setMatchStarted(false); resetSelection() }}>
             デッキ選択へ戻る
-          </button>
-          <button type="button" onClick={handleReset}>
+          </button>}
+          {!online && <button type="button" onClick={handleReset}>
             ゲームリセット
-          </button>
+          </button>}
         </div>
       </header>
 
@@ -849,7 +851,7 @@ function App({ online }: { online?: {
             selectedAttacker ? 'attack-target' : '',
           ].filter(Boolean).join(' ')}
           disabled={
-            !selectedAttacker ||
+            !selectedAttacker || !onlineCanAct ||
             game.winnerId !== null ||
             (isGuarded(opponent) && !selectedAttacker.keywords.includes('plunge_attack')) ||
             (selectedAttacker.keywords.includes('rush_only') && !selectedAttacker.keywords.includes('storm'))
@@ -965,7 +967,7 @@ function App({ online }: { online?: {
         <button
           type="button"
           className="end-turn"
-          disabled={shownGame.winnerId !== null || Boolean(playback)}
+          disabled={!onlineCanAct || shownGame.winnerId !== null || Boolean(playback)}
           onClick={handleEndTurn}
         >
           <span>END TURN</span><strong>ターン終了</strong>
@@ -1000,7 +1002,8 @@ function App({ online }: { online?: {
 
       {selectedHandIndex !== null && ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex]) && (
         <button type="button" onClick={() => {
-          animateAction(previous => playCard(previous, previous.currentPlayerId,
+          if (online) onlineSend({type:'play',handIndex:selectedHandIndex,targetId:'self'})
+          else animateAction(previous => playCard(previous, previous.currentPlayerId,
             selectedHandIndex, 'self'), '自身を強化して召喚')
           resetSelection()
         }}>
@@ -1028,7 +1031,7 @@ function App({ online }: { online?: {
             currentPlayer.field.some(f => f.instanceId === selectedAbility.followerId && f.cardId === 'C083')
           const playable = varkaChoice
             ? ['pyro','hydro','cryo','electro'].includes(card.element)
-            : canPlayCard(game, index)
+            : onlineCanAct && canPlayCard(game, index)
           const selected = selectedHandIndex === index
 
           return (
