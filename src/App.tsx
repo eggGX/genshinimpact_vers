@@ -17,7 +17,7 @@ import {
   activateAbility,
   playCard,
 } from './game/engine'
-import type { Follower, GameState } from './game/types'
+import type { Follower, GameState, Player } from './game/types'
 import { beginPresentation, captureFrame, compactPresentationFrames, withoutPresentation, type PresentationFrame } from './game/presentation'
 import type { AbilityKind } from './game/engine'
 import './App.css'
@@ -29,7 +29,7 @@ import { DeckBuilder } from './components/DeckBuilder'
 import { FriendRoomLobby } from './components/FriendRoomLobby'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
-import type { OnlineMatchView } from './online/matchClient'
+import type { OnlineMatchView, OnlinePlayerView } from './online/matchClient'
 import type { OnlineAction } from '../server/src/matchActions'
 
 type BothDecks = [DeckDefinition, DeckDefinition]
@@ -57,6 +57,27 @@ function loadDecks(): BothDecks {
     return [normalize(parsed[0], defaults[0]), normalize(parsed[1], defaults[1])]
   } catch {
     return defaults
+  }
+}
+
+/** Convert one public server projection to the shared battle UI's player shape.
+ * Placeholder IDs preserve counts only; private opponent cards are never exposed.
+ */
+function projectOnlinePlayer(p: OnlinePlayerView, isSelf: boolean): Player {
+  return {
+    ...p,
+    deck: Array<string>(p.deckCount).fill('hidden'),
+    hand: isSelf ? (p.hand ?? []) : Array<string>(p.handCount).fill('hidden'),
+    field: p.field.map(f => ({
+      ...f,
+      aura: f.aura ?? [],
+      shield: f.shield ?? { normal: 0, crystallize: 0 },
+    })),
+    amulets: p.amulets ?? [],
+    crests: p.crests ?? [],
+    leaderAura: p.leaderAura ?? [],
+    leaderShield: p.leaderShield ?? { normal: 0, crystallize: 0 },
+    graveyard: p.graveyard,
   }
 }
 
@@ -113,19 +134,10 @@ function App({ online }: { online?: {
     phase: online.match.phase,
     currentPlayerId: online.match.currentPlayerId,
     winnerId: online.match.winnerId,
-    players: [0, 1].map(i => {
-      const p = online.match.players[i as 0 | 1]
-      return {
-        ...p,
-        deck: Array(p.deckCount).fill('hidden'),
-        hand: i === online.match.seat ? (p.hand ?? []) : Array(p.handCount).fill('hidden'),
-        field: p.field.map(f => ({...f, aura:f.aura ?? [], shield:f.shield ?? {normal:0, crystallize:0}})),
-        graveyard: p.graveyard,
-        amulets: p.amulets ?? [],
-        leaderAura: p.leaderAura ?? [],
-        leaderShield: p.leaderShield ?? {normal:0, crystallize:0},
-      }
-    }) as [GameState['players'][0], GameState['players'][1]],
+    players: [
+      projectOnlinePlayer(online.match.players[0], online.match.seat === 0),
+      projectOnlinePlayer(online.match.players[1], online.match.seat === 1),
+    ],
   } : localGame
   const onlineCanAct = !online || (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
