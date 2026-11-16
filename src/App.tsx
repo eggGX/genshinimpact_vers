@@ -113,16 +113,19 @@ function App({ online }: { online?: {
     phase: online.match.phase,
     currentPlayerId: online.match.currentPlayerId,
     winnerId: online.match.winnerId,
-    players: online.match.players.map((p, i) => ({
-      ...p,
-      deck: Array(p.deckCount).fill('hidden'),
-      hand: i === online.match.seat ? (p.hand ?? []) : Array(p.handCount).fill('hidden'),
-      field: p.field.map(f => ({...f, aura:f.aura ?? [], shield:f.shield ?? {normal:0, crystallize:0}})),
-      graveyard: p.graveyard,
-      amulets: p.amulets ?? [],
-      leaderAura: p.leaderAura ?? [],
-      leaderShield: p.leaderShield ?? {normal:0, crystallize:0},
-    })) as GameState['players'],
+    players: [0, 1].map(i => {
+      const p = online.match.players[i as 0 | 1]
+      return {
+        ...p,
+        deck: Array(p.deckCount).fill('hidden'),
+        hand: i === online.match.seat ? (p.hand ?? []) : Array(p.handCount).fill('hidden'),
+        field: p.field.map(f => ({...f, aura:f.aura ?? [], shield:f.shield ?? {normal:0, crystallize:0}})),
+        graveyard: p.graveyard,
+        amulets: p.amulets ?? [],
+        leaderAura: p.leaderAura ?? [],
+        leaderShield: p.leaderShield ?? {normal:0, crystallize:0},
+      }
+    }) as [GameState['players'][0], GameState['players'][1]],
   } : localGame
   const onlineCanAct = !online || (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
