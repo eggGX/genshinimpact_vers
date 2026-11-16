@@ -59,3 +59,16 @@
 .friend-mulligan-card:has(input:checked){border-color:#72cfb5;background:#184b46;}
 .friend-mulligan-card input{accent-color:#71d7b3;flex:none;}
 @media(max-width:500px){.friend-mulligan-cards{grid-template-columns:1fr;}}
+
+
+.friend-mulligan .mulligan-cards.friend-mulligan-cards{
+  display:flex;align-items:stretch;justify-content:center;flex-wrap:wrap;gap:13px;margin:24px 0;
+}
+.friend-mulligan .mulligan-cards.friend-mulligan-cards .mulligan-card{
+  width:clamp(125px,18vw,168px);min-height:215px;
+}
+@media(max-width:650px){
+  .friend-mulligan .mulligan-cards.friend-mulligan-cards .mulligan-card{
+    width:calc(50% - 12px);min-width:120px;max-width:168px;
+  }
+}
