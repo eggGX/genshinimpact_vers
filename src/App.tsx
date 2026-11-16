@@ -600,7 +600,7 @@ function App() {
               <span>元素：</span>
               {deck.elements.length
                 ? <span className="deck-setup-element-icons">
-                    {deck.elements.filter(element => element !== 'none').map(element =>
+                    {deck.elements.map(element =>
                       <ElementIcon key={element} element={element} size="md" />
                     )}
                   </span>
