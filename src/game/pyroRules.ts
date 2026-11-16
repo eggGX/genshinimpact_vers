@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader, healLeader } from './leaderShield'
@@ -42,7 +43,7 @@ export function hitAllEnemyFollowers(
     result = resolveReactionConsequence(
       { ...result, players }, enemyIndex, id, hit.reaction, hit.reactedElement, ownerIndex
     )
-    result = resolveDeaths(result)
+    result = captureFrame(resolveDeaths(result), '炎元素の攻撃')
   }
   return result
 }
@@ -243,7 +244,7 @@ export function resolvePyroGoldTurnEnd(
     const selection = Math.floor(Math.random() * (targets.length + 1))
     const victim = targets[selection]
     if (!victim) {
-      result = dealLeaderDamage(result, enemyIndex, 2)
+      result = captureFrame(dealLeaderDamage(result, enemyIndex, 2), 'グゥオパァー：ランダム炎2（リーダー）')
       continue
     }
     const outcome = resolveElementalDamage(victim, 2, 'pyro')
@@ -256,7 +257,7 @@ export function resolvePyroGoldTurnEnd(
       { ...result, players }, enemyIndex, victim.instanceId,
       outcome.reaction, outcome.reactedElement, ownerIndex
     )
-    result = resolveDeaths(result)
+    result = captureFrame(resolveDeaths(result), 'グゥオパァー：ランダム炎2')
   }
   return result
 }
