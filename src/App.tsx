@@ -23,6 +23,7 @@ import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
 import { CardArtwork } from './components/CardArtwork'
+import { BattleCardTooltip } from './components/BattleCardTooltip'
 import { ElementIcon } from './components/ElementIcon'
 import { DeckBuilder } from './components/DeckBuilder'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
@@ -148,6 +149,9 @@ function App() {
     playbackLock.current = false
     setPlayback(null)
   }
+  const [inspectedCard, setInspectedCard] = useState<
+    { kind: 'follower' | 'amulet'; instanceId: string } | { kind: 'hand'; cardId: string } | null
+  >(null)
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
   const [selectedHandIndex, setSelectedHandIndex] =
@@ -169,6 +173,20 @@ function App() {
   const winner = shownGame.players.find(
     p => p.id === shownGame.winnerId
   )
+
+  const inspectFollower = inspectedCard?.kind === 'follower'
+    ? shownGame.players.flatMap(p => p.field).find(f => f.instanceId === inspectedCard.instanceId)
+    : undefined
+  const inspectAmulet = inspectedCard?.kind === 'amulet'
+    ? shownGame.players.flatMap(p => p.amulets ?? []).find(a => a.instanceId === inspectedCard.instanceId)
+    : undefined
+  const inspectCard = inspectedCard?.kind === 'hand'
+    ? getCard(inspectedCard.cardId)
+    : getCard(inspectFollower?.cardId ?? inspectAmulet?.cardId ?? '')
+  const inspectOwner = inspectedCard?.kind === 'hand' ? '自分の手札'
+    : inspectedCard?.kind === 'follower'
+      ? shownGame.players.find(p => p.field.some(f => f.instanceId === inspectedCard.instanceId))?.name ?? '場'
+      : shownGame.players.find(p => p.amulets?.some(a => a.instanceId === inspectedCard?.instanceId))?.name ?? '場'
 
   const selectedAttacker = currentPlayer.field.find(
     f => f.instanceId === selectedAttackerId
@@ -374,7 +392,9 @@ function App() {
         : follower.instanceId}
         className={['follower-wrapper',
           highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : '',
-          follower.aura.length ? 'follower-has-aura' : ''].join(' ')}>
+          follower.aura.length ? 'follower-has-aura' : ''].join(' ')}
+        onMouseEnter={() => setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })}
+        onMouseLeave={() => setInspectedCard(null)}>
       {follower.aura.length > 0 && <div className="follower-aura-icons"
         aria-label={`元素付着：${follower.aura.map(a=>a.element).join('、')}`}>
         {follower.aura.map((a,i)=><span key={i} className="aura-icon-holder">
@@ -392,12 +412,8 @@ function App() {
           isTarget ? 'attack-target' : '',
         ].filter(Boolean).join(' ')}
         disabled={!canAttack && !isTarget && !isFriendlyTarget}
-        title={[`カード：${card?.name ?? follower.cardId}`, card?.description,
-          follower.aura.length ? `元素付着：${follower.aura.map(a => a.element).join('、')}` : '',
-          follower.shield.normal ? `通常シールド：${follower.shield.normal}` : '',
-          follower.shield.crystallize ? `結晶シールド：${follower.shield.crystallize}` : '',
-          follower.keywords.join(' / ')
-        ].filter(Boolean).join('\n')}
+        onFocus={() => setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })}
+        onBlur={() => setInspectedCard(null)}
         onClick={() => {
           if (isOpponent) {
             handleEnemyFollowerClick(follower.instanceId)
@@ -545,11 +561,13 @@ function App() {
           {followers.map(f => renderFollower(f, isOpponent))}
           {amulets.map(amulet => {
             const card = getCard(amulet.cardId)
-            return <div className="follower-wrapper" key={amulet.instanceId}>
+            return <div className="follower-wrapper" key={amulet.instanceId}
+              onMouseEnter={() => setInspectedCard({ kind: 'amulet', instanceId: amulet.instanceId })}
+              onMouseLeave={() => setInspectedCard(null)}>
               <div className={['field-card','amulet-card',
                 `card-element--${card?.element ?? 'none'}`,
                 `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}
-                title={card?.description || card?.name || amulet.cardId}>
+>
                 <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
                 <strong>{card?.name ?? amulet.cardId}</strong>
                 <ElementIcon element={card?.element ?? 'none'} size="xs" />
@@ -928,7 +946,16 @@ function App() {
 
       <footer className="hand">
         <div className="hand-label"><span>YOUR HAND</span><strong>{currentPlayer.hand.length} / 9</strong></div>
-        <div className="hand-cards">
+        <div className="hand-cards"
+          onMouseMove={event => {
+            const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.hand-card')
+            const index = button ? Number(button.dataset.handIndex) : -1
+            const cardId = currentPlayer.hand[index]
+            if (cardId) setInspectedCard(previous =>
+              previous?.kind === 'hand' && previous.cardId === cardId
+                ? previous : { kind: 'hand', cardId })
+          }}
+          onMouseLeave={() => setInspectedCard(null)}>
         {currentPlayer.hand.map((cardId, index) => {
           const card = getCard(cardId)
           if (!card) return null
@@ -951,9 +978,11 @@ function App() {
               ].filter(Boolean).join(' ')}
               key={`${cardId}-${index}`}
               disabled={!playable}
+              data-hand-index={index}
+              onMouseEnter={() => setInspectedCard({ kind: 'hand', cardId })}
+              onFocus={() => setInspectedCard({ kind: 'hand', cardId })}
+              onBlur={() => setInspectedCard(null)}
               onClick={() => handlePlayCard(index)}
-
-              title={card.description}
             >
               <span className="card-cost">
                 {card.cost}
@@ -971,6 +1000,8 @@ function App() {
         })}
         </div>
       </footer>
+      {inspectCard && <BattleCardTooltip card={inspectCard} follower={inspectFollower}
+        amulet={inspectAmulet} ownerLabel={inspectOwner} />}
     </div>
   )
 }
