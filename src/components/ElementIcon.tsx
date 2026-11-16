@@ -26,7 +26,7 @@ export function ElementIcon({ element, size = 'sm', withLabel = false, className
   >
     <span className="element-icon-emblem" aria-hidden="true">
       {showImage
-        ? <img src={visual.image} alt="" draggable={false}
+        ? <img src={`${import.meta.env.BASE_URL}${visual.image?.replace(/^\//, '') ?? ''}`} alt="" draggable={false}
             onError={() => setFailedImage(visual.image ?? null)} />
         : showSprite
           ? <span className="element-icon-sprite"
