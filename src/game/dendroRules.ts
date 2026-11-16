@@ -45,7 +45,7 @@ export function dendroDestroy(state: GameState, ownerId: string, dead: Follower)
   if (dead.cardId !== 'C104' || state.winnerId !== null) return state
   const other = state.players.find(p => p.id !== ownerId)
   if (!other) return state
-  const damaged = damageLeader(other, 2)
+  const damaged = damageLeader(other, 2, 'dendro')
   return { ...edit(state, other.id, () => damaged),
     winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId }
 }
@@ -292,7 +292,7 @@ function dendroRandomEnemy(state: GameState, ownerId: string, amount: number,
   const choices=foe.field.filter(f=>f.health>0)
   const selected=Math.floor(Math.random()*(choices.length+1))
   if(selected===0){
-    const hit=damageLeader(foe,amount)
+    const hit=damageLeader(foe,amount,'dendro')
     return {...edit(state,foe.id,()=>hit),
       winnerId:hit.leaderHealth===0?ownerId:state.winnerId}
   }
@@ -342,7 +342,7 @@ export function dendroLegendaryBurst(state: GameState, ownerId: string, cardId: 
     const result=dendroHitAll(state,ownerId,2,deaths)
     if(result.winnerId!==null)return result
     const enemy=result.players.find(p=>p.id!==ownerId)!
-    const hit=damageLeader(enemy,3)
+    const hit=damageLeader(enemy,3,'dendro')
     return {...edit(result,enemy.id,()=>hit),
       winnerId:hit.leaderHealth===0?ownerId:result.winnerId}
   }
