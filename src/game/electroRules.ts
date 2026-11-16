@@ -41,7 +41,7 @@ export function electroDestroy(
   if (destroyed.cardId !== 'C059') return state
   const enemy = state.players.find(p => p.id !== ownerId)
   if (!enemy) return state
-  const damaged = damageLeader(enemy, 2)
+  const damaged = damageLeader(enemy, 2, 'electro')
   return {
     ...updatePlayer(state, enemy.id, () => damaged),
     winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId,
