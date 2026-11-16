@@ -449,3 +449,20 @@
   .mulligan-card{width:calc(50% - 12px);max-width:172px;min-height:200px;}
   .mulligan-card .card-artwork{max-height:125px;}
 }
+
+/* Amulets share the same five battlefield slots as followers. */
+.amulet-card { cursor: default; min-height: 144px; justify-content: space-between; }
+.amulet-card:has(.card-artwork) { min-height: 170px; }
+.amulet-card .card-artwork { max-height: 95px; }
+.amulet-card .amulet-type { font-size: 9px; font-weight: 700; color: #e4c787; letter-spacing: .06em; }
+.amulet-card .amulet-countdown {
+  font-size: 10px; font-weight: 800; padding: 3px 5px; border-radius: 12px;
+  background: #2e4861; border: 1px solid #d5b66f; color: #ffdf9f;
+}
+@media(max-width:760px){
+  .amulet-card { min-height: 96px; }
+  .amulet-card:has(.card-artwork) { min-height: 125px; }
+  .amulet-card .card-artwork { max-height: 67px; }
+  .amulet-card .amulet-type { font-size: 7px; }
+  .amulet-card .amulet-countdown { font-size: 8px; padding: 2px 3px; }
+}
