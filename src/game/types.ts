@@ -161,6 +161,8 @@ export interface Player {
   leaderSuperconduct?: boolean
   /** The next own turn starts with 1 less usable PP; repeated freezes do not stack. */
   leaderFrozenNextTurn?: boolean
+  /** Quicken (Dendro + Electro): next two Electro/Dendro hits consume one charge each. */
+  leaderQuickenCharges?: number
   /** Leader elemental attachment (e.g. Barbara's healing crest). */
   leaderAura?: ElementalAura[]
   /** Healing absorption remaining from a Bond of Life. */
