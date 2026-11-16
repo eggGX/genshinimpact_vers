@@ -34,3 +34,16 @@
 .friend-deck-elements{display:inline-flex;gap:7px;flex-wrap:wrap;align-items:center;}
 .friend-deck-selection button{margin-top:10px;}
 .friend-room-both-ready{color:#adf5cc!important;font-weight:800;border:1px solid #529b75;padding:12px;border-radius:8px;background:#14382b;}
+
+
+/* Online match staging: both browsers show the same session-start state. */
+.friend-match-session{max-width:620px;}
+.friend-room-start{font-size:16px!important;padding:13px 24px!important;box-shadow:0 0 16px #cfad6744;}
+.friend-match-session-banner{
+  margin:24px 0;padding:19px 20px;
+  border:1px solid #588f82;border-radius:12px;
+  background:linear-gradient(145deg,#18433a,#122c34);
+  text-align:left;
+}
+.friend-match-session-banner strong{color:#a4f5d2;font-size:14px;}
+.friend-match-session-banner p{margin:10px 0 0;color:#d1dfd9;font-size:12px;line-height:1.8;}
