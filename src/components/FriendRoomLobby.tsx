@@ -261,7 +261,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
       </section>}
       {pending && <p className="friend-room-wait">Firebaseに接続しています…</p>}
       {error && <p className="friend-room-error" role="alert">{error}</p>}
-      <p className="friend-room-footnote">対戦サーバーが設定済みなら非公開の初期手札・マリガン・基本的な対戦操作を同期できます。既存のローカル対戦UIとの統合は開発中です。</p>
+      <p className="friend-room-footnote">対戦セッション開始後は両プレイヤーともローカル対戦と同じバトル画面へ移動し、その画面上で同時にマリガンできます。</p>
     </main>
   </div>
 }
