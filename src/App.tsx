@@ -85,6 +85,7 @@ function App({ online }: { online?: {
   match: OnlineMatchView
   pending: boolean
   onAction: (action: OnlineAction) => void
+  onMulligan: (indices: number[]) => void
   onLeave: () => void
 } } = {}) {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
@@ -210,6 +211,7 @@ function App({ online }: { online?: {
   } | null>(null)
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
+  const [onlineMulliganSelection, setOnlineMulliganSelection] = useState<number[]>([])
 
   const currentPlayer = online
     ? shownGame.players[online.match.seat]
@@ -652,7 +654,7 @@ function App({ online }: { online?: {
       <div style={{ display: editingPlayer !== null ? 'none' : undefined }}>
         <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
           deck={decks[0]} onEditDeck={() => setEditingPlayer(0)}
-          renderOnlineBattle={(match, pending, onAction, onLeave) => <App online={{match,pending,onAction,onLeave}} />} />
+          renderOnlineBattle={(match, pending, onAction, onMulligan, onLeave) => <App online={{match,pending,onAction,onMulligan,onLeave}} />} />
       </div>
       {editingPlayer !== null && <DeckBuilder
         title="フレンド対戦：自分のデッキ"
@@ -806,6 +808,41 @@ function App({ online }: { online?: {
 
   return (
     <div className={['game','game--battle',playback ? 'game--animating' : ''].join(' ')}>
+      {online?.match.phase === 'mulligan' && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
+        <div className="online-mulligan-dialog">
+          <h2>{currentPlayer.name} のマリガン</h2>
+          <p>両プレイヤーが対戦画面で同時にマリガンします。</p>
+          <p>空：{online.match.mulliganReady?.[0] ? '確定済み' : '選択中'}　蛍：{online.match.mulliganReady?.[1] ? '確定済み' : '選択中'}</p>
+          {!online.match.mulliganReady?.[online.match.seat] ? <>
+            <p>交換したいカードを選択してください。（{onlineMulliganSelection.length} / 4枚）</p>
+            <div className="mulligan-cards">
+              {currentPlayer.hand.map((cardId, index) => {
+                const card = getCard(cardId)
+                if (!card) return null
+                const selected = onlineMulliganSelection.includes(index)
+                return <button type="button" key={index} disabled={online.pending}
+                  aria-pressed={selected}
+                  className={['mulligan-card', `card-element--${card.element}`,
+                    `card-rarity--${card.rarity}`, selected ? 'selected' : ''].join(' ')}
+                  onClick={() => setOnlineMulliganSelection(previous => previous.includes(index)
+                    ? previous.filter(i => i !== index) : [...previous, index])}>
+                  <span>コスト {card.cost}</span>
+                  <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
+                  <strong>{card.name}</strong>
+                  <span>{card.type === 'follower' ? `${card.attack} / ${card.health}` : card.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
+                  <span>{selected ? '交換する ✓' : 'キープ'}</span>
+                </button>
+              })}
+            </div>
+            <button type="button" className="end-turn mulligan-confirm" disabled={online.pending}
+              onClick={() => online.onMulligan([...onlineMulliganSelection])}>
+              {onlineMulliganSelection.length ? `${onlineMulliganSelection.length}枚交換して確定` : 'すべてキープして確定'}
+            </button>
+          </> : <div className="online-mulligan-waiting" role="status">
+            マリガン確定済み。相手のマリガン完了を待っています。
+          </div>}
+        </div>
+      </div>}
       <header className="game-header game-header--battle">
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
         <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
