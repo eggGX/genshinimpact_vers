@@ -110,7 +110,7 @@ function projectState(stored: Stored, seat: 0 | 1) {
     winnerId: state.winnerId,
     players: state.players.map((player, index) => ({
       id: player.id,
-      name: player.name,
+      name: index === 0 ? '空' : '蛍',
       leaderHealth: player.leaderHealth,
       leaderMaxHealth: player.leaderMaxHealth,
       pp: player.pp,
