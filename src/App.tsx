@@ -789,7 +789,7 @@ function App() {
             !selectedAttacker ||
             game.winnerId !== null ||
             isGuarded(opponent) ||
-            selectedAttacker.keywords.includes('rush_only')
+            (selectedAttacker.keywords.includes('rush_only') && !selectedAttacker.keywords.includes('storm'))
           }
           onClick={handleAttackLeader}
         >
