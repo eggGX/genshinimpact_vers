@@ -150,7 +150,11 @@ function App() {
       return
     }
     if (!canPlayCard(game, handIndex)) return
-    if (!noBuffAlly && (needsPlayTarget(card) || needsFriendlyPlayTarget(card))) {
+    const hasEnemyTarget = opponent.field.some(f => f.health > 0 &&
+      !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
+    if (!noBuffAlly &&
+        ((needsPlayTarget(card) && (card.type === 'spell' || hasEnemyTarget)) ||
+          needsFriendlyPlayTarget(card))) {
       setSelectedHandIndex(previous =>
         previous === handIndex ? null : handIndex
       )
@@ -450,17 +454,33 @@ function App() {
   }
 
   const renderField = (
-    followers: Follower[],
+    player: typeof currentPlayer,
     isOpponent: boolean
-  ) => (
-    <div className="card-slot">
-      {followers.length === 0
+  ) => {
+    const followers = player.field
+    const amulets = player.amulets ?? []
+    return <div className="card-slot" aria-label={`場：フォロワー${followers.length}体・アミュレット${amulets.length}枚`}>
+      {followers.length + amulets.length === 0
         ? 'カード配置エリア'
-        : followers.map(f =>
-            renderFollower(f, isOpponent)
-          )}
+        : <>
+          {followers.map(f => renderFollower(f, isOpponent))}
+          {amulets.map(amulet => {
+            const card = getCard(amulet.cardId)
+            return <div className="follower-wrapper" key={amulet.instanceId}>
+              <div className={['field-card','amulet-card',
+                `card-element--${card?.element ?? 'none'}`,
+                `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}
+                title={card?.description || card?.name || amulet.cardId}>
+                <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
+                <strong>{card?.name ?? amulet.cardId}</strong>
+                <span className="amulet-type">アミュレット</span>
+                <span className="amulet-countdown">残り {amulet.turnsRemaining} ターン</span>
+              </div>
+            </div>
+          })}
+        </>}
     </div>
-  )
+  }
 
   if (showCardLibrary) {
     return <CardLibrary onBack={() => setShowCardLibrary(false)} />
@@ -642,12 +662,6 @@ function App() {
         </div>
         <div className="player-counts"><span>山札 <strong>{opponent.deck.length}</strong></span><span>手札 <strong>{opponent.hand.length}</strong></span><span>墓場 <strong>{opponent.graveyard.length}</strong></span></div>
         <div className="player-effects">
-        {(opponent.amulets ?? []).map(amulet => (
-          <div key={amulet.instanceId}>
-            アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
-            {amulet.turnsRemaining > 0 ? `残り${amulet.turnsRemaining}ターン` : '残り0ターン'}
-          </div>
-        ))}
         {(opponent.bondOfLife ?? 0) > 0 && <div>命の契約：{opponent.bondOfLife}</div>}
         {opponent.leaderShield && (
           <div>リーダーシールド：通常 {opponent.leaderShield.normal} ／ 結晶 {opponent.leaderShield.crystallize}</div>
@@ -660,15 +674,15 @@ function App() {
 
       <section className="field">
         <div className="field-row">
-          <p className="zone-label"><span>ENEMY FIELD</span><small>{opponent.field.length} / 5</small></p>
-          {renderField(opponent.field, true)}
+          <p className="zone-label"><span>ENEMY FIELD</span><small>{opponent.field.length + (opponent.amulets?.length ?? 0)} / 5</small></p>
+          {renderField(opponent, true)}
         </div>
 
         <div className="field-divider"><span className="field-divider-emblem">✦</span><span className="field-divider-text">ELEMENTAL BATTLE</span></div>
 
         <div className="field-row">
-          <p className="zone-label"><span>YOUR FIELD</span><small>{currentPlayer.field.length} / 5</small></p>
-          {renderField(currentPlayer.field, false)}
+          <p className="zone-label"><span>YOUR FIELD</span><small>{currentPlayer.field.length + (currentPlayer.amulets?.length ?? 0)} / 5</small></p>
+          {renderField(currentPlayer, false)}
         </div>
       </section>
 
@@ -688,12 +702,6 @@ function App() {
         </div>
         <div className="player-counts"><span>山札 <strong>{currentPlayer.deck.length}</strong></span><span>手札 <strong>{currentPlayer.hand.length}</strong></span><span>墓場 <strong>{currentPlayer.graveyard.length}</strong></span></div>
         <div className="player-effects">
-        {(currentPlayer.amulets ?? []).map(amulet => (
-          <div key={amulet.instanceId}>
-            アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
-            {amulet.turnsRemaining > 0 ? `残り${amulet.turnsRemaining}ターン` : '残り0ターン'}
-          </div>
-        ))}
         {(currentPlayer.crests ?? []).map((crest, index) => (
           <div key={index}>
             クレスト【{crest.id === 'C034' ? '歌声の環' : getCard(crest.id)?.name ?? crest.id}】
