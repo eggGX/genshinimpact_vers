@@ -10,6 +10,26 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C001: '/card-art/C001.webp', // ヒルチャール
+  C002: '/card-art/C002.webp', // 宝盗団・雑夫
+  C003: '/card-art/C003.webp', // 遺跡守衛
+  C005: '/card-art/C005.webp', // ヒルチャール強襲
+  C006: '/card-art/C006.webp', // エラ・マスク
+  C007: '/card-art/C007.webp', // ティミー
+  C008: '/card-art/C008.webp', // ヒルチャール暴徒
+  C011: '/card-art/C011.webp', // 炎スライム
+  C012: '/card-art/C012.webp', // ヒルチャール射手・炎
+  C026: '/card-art/C026.webp', // 水スライム
+  C027: '/card-art/C027.webp', // ヒルチャールシャーマン・水
+  C033: '/card-art/C033.webp', // ヒルチャールレンジャー・水
+  C041: '/card-art/C041.webp', // 氷スライム
+  C042: '/card-art/C042.webp', // ヒルチャール射手・氷
+  C048: '/card-art/C048.webp', // ヒルチャール・霜鎧の王
+  C056: '/card-art/C056.webp', // 雷スライム
+  C071: '/card-art/C071.webp', // 風スライム
+  C077: '/card-art/C077.webp', // ヒルチャールレンジャー・風
+  C086: '/card-art/C086.webp', // 岩スライム
+  C101: '/card-art/C101.webp', // 草スライム
   C009: '/card-art/C009.webp', // パイモンのへそくり
   C010: '/card-art/C010.webp', // 第四降臨者の力
   C019: '/card-art/C019.webp', // アンバー
