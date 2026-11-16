@@ -18,3 +18,7 @@
 .element-icon--lg{font-size:40px;}
 .element-icon-label{font-size:.52em;color:#f2e6cf;font-weight:700;line-height:1.3;}
 .element-icon--none .element-icon-emblem{opacity:.78;}
+
+/* Seven 56px transparent crops packed vertically into one lightweight PNG. */
+.element-icon-sprite {display:block;width:100%;height:100%;background-image:url('/elements/elements-sprite.png');background-repeat:no-repeat;background-size:100% 700%;}
+.element-icon:has(.element-icon-sprite) .element-icon-emblem {border:0;background:none;box-shadow:none;}
