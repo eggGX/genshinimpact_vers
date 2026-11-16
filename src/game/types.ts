@@ -182,6 +182,11 @@ export type GamePhase =
   | 'end'
 
 export interface GameState {
+  /** Optional intermediate snapshots for UI playback; never part of saved game rules. */
+  presentationFrames?: Array<{
+    label: string
+    state: Omit<GameState, 'presentationFrames'>
+  }>
   turn: number
   currentPlayerId: string
   players: [Player, Player]
