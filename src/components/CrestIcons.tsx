@@ -46,7 +46,7 @@ export function CrestIcons({ crests = [], ownerName }: Props) {
   return <div className="crest-tray" aria-label={`${ownerName}のクレスト`}>
     <span className="crest-tray-label">CREST</span>
     <div className="crest-tray-icons">
-      {entries.map(({ crest, index, card, name, key }) => {
+      {entries.map(({ crest, card, name, key }) => {
         const tooltip = `${name}：残り${crest.turnsRemaining}ターン`
         return <button
           type="button"
@@ -56,7 +56,6 @@ export function CrestIcons({ crests = [], ownerName }: Props) {
           aria-label={`${ownerName}のクレスト：${tooltip}。詳細を表示`}
           aria-expanded={active?.key === key}
           onClick={() => setSelected(current => current === key ? null : key)}
-          style={{ '--crest-order': index } as React.CSSProperties}
         >
           <CrestEmblem id={crest.id} element={card?.element ?? 'none'} />
           <span className="crest-turn-count" aria-hidden="true">{crest.turnsRemaining}</span>
