@@ -704,3 +704,15 @@
 .online-action-history summary{cursor:pointer;font-weight:800;text-align:center}
 .online-action-history ol{margin:10px 0 0;padding-left:24px;color:#e3e5db;line-height:1.8}
 .online-action-history li+li{border-top:1px solid #a78c5a24}
+
+
+.online-latest-action{
+  position:relative;z-index:5;
+  display:flex;gap:12px;justify-content:center;align-items:center;
+  margin:10px auto 0;width:min(680px,95%);
+  padding:10px 12px;border-radius:10px;border:1px solid #d6b36c88;
+  background:#173c46e8;color:#f7e5bb;font-size:13px;
+}
+.online-latest-action span{font-size:10px;color:#9ce5d0;white-space:nowrap}
+.online-latest-action strong{overflow-wrap:anywhere}
+@media(max-width:600px){.online-latest-action{flex-direction:column;gap:4px}}
