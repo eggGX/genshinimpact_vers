@@ -40,8 +40,9 @@ test('Firestore rules can be deployed along with Hosting', () => {
   const firebase = JSON.parse(read('firebase.json'))
   assert.equal(firebase.firestore.rules, 'firestore.rules')
 })
-test('online session explicitly distinguishes match start from live card play', () => {
-  assert.match(lobby, /既存のローカル対戦UIとの統合は開発中です/)
+test('online session switches from lobby to the shared local battle screen', () => {
+  assert.match(lobby, /renderOnlineBattle\(onlineMatch, pending/)
+  assert.match(app, /<App online=\{\{match,pending,onAction,onLeave\}\}/)
   assert.match(lobby, /対戦セッションを開始しました/)
 })
 
