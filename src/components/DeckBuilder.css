@@ -35,3 +35,38 @@
 @media(max-width:850px){.deck-builder{padding:12px}.deck-builder-columns{grid-template-columns:1fr}.deck-card-pool,.deck-selected-list{max-height:none}}
 
 .deck-card-row:has(.card-artwork) { align-items: center; }
+
+/* Unified fantasy game menus (rather than a generic web form). */
+.deck-builder {
+  min-height:100vh;max-width:none;
+  background:
+    radial-gradient(ellipse at 50% 0%,#32657555,transparent 70%),
+    radial-gradient(ellipse at 80% 70%,#6c4b3350,transparent 64%),
+    linear-gradient(135deg,#0a1625,#182f3a 52%,#0b1b29);
+  font-family:'Noto Sans JP',system-ui,sans-serif;
+}
+.deck-builder-header,.deck-element-section,.deck-builder-columns{max-width:1400px;margin-left:auto;margin-right:auto;}
+.deck-builder h1{font-family:'Cinzel','Noto Sans JP',serif;color:#f3dcab;letter-spacing:.04em;}
+.deck-builder h2{color:#e7ca91;letter-spacing:.08em;}
+.deck-element-section,.deck-pool,.deck-selected {
+  background:linear-gradient(145deg,#1d3a46f0,#112534f5);
+  border:1px solid #ba996177;border-radius:15px;
+  box-shadow:inset 0 1px #dec38822,0 10px 20px #0007;
+}
+.deck-builder button{background:linear-gradient(#365466,#1d3041);border-color:#bf9e66;
+  color:#f8e8ca;box-shadow:inset 0 1px #f0d19722;}
+.deck-builder button:hover:not(:disabled){background:linear-gradient(#557585,#28465a);}
+.deck-element-buttons button{border-radius:30px;min-width:78px;}
+.deck-element-buttons button.chosen{background:linear-gradient(140deg,#b48c4c,#6b5734);
+  border-color:#f4d190;color:#fff8e7;box-shadow:0 0 16px #d6af5b66;}
+.deck-card-row,.deck-selected-row{
+  background:linear-gradient(115deg,#253f50,#182d3b);
+  border:1px solid #6f7b74;border-radius:9px;
+  box-shadow:inset 0 1px #c6aa7640;
+}
+.deck-card-row:hover{border-color:#bba16c;background:linear-gradient(115deg,#34576a,#203747);}
+.deck-copy-buttons button,.deck-selected-row button{border-radius:50%;height:37px;width:37px;padding:0;}
+.deck-filter-controls input,.deck-filter-controls select{background:#102633;border-color:#9f875f;color:#f4e9d5;}
+.deck-card-description{color:#bfcfd2;}
+.deck-progress{background:#0e1d2a;border:1px solid #8e7c5c;box-shadow:inset 0 2px 6px #0008;}
+.deck-progress span{background:linear-gradient(90deg,#9e7441,#f2ce7a);box-shadow:0 0 16px #e7be6b7a;}
