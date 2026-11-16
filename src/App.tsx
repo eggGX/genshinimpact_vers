@@ -177,9 +177,13 @@ function App({ online }: { online?: {
     const seatId = online ? online.match.players[online.match.seat].id : 'player1'
     const playerName = game.players.find(p => p.id === game.currentPlayerId)?.name ?? ''
     setTurnAnnouncement({ id: turnKey, own: game.currentPlayerId === seatId, playerName })
+  }, [game.phase, game.turn, game.currentPlayerId, game.winnerId, online?.match.seat])
+  // Separate dismissal effect also works under React StrictMode's effect replay.
+  useEffect(() => {
+    if (!turnAnnouncement) return
     const timer = window.setTimeout(() => setTurnAnnouncement(null), 1800)
     return () => window.clearTimeout(timer)
-  }, [game.phase, game.turn, game.currentPlayerId, game.winnerId, online?.match.seat])
+  }, [turnAnnouncement])
   const onlineCanAct = !online || (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
     !online.pending && !online.match.winnerId && !playbackLock.current && !playback)
