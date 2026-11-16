@@ -655,3 +655,14 @@
   .pp-values small,.resource-head .pp-values small{font-size:9px;}
   .pp-values strong,.resource-head .pp-values strong{font-size:15px;}
 }
+
+
+/* Friend room entry on the existing deck selection screen. */
+.friend-match-entry{
+  display:block;margin:15px auto 0;padding:14px 25px;
+  border:1px solid #7bccc1;border-radius:12px;
+  background:linear-gradient(115deg,#21535b,#15323e);
+  color:#d9fff4;font-weight:800;letter-spacing:.03em;cursor:pointer;
+  box-shadow:0 0 16px #3bd8b133;
+}
+.friend-match-entry:hover{filter:brightness(1.17);}
