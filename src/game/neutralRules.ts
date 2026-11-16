@@ -1,6 +1,6 @@
 import type { Card, ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader } from './leaderShield'
+import { resolveLeaderElementalHit } from './elemental'
 
 const MAX_FIELD = 5
 const MAX_HAND = 9
@@ -173,13 +173,7 @@ export function resolveNeutralTurnEnd(state: GameState, ownerId: string): GameSt
     }))
     if (element) {
       const enemyIndex = result.players.findIndex(player => player.id !== ownerId)
-      const players = [...result.players] as [Player, Player]
-      const enemy = players[enemyIndex]
-      const damaged = damageLeader(enemy, 1, element)
-      const hp = damaged.leaderHealth
-      players[enemyIndex] = damaged
-      result = { ...result, players,
-        winnerId: hp === 0 ? ownerId : result.winnerId }
+      result = resolveLeaderElementalHit(result, enemyIndex, 1, element, 1 - enemyIndex)
     }
   }
   // カウントダウン0でクレストは消滅する。
