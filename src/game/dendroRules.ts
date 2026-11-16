@@ -3,7 +3,7 @@ import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader, healLeader, addLeaderShield } from './leaderShield'
 import { summonFollowers } from './neutralRules'
-import { resolveElementalDamage, resolveReactionConsequence, grantShield } from './elemental'
+import { resolveElementalDamage, resolveReactionConsequence, grantShield , resolveLeaderElementalHit } from './elemental'
 
 let nextDendroAmuletId = 1
 
@@ -45,9 +45,7 @@ export function dendroDestroy(state: GameState, ownerId: string, dead: Follower)
   if (dead.cardId !== 'C104' || state.winnerId !== null) return state
   const other = state.players.find(p => p.id !== ownerId)
   if (!other) return state
-  const damaged = damageLeader(other, 2, 'dendro')
-  return { ...edit(state, other.id, () => damaged),
-    winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId }
+  return resolveLeaderElementalHit(state, state.players.findIndex(p=>p.id===other.id), 2, 'dendro')
 }
 
 /** C107: three-turn Vanarana amulet. */
@@ -262,9 +260,7 @@ export function dendroGoldSkill(state: GameState, ownerId: string, sourceId: str
     let result=dendroHitTarget(state,ownerId,targetId,2)
     if (core && enemy) {
       const foe=result.players.find(p=>p.id===enemy.id)!
-      const damaged=damageLeader(foe,Math.min(3,core.health))
-      result={...edit(result,foe.id,()=>damaged),
-        winnerId:damaged.leaderHealth===0?ownerId:result.winnerId}
+      result=resolveLeaderElementalHit(result,result.players.findIndex(p=>p.id===foe.id),Math.min(3,core.health))
     }
     return result
   }
@@ -292,9 +288,7 @@ function dendroRandomEnemy(state: GameState, ownerId: string, amount: number,
   const choices=foe.field.filter(f=>f.health>0)
   const selected=Math.floor(Math.random()*(choices.length+1))
   if(selected===0){
-    const hit=damageLeader(foe,amount,'dendro')
-    return {...edit(state,foe.id,()=>hit),
-      winnerId:hit.leaderHealth===0?ownerId:state.winnerId}
+    return resolveLeaderElementalHit(state,1-index,amount,'dendro',index)
   }
   return deaths(dendroHitTarget(state,ownerId,choices[selected-1].instanceId,amount))
 }
@@ -342,9 +336,7 @@ export function dendroLegendaryBurst(state: GameState, ownerId: string, cardId: 
     const result=dendroHitAll(state,ownerId,2,deaths)
     if(result.winnerId!==null)return result
     const enemy=result.players.find(p=>p.id!==ownerId)!
-    const hit=damageLeader(enemy,3,'dendro')
-    return {...edit(result,enemy.id,()=>hit),
-      winnerId:hit.leaderHealth===0?ownerId:result.winnerId}
+    return resolveLeaderElementalHit(result,result.players.findIndex(p=>p.id===enemy.id),3,'dendro')
   }
   return state
 }
