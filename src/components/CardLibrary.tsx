@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CardArtwork } from './CardArtwork'
+import { CardDetail } from './CardDetail'
 import { ElementIcon } from './ElementIcon'
 import { getAllCards } from '../data/cardRegistry'
 import { productionCards } from '../data/productionCards'
@@ -26,7 +27,12 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
   const report = validateProductionCards(productionCards)
   const originIds = new Set(productionCards.map(card => card.id))
   const visible = filterCards(getAllCards(), { element, rarity, origin, search }, originIds)
-  const selected = visible.find(card => card.id === selectedId)
+  const selectedIndex = visible.findIndex(card => card.id === selectedId)
+  const selected = selectedIndex >= 0 ? visible[selectedIndex] : undefined
+  const selectNeighbor = (offset: -1 | 1) => {
+    const neighbor = visible[selectedIndex + offset]
+    if (neighbor) setSelectedId(neighbor.id)
+  }
 
   return (
     <main className="library-page">
@@ -147,7 +153,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
           {visible.map(card => (
             <button type="button" key={card.id}
               className={selectedId === card.id ? 'library-entry selected' : 'library-entry'}
-              onClick={() => setSelectedId(card.id === selectedId ? null : card.id)}>
+              onClick={() => setSelectedId(card.id)}>
               <span className="library-card-element">コスト {card.cost} <ElementIcon element={card.element} size="xs" withLabel /></span>
               <strong>{card.name}</strong>
               <span>{RARITY_LABELS[card.rarity]}</span>
@@ -159,23 +165,15 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
           ))}
           {visible.length === 0 && <p>該当するカードはありません。</p>}
         </div>
-        {selected && (
-          <article className="library-details">
-            <h3>{selected.name} <ElementIcon element={selected.element} size="sm" withLabel /></h3>
-            <CardArtwork cardId={selected.id} name={selected.name} className="card-artwork--library" />
-            <p>{selected.description || '説明は未登録です。'}</p>
-            <p>ID：{selected.id} ／ タイプ：{selected.type}</p>
-            {selected.region && <p>地域：{selected.region.join('／')}</p>}
-            {selected.traits && <p>タイプ：{selected.traits.join('／')}</p>}
-            {selected.implementationStatus === 'data_only' && (
-              <p>このカードはデータ登録済みですが、効果はまだ実装されておらず対戦では使用できません。</p>
-            )}
-            {selected.token && <p>トークンカード：通常のデッキには含まれません。</p>}
-            {selected.elementalSkill && <p>元素スキル：{selected.elementalSkill.name}{selected.elementalSkill.ppCost !== undefined ? `（PP${selected.elementalSkill.ppCost}）` : ''}</p>}
-            {selected.elementalBurst && <p>元素爆発：{selected.elementalBurst.name}（EN{selected.elementalBurst.energyCost ?? 0}）</p>}
-          </article>
-        )}
+
       </section>
+      {selected && <div className="card-detail-overlay" role="dialog" aria-modal="true"
+          aria-label={`${selected.name}のカード詳細`}>
+        <CardDetail card={selected} position={selectedIndex + 1} total={visible.length}
+          onClose={() => setSelectedId(null)}
+          onPrevious={selectedIndex > 0 ? () => selectNeighbor(-1) : undefined}
+          onNext={selectedIndex < visible.length - 1 ? () => selectNeighbor(1) : undefined} />
+      </div>}
     </main>
   )
 }
