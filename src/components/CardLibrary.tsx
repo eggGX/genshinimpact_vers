@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CardArtwork } from './CardArtwork'
+import { ElementIcon } from './ElementIcon'
 import { getAllCards } from '../data/cardRegistry'
 import { productionCards } from '../data/productionCards'
 import { ELEMENT_ORDER, RARITY_ORDER, validateProductionCards } from '../data/cardValidation'
@@ -64,7 +65,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
                 const slots = report.slots.filter(slot => slot.element === value)
                 return (
                   <tr key={value}>
-                    <th scope="row">{ELEMENT_LABELS[value]}</th>
+                    <th scope="row"><ElementIcon element={value} size="xs" withLabel /></th>
                     {slots.map(slot => (
                       <td key={slot.rarity}>{slot.registered} / {slot.planned}</td>
                     ))}
@@ -100,6 +101,17 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
                 <option value={value} key={value}>{ELEMENT_LABELS[value]}</option>)}
             </select>
           </label>
+          <div className="library-element-chips" aria-label="元素で絞り込み">
+            <button type="button" aria-pressed={element === 'all'}
+              className={element === 'all' ? 'active' : ''}
+              onClick={() => { setElement('all'); setSelectedId(null) }}>すべて</button>
+            {ELEMENT_ORDER.map(value => <button type="button" key={value}
+              className={element === value ? 'active' : ''}
+              aria-pressed={element === value}
+              onClick={() => { setElement(value); setSelectedId(null) }}>
+              <ElementIcon element={value} size="xs" withLabel />
+            </button>)}
+          </div>
           <label>
             レアリティ
             <select value={rarity} onChange={e => {
@@ -136,7 +148,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
             <button type="button" key={card.id}
               className={selectedId === card.id ? 'library-entry selected' : 'library-entry'}
               onClick={() => setSelectedId(card.id === selectedId ? null : card.id)}>
-              <span>コスト {card.cost} ／ {ELEMENT_LABELS[card.element]}</span>
+              <span className="library-card-element">コスト {card.cost} <ElementIcon element={card.element} size="xs" withLabel /></span>
               <strong>{card.name}</strong>
               <span>{RARITY_LABELS[card.rarity]}</span>
               <CardArtwork cardId={card.id} name={card.name} className="card-artwork--library" />
@@ -149,7 +161,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
         </div>
         {selected && (
           <article className="library-details">
-            <h3>{selected.name}</h3>
+            <h3>{selected.name} <ElementIcon element={selected.element} size="sm" withLabel /></h3>
             <CardArtwork cardId={selected.id} name={selected.name} className="card-artwork--library" />
             <p>{selected.description || '説明は未登録です。'}</p>
             <p>ID：{selected.id} ／ タイプ：{selected.type}</p>
