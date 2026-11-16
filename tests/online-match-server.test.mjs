@@ -27,10 +27,13 @@ test('client projection omits opponent hand and all deck orders', () => {
   assert.doesNotMatch(backend.slice(backend.indexOf('function projectState'),backend.indexOf('function getMatchRef')), /deck: player\.deck/)
   assert.match(rules, /allow read, write: if false/)
 })
-test('mulligan is gated by seat, current revision and transaction', () => {
-  assert.match(backend, /stored\.revision !== revision/)
-  assert.match(backend, /stored\.state\.currentPlayerId !==/)
-  assert.match(backend, /confirmMulligan\(stored\.state, indices as number\[\]\)/)
+test('mulligan is independent for both seats and committed atomically', () => {
+  const reducer = read('server/src/mulligan.ts')
+  assert.match(backend, /applyIndependentMulligan/)
+  assert.match(backend, /mulliganReady: stored\.mulliganReady \?\? \[false, false\]/)
+  assert.match(reducer, /if \(flags\[seat\]\)/)
+  assert.match(reducer, /mulliganReady\.every\(Boolean\)/)
+  assert.match(reducer, /phase: bothReady \? 'main' : 'mulligan'/)
   assert.match(backend, /tx\.update\(matchRef, result\)/)
 })
 test('browser uses optional backend address and never uploads match state to Firestore', () => {
@@ -38,7 +41,7 @@ test('browser uses optional backend address and never uploads match state to Fir
   assert.match(frontend, /Authorization: `Bearer \$\{token\}`/)
   assert.match(lobby, /isMatchServerConfigured\(\)/)
   assert.match(lobby, /submitOnlineMulligan/)
-  assert.match(lobby, /既存のローカル対戦UIとの統合は開発中です/)
+  assert.match(lobby, /onlineMatch\.mulliganReady\[onlineMatch\.seat\]/)
 })
 test('match server has isolated dependencies and admin SDK', () => {
   assert.ok(serverManifest.dependencies['firebase-admin'])
@@ -67,4 +70,16 @@ test('client requests actions without writing complete game state', () => {
   assert.match(lobby, /submitOnlineAction\(room.code, onlineMatch.revision, action\)/)
   assert.match(board, /match.players\[1 - match.seat\]/)
   assert.match(board, /手札 \{enemy.handCount\}枚（非公開）/)
+})
+
+test('online player names and illustrated battle actions are integrated', () => {
+  const game = read('src/game/engine.ts')
+  const board = read('src/components/OnlineMatchBoard.tsx')
+  assert.match(game, /createPlayer\('player1', '空'/)
+  assert.match(game, /createPlayer\('player2', '蛍'/)
+  assert.match(board, /CardArtwork/)
+  assert.match(board, /ElementIcon/)
+  assert.match(board, /className="hand-cards"/)
+  assert.match(board, /chooseTarget\(f.instanceId,own\)/)
+  assert.match(board, /send\(\{type:'endTurn'\}\)/)
 })
