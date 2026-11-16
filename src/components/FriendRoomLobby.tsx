@@ -8,6 +8,14 @@ import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
 import './FriendRoomLobby.css'
 
+const ACTIVE_ROOM_KEY = 'genshin-friend-room-code-v1'
+function saveActiveRoom(code: string | null) {
+  try {
+    if (code) window.localStorage.setItem(ACTIVE_ROOM_KEY, code)
+    else window.localStorage.removeItem(ACTIVE_ROOM_KEY)
+  } catch { /* Browsers with disabled storage still support a live session. */ }
+}
+
 export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
   onBack: () => void
   deck: DeckDefinition
@@ -21,6 +29,25 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
   const [pollError, setPollError] = useState(false)
   const deckErrors = validateDeck(deck)
   const myReady = role === 'host' ? room?.hostReady : room?.guestReady
+
+  // Restore the room after refresh, but only for its authenticated participant.
+  useEffect(() => {
+    let active = true
+    const restore = async () => {
+      try {
+        const code = window.localStorage.getItem(ACTIVE_ROOM_KEY)
+        if (!code) return
+        const saved = await fetchFriendRoom(code)
+        const savedRole = await getMyFriendRoomRole(saved)
+        if (!active) return
+        if (!savedRole) { saveActiveRoom(null); return }
+        setRoom(previous => previous ?? saved)
+        setRole(previous => previous ?? savedRole)
+      } catch { /* User can create or join a fresh room instead. */ }
+    }
+    void restore()
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     if (!room) return
@@ -73,6 +100,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
       if (!myRole) throw new Error('参加権限を確認できませんでした。')
       setRoom(next)
       setRole(myRole)
+      saveActiveRoom(next.code)
     } catch (e) {
       setError(e instanceof Error ? e.message : '通信エラーが発生しました。')
     } finally { setPending(false) }
@@ -121,7 +149,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
             そのまま起動することはしていません。</p>
         </div>
         {pollError && <p className="friend-room-error">通信が不安定です。接続を確認してください。</p>}
-        <button type="button" onClick={() => { setRoom(null); setRole(null); setError('') }}>
+        <button type="button" onClick={() => { saveActiveRoom(null); setRoom(null); setRole(null); setError('') }}>
           ロビー画面を閉じる
         </button>
       </section> : <section className="friend-room-panel friend-room-active">
@@ -164,7 +192,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
         {!room.guestUid && <p className="friend-room-notice">
           フレンドにコードを伝えて参加してもらってください。接続状況は自動更新されます。
         </p>}
-        <button type="button" onClick={() => { setRoom(null); setRole(null); setError('') }}>ロビーを離れる</button>
+        <button type="button" onClick={() => { saveActiveRoom(null); setRoom(null); setRole(null); setError('') }}>ロビーを離れる</button>
       </section>}
       {pending && <p className="friend-room-wait">Firebaseに接続しています…</p>}
       {error && <p className="friend-room-error" role="alert">{error}</p>}
