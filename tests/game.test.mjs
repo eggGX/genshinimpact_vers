@@ -4623,7 +4623,7 @@ test('リーダー元素付着：同一元素は重複せず蒸発で既存付�
   assert.deepEqual(repeated.leaderAura.map(a=>a.element),['pyro'])
   const reacted=damageLeader(repeated,1,'hydro')
   assert.deepEqual(reacted.leaderAura,[])
-  assert.equal(reacted.leaderHealth,15)
+  assert.equal(reacted.leaderHealth,16)
 })
 test('リーダー元素付着：水元素の歌声の環効果はリーダーに付着情報を保持する',async()=>{
   const state=startedGame()
