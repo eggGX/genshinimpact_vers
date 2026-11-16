@@ -90,7 +90,7 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
             own && choice?.kind === 'attack' && choice.followerId === f.instanceId ? 'selected-card' : '',
             choice && ((own && choice.kind !== 'attack' && choice.friendly) ||
               (!own && (choice.kind === 'attack' || !choice.friendly))) ? 'attack-target' : '',
-          ].filter(Boolean).join(' ')} disabled={!canAct && !own}
+          ].filter(Boolean).join(' ')} 
             onClick={() => {
               if (!canAct) return
               if (choice && ((own && choice.kind !== 'attack' && choice.friendly) ||
@@ -112,7 +112,9 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
             </small> : null}
           </button>
           {own && <div className="online-follower-actions">
-            {card?.elementalSkill && <button type="button" disabled={!canAct || f.skillUsed}
+            {card?.elementalSkill && <button type="button"
+              disabled={!canAct || (f.skillUsesThisTurn ?? (f.skillUsed ? 1 : 0)) >=
+                (f.cardId === 'C084' ? 2 : ['C023','C069'].includes(f.cardId) ? 3 : 1)}
               onClick={() => chooseAbility(f,'skill')}>スキル</button>}
             {card?.elementalBurst && <button type="button" disabled={!canAct || f.burstUsed}
               onClick={() => chooseAbility(f,'burst')}>爆発</button>}
@@ -168,7 +170,8 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
     </section>
     <div className="battle-message" role="status">{activeDescription}
       {choice && <button type="button" onClick={()=>setChoice(null)}>選択を解除</button>}
-      {choice?.kind === 'play' && <button type="button" onClick={()=>send({type:'play',handIndex:choice.index,targetId:'self'})}>自身に効果を付与</button>}
+      {choice?.kind === 'play' && ['C021','C044'].includes(self.hand?.[choice.index] ?? '') &&
+        <button type="button" onClick={()=>send({type:'play',handIndex:choice.index,targetId:'self'})}>自身に効果を付与</button>}
     </div>
     <footer className="hand online-hand">
       <div className="hand-label">YOUR HAND <strong>{self.handCount} / 9</strong></div>
