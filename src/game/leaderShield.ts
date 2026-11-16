@@ -8,48 +8,76 @@ export function addLeaderShield(player: Player, amount: number, type: keyof Shie
   }}
 }
 
-/**
- * Elemental damage to a leader attaches its element just as it does to a follower.
- * An existing reactive attachment is consumed; Vaporize and Melt add damage.
- * Physical, Anemo and Geo hits do not create an aura.
+export type LeaderReaction =
+  | 'vaporize' | 'melt' | 'overloaded' | 'superconduct' | 'frozen'
+  | 'electro_charged' | 'burning' | 'bloom' | 'swirl' | 'crystallize'
+
+export interface LeaderDamageResult {
+  player: Player
+  reaction: LeaderReaction | null
+  reactedElement?: ElementType
+}
+
+function leaderReaction(attached: ElementType, incoming: ElementType): LeaderReaction | null {
+  const pair = [attached, incoming]
+  if (pair.includes('pyro') && pair.includes('hydro')) return 'vaporize'
+  if (pair.includes('pyro') && pair.includes('cryo')) return 'melt'
+  if (pair.includes('pyro') && pair.includes('electro')) return 'overloaded'
+  if (pair.includes('cryo') && pair.includes('electro')) return 'superconduct'
+  if (pair.includes('hydro') && pair.includes('cryo')) return 'frozen'
+  if (pair.includes('hydro') && pair.includes('electro')) return 'electro_charged'
+  if (pair.includes('pyro') && pair.includes('dendro')) return 'burning'
+  if (pair.includes('hydro') && pair.includes('dendro')) return 'bloom'
+  // Quicken is deliberately excluded: it cannot occur on a leader.
+  if (incoming === 'anemo' && ['pyro', 'hydro', 'cryo', 'electro'].includes(attached)) return 'swirl'
+  if (incoming === 'geo' && ['pyro', 'hydro', 'cryo', 'electro'].includes(attached)) return 'crystallize'
+  return null
+}
+
+/** Resolve the leader's damage, shields and persistent statuses. Side effects
+ * involving other cards are resolved by the caller using the reaction result.
  */
-export function damageLeader(player: Player, amount: number, element?: ElementType): Player {
+export function damageLeaderWithReaction(player: Player, amount: number, element?: ElementType): LeaderDamageResult {
   const auras = player.leaderAura ?? []
   const incoming = element && !['none', 'anemo', 'geo'].includes(element) ? element : undefined
-  const reacts = (existing: ElementType): boolean => {
-    const pair = [existing, element]
-    return (pair.includes('pyro') && (['hydro','cryo','electro','dendro'] as ElementType[]).some(e => pair.includes(e))) ||
-      (pair.includes('hydro') && (['electro','cryo','dendro'] as ElementType[]).some(e => pair.includes(e))) ||
-      (pair.includes('cryo') && pair.includes('electro')) ||
-      (pair.includes('dendro') && pair.includes('electro')) ||
-      ((element === 'anemo' || element === 'geo') &&
-        ['pyro','hydro','cryo','electro'].includes(existing))
-  }
-  const index = element ? auras.findIndex(a => reacts(a.element)) : -1
-  const reacted = index >= 0 ? auras[index].element : null
-  const bonus = reacted && element &&
-    ((reacted === 'pyro' && element === 'cryo') ||
-     (reacted === 'cryo' && element === 'pyro')) ? 3 :
-    reacted && element &&
-    ((reacted === 'pyro' && element === 'hydro') ||
-     (reacted === 'hydro' && element === 'pyro')) ? 2 : 0
+  const index = element ? auras.findIndex(aura => leaderReaction(aura.element, element) !== null) : -1
+  const reactedElement = index >= 0 ? auras[index].element : undefined
+  const reaction = reactedElement && element ? leaderReaction(reactedElement, element) : null
   const nextAuras = index >= 0
     ? auras.filter((_, i) => i !== index)
     : incoming && !auras.some(a => a.element === incoming)
       ? [...auras, { element: incoming }]
       : auras
 
-  let remaining = Math.max(0, Math.trunc(amount) + bonus)
+  const physical = !element || element === 'none'
+  const bonus = reaction === 'vaporize' || reaction === 'melt' || reaction === 'overloaded' ? 1 : 0
+  const physicalBonus = physical && player.leaderSuperconduct && amount > 0 ? 1 : 0
+  let remaining = Math.max(0, Math.trunc(amount) + bonus + physicalBonus)
   const current = player.leaderShield ?? { normal: 0, crystallize: 0 }
   const normal = Math.min(current.normal, remaining)
   remaining -= normal
   const crystallize = Math.min(current.crystallize, remaining)
   remaining -= crystallize
-  return { ...player,
-    leaderAura: nextAuras,
-    leaderShield: { normal: current.normal - normal, crystallize: current.crystallize - crystallize },
-    leaderHealth: Math.max(0, player.leaderHealth - remaining),
+  return {
+    player: {
+      ...player,
+      leaderAura: nextAuras,
+      leaderShield: { normal: current.normal - normal, crystallize: current.crystallize - crystallize },
+      leaderHealth: Math.max(0, player.leaderHealth - remaining),
+      leaderSuperconduct: reaction === 'superconduct'
+        ? true : physical && amount > 0 ? false : player.leaderSuperconduct,
+      leaderFrozenNextTurn: reaction === 'frozen' ? true : player.leaderFrozenNextTurn,
+      leaderBurningTurns: reaction === 'burning'
+        ? (player.leaderBurningTurns ?? 0) + 1 : player.leaderBurningTurns,
+    },
+    reaction,
+    reactedElement,
   }
+}
+
+/** Compatibility wrapper used by older non-battle elemental effects. */
+export function damageLeader(player: Player, amount: number, element?: ElementType): Player {
+  return damageLeaderWithReaction(player, amount, element).player
 }
 
 /** Bond of Life absorbs healing before it can restore the leader's HP. */
