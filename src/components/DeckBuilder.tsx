@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CardArtwork } from './CardArtwork'
+import { ElementIcon } from './ElementIcon'
 import { productionCards } from '../data/productionCards'
 import {
   DECK_SIZE, MAX_CARD_COPIES, MAX_DECK_ELEMENTS, SELECTABLE_ELEMENTS,
@@ -78,7 +79,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
           className={deck.elements.includes(element)?'chosen':''}
           disabled={!deck.elements.includes(element)&&deck.elements.length>=3}
           onClick={()=>toggleElement(element)}>
-          {names[element]} {deck.elements.includes(element)?'✓':''}
+          <ElementIcon element={element} size="sm" withLabel /> {deck.elements.includes(element)?'✓':''}
         </button>)}
       </div>
       <p className="deck-help">元素を外すと、その元素のカードもデッキから取り除きます。1〜2元素でも構築できます。</p>
@@ -108,7 +109,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
               <CardArtwork cardId={card.id} name={card.name} className="card-artwork--list" />
               <div className="deck-card-details">
                 <strong>{card.cost}PP {card.name}</strong>
-                <small>{card.element==='none'?'無元素':names[card.element as PlayableElement]}・{rarityNames[card.rarity]}・{cardTypeNames[card.type]}</small>
+                <small className="deck-card-meta"><ElementIcon element={card.element} size="xs" withLabel /> ・{rarityNames[card.rarity]}・{cardTypeNames[card.type]}</small>
                 <span className="deck-card-description">{card.description||'能力なし'}</span>
               </div>
               <div className="deck-copy-buttons">
@@ -136,7 +137,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
             </div>}
         <div className="deck-selected-list">
           {entries.map(({card,id,count})=><div className="deck-selected-row" key={id}>
-            <span>{card?.cost}PP {card?.name} ×{count}</span>
+            <span className="deck-selected-entry">{card && <ElementIcon element={card.element} size="xs" />} {card?.cost}PP {card?.name} ×{count}</span>
             <button type="button" onClick={()=>remove(id)}
               aria-label={card?.name+'を1枚外す'}>－</button>
           </div>)}
