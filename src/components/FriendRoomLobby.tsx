@@ -71,7 +71,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
     setPending(true)
     setError('')
     try {
-      const latest = await setFriendRoomReady(room, ready)
+      const latest = await setFriendRoomReady(room, ready, ready ? deck : undefined)
       setRoom(latest)
     } catch (e) {
       setError(e instanceof Error ? e.message : '準備状態の更新に失敗しました。')
