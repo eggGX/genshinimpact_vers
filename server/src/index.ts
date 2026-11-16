@@ -8,6 +8,7 @@ import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { createInitialGameState, confirmMulligan } from '../../src/game/engine.ts'
+import { applyOnlineAction, type OnlineAction } from './matchActions.ts'
 import { validateDeck, type DeckDefinition } from '../../src/data/deckRules.ts'
 import type { GameState } from '../../src/game/types.ts'
 
@@ -158,6 +159,37 @@ async function submitMulligan(
   })
 }
 
+
+/** All game commands run on the server with a validated seat and revision. */
+async function submitAction(
+  code: string, uid: string, action: unknown, revision: unknown,
+): Promise<{ stored: Stored; seat: 0 | 1 }> {
+  if (!Number.isSafeInteger(revision) || (revision as number) < 0) {
+    throw new Error('対戦リビジョンが不正です')
+  }
+  const roomRef = db.collection('friendRooms').doc(code)
+  const matchRef = getMatchRef(code)
+  return db.runTransaction(async tx => {
+    const [roomSnap, matchSnap] = await Promise.all([tx.get(roomRef), tx.get(matchRef)])
+    if (!roomSnap.exists || !matchSnap.exists) throw new Error('対戦が見つかりません')
+    const room = roomSnap.data() as Room
+    const seat = getSeat(room, uid)
+    if (room.status !== 'playing') throw new Error('このルームは対戦中ではありません')
+    const stored = matchSnap.data() as Stored
+    if (stored.revision !== revision) throw new Error('対戦状態が更新されています。再読み込みしてください')
+    if (stored.state.phase !== 'main') throw new Error('現在はカード操作できません')
+    if (stored.state.winnerId !== null) throw new Error('対戦は終了しています')
+    if (stored.state.currentPlayerId !== `player${seat + 1}`) {
+      throw new Error('相手のターンです')
+    }
+    const next = applyOnlineAction(stored.state, action as OnlineAction)
+    if (next === stored.state) throw new Error('実行できない操作です')
+    const result: Stored = { state: next, revision: stored.revision + 1 }
+    tx.update(matchRef, result)
+    return { stored: result, seat }
+  })
+}
+
 createServer(async (req, res) => {
   const requestOrigin = req.headers.origin
   if (requestOrigin && requestOrigin !== origin) {
@@ -168,7 +200,7 @@ createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/health') {
     json(res, 200, { ok: true }); return
   }
-  const match = /^\/rooms\/([A-HJ-NP-Z2-9]{8})\/(state|mulligan)$/.exec(pathname)
+  const match = /^\/rooms\/([A-HJ-NP-Z2-9]{8})\/(state|mulligan|action)$/.exec(pathname)
   if (!match || !codePattern.test(match[1])) {
     json(res, 404, { error: 'エンドポイントが見つかりません' }); return
   }
@@ -184,6 +216,11 @@ createServer(async (req, res) => {
       if (!data || typeof data !== 'object') throw new Error('不正なリクエスト')
       const payload = data as { indices?: unknown; revision?: unknown }
       output = await submitMulligan(match[1], user.uid, payload.indices, payload.revision)
+    } else if (req.method === 'POST' && match[2] === 'action') {
+      const data = await readJson(req)
+      if (!data || typeof data !== 'object') throw new Error('不正なリクエスト')
+      const payload = data as { action?: unknown; revision?: unknown }
+      output = await submitAction(match[1], user.uid, payload.action, payload.revision)
     } else { json(res, 405, { error: '許可されていない操作です' }); return }
     json(res, 200, projectState(output.stored, output.seat))
   } catch (error) {
