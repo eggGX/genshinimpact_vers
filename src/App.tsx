@@ -594,7 +594,8 @@ function App() {
   }
 
   if (showFriendLobby && !matchStarted) {
-    return <FriendRoomLobby onBack={() => setShowFriendLobby(false)} />
+    return <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
+      deck={decks[0]} onEditDeck={() => setEditingPlayer(0)} />
   }
 
   if (!matchStarted) {
