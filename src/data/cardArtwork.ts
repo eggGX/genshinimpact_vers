@@ -10,6 +10,8 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C009: '/card-art/C009.webp', // パイモンのへそくり
+  C010: '/card-art/C010.webp', // 第四降臨者の力
   C019: '/card-art/C019.webp', // アンバー
   C020: '/card-art/C020.webp', // 香菱
   C021: '/card-art/C021.webp', // ベネット
