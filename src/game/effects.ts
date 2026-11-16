@@ -193,7 +193,7 @@ function applyEffect(
     : 0
 
   const nextLeader = effect.type === 'damage'
-    ? damageLeader(targetPlayer, value)
+    ? damageLeader(targetPlayer, value, effect.element)
     : healLeader(targetPlayer, value)
   const health = nextLeader.leaderHealth
   players[targetIndex] = nextLeader
