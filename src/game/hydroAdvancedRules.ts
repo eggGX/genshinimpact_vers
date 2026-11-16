@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { summonFollowers } from './neutralRules'
 import { damageLeader, healLeader } from './leaderShield'
@@ -221,7 +222,7 @@ export function resolveHydroAdvancedTurnEnd(
     const candidates = result.players[1 - i].field.filter(f => f.health > 0)
     if (candidates.length) {
       const victim = candidates[Math.floor(Math.random() * candidates.length)]
-      result = resolveDeaths(hydroFollowerDamage(result, i, victim.instanceId, 1))
+      result = captureFrame(resolveDeaths(hydroFollowerDamage(result, i, victim.instanceId, 1)), '水元素：ランダムダメージ')
     }
     return result
   }
