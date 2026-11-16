@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { damageLeader } from './leaderShield'
@@ -47,14 +48,14 @@ function randomHit(state: GameState, ownerId: string, damage: number, element: E
   const opponents = validEnemy(state, ownerId)
   if (!opponents.length) return state
   const chosen = opponents[Math.floor(Math.random() * opponents.length)]
-  return deaths(hit(state, ownerId, chosen.instanceId, damage, element).state)
+  return captureFrame(deaths(hit(state, ownerId, chosen.instanceId, damage, element).state), 'ランダム風元素ダメージ')
 }
 function randomOpponentHit(state: GameState, ownerId: string, value: number, deaths: DeathResolver): GameState {
   const foe = state.players.find(p => p.id !== ownerId)
   if (!foe || state.winnerId !== null) return state
   const options = foe.field.filter(f => f.health > 0)
   const random = Math.floor(Math.random() * (options.length + 1))
-  if (random < options.length) return deaths(hit(state, ownerId, options[random].instanceId, value, 'anemo').state)
+  if (random < options.length) return captureFrame(deaths(hit(state, ownerId, options[random].instanceId, value, 'anemo').state), 'ランダム風元素ダメージ')
   const damaged = damageLeader(foe, value)
   const next = edit(state, foe.id, () => damaged)
   return { ...next, winnerId: damaged.leaderHealth === 0 ? ownerId : next.winnerId }
