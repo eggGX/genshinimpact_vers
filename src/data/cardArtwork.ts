@@ -10,6 +10,14 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C028: '/card-art/C028.webp', // コホラ仔竜
+  C032: '/card-art/C032.webp', // 堅盾重甲ヤドカニ
+  C043: '/card-art/C043.webp', // イクトミ仔竜
+  C058: '/card-art/C058.webp', // ライノ仔竜
+  C073: '/card-art/C073.webp', // クク仔竜
+  C088: '/card-art/C088.webp', // テペトル仔竜
+  C092: '/card-art/C092.webp', // 獣域ハウンド・岩
+  C103: '/card-art/C103.webp', // ユムカ仔竜
   C004: '/card-art/C004.webp', // ワイルドハント
   C014: '/card-art/C014.webp', // アビスの魔術師・炎
   C029: '/card-art/C029.webp', // アビスの魔術師・水
