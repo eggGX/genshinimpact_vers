@@ -175,7 +175,7 @@ export function resolveNeutralTurnEnd(state: GameState, ownerId: string): GameSt
       const enemyIndex = result.players.findIndex(player => player.id !== ownerId)
       const players = [...result.players] as [Player, Player]
       const enemy = players[enemyIndex]
-      const damaged = damageLeader(enemy, 1)
+      const damaged = damageLeader(enemy, 1, element)
       const hp = damaged.leaderHealth
       players[enemyIndex] = damaged
       result = { ...result, players,
