@@ -236,8 +236,8 @@ export function resolveHydroPermanentsTurnEnd(
     result = updatePlayer(result, ownerId, p => ({
       ...p,
       ...healLeader(p, 3),
-      leaderAura: (p.leaderAura ?? []).some(a => a.element === 'hydro')
-        ? p.leaderAura : [...(p.leaderAura ?? []), { element: 'hydro' }],
+      // Barbara's self-Hydro application also obeys the single-aura leader rule.
+      leaderAura: [{ element: 'hydro' }],
       crests: (p.crests ?? []).map((c, i) => i === crestIndex ? {
         ...c, turnsRemaining: c.turnsRemaining - 1,
       } : c),
