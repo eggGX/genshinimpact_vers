@@ -26,6 +26,7 @@ import { CardArtwork } from './components/CardArtwork'
 import { BattleCardTooltip } from './components/BattleCardTooltip'
 import { ElementIcon } from './components/ElementIcon'
 import { DeckBuilder } from './components/DeckBuilder'
+import { FriendRoomLobby } from './components/FriendRoomLobby'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
 
@@ -59,6 +60,7 @@ function loadDecks(): BothDecks {
 
 function App() {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
+  const [showFriendLobby, setShowFriendLobby] = useState(false)
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
@@ -591,6 +593,10 @@ function App() {
       onBack={() => setEditingPlayer(null)} />
   }
 
+  if (showFriendLobby && !matchStarted) {
+    return <FriendRoomLobby onBack={() => setShowFriendLobby(false)} />
+  }
+
   if (!matchStarted) {
     const errors = decks.map(validateDeck)
     return <div className="game">
@@ -635,7 +641,10 @@ function App() {
         </div>
         <button type="button" className="end-turn deck-start"
           disabled={errors.some(items => items.length > 0)} onClick={beginMatch}>
-          この2つのデッキで対戦開始
+          この2つのデッキでローカル対戦開始
+        </button>
+        <button type="button" className="friend-match-entry" onClick={() => setShowFriendLobby(true)}>
+          フレンド対戦（ルーム作成・参加）
         </button>
         <p className="deck-setup-note">編集内容はこのブラウザに保存されます。対戦開始後は再度デッキ選択画面に戻れます。</p>
       </main>
