@@ -716,3 +716,44 @@
 .online-latest-action span{font-size:10px;color:#9ce5d0;white-space:nowrap}
 .online-latest-action strong{overflow-wrap:anywhere}
 @media(max-width:600px){.online-latest-action{flex-direction:column;gap:4px}}
+
+
+/* Turn-transition announcement, shared by local and both online seats. */
+.game--battle > .turn-announcement {
+  position:fixed;inset:0;z-index:1500;display:grid;place-items:center;
+  pointer-events:none;background:rgba(4,12,23,.38);
+  animation:turn-announcement-backdrop 1.8s ease both;
+}
+.turn-announcement-panel {
+  width:min(730px,92vw);box-sizing:border-box;text-align:center;
+  padding:24px 24px 27px;
+  border-top:2px solid #dcbf81;border-bottom:2px solid #dcbf81;
+  background:linear-gradient(90deg,transparent,#122e40f5 15%,#17394bf5 85%,transparent);
+  box-shadow:0 0 45px #09121dc0,0 8px 55px #06111ad9;
+  animation:turn-announcement-panel 1.8s ease both;
+}
+.turn-announcement--opponent .turn-announcement-panel {
+  border-color:#c79b9b;
+  background:linear-gradient(90deg,transparent,#352936f5 15%,#3a2e40f5 85%,transparent);
+}
+.turn-announcement-label {
+  display:block;font:700 12px 'Cinzel','Noto Sans JP',serif;
+  letter-spacing:.24em;color:#d2c29c;margin-bottom:9px;
+}
+.turn-announcement-panel strong {
+  display:block;font:800 clamp(27px,5vw,47px) 'Noto Sans JP',sans-serif;
+  letter-spacing:.08em;color:#fff0be;text-shadow:0 2px 19px #d1a15a80;
+}
+.turn-announcement--opponent .turn-announcement-panel strong {color:#ffe0dd;text-shadow:0 2px 16px #c27d8399;}
+.turn-announcement-ornament {display:block;color:#c2a771;margin-top:12px;font-size:15px;letter-spacing:.3em;}
+@keyframes turn-announcement-backdrop {
+  0%{opacity:0}16%,69%{opacity:1}100%{opacity:0}
+}
+@keyframes turn-announcement-panel {
+  0%{opacity:0;transform:translateY(28px) scale(.94)}
+  17%,70%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-14px) scale(1.03)}
+}
+@media(prefers-reduced-motion:reduce){
+  .game--battle > .turn-announcement,.turn-announcement-panel{animation:none}
+}
