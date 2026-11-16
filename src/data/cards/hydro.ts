@@ -110,7 +110,7 @@ export const hydroCards: Card[] = [
   },
   {
     "id": "C032",
-    "name": "重甲ヤドカニ",
+    "name": "堅盾重甲ヤドカニ",
     "type": "follower",
     "rarity": "silver",
     "element": "hydro",
