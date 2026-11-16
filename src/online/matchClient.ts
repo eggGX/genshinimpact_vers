@@ -12,6 +12,7 @@ export interface OnlineFollowerView {
   hasAttacked: boolean
   attacksThisTurn?: number
   skillUsed: boolean
+  skillUsesThisTurn?: number
   burstUsed: boolean
   keywords: string[]
   aura: ElementalAura[]
