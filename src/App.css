@@ -511,3 +511,26 @@
   .game--animating .field-card:not(.amulet-card),
   .game--animating .leader-health,.battle-playback{animation:none;}
 }
+
+/* Re-trigger a readable hit flash on each recorded change, including repeated random hits. */
+.follower-wrapper.battle-hit .field-card {
+  animation: battle-target-impact .82s ease-out both;
+}
+.leader.leader-hit {
+  animation: battle-leader-impact .82s ease-out both;
+}
+@keyframes battle-target-impact {
+  0% { transform:translateY(-3px) scale(1.13);filter:brightness(1.9);
+    box-shadow:0 0 0 5px #ffdd8799,0 0 35px #ffa84ba8; }
+  33% { transform:translateY(2px) scale(.97);filter:brightness(1.35);
+    box-shadow:0 0 0 3px #ffe79f66,0 0 20px #e1b26975; }
+  100% { transform:none;filter:brightness(1); }
+}
+@keyframes battle-leader-impact {
+  0% { transform:scale(1.13);filter:brightness(1.7);
+    box-shadow:0 0 0 6px #e35e7977,0 0 30px #f9657da6; }
+  100% {transform:none;filter:brightness(1);}
+}
+@media(prefers-reduced-motion:reduce){
+  .follower-wrapper.battle-hit .field-card,.leader.leader-hit{animation:none;}
+}
