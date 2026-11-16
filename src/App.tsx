@@ -846,6 +846,7 @@ function App({ online }: { online?: {
       <header className="game-header game-header--battle">
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
         <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
+        {online && <small className="online-build-marker" title="オンライン対戦画面のビルド識別子">ONLINE UI 20261116-B</small>}
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
