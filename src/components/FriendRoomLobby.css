@@ -1,0 +1,28 @@
+.friend-room-lobby{max-width:950px;margin:34px auto 60px;padding:0 18px;color:#e9e4d6;}
+.friend-lobby-heading{text-align:center;margin:0 0 30px;}
+.friend-lobby-heading>span,.friend-lobby-subtitle{font:700 11px 'Cinzel',serif;letter-spacing:.18em;color:#d7b978;}
+.friend-lobby-heading h2{font-size:32px;margin:8px 0 14px;color:#ffe9ad;}
+.friend-lobby-heading p,.friend-room-panel p{color:#b8c7c9;font-size:13px;line-height:1.8;}
+.friend-lobby-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;}
+.friend-room-panel{border:1px solid #9c865a;border-radius:16px;padding:26px;
+  background:linear-gradient(145deg,#163341,#0c1c2b);box-shadow:0 14px 30px #0007;}
+.friend-room-panel h3{font-size:19px;color:#f3daa0;margin:0 0 12px;}
+.friend-room-panel label{display:block;margin:20px 0 8px;font-size:12px;color:#d3dacc;}
+.friend-room-panel input{width:100%;box-sizing:border-box;background:#0a1927;color:#f8e9c5;border:1px solid #bca46e;
+  border-radius:8px;padding:12px 14px;font-size:20px;font-weight:800;letter-spacing:.17em;text-transform:uppercase;}
+.friend-room-panel button{margin-top:16px;border:1px solid #d1b36d;border-radius:9px;background:#284559;
+  color:#ffedc7;padding:11px 18px;cursor:pointer;font-weight:800;}
+.friend-room-panel button:disabled{opacity:.45;cursor:not-allowed;}
+.friend-room-panel button:not(:disabled):hover{filter:brightness(1.2);}
+.friend-room-panel .friend-room-primary{background:linear-gradient(120deg,#947039,#5b4629);}
+.friend-room-active{max-width:540px;margin:auto;text-align:center;}
+.friend-code-display{margin:17px auto 4px;border:1px solid #d4b36a;background:#0b1c29;
+  color:#f7e4ab;border-radius:10px;padding:18px 8px;font:800 clamp(22px,4vw,36px) 'Cinzel',sans-serif;letter-spacing:.2em;}
+.friend-room-players{display:grid;gap:12px;margin:22px 0;padding-top:17px;border-top:1px solid #7c815e;}
+.friend-room-players>span{display:flex;justify-content:space-between;gap:16px;font-size:13px;text-align:left;}
+.friend-room-players strong{color:#91e7c4;}
+.friend-room-notice{margin:14px 0;}
+.friend-room-error{color:#ffc0b6;text-align:center;}
+.friend-room-wait,.friend-room-footnote{text-align:center;color:#a9c4c3;font-size:12px;margin-top:25px;}
+.friend-room-panel code{color:#f2d795;overflow-wrap:anywhere;}
+@media(max-width:680px){.friend-lobby-grid{grid-template-columns:1fr;}.friend-room-panel{padding:18px;}}
