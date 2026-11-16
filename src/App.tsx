@@ -746,7 +746,17 @@ function App() {
       )}
 
       <section className="player opponent">
-        <div className="player-side-label"><span className="side-label-dot" /> OPPONENT <strong>{opponent.name}</strong></div>
+        <div className="player-side-label">
+          <span className="side-label-dot" /> OPPONENT <strong>{opponent.name}</strong>
+          <span className="leader-aura-status" aria-label={`リーダー元素付着：${opponent.leaderAura?.map(a => a.element).join('、') || 'なし'}`}>
+            {(opponent.leaderAura?.length ?? 0) > 0
+              ? opponent.leaderAura?.map((a, i) =>
+                  <span key={i} className="aura-icon-holder">
+                    <ElementIcon element={a.element} size="sm" />
+                  </span>)
+              : <span className="leader-aura-empty">付着なし</span>}
+          </span>
+        </div>
         <button
           type="button"
           key={highlightedLeaders.has(opponent.id) ? `opponent-hit-${playback?.index}` : 'opponent-leader'}
@@ -764,12 +774,6 @@ function App() {
           }
           onClick={handleAttackLeader}
         >
-          {(opponent.leaderAura?.length ?? 0) > 0 && <span className="leader-aura-icons"
-            aria-label={`リーダー元素付着：${opponent.leaderAura?.map(a=>a.element).join('、')}`}>
-            {opponent.leaderAura?.map((a,i)=><span key={i} className="aura-icon-holder">
-              <ElementIcon element={a.element} size="sm" />
-            </span>)}
-          </span>}
           <span className="leader-avatar" aria-hidden="true">
             <img src={`${import.meta.env.BASE_URL}images/travelers/${opponent.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
@@ -810,15 +814,19 @@ function App() {
       </section>
 
       <section className="player self">
-        <div className="player-side-label"><span className="side-label-dot" /> YOU <strong>{currentPlayer.name}</strong></div>
+        <div className="player-side-label">
+          <span className="side-label-dot" /> YOU <strong>{currentPlayer.name}</strong>
+          <span className="leader-aura-status" aria-label={`リーダー元素付着：${currentPlayer.leaderAura?.map(a => a.element).join('、') || 'なし'}`}>
+            {(currentPlayer.leaderAura?.length ?? 0) > 0
+              ? currentPlayer.leaderAura?.map((a, i) =>
+                  <span key={i} className="aura-icon-holder">
+                    <ElementIcon element={a.element} size="sm" />
+                  </span>)
+              : <span className="leader-aura-empty">付着なし</span>}
+          </span>
+        </div>
         <div key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
           className={highlightedLeaders.has(currentPlayer.id) ? 'leader leader-hit' : 'leader'}>
-          {(currentPlayer.leaderAura?.length ?? 0) > 0 && <span className="leader-aura-icons"
-            aria-label={`リーダー元素付着：${currentPlayer.leaderAura?.map(a=>a.element).join('、')}`}>
-            {currentPlayer.leaderAura?.map((a,i)=><span key={i} className="aura-icon-holder">
-              <ElementIcon element={a.element} size="sm" />
-            </span>)}
-          </span>}
           <span className="leader-avatar" aria-hidden="true">
             <img src={`${import.meta.env.BASE_URL}images/travelers/${currentPlayer.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
