@@ -198,8 +198,10 @@ export function canPlayCard(
   if (owner.pp < card.cost) return false
   if (card.type !== 'spell' && owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
 
+  // Targetless fanfares are optional: the follower can still enter the field.
+  // Spells whose main effect requires an enemy target remain unplayable without one.
   if (
-    needsPlayTarget(card) &&
+    card.type === 'spell' && needsPlayTarget(card) &&
     !enemy.field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
   ) {
     return false
@@ -380,11 +382,14 @@ export function playCard(
 
   if (needsPlayTarget(card)) {
     const enemy = state.players[1 - index]
+    const validTargets = enemy.field.filter(f => f.health > 0 &&
+      !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
 
-    if (
-      !targetId ||
-      !enemy.field.some(f => f.instanceId === targetId && f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
-    ) {
+    // A follower's targeted fanfare fizzles when no valid target exists;
+    // the follower itself still costs PP and enters the field normally.
+    if (validTargets.length > 0 || card.type === 'spell') {
+      if (!targetId || !validTargets.some(f => f.instanceId === targetId)) return state
+    } else if (targetId) {
       return state
     }
   }
