@@ -1,7 +1,7 @@
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader } from './leaderShield'
+import { resolveLeaderElementalHit } from './elemental'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 import { summonFollowers } from './neutralRules'
 
@@ -41,11 +41,7 @@ export function electroDestroy(
   if (destroyed.cardId !== 'C059') return state
   const enemy = state.players.find(p => p.id !== ownerId)
   if (!enemy) return state
-  const damaged = damageLeader(enemy, 2, 'electro')
-  return {
-    ...updatePlayer(state, enemy.id, () => damaged),
-    winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId,
-  }
+  return resolveLeaderElementalHit(state, state.players.findIndex(p => p.id === enemy.id), 2, 'electro')
 }
 
 /** C060 spell summons Oz after resolving its selected damage, if space remains. */
@@ -86,9 +82,5 @@ export function electroAttack(state: GameState, ownerId: string, attackerId: str
   if (!attacker || getCard(attacker.cardId)?.id !== 'C063') return state
   const enemy = state.players.find(p => p.id !== ownerId)
   if (!enemy) return state
-  const damaged = damageLeader(enemy, 1)
-  return {
-    ...updatePlayer(state, enemy.id, () => damaged),
-    winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId,
-  }
+  return resolveLeaderElementalHit(state, state.players.findIndex(p => p.id === enemy.id), 1)
 }
