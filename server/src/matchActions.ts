@@ -36,23 +36,23 @@ export function validateOnlineAction(value: unknown): OnlineAction {
       if (!exactKeys(value, ['type', 'handIndex', 'targetId']) ||
           !Number.isInteger(value.handIndex) || (value.handIndex as number) < 0 ||
           (value.handIndex as number) > 8 || !optionalTarget(value.targetId)) break
-      return value as OnlineAction
+      return { type: 'play', handIndex: value.handIndex as number, ...(value.targetId === undefined ? {} : { targetId: value.targetId as string }) }
     case 'ability':
       if (!exactKeys(value, ['type', 'followerId', 'kind', 'targetId']) ||
           !isId(value.followerId) ||
           (value.kind !== 'skill' && value.kind !== 'burst') ||
           !optionalTarget(value.targetId)) break
-      return value as OnlineAction
+      return { type: 'ability', followerId: value.followerId as string, kind: value.kind as AbilityKind, ...(value.targetId === undefined ? {} : { targetId: value.targetId as string }) }
     case 'attackFollower':
       if (!exactKeys(value, ['type', 'attackerId', 'targetId']) ||
           !isId(value.attackerId) || !isId(value.targetId)) break
-      return value as OnlineAction
+      return { type: 'attackFollower', attackerId: value.attackerId as string, targetId: value.targetId as string }
     case 'attackLeader':
       if (!exactKeys(value, ['type', 'attackerId']) || !isId(value.attackerId)) break
-      return value as OnlineAction
+      return { type: 'attackLeader', attackerId: value.attackerId as string }
     case 'endTurn':
       if (!exactKeys(value, ['type'])) break
-      return value as OnlineAction
+      return { type: 'endTurn' }
   }
   throw new Error('操作の形式が不正です')
 }
