@@ -88,8 +88,8 @@ export function createInitialGameState(decks?: readonly [DeckDefinition, DeckDef
       if (errors.length) throw new Error(`プレイヤー${index + 1}のデッキが不正です: ${errors.join(' / ')}`)
     }
   }
-  const p1 = createPlayer('player1', 'プレイヤー1', decks?.[0].cards)
-  const p2 = createPlayer('player2', 'プレイヤー2', decks?.[1].cards)
+  const p1 = createPlayer('player1', '空', decks?.[0].cards)
+  const p2 = createPlayer('player2', '蛍', decks?.[1].cards)
 
   return {
     turn: 1,
