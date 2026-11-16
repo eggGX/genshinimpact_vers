@@ -1043,6 +1043,8 @@ function App({ online }: { online?: {
         {(opponent.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{opponent.leaderBurningTurns}ターン</div>
         )}
+        {opponent.leaderFrozenNextTurn && <div>❄ リーダー凍結：次の自分のターンの使用可能PP－1（重複不可）</div>}
+        {opponent.leaderSuperconduct && <div>⚡ リーダー超電導：次の物理ダメージ＋1</div>}
         </div>
       </section>
 
@@ -1114,6 +1116,8 @@ function App({ online }: { online?: {
         {(currentPlayer.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{currentPlayer.leaderBurningTurns}ターン</div>
         )}
+        {currentPlayer.leaderFrozenNextTurn && <div>❄ リーダー凍結：次の自分のターンの使用可能PP－1（重複不可）</div>}
+        {currentPlayer.leaderSuperconduct && <div>⚡ リーダー超電導：次の物理ダメージ＋1</div>}
         </div>
 
         <button
