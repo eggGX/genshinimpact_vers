@@ -6,8 +6,8 @@ import type {
   GameState,
   Player,
 } from './types'
-import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
-import { damageLeader, healLeader } from './leaderShield'
+import { grantShield, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
+import { healLeader } from './leaderShield'
 
 /**
  * 効果を順番に実行する。
@@ -192,18 +192,9 @@ function applyEffect(
     ? Math.max(0, Math.floor(effect.value))
     : 0
 
-  const nextLeader = effect.type === 'damage'
-    ? damageLeader(targetPlayer, value, effect.element)
-    : healLeader(targetPlayer, value)
-  const health = nextLeader.leaderHealth
-  players[targetIndex] = nextLeader
-
-  return {
-    ...state,
-    players,
-    winnerId:
-      effect.type === 'damage' && health <= 0
-        ? players[1 - targetIndex].id
-        : state.winnerId,
+  if (effect.type === 'damage') {
+    return resolveLeaderElementalHit(state, targetIndex, value, effect.element, ownerIndex)
   }
+  players[targetIndex] = healLeader(targetPlayer, value)
+  return { ...state, players }
 }
