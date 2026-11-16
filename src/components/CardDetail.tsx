@@ -26,7 +26,7 @@ const targetNames: Record<EffectTarget, string> = {
   self_follower: 'このフォロワー',
 }
 
-export function describeCardEffect(effect: CardEffect): string {
+function describeCardEffect(effect: CardEffect): string {
   switch (effect.type) {
     case 'damage':
       return `${targetNames[effect.target]}に${effect.element ? '元素' : '非元素'}${effect.value}ダメージ`
@@ -39,7 +39,7 @@ export function describeCardEffect(effect: CardEffect): string {
   }
 }
 
-export function splitCardAbility(description: string | undefined): string[] {
+function splitCardAbility(description: string | undefined): string[] {
   if (!description?.trim()) return ['能力なし']
   return description.split(/(?=【)/).map(text => text.trim()).filter(Boolean)
 }
@@ -136,7 +136,7 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
           <h2>元素能力</h2>
           {card.elementalSkill && <div className="card-detail-ability">
             <div className="card-detail-ability-title">
-              <strong>元素スキル　{card.elementalSkill.name}</strong>
+              <strong>元素スキル {card.elementalSkill.name}</strong>
               <span>PP {card.elementalSkill.ppCost ?? 0}</span>
             </div>
             {card.elementalSkill.effects.length > 0 &&
@@ -148,7 +148,7 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
           </div>}
           {card.elementalBurst && <div className="card-detail-ability">
             <div className="card-detail-ability-title">
-              <strong>元素爆発　{card.elementalBurst.name}</strong>
+              <strong>元素爆発 {card.elementalBurst.name}</strong>
               <span>EN {card.elementalBurst.energyCost ?? 0}</span>
             </div>
             {card.elementalBurst.effects.length > 0 &&
