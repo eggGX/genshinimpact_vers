@@ -8,6 +8,8 @@ const source = path => readFileSync(new URL(`../src/game/${path}`, import.meta.u
 const cases = [
   ['neutralRules.ts', /damageLeader\(enemy, 1, element\)/],
   ['pyroLegendaryRules.ts', /damageLeader\(enemy, 3, 'pyro'\)/],
+  ['pyroRules.ts', /dealLeaderDamage\(result, 1 - ownerIndex, 1, 'pyro'\)/],
+  ['pyroRules.ts', /dealLeaderDamage\(result, enemyIndex, 1, 'pyro'\)/],
   ['hydroRules.ts', /damageLeader\(enemy, 1, 'hydro'\)/],
   ['cryoAdvancedRules.ts', /damageLeader\(opponent, 1, 'cryo'\)/],
   ['electroRules.ts', /damageLeader\(enemy, 2, 'electro'\)/],
