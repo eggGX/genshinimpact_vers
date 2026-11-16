@@ -1,5 +1,6 @@
 import { getFriendMatchIdToken } from './firebaseRooms'
 import type { OnlineAction } from '../../server/src/matchActions'
+import type { ElementalAura, Shield } from '../game/types'
 
 export interface OnlineFollowerView {
   instanceId: string
@@ -13,6 +14,8 @@ export interface OnlineFollowerView {
   skillUsed: boolean
   burstUsed: boolean
   keywords: string[]
+  aura: ElementalAura[]
+  shield: Shield
 }
 export interface OnlinePlayerView {
   id: string
@@ -28,6 +31,8 @@ export interface OnlinePlayerView {
   field: OnlineFollowerView[]
   amulets?: Array<{instanceId: string; cardId: string; turnsRemaining: number}>
   graveyard: string[]
+  leaderAura?: ElementalAura[]
+  leaderShield?: Shield
 }
 export interface OnlineMatchView {
   revision: number
