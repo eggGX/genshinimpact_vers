@@ -1,9 +1,9 @@
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader, healLeader } from './leaderShield'
+import { healLeader } from './leaderShield'
 import { summonFollowers } from './neutralRules'
-import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 
 function updateOwner(state: GameState, ownerId: string, update: (player: Player) => Player): GameState {
   const index = state.players.findIndex(p => p.id === ownerId)
@@ -50,16 +50,7 @@ export function hitAllEnemyFollowers(
 
 function dealLeaderDamage(state: GameState, targetIndex: number, amount: number, element?: 'pyro'): GameState {
   if (state.winnerId !== null) return state
-  const players = [...state.players] as [Player, Player]
-  const target = players[targetIndex]
-  const damaged = damageLeader(target, amount, element)
-  const hp = damaged.leaderHealth
-  players[targetIndex] = damaged
-  return {
-    ...state,
-    players,
-    winnerId: hp === 0 ? players[1 - targetIndex].id : state.winnerId,
-  }
+  return resolveLeaderElementalHit(state, targetIndex, amount, element)
 }
 
 /** Pyro silver spells C015 and C018. */
