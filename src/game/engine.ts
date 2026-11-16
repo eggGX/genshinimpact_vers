@@ -8,6 +8,7 @@ import type {
 import { getCard, getDeckCardPool } from '../data/cardRegistry'
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { resolveEffects } from './effects'
+import { captureFrame } from './presentation'
 import { resolveHydroSpell, resolveHydroTurnEnd, resolveHydroAttack, grantRaincutter, raincutterAttackFollower, raincutterAttackLeader } from './hydroRules'
 import { resolveCryoPlay, resolveCryoTurnEnd } from './cryoRules'
 import { electroDestroy, electroSpell, electroPlay, electroTurnEnd, electroAttack } from './electroRules'
@@ -342,6 +343,7 @@ function resolveTurnEffects(
       result = dendroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
+    result = captureFrame(result, `${card?.name ?? source.cardId}：${trigger === 'turn_end' ? 'ターン終了時効果' : 'ターン開始時効果'}`)
   }
 
   return result
@@ -941,41 +943,54 @@ export function endTurn(state: GameState): GameState {
   }
 
   result = resolveNeutralTurnEnd(result, currentId)
+  result = captureFrame(result, '無元素のターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = resolvePyroTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '炎元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = resolveHydroPermanentsTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '水元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = cryoCrestsEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '氷元素・クレストのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = electroAmuletsTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '雷元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = resolveAnemoAmuletsTurnEnd(result, currentId)
+  result = captureFrame(result, '風元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = geoNaviaCrestsTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '岩元素・クレストのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = geoAmuletsTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '岩元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = dendroAmuletsTurnEnd(result, currentId)
+  result = captureFrame(result, '草元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = dendroColleiAmberTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, 'コレアンバーのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = dendroLumidouceTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, 'ルミドゥースのターン終了時効果')
   if (result.winnerId !== null) return result
 
   result = advancedAnemoAmuletsTurnEnd(result, currentId, resolveDeaths)
+  result = captureFrame(result, '風元素の追加ターン終了時効果')
   if (result.winnerId !== null) return result
   result = advancedAnemoBothTurnEnd(result, resolveDeaths)
+  result = captureFrame(result, '両プレイヤーへのターン終了時効果')
   if (result.winnerId !== null) return result
   result = resetAnemoTurnStatuses(result, currentId)
 
@@ -997,7 +1012,7 @@ export function endTurn(state: GameState): GameState {
       }
     }),
   })) as [Player, Player]
-  result = resolveDeaths({ ...result, players: burnPlayers })
+  result = captureFrame(resolveDeaths({ ...result, players: burnPlayers }), '燃焼ダメージ')
   if (result.winnerId !== null) return result
 
   // 草原核：持ち主のターン終了時、草原核1個につき自陣ランダム1体へ2ダメージ。
@@ -1018,7 +1033,7 @@ export function endTurn(state: GameState): GameState {
       field: current.field.map(f =>
         f.instanceId === chosen.instanceId ? absorbDamage(f, 2) : f),
     }
-    coreState = resolveDeaths({ ...coreState, players })
+    coreState = captureFrame(resolveDeaths({ ...coreState, players }), '草原核のランダムダメージ')
   }
   result = coreState
   if (result.winnerId !== null) return result
@@ -1038,6 +1053,7 @@ export function endTurn(state: GameState): GameState {
       players,
       winnerId: hp === 0 ? players[nextIndex].id : result.winnerId,
     }
+    result = captureFrame(result, 'リーダーの燃焼ダメージ')
     if (result.winnerId !== null) return result
   }
 
@@ -1094,12 +1110,13 @@ export function endTurn(state: GameState): GameState {
     winnerId: draw.deckOut ? currentId : null,
   }
 
+  result = captureFrame(result, '次のプレイヤーがカードをドロー')
   if (result.winnerId !== null) {
     return result
   }
 
   // The Funny Hat Cat's self-destruction resolves before other start effects.
-  result = resolveLegendaryTurnStart(result, nextId, resolveDeaths)
+  result = captureFrame(resolveLegendaryTurnStart(result, nextId, resolveDeaths), 'ターン開始時の変身・破壊')
   if (result.winnerId !== null) return result
 
   // 3. ターン開始時効果
