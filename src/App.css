@@ -600,3 +600,26 @@
 /* In-battle Traveler portraits retain the existing round leader framing. */
 .leader-avatar{overflow:hidden;}
 .leader-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;}
+
+
+/* Show leader elemental attachment in the visible label row above the portrait.
+   It stays outside the leader button, so it cannot be clipped by the badge. */
+.player-side-label{position:relative;min-height:36px;overflow:visible;}
+.leader-aura-status{
+  position:absolute;z-index:12;left:86px;top:50%;transform:translateY(-50%);
+  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+  font:700 10px 'Noto Sans JP',sans-serif;letter-spacing:0;
+  pointer-events:none;
+}
+.leader-aura-status .aura-icon-holder{
+  width:31px;height:31px;display:grid;place-items:center;
+  border-radius:50%;border:1px solid #e8cd87;
+  background:#0d2335;box-shadow:0 0 12px #edc87490,0 3px 7px #000b;
+}
+.leader-aura-status .element-icon-emblem{width:26px;height:26px;}
+.leader-aura-empty{font-size:10px;color:#96acb0;opacity:.8;font-weight:600;}
+@media(max-width:760px){
+  .leader-aura-status{left:49px;}
+  .leader-aura-status .aura-icon-holder{width:24px;height:24px;}
+  .leader-aura-status .element-icon-emblem{width:20px;height:20px;}
+}
