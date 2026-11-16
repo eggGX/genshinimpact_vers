@@ -97,7 +97,7 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
           </select>
         </label>
         <label>能力の種類
-          <select value={abilityKind} onChange={e => setAbilityKind(e.target.value)}>
+          <select value={abilityKind} onChange={e => setAbilityKind(e.target.value === 'burst' ? 'burst' : 'skill')}>
             <option value="skill">元素スキル</option>
             <option value="burst">元素爆発</option>
           </select>
