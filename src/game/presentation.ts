@@ -1,0 +1,98 @@
+import type { GameState, Player } from './types'
+
+export interface PresentationFrame {
+  label: string
+  state: Omit<GameState, 'presentationFrames'>
+}
+
+/** A trace is opt-in. The engine remains synchronous, deterministic for any fixed RNG. */
+export function beginPresentation(state: GameState): GameState {
+  return { ...state, presentationFrames: [] }
+}
+
+export function withoutPresentation(state: GameState): GameState {
+  if (!state.presentationFrames) return state
+  const { presentationFrames: _frames, ...clean } = state
+  void _frames
+  return clean
+}
+
+/** Store immutable snapshots *after* each individual resolution, not just the final board. */
+export function captureFrame(state: GameState, label: string): GameState {
+  if (!state.presentationFrames) return state
+  const snapshot = withoutPresentation(state)
+  const players = structuredClone(snapshot.players) as [Player, Player]
+  return {
+    ...state,
+    presentationFrames: [...state.presentationFrames, { label, state: { ...snapshot, players } }],
+  }
+}
+
+function life(player: Player): string {
+  return `${player.name} HP${player.leaderHealth}`
+}
+
+/** UI text is derived from the actual successive engine states; no guessed random targets. */
+export function describePresentationChange(
+  previous: Omit<GameState, 'presentationFrames'>,
+  next: Omit<GameState, 'presentationFrames'>,
+): string[] {
+  const changes: string[] = []
+  for (let i = 0; i < 2; i++) {
+    const before = previous.players[i]
+    const after = next.players[i]
+    const beforeFollowers = new Map(before.field.map(f => [f.instanceId, f]))
+    const afterFollowers = new Map(after.field.map(f => [f.instanceId, f]))
+    for (const [id, follower] of beforeFollowers) {
+      const now = afterFollowers.get(id)
+      if (!now) {
+        changes.push(`${follower.cardId} が破壊された`)
+      } else if (follower.health !== now.health) {
+        const delta = now.health - follower.health
+        changes.push(`${follower.cardId} ${delta < 0 ? 'ダメージ' : '回復'} ${Math.abs(delta)}（HP ${follower.health}→${now.health}）`)
+      } else if (follower.shield.normal !== now.shield.normal ||
+                 follower.shield.crystallize !== now.shield.crystallize) {
+        changes.push(`${follower.cardId} シールド変化`)
+      }
+    }
+    for (const [id, follower] of afterFollowers) {
+      if (!beforeFollowers.has(id)) changes.push(`${follower.cardId} が登場`)
+    }
+    if (before.leaderHealth !== after.leaderHealth) {
+      changes.push(`${life(before)} → ${after.leaderHealth}`)
+    }
+    const previousAmulets = new Set((before.amulets ?? []).map(a => a.instanceId))
+    const nextAmulets = new Set((after.amulets ?? []).map(a => a.instanceId))
+    for (const amulet of after.amulets ?? []) {
+      if (!previousAmulets.has(amulet.instanceId)) changes.push(`${amulet.cardId} を設置`)
+    }
+    for (const amulet of before.amulets ?? []) {
+      if (!nextAmulets.has(amulet.instanceId)) changes.push(`${amulet.cardId} が消滅`)
+    }
+  }
+  if (previous.currentPlayerId !== next.currentPlayerId) {
+    const owner = next.players.find(p => p.id === next.currentPlayerId)
+    changes.push(`${owner?.name ?? ''} のターン開始`)
+  }
+  if (next.winnerId && previous.winnerId !== next.winnerId) {
+    changes.push(`${next.players.find(p => p.id === next.winnerId)?.name ?? ''} の勝利`)
+  }
+  return changes
+}
+
+/** Drop frames that have no visual changes, keeping the starting title frame. */
+export function compactPresentationFrames(
+  initial: GameState,
+  frames: readonly PresentationFrame[],
+): PresentationFrame[] {
+  let previous = withoutPresentation(initial)
+  const result: PresentationFrame[] = []
+  for (const frame of frames) {
+    const changes = describePresentationChange(previous, frame.state)
+    if (changes.length > 0) {
+      result.push({ ...frame, label: `${frame.label}：${changes.join(' ／ ')}` })
+    }
+    previous = frame.state
+  }
+  return result
+}
