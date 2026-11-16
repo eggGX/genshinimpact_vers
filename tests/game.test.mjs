@@ -964,14 +964,24 @@ test('C012 炎射手はファンファーレで対象1体に炎1ダメージと�
   assert.deepEqual(next.players[1].field[0].aura,[{element:'pyro'}])
 })
 
-test('C012 炎射手は対象選択できない敵だけならプレイ不可', () => {
+test('C012 炎射手は対象不在やオーラのみでも本体をプレイできる', () => {
   const state=startedGame()
   state.players[0].pp=2
   state.players[0].hand=['C012']
-  const target=place(state,1,'C001',1,5)
+  assert.equal(engine.canPlayCard(state,0),true)
+  const noTarget=engine.playCard(state,'player1',0)
+  assert.deepEqual(noTarget.players[0].field.map(f=>f.cardId),['C012'])
+  assert.equal(noTarget.players[0].pp,0)
+  const withAura=startedGame()
+  withAura.players[0].pp=2
+  withAura.players[0].hand=['C012']
+  const target=place(withAura,1,'C001',1,5)
   target.keywords=['aura']
-  assert.equal(engine.canPlayCard(state,0),false)
-  assert.equal(engine.playCard(state,'player1',0,target.instanceId),state)
+  assert.equal(engine.canPlayCard(withAura,0),true)
+  assert.equal(engine.playCard(withAura,'player1',0,target.instanceId),withAura)
+  const next=engine.playCard(withAura,'player1',0)
+  assert.equal(next.players[0].field[0].cardId,'C012')
+  assert.equal(next.players[1].field[0].health,5)
 })
 
 test('C013 ドドコは破壊時にランダムな敵1体に炎2ダメージ', () => {
@@ -4419,4 +4429,55 @@ test('不正デッキを渡した対戦開始は拒否され、ランダムデ�
   const first=createStarterDeck(['pyro'])
   const second=createStarterDeck(['hydro'])
   assert.throws(()=>engine.createInitialGameState([{...first,cards:first.cards.slice(1)},second]),/不正/)
+})
+
+test('対象指定ファンファーレは敵不在なら本体のみ出し、敵がいれば対象選択を要求',()=>{
+ for(const cardId of ['C012','C019','C042']){
+  const state=startedGame()
+  state.players[0].pp=10
+  state.players[0].hand=[cardId]
+  assert.equal(engine.canPlayCard(state,0),true)
+  const played=engine.playCard(state,'player1',0)
+  assert.equal(played.players[0].field.length,1)
+  assert.equal(played.players[0].field[0].cardId,cardId)
+  assert.equal(played.players[0].pp,10-engine.getCard(cardId).cost)
+  const withEnemy=startedGame()
+  withEnemy.players[0].pp=10
+  withEnemy.players[0].hand=[cardId]
+  place(withEnemy,1,'C001',1,5)
+  assert.equal(engine.playCard(withEnemy,'player1',0),withEnemy)
+ }
+})
+test('アミュレットとフォロワーの共有場枠：4+1で満員、残り0枠では双方プレイ不可',()=>{
+ let state=startedGame()
+ state.players[0].pp=10
+ state.players[0].hand=['C016','C001']
+ for(let i=0;i<4;i++)place(state,0,'C001',1,2)
+ assert.equal(engine.canPlayCard(state,0),true)
+ state=engine.playCard(state,'player1',0)
+ assert.equal(state.players[0].field.length,4)
+ assert.equal(state.players[0].amulets.length,1)
+ assert.equal(state.players[0].field.length+state.players[0].amulets.length,5)
+ assert.equal(engine.canPlayCard(state,0),false)
+ assert.equal(engine.playCard(state,'player1',0),state)
+})
+test('共有場枠：アミュレット4枚＋フォロワー1枚で満員',()=>{
+ let state=startedGame()
+ state.players[0].pp=10
+ state.players[0].hand=['C001','C016']
+ state.players[0].amulets=Array.from({length:4},(_,i)=>({
+  instanceId:'test-amulet-'+i,cardId:'C016',turnsRemaining:3,
+ }))
+ assert.equal(engine.canPlayCard(state,0),true)
+ state=engine.playCard(state,'player1',0)
+ assert.equal(state.players[0].field.length,1)
+ assert.equal(state.players[0].amulets.length,4)
+ assert.equal(engine.canPlayCard(state,0),false)
+})
+test('対象指定を要する敵破壊スペルは敵不在では使用できないまま',()=>{
+ const state=startedGame()
+ state.players[0].pp=10
+ state.players[0].hand=['C018']
+ assert.equal(engine.canPlayCard(state,0),false)
+ assert.equal(engine.playCard(state,'player1',0),state)
 })
