@@ -3,6 +3,8 @@
  * This module deliberately stores NO decks, hands, draws, or game state.
  * Online game actions must go through a trusted server in a later phase.
  */
+import { validateDeck, type DeckDefinition } from '../data/deckRules'
+
 const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID?.trim()
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY?.trim()
 const SESSION_KEY = 'genshin-friend-room-auth-v1'
@@ -202,14 +204,46 @@ export async function getMyFriendRoomRole(room: FriendRoom): Promise<'host' | 'g
   return null
 }
 
-/** Register the current browser's readiness only; no card lists are uploaded. */
+/**
+ * Register a 40-card snapshot into this participant's PRIVATE document.
+ * Clients cannot read the other participant's deck through Firestore rules.
+ * A future trusted game server will validate both snapshots before shuffling.
+ */
+export async function uploadPrivateDeck(room: FriendRoom, deck: DeckDefinition): Promise<void> {
+  const role = await getMyFriendRoomRole(room)
+  if (!role) throw new Error('このルームの参加者ではありません。')
+  if (!room.guestUid || room.status !== 'waiting') {
+    throw new Error('対戦準備中のルームでのみデッキを登録できます。')
+  }
+  if ((role === 'host' ? room.hostReady : room.guestReady)) {
+    throw new Error('デッキの再登録は準備完了を解除してから行ってください。')
+  }
+  const errors = validateDeck(deck)
+  if (errors.length) throw new Error(errors[0])
+  await firestore<FirestoreRoom>(`/${room.code}/privateDecks/${role}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      fields: {
+        ownerUid: value(role === 'host' ? room.hostUid : room.guestUid),
+        elements: { arrayValue: { values: deck.elements.map(value) } },
+        cards: { arrayValue: { values: deck.cards.map(value) } },
+      },
+    }),
+  })
+}
+
+/** Update only this participant's readiness, after private deck registration. */
 export async function setFriendRoomReady(
-  room: FriendRoom, ready: boolean,
+  room: FriendRoom, ready: boolean, deck?: DeckDefinition,
 ): Promise<FriendRoom> {
   const role = await getMyFriendRoomRole(room)
   if (!role) throw new Error('このルームの参加者ではありません。')
   if (!room.guestUid) throw new Error('もう1人の参加を待ってください。')
   if (room.status !== 'waiting') throw new Error('対戦開始後は準備状態を変更できません。')
+  if (ready) {
+    if (!deck) throw new Error('デッキが指定されていません。')
+    await uploadPrivateDeck(room, deck)
+  }
   const field = role === 'host' ? 'hostReady' : 'guestReady'
   const updated = await firestore<FirestoreRoom>(
     `/${room.code}?updateMask.fieldPaths=${field}`,
