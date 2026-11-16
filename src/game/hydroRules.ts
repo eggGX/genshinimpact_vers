@@ -1,7 +1,7 @@
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { healLeader, damageLeader } from './leaderShield'
-import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { healLeader } from './leaderShield'
+import { grantShield, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 import { summonFollowers } from './neutralRules'
 
 function updatePlayer(
@@ -101,8 +101,5 @@ export function raincutterAttackLeader(state: GameState, ownerId: string, attack
   if (index < 0) return state
   const attacker = state.players[index].field.find(f => f.instanceId === attackerId && f.health > 0)
   if (!attacker?.keywords.includes('raincutter_on_attack')) return state
-  const enemy = state.players[1-index]
-  const damaged = damageLeader(enemy, 1, 'hydro')
-  return { ...updatePlayer(state, enemy.id, () => damaged),
-    winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId }
+  return resolveLeaderElementalHit(state, 1-index, 1, 'hydro', index)
 }
