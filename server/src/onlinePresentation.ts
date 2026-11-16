@@ -42,7 +42,9 @@ function actionTitle(state: GameState, action: OnlineAction): string {
 export function recordOnlineAction(state: GameState, action: OnlineAction, revision: number):
   { next: GameState; event: RecordedOnlineEvent } {
   const title = actionTitle(state, action)
-  const traced = applyOnlineAction(beginPresentation(state), action)
+  const initial = beginPresentation(state)
+  const traced = applyOnlineAction(initial, action)
+  if (traced === initial) throw new Error('実行できない操作です')
   const next = withoutPresentation(traced)
   const captured = captureFrame(traced, title)
   const compact = compactPresentationFrames(state, captured.presentationFrames ?? [])
