@@ -24,7 +24,7 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
     ...enemy.field.map(f => ({ id: f.instanceId, name: `敵：${followerLabel(f)}` })),
     ...self.field.map(f => ({ id: f.instanceId, name: `味方：${followerLabel(f)}` })),
     { id: 'self', name: 'プレイするフォロワー自身（対応カードのみ）' },
-    ...self.hand!.map((id,i) => ({ id: `hand:${i}`, name: `自分の手札：${getCard(id)?.name ?? id}` })),
+    ...(self.hand ?? []).map((id,i) => ({ id: `hand:${i}`, name: `自分の手札：${getCard(id)?.name ?? id}` })),
   ]
   const chosenAttacker = self.field.find(f => f.instanceId === attackerId)
   const canSend = myTurn && !pending
