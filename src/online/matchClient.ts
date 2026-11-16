@@ -35,6 +35,8 @@ export interface OnlinePlayerView {
   leaderAura?: ElementalAura[]
   leaderShield?: Shield
   leaderBurningTurns?: number
+  leaderSuperconduct?: boolean
+  leaderFrozenNextTurn?: boolean
   bondOfLife?: number
   crests?: Array<{id:string;turnsRemaining:number;usedElements:ElementalAura['element'][]}>
 }
