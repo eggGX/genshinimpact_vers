@@ -692,3 +692,15 @@
   .online-mulligan-dialog .mulligan-card{width:calc(50% - 12px);max-width:168px}
   .online-mulligan-dialog{padding:16px 8px 22px}
 }
+
+
+/* Online actions use the local combat playback banner, with an optional log. */
+.online-action-history{
+  position:relative;z-index:6;
+  margin:10px auto 18px;width:min(680px,95%);
+  padding:9px 14px;border:1px solid #a78c5a88;border-radius:10px;
+  background:#0b2231e8;color:#ecd29a;font-size:12px;
+}
+.online-action-history summary{cursor:pointer;font-weight:800;text-align:center}
+.online-action-history ol{margin:10px 0 0;padding-left:24px;color:#e3e5db;line-height:1.8}
+.online-action-history li+li{border-top:1px solid #a78c5a24}
