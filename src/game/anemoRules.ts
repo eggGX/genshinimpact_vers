@@ -1,6 +1,6 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { damageLeader } from './leaderShield'
+import { resolveLeaderElementalHit } from './elemental'
 import { summonFollowers } from './neutralRules'
 
 let nextMondstadtCityId = 1
@@ -60,11 +60,7 @@ export function resolveAnemoDestroy(state: GameState, ownerId: string, source: F
   if (state.winnerId !== null || source.cardId !== 'C074') return state
   const opponent = state.players.find(p => p.id !== ownerId)
   if (!opponent) return state
-  const damaged = damageLeader(opponent, 2, 'anemo')
-  return {
-    ...editOwner(state, opponent.id, () => damaged),
-    winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId,
-  }
+  return resolveLeaderElementalHit(state, state.players.findIndex(p => p.id === opponent.id), 2, 'anemo')
 }
 
 /** C077: on attack declaration, summon one normal Hilichurl. */
