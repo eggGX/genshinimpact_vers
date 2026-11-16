@@ -18,8 +18,8 @@ export function damageLeader(player: Player, amount: number, element?: ElementTy
   const incoming = element && !['none', 'anemo', 'geo'].includes(element) ? element : undefined
   const reacts = (existing: ElementType): boolean => {
     const pair = [existing, element]
-    return (pair.includes('pyro') && ['hydro','cryo','electro','dendro'].some(e => pair.includes(e))) ||
-      (pair.includes('hydro') && ['electro','cryo','dendro'].some(e => pair.includes(e))) ||
+    return (pair.includes('pyro') && (['hydro','cryo','electro','dendro'] as ElementType[]).some(e => pair.includes(e))) ||
+      (pair.includes('hydro') && (['electro','cryo','dendro'] as ElementType[]).some(e => pair.includes(e))) ||
       (pair.includes('cryo') && pair.includes('electro')) ||
       (pair.includes('dendro') && pair.includes('electro')) ||
       ((element === 'anemo' || element === 'geo') &&
