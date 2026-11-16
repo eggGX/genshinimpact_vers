@@ -1,3 +1,4 @@
+import { captureFrame } from './presentation'
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { addLeaderShield, healLeader, damageLeader } from './leaderShield'
@@ -92,8 +93,8 @@ export function geoAmuletsTurnEnd(
         const changed = update(result, enemy.id, p => ({
           ...p, field: p.field.map(f => f.instanceId === target.instanceId ? hit.follower : f),
         }))
-        result = deaths(resolveReactionConsequence(changed, 1-index, target.instanceId,
-          hit.reaction, hit.reactedElement, index))
+        result = captureFrame(deaths(resolveReactionConsequence(changed, 1-index, target.instanceId,
+          hit.reaction, hit.reactedElement, index)), '岩創造物：ランダム岩元素ダメージ')
       }
       if (result.winnerId === null && amulet.cardId === 'token-solar-isotoma') {
         result = gainGeoCrystallize(result, ownerId, 1)
