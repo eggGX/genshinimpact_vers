@@ -1,7 +1,9 @@
 /**
  * Firebase REST transport for the friend-room lobby.
- * This module deliberately stores NO decks, hands, draws, or game state.
- * Online game actions must go through a trusted server in a later phase.
+ * The public room document contains only participation and readiness.
+ * Deck snapshots are kept in per-participant private subcollection documents.
+ * Hands, draws, and game state are NEVER exposed here; a trusted server
+ * must validate both decks and handle future game actions.
  */
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 
