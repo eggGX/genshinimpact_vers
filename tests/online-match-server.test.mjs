@@ -107,3 +107,20 @@ test('both seats enter the shared battlefield before independent mulligan', () =
   assert.match(app, /online\.match\.players\[online\.match\.seat\]/)
   assert.match(lobby, /submitOnlineMulligan\(room\.code, onlineMatch\.revision, indices\)/)
 })
+
+test('Firebase Hosting always revalidates HTML but caches fingerprinted assets', () => {
+  const config = JSON.parse(read('firebase.json'))
+  const headers = config.hosting.headers
+  assert.ok(headers.some(rule => rule.source === '/index.html' &&
+    rule.headers.some(header => header.key === 'Cache-Control' && header.value.includes('no-store'))))
+  assert.ok(headers.some(rule => rule.source === '/assets/**' &&
+    rule.headers.some(header => header.key === 'Cache-Control' && header.value.includes('immutable'))))
+})
+
+test('online shared battle provides visible deployment marker for both seats', () => {
+  const app = read('src/App.tsx')
+  const lobby = read('src/components/FriendRoomLobby.tsx')
+  assert.match(app, /ONLINE UI 20261116-B/)
+  assert.match(lobby, /room\?\.status === 'playing' && onlineMatch && isMatchServerConfigured\(\)/)
+  assert.doesNotMatch(lobby, /<OnlineMatchBoard/)
+})
