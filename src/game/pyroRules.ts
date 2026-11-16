@@ -48,11 +48,11 @@ export function hitAllEnemyFollowers(
   return result
 }
 
-function dealLeaderDamage(state: GameState, targetIndex: number, amount: number): GameState {
+function dealLeaderDamage(state: GameState, targetIndex: number, amount: number, element?: 'pyro'): GameState {
   if (state.winnerId !== null) return state
   const players = [...state.players] as [Player, Player]
   const target = players[targetIndex]
-  const damaged = damageLeader(target, amount)
+  const damaged = damageLeader(target, amount, element)
   const hp = damaged.leaderHealth
   players[targetIndex] = damaged
   return {
@@ -97,8 +97,8 @@ export function resolvePyroSpell(
       field: enemy.field.map(f => f.instanceId === targetId ? { ...f, health: 0 } : f),
     }
     let result = resolveDeaths({ ...state, players })
-    result = dealLeaderDamage(result, enemyIndex, 2)
-    result = dealLeaderDamage(result, ownerIndex, 2)
+    result = dealLeaderDamage(result, enemyIndex, 2, 'pyro')
+    result = dealLeaderDamage(result, ownerIndex, 2, 'pyro')
     return result
   }
   return state
@@ -244,7 +244,7 @@ export function resolvePyroGoldTurnEnd(
     const selection = Math.floor(Math.random() * (targets.length + 1))
     const victim = targets[selection]
     if (!victim) {
-      result = captureFrame(dealLeaderDamage(result, enemyIndex, 2), 'グゥオパァー：ランダム炎2（リーダー）')
+      result = captureFrame(dealLeaderDamage(result, enemyIndex, 2, 'pyro'), 'グゥオパァー：ランダム炎2（リーダー）')
       continue
     }
     const outcome = resolveElementalDamage(victim, 2, 'pyro')
