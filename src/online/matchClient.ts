@@ -38,8 +38,22 @@ export interface OnlinePlayerView {
   bondOfLife?: number
   crests?: Array<{id:string;turnsRemaining:number;usedElements:ElementalAura['element'][]}>
 }
+export interface OnlinePresentationSnapshot {
+  turn: number
+  phase: 'mulligan' | 'start' | 'main' | 'end'
+  currentPlayerId: string
+  winnerId: string | null
+  players: [OnlinePlayerView, OnlinePlayerView]
+}
+export interface OnlinePresentationEvent {
+  revision: number
+  actorId: string
+  title: string
+  frames: Array<{ label: string; state: OnlinePresentationSnapshot }>
+}
 export interface OnlineMatchView {
   revision: number
+  history?: OnlinePresentationEvent[]
   mulliganReady: [boolean, boolean]
   seat: 0 | 1
   turn: number
