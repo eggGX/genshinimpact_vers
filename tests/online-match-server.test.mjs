@@ -139,3 +139,17 @@ test('online action history is privacy projected per viewer before transmission'
   assert.match(frontend, /online\.match\.history \?\? \[\]/)
   assert.match(frontend, /対戦行動履歴/)
 })
+
+test('turn transition banner distinguishes own and opponent on the shared battle screen', () => {
+  const app = read('src/App.tsx')
+  const css = read('src/App.css')
+  assert.match(app, /const turnKey = `\$\{game\.turn\}:\$\{game\.currentPlayerId\}`/)
+  assert.match(app, /game\.phase !== 'main'/)
+  assert.match(app, /lastAnnouncedTurn\.current === turnKey/)
+  assert.match(app, /online \? online\.match\.players\[online\.match\.seat\]\.id : 'player1'/)
+  assert.match(app, /turnAnnouncement\.own \? 'あなたのターンです' : '相手のターンです'/)
+  assert.match(app, /window\.setTimeout\(\(\) => setTurnAnnouncement\(null\), 1800\)/)
+  assert.match(app, /role="status" aria-live="polite"/)
+  assert.match(css, /\.game--battle > \.turn-announcement/)
+  assert.match(css, /prefers-reduced-motion:reduce/)
+})
