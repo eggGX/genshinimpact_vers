@@ -41,7 +41,7 @@ test('browser uses optional backend address and never uploads match state to Fir
   assert.match(frontend, /Authorization: `Bearer \$\{token\}`/)
   assert.match(lobby, /isMatchServerConfigured\(\)/)
   assert.match(lobby, /submitOnlineMulligan/)
-  assert.match(lobby, /onlineMatch\.mulliganReady\?\.\[onlineMatch\.seat\]/)
+  assert.match(lobby, /indices => \{ void completeMulligan\(indices\) \}/)
 })
 test('match server has isolated dependencies and admin SDK', () => {
   assert.ok(serverManifest.dependencies['firebase-admin'])
@@ -74,7 +74,7 @@ test('client requests actions without writing complete game state', () => {
 
 test('online battle reuses the exact local battle scene with server commands', () => {
   const app = read('src/App.tsx')
-  assert.match(app, /renderOnlineBattle=\{\(match, pending, onAction, onLeave\) => <App online=/)
+  assert.match(app, /renderOnlineBattle=\{\(match, pending, onAction, onMulligan, onLeave\) => <App online=/)
   assert.match(lobby, /return <>\{renderOnlineBattle\(onlineMatch/)
   assert.doesNotMatch(lobby, /<OnlineMatchBoard/)
   assert.match(app, /className=\{\['game','game--battle'/)
@@ -94,4 +94,16 @@ test('online player names and status are sourced from server projections', () =>
   assert.match(backend, /name: index === 0 \? '空' : '蛍'/)
   assert.match(backend, /leaderBurningTurns: player.leaderBurningTurns/)
   assert.match(backend, /bondOfLife: player.bondOfLife/)
+})
+
+test('both seats enter the shared battlefield before independent mulligan', () => {
+  const app = read('src/App.tsx')
+  assert.match(lobby, /room\?\.status === 'playing' && onlineMatch && isMatchServerConfigured\(\)/)
+  assert.doesNotMatch(lobby, /onlineMatch\.phase !== 'mulligan'/)
+  assert.match(app, /online\?\.match\.phase === 'mulligan'/)
+  assert.match(app, /online-mulligan-overlay/)
+  assert.match(app, /online\.match\.mulliganReady\?\.\[online\.match\.seat\]/)
+  assert.match(app, /online\.onMulligan\(\[\.\.\.onlineMulliganSelection\]\)/)
+  assert.match(app, /online\.match\.players\[online\.match\.seat\]/)
+  assert.match(lobby, /submitOnlineMulligan\(room\.code, onlineMatch\.revision, indices\)/)
 })
