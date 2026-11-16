@@ -4522,3 +4522,12 @@ test('演出トレースは任意：無効化した通常のゲーム処理に�
   assert.equal(frame.presentationFrames[0].state.presentationFrames,undefined)
   assert.equal(withoutPresentation(frame).presentationFrames,undefined)
 })
+
+test('演出トレース：元素反応名が実際の解決結果から記録される',async()=>{
+  const {beginPresentation}=await vite.ssrLoadModule('/src/game/presentation.ts')
+  const {resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
+  const state=startedGame()
+  const traced=resolveReactionConsequence(beginPresentation(state),1,'dummy','vaporize','pyro',0)
+  assert.ok(traced.presentationFrames.some(f=>f.label.includes('蒸発')))
+  assert.equal(traced.players[1].leaderHealth,state.players[1].leaderHealth)
+})
