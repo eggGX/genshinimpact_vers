@@ -782,8 +782,19 @@ function App() {
         </button>
 
         <div className="player-resources">
-          <div className="resource-head"><span className="resource-caption">PLAY POINT</span><strong>{opponent.pp}<small> / {opponent.maxPp}</small></strong></div>
-          <div className="pp-gems" aria-label={`PP ${opponent.pp} / ${opponent.maxPp}`}>{Array.from({length:10},(_,i)=><span key={i} className={i<opponent.pp?'pp-gem active':'pp-gem'}/>)}</div>
+          <div className="resource-head pp-resource-head">
+            <span className="resource-caption">PLAY POINT</span>
+            <span className="pp-values" aria-label={`現在PP ${opponent.pp}、最大PP ${opponent.maxPp}`}>
+              <span className="pp-current"><small>現在</small><strong>{opponent.pp}</strong></span>
+              <span className="pp-max"><small>最大</small><strong>{opponent.maxPp}</strong></span>
+            </span>
+          </div>
+          <div className="pp-gems" aria-label={`現在PP ${opponent.pp}、最大PP ${opponent.maxPp}`}>
+            {Array.from({length:10},(_,i)=><span key={i}
+              className={`pp-gem ${i < opponent.pp ? 'active' : i < opponent.maxPp ? 'spent' : 'locked'}`}
+              title={i < opponent.pp ? '使用可能PP' : i < opponent.maxPp ? '消費済みPP' : '未解放PP'}
+            />)}
+          </div>
           <div className="resource-head energy-head"><span className="resource-caption">ELEMENTAL ENERGY</span><strong>{opponent.energy}<small> / 5</small></strong></div>
           <div className="energy-gems">{Array.from({length:5},(_,i)=><span key={i} className={i<opponent.energy?'energy-gem active':'energy-gem'}/>)}</div>
         </div>
@@ -835,8 +846,19 @@ function App() {
         </div>
 
         <div className="player-resources">
-          <div className="resource-head"><span className="resource-caption">PLAY POINT</span><strong>{currentPlayer.pp}<small> / {currentPlayer.maxPp}</small></strong></div>
-          <div className="pp-gems" aria-label={`PP ${currentPlayer.pp} / ${currentPlayer.maxPp}`}>{Array.from({length:10},(_,i)=><span key={i} className={i<currentPlayer.pp?'pp-gem active':'pp-gem'}/>)}</div>
+          <div className="resource-head pp-resource-head">
+            <span className="resource-caption">PLAY POINT</span>
+            <span className="pp-values" aria-label={`現在PP ${currentPlayer.pp}、最大PP ${currentPlayer.maxPp}`}>
+              <span className="pp-current"><small>現在</small><strong>{currentPlayer.pp}</strong></span>
+              <span className="pp-max"><small>最大</small><strong>{currentPlayer.maxPp}</strong></span>
+            </span>
+          </div>
+          <div className="pp-gems" aria-label={`現在PP ${currentPlayer.pp}、最大PP ${currentPlayer.maxPp}`}>
+            {Array.from({length:10},(_,i)=><span key={i}
+              className={`pp-gem ${i < currentPlayer.pp ? 'active' : i < currentPlayer.maxPp ? 'spent' : 'locked'}`}
+              title={i < currentPlayer.pp ? '使用可能PP' : i < currentPlayer.maxPp ? '消費済みPP' : '未解放PP'}
+            />)}
+          </div>
           <div className="resource-head energy-head"><span className="resource-caption">ELEMENTAL ENERGY</span><strong>{currentPlayer.energy}<small> / 5</small></strong></div>
           <div className="energy-gems">{Array.from({length:5},(_,i)=><span key={i} className={i<currentPlayer.energy?'energy-gem active':'energy-gem'}/>)}</div>
         </div>
