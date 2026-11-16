@@ -1,4 +1,5 @@
 import type { GameState, Player } from './types'
+import { getCard } from '../data/cardRegistry'
 
 export interface PresentationFrame {
   label: string
@@ -28,6 +29,10 @@ export function captureFrame(state: GameState, label: string): GameState {
   }
 }
 
+function label(id: string): string {
+  return getCard(id)?.name ?? id
+}
+
 function life(player: Player): string {
   return `${player.name} HP${player.leaderHealth}`
 }
@@ -46,17 +51,30 @@ export function describePresentationChange(
     for (const [id, follower] of beforeFollowers) {
       const now = afterFollowers.get(id)
       if (!now) {
-        changes.push(`${follower.cardId} が破壊された`)
+        changes.push(`${label(follower.cardId)} が破壊された`)
       } else if (follower.health !== now.health) {
         const delta = now.health - follower.health
-        changes.push(`${follower.cardId} ${delta < 0 ? 'ダメージ' : '回復'} ${Math.abs(delta)}（HP ${follower.health}→${now.health}）`)
+        changes.push(`${label(follower.cardId)} ${delta < 0 ? 'ダメージ' : '回復'} ${Math.abs(delta)}（HP ${follower.health}→${now.health}）`)
+      } else if (follower.attack !== now.attack) {
+        changes.push(`${label(follower.cardId)} 攻撃力 ${follower.attack}→${now.attack}`)
+      } else if (follower.aura.map(a => a.element).join() !== now.aura.map(a => a.element).join()) {
+        changes.push(`${label(follower.cardId)} 元素付着変化`)
       } else if (follower.shield.normal !== now.shield.normal ||
                  follower.shield.crystallize !== now.shield.crystallize) {
-        changes.push(`${follower.cardId} シールド変化`)
+        changes.push(`${label(follower.cardId)} シールド変化`)
       }
     }
     for (const [id, follower] of afterFollowers) {
-      if (!beforeFollowers.has(id)) changes.push(`${follower.cardId} が登場`)
+      if (!beforeFollowers.has(id)) changes.push(`${label(follower.cardId)} が登場`)
+    }
+    if (before.hand.length !== after.hand.length) {
+      changes.push(`${after.name} 手札 ${before.hand.length}→${after.hand.length}枚`)
+    }
+    if (before.pp !== after.pp) {
+      changes.push(`${after.name} PP ${before.pp}→${after.pp}`)
+    }
+    if (before.energy !== after.energy) {
+      changes.push(`${after.name} EN ${before.energy}→${after.energy}`)
     }
     if (before.leaderHealth !== after.leaderHealth) {
       changes.push(`${life(before)} → ${after.leaderHealth}`)
@@ -64,10 +82,10 @@ export function describePresentationChange(
     const previousAmulets = new Set((before.amulets ?? []).map(a => a.instanceId))
     const nextAmulets = new Set((after.amulets ?? []).map(a => a.instanceId))
     for (const amulet of after.amulets ?? []) {
-      if (!previousAmulets.has(amulet.instanceId)) changes.push(`${amulet.cardId} を設置`)
+      if (!previousAmulets.has(amulet.instanceId)) changes.push(`${label(amulet.cardId)} を設置`)
     }
     for (const amulet of before.amulets ?? []) {
-      if (!nextAmulets.has(amulet.instanceId)) changes.push(`${amulet.cardId} が消滅`)
+      if (!nextAmulets.has(amulet.instanceId)) changes.push(`${label(amulet.cardId)} が消滅`)
     }
   }
   if (previous.currentPlayerId !== next.currentPlayerId) {
