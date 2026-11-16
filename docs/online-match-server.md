@@ -1,0 +1,55 @@
+# フレンド対戦・信頼できるゲームサーバー（試作）
+
+## 実装内容
+
+`server/src/index.ts` はサーバー実行専用のコードです。Firebase Admin SDKでIDトークンを検証し、ルームのホスト・ゲストだけを認可します。
+
+- `GET /rooms/{code}/state` — 2人分の提出済み非公開デッキをサーバー側で検証し、初回のみシャッフル・初期手札配布。以後は保存済み状態を返す
+- `POST /rooms/{code}/mulligan` — 本人のマリガンを確定。本文は `{"revision":0,"indices":[0,2]}`
+- `GET /health` — ヘルスチェック
+
+マリガンのターン順・選択枚数・リビジョンをサーバーで検査し、Firestoreトランザクションで重複送信を排除します。
+`onlineMatches/{code}` に完全なゲーム状態を置きますが、**ブラウザのFirestore権限は拒否**されており、HTTPレスポンスにも相手の手札や山札の並びは含まれません。自分の山札の並びも公開しません。
+
+**現時点ではマリガンまでの試作で、カードプレイ・攻撃・ターン終了はオンラインで行えません。**
+
+## セキュリティと運用上の制約
+
+- Cloud Firestoreクライアントから `onlineMatches` を読み書きできないルールは既存のcatch-all denyを維持しています
+- `ALLOWED_ORIGIN` 以外のブラウザOriginは拒否します（CORSは認証の代用ではなく、Firebase IDトークンとルームのUIDを必ず検査します）
+- Firebase Admin権限を持つサービスアカウント秘密鍵を**GitHub、Viteの環境変数、Webブラウザへ絶対に配置しないでください**
+- サーバーのFirebase認証はGoogle Application Default Credentials（ADC）を使用します
+- 対戦状態の保存先はFirestoreで、サーバー再起動後も試合が残ります。ルームを再利用しない運用です
+- ルームとマッチの自動削除はまだありません。運用開始前にTTL／クリーンアップが必要です
+- アクション同期、終了・降参、対戦ログ、カード効果の乱数と状態保存の厳密な監査は今後の課題です
+- ゲームエンジンの乱数は現状 `Math.random` です。競技的な公平性が必要な段階でサーバー乱数源を強化します
+
+## ローカルでサーバーを動かす場合（任意）
+
+```bash
+cd server
+npm install
+# Firebase Adminが利用できるADCを設定
+# Windowsなら gcloud auth application-default login など
+npm run check
+npm run dev
+```
+
+`ALLOWED_ORIGIN` の既定値は `https://genshincard-25028.web.app`、`PORT` は `8080` です。
+
+## 公開先サーバーが準備できた場合
+
+`.env.local` に
+
+```dotenv
+VITE_MATCH_SERVER_URL=https://<信頼できる対戦サーバーのURL>
+```
+
+を追加して `npm run build` とHosting再デプロイを行います。
+サーバーURLを設定していない間は、既存の「対戦セッション開始」表示のままです。安全でないクライアント対戦に切り替わることはありません。
+
+**注意：Firebase Spark無料プランでこのNodeゲームサーバーが自動稼働するわけではありません。** 対戦サーバーを公開するには別のホスティング環境が必要です。Cloud Runなどを使う場合は課金アカウントや無料枠・予算上限を確認してから、利用者の承認を得てセットアップします。Firebase HostingだけではNodeサーバーは動きません。
+
+## ユーザーが今できること
+
+今のSparkプランを変えず、通常のゲームは従来どおり利用できます。今回追加したサーバーコードは配備していないため、オンライン初期手札画面はまだ利用できません。
