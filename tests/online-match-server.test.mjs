@@ -41,7 +41,7 @@ test('browser uses optional backend address and never uploads match state to Fir
   assert.match(frontend, /Authorization: `Bearer \$\{token\}`/)
   assert.match(lobby, /isMatchServerConfigured\(\)/)
   assert.match(lobby, /submitOnlineMulligan/)
-  assert.match(lobby, /onlineMatch\.mulliganReady\[onlineMatch\.seat\]/)
+  assert.match(lobby, /onlineMatch\.mulliganReady\?\.\[onlineMatch\.seat\]/)
 })
 test('match server has isolated dependencies and admin SDK', () => {
   assert.ok(serverManifest.dependencies['firebase-admin'])
