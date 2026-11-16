@@ -193,7 +193,7 @@ export function cryoAttack(state: GameState, ownerId: string, sourceId: string):
   if (source?.cardId !== 'C053') return state
   const opponent = state.players.find(p => p.id !== ownerId)
   if (!opponent) return state
-  const next = damageLeader(opponent, 1)
+  const next = damageLeader(opponent, 1, 'cryo')
   const result = edit(state, opponent.id, () => next)
   return { ...result, winnerId: next.leaderHealth === 0 ? ownerId : result.winnerId }
 }
