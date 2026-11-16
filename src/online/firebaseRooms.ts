@@ -199,6 +199,11 @@ export async function joinFriendRoom(code: string): Promise<FriendRoom> {
   }
 }
 
+/** ID token for a trusted match server; never send it to other clients. */
+export async function getFriendMatchIdToken(): Promise<string> {
+  return (await getSession()).idToken
+}
+
 export async function getMyFriendRoomRole(room: FriendRoom): Promise<'host' | 'guest' | null> {
   const { uid } = await getSession()
   if (room.hostUid === uid) return 'host'
