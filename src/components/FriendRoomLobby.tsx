@@ -6,6 +6,7 @@ import {
 } from '../online/firebaseRooms'
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
+import { CardArtwork } from './CardArtwork'
 import { getCard } from '../game/engine'
 import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
 import type { OnlineAction } from '../../server/src/matchActions'
@@ -201,23 +202,36 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
             </p>
             {onlineMatch.phase === 'mulligan' && !onlineMatch.mulliganReady[onlineMatch.seat]
               ? <div className="friend-mulligan">
-                  <p>交換するカードを選択してください（最大4枚）。</p>
-                  <div className="friend-mulligan-cards">
-                    {(onlineMatch.players[onlineMatch.seat].hand ?? []).map((cardId, i) =>
-                      <label key={i} className="friend-mulligan-card">
-                        <input type="checkbox" checked={mulliganSelection.includes(i)}
-                          onChange={() => setMulliganSelection(previous =>
-                            previous.includes(i) ? previous.filter(n => n !== i) : [...previous, i])}/>
-                        <span>{getCard(cardId)?.name ?? cardId}</span>
-                      </label>)}
+                  <h3>マリガン · {onlineMatch.seat === 0 ? '空' : '蛍'}</h3>
+                  <p>交換するカードをクリックして選択してください。空と蛍は同時にマリガンできます。</p>
+                  <p>空：{onlineMatch.mulliganReady[0] ? '確定済み' : '選択中'}　
+                     蛍：{onlineMatch.mulliganReady[1] ? '確定済み' : '選択中'}</p>
+                  <div className="mulligan-cards friend-mulligan-cards">
+                    {(onlineMatch.players[onlineMatch.seat].hand ?? []).map((cardId, i) => {
+                      const card = getCard(cardId)
+                      const selected = mulliganSelection.includes(i)
+                      return <button key={i} type="button" disabled={pending}
+                        className={['mulligan-card', `card-element--${card?.element ?? 'none'}`,
+                          `card-rarity--${card?.rarity ?? 'bronze'}`, selected ? 'selected' : ''].join(' ')}
+                        aria-pressed={selected}
+                        onClick={() => setMulliganSelection(previous => previous.includes(i)
+                          ? previous.filter(n => n !== i) : [...previous, i])}>
+                        <span>コスト {card?.cost ?? '?'}</span>
+                        <CardArtwork cardId={cardId} name={card?.name ?? cardId} className="card-artwork--mulligan"/>
+                        <strong>{card?.name ?? cardId}</strong>
+                        <span>{card?.type === 'follower' ? `${card.attack} / ${card.health}` :
+                          card?.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
+                        <span>{selected ? '交換する ✓' : 'キープ'}</span>
+                      </button>
+                    })}
                   </div>
                   <button type="button" className="friend-room-primary" disabled={pending}
                     onClick={() => void completeMulligan()}>
-                    {mulliganSelection.length ? `${mulliganSelection.length}枚を交換して確定` : '交換せず確定'}
+                    {mulliganSelection.length ? `${mulliganSelection.length}枚を交換して確定` : 'すべてキープして確定'}
                   </button>
                 </div>
               : onlineMatch.phase === 'mulligan'
-                ? <p>マリガン確定済み。相手のマリガン完了を待っています。</p>
+                ? <p>マリガン確定済み。相手のマリガン完了を待っています。（空・蛍の両者が確定すると先攻1ターン目を開始します）</p>
                 : <OnlineMatchBoard match={onlineMatch} pending={pending}
                     onAction={action => { void sendMatchAction(action) }} />}
           </>}
