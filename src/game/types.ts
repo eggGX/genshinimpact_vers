@@ -157,6 +157,10 @@ export interface Player {
   leaderShield?: Shield
   /** Burning turns applied to the leader by burgeon. */
   leaderBurningTurns?: number
+  /** Next physical hit on this leader deals +1 after superconduct. */
+  leaderSuperconduct?: boolean
+  /** The next own turn starts with 1 less usable PP; repeated freezes do not stack. */
+  leaderFrozenNextTurn?: boolean
   /** Leader elemental attachment (e.g. Barbara's healing crest). */
   leaderAura?: ElementalAura[]
   /** Healing absorption remaining from a Bond of Life. */
