@@ -40,8 +40,9 @@ test('Firestore rules can be deployed along with Hosting', () => {
   const firebase = JSON.parse(read('firebase.json'))
   assert.equal(firebase.firestore.rules, 'firestore.rules')
 })
-test('lobby never claims online gameplay is available yet', () => {
-  assert.match(lobby, /対戦アクションの同期はまだ有効化していません/)
+test('online session explicitly distinguishes match start from live card play', () => {
+  assert.match(lobby, /手札・山札・マリガン・カード操作の同期はまだ未実装です/)
+  assert.match(lobby, /対戦セッションを開始しました/)
 })
 
 test('online deck editor preserves mounted lobby and room state', () => {
@@ -50,4 +51,22 @@ test('online deck editor preserves mounted lobby and room state', () => {
   assert.match(app, /<FriendRoomLobby onBack=/)
   assert.match(app, /フレンド対戦：自分のデッキ/)
   assert.match(app, /onBack=\{\(\) => setEditingPlayer\(null\)\}/)
+})
+
+test('only a ready host can start the online match', () => {
+  assert.match(transport, /export async function startFriendMatch/)
+  assert.match(transport, /if \(role !== 'host'\)/)
+  assert.match(transport, /!room\.hostReady \|\| !room\.guestReady/)
+  assert.match(transport, /currentDocument\.updateTime=/)
+  assert.ok(rules.includes("affectedKeys().hasOnly(['status'])"))
+  assert.ok(rules.includes("request.resource.data.status == 'playing'"))
+  assert.ok(rules.includes("resource.data.hostReady == true"))
+  assert.ok(rules.includes("resource.data.guestReady == true"))
+  assert.match(lobby, /room\.status === 'playing'/)
+  assert.match(lobby, /role === 'host'/)
+  assert.match(lobby, /ホストの開始操作を待っています/)
+})
+test('readiness is frozen when the room is playing', () => {
+  assert.match(transport, /room\.status !== 'waiting'/)
+  assert.match(rules, /resource\.data\.status == 'waiting'/)
 })
