@@ -56,7 +56,7 @@ function randomOpponentHit(state: GameState, ownerId: string, value: number, dea
   const options = foe.field.filter(f => f.health > 0)
   const random = Math.floor(Math.random() * (options.length + 1))
   if (random < options.length) return captureFrame(deaths(hit(state, ownerId, options[random].instanceId, value, 'anemo').state), 'ランダム風元素ダメージ')
-  const damaged = damageLeader(foe, value)
+  const damaged = damageLeader(foe, value, 'anemo')
   const next = edit(state, foe.id, () => damaged)
   return { ...next, winnerId: damaged.leaderHealth === 0 ? ownerId : next.winnerId }
 }
