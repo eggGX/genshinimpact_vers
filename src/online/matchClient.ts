@@ -30,6 +30,7 @@ export interface OnlinePlayerView {
 }
 export interface OnlineMatchView {
   revision: number
+  mulliganReady: [boolean, boolean]
   seat: 0 | 1
   turn: number
   phase: 'mulligan' | 'start' | 'main' | 'end'
