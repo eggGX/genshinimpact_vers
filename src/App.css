@@ -466,3 +466,48 @@
   .amulet-card .amulet-type { font-size: 7px; }
   .amulet-card .amulet-countdown { font-size: 8px; padding: 2px 3px; }
 }
+
+/* Action playback: rules resolve synchronously; captured board states appear in sequence. */
+.game--animating .game-header,
+.game--animating .field,
+.game--animating .player,
+.game--animating .hand {pointer-events:none;}
+.game--animating .field-card:not(.amulet-card),
+.game--animating .leader-health {animation:cinematic-glow .9s ease-in-out infinite alternate;}
+@keyframes cinematic-glow {
+  from{filter:brightness(1);box-shadow:inset 0 0 0 2px #0a1421,0 6px 13px #000a;}
+  to{filter:brightness(1.12);box-shadow:inset 0 0 0 2px #304d56,0 0 18px #ecc76b88;}
+}
+.battle-playback {
+  position:fixed;z-index:40;left:50%;top:85px;transform:translateX(-50%);
+  width:min(740px,calc(100vw - 24px));
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  box-sizing:border-box;padding:12px 17px;
+  background:linear-gradient(105deg,#071625f5,#1e4252f5 45%,#071625f5);
+  border:2px solid #d1ac6a;border-radius:13px;
+  box-shadow:0 0 0 5px #101f2ba3,0 12px 35px #000c,0 0 19px #cbad6966;
+  color:#fff0ce;
+  animation:playback-appear .2s ease-out;
+}
+@keyframes playback-appear {from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.battle-playback-heading{display:flex;align-items:center;gap:7px;font-size:11px;
+  color:#edd199;white-space:nowrap;font-weight:800;letter-spacing:.05em;}
+.battle-playback-icon{font-size:24px;color:#f9d18a;text-shadow:0 0 12px #c9a95c;}
+.battle-playback-description{flex:1 1 250px;max-height:56px;overflow-y:auto;line-height:1.5;
+  font-size:12px;font-weight:700;}
+.battle-playback-controls{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.battle-playback-controls label{display:flex;align-items:center;gap:6px;font-size:10px;color:#f5daa8;}
+.battle-playback-controls select,.battle-playback-controls button{
+  background:#233c4d;border:1px solid #dbb97a;border-radius:6px;
+  color:#fff1d4;font-size:11px;padding:7px;cursor:pointer;
+}
+.battle-playback-controls button:hover{background:#546c79;}
+@media(max-width:760px){
+  .battle-playback{top:6px;padding:9px 10px;gap:5px;}
+  .battle-playback-description{flex-basis:100%;font-size:11px;max-height:55px;}
+  .battle-playback-controls{width:100%;justify-content:space-between;}
+}
+@media(prefers-reduced-motion:reduce){
+  .game--animating .field-card:not(.amulet-card),
+  .game--animating .leader-health,.battle-playback{animation:none;}
+}
