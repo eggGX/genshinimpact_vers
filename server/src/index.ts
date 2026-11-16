@@ -7,7 +7,8 @@ import { createServer } from 'node:http'
 import { initializeApp, applicationDefault, cert, getApps, type ServiceAccount } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
-import { createInitialGameState, confirmMulligan } from '../../src/game/engine.ts'
+import { createInitialGameState } from '../../src/game/engine.ts'
+import { applyIndependentMulligan, type MulliganFlags } from './mulligan.ts'
 import { applyOnlineAction, type OnlineAction } from './matchActions.ts'
 import { validateDeck, type DeckDefinition } from '../../src/data/deckRules.ts'
 import type { GameState } from '../../src/game/types.ts'
@@ -55,7 +56,7 @@ type Room = {
   guestReady: boolean
   status: string
 }
-type Stored = { state: GameState; revision: number }
+type Stored = { state: GameState; revision: number; mulliganReady?: MulliganFlags }
 
 function json(res: import('node:http').ServerResponse, status: number, data: unknown) {
   res.writeHead(status, {
@@ -101,6 +102,7 @@ function projectState(stored: Stored, seat: 0 | 1) {
   const state = stored.state
   return {
     revision: stored.revision,
+    mulliganReady: stored.mulliganReady ?? [false, false],
     seat,
     turn: state.turn,
     phase: state.phase,
@@ -152,7 +154,7 @@ async function ensureMatch(code: string, uid: string): Promise<{ stored: Stored;
       deckFromData(hostSnap.data()), deckFromData(guestSnap.data()),
     ]
     const state = createInitialGameState(decks)
-    const stored: Stored = { state, revision: 0 }
+    const stored: Stored = { state, revision: 0, mulliganReady: [false, false] }
     tx.create(matchRef, stored)
     return { stored, seat }
   })
@@ -175,12 +177,13 @@ async function submitMulligan(
     const seat = getSeat(room, uid)
     const stored = matchSnap.data() as Stored
     if (stored.revision !== revision) throw new Error('対戦状態が更新されています。再読み込みしてください')
-    if (stored.state.phase !== 'mulligan' || stored.state.currentPlayerId !== `player${seat + 1}`) {
-      throw new Error('今はあなたのマリガン順ではありません')
+    if (stored.state.phase !== 'mulligan') {
+      throw new Error('マリガンは終了しています')
     }
-    const next = confirmMulligan(stored.state, indices as number[])
-    if (next === stored.state) throw new Error('マリガンできません')
-    const result: Stored = { state: next, revision: stored.revision + 1 }
+    const { state: next, mulliganReady } = applyIndependentMulligan(
+      stored.state, stored.mulliganReady ?? [false, false], seat, indices as number[],
+    )
+    const result: Stored = { state: next, mulliganReady, revision: stored.revision + 1 }
     tx.update(matchRef, result)
     return { stored: result, seat }
   })
