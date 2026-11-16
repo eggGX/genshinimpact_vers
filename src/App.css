@@ -559,7 +559,7 @@
 .follower-aura-icons .element-icon-emblem{width:27px;height:27px;}
 .leader {position:relative;}
 .leader-aura-icons {
-  position:absolute;z-index:8;top:-18px;left:50%;transform:translateX(-50%);
+  position:absolute;z-index:8;top:-40px;left:75%;transform:translateX(-50%);
   display:flex;gap:3px;align-items:center;justify-content:center;
   white-space:nowrap;pointer-events:none;
 }
@@ -569,7 +569,7 @@
   .follower-aura-icons{top:-18px;}
   .follower-aura-icons .aura-icon-holder{width:24px;height:24px;}
   .follower-aura-icons .element-icon-emblem{width:21px;height:21px;}
-  .leader-aura-icons{top:-14px;}
+   .leader-aura-icons{top:-28px;left:72%;}
   .leader-aura-icons .aura-icon-holder{width:23px;height:23px;}
   .leader-aura-icons .element-icon-emblem{width:19px;height:19px;}
 }
