@@ -200,12 +200,12 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
             <p>自分の山札：{onlineMatch.players[onlineMatch.seat].deckCount}枚　
               相手の手札：{onlineMatch.players[1 - onlineMatch.seat].handCount}枚
             </p>
-            {onlineMatch.phase === 'mulligan' && !onlineMatch.mulliganReady[onlineMatch.seat]
+            {onlineMatch.phase === 'mulligan' && !onlineMatch.mulliganReady?.[onlineMatch.seat]
               ? <div className="friend-mulligan">
                   <h3>マリガン · {onlineMatch.seat === 0 ? '空' : '蛍'}</h3>
                   <p>交換するカードをクリックして選択してください。空と蛍は同時にマリガンできます。</p>
-                  <p>空：{onlineMatch.mulliganReady[0] ? '確定済み' : '選択中'}　
-                     蛍：{onlineMatch.mulliganReady[1] ? '確定済み' : '選択中'}</p>
+                  <p>空：{onlineMatch.mulliganReady?.[0] ? '確定済み' : '選択中'}　
+                     蛍：{onlineMatch.mulliganReady?.[1] ? '確定済み' : '選択中'}</p>
                   <div className="mulligan-cards friend-mulligan-cards">
                     {(onlineMatch.players[onlineMatch.seat].hand ?? []).map((cardId, i) => {
                       const card = getCard(cardId)
