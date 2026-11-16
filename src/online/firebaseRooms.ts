@@ -18,6 +18,8 @@ export type FriendRoom = {
   hostUid: string
   guestUid: string
   status: 'waiting' | 'paired'
+  hostReady: boolean
+  guestReady: boolean
   updateTime: string
 }
 
@@ -102,15 +104,18 @@ async function getSession(): Promise<AuthSession> {
 const firestoreBase = () =>
   `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(requiredConfig().projectId)}/databases/(default)/documents/friendRooms`
 type FirestoreRoom = {
-  fields?: Record<string, { stringValue?: string }>
+  fields?: Record<string, { stringValue?: string; booleanValue?: boolean }>
   updateTime?: string
 }
 const value = (s: string) => ({ stringValue: s })
+const boolValue = (b: boolean) => ({ booleanValue: b })
 const roomFromDocument = (code: string, document: FirestoreRoom): FriendRoom => ({
   code,
   hostUid: document.fields?.hostUid?.stringValue ?? '',
   guestUid: document.fields?.guestUid?.stringValue ?? '',
   status: (document.fields?.status?.stringValue === 'paired' ? 'paired' : 'waiting'),
+  hostReady: document.fields?.hostReady?.booleanValue === true,
+  guestReady: document.fields?.guestReady?.booleanValue === true,
   updateTime: document.updateTime ?? '',
 })
 async function firestore<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -144,6 +149,8 @@ export async function createFriendRoom(): Promise<FriendRoom> {
           hostUid: value(session.uid),
           guestUid: value(''),
           status: value('waiting'),
+          hostReady: boolValue(false),
+          guestReady: boolValue(false),
         } }),
       })
       return roomFromDocument(code, room)
@@ -193,4 +200,19 @@ export async function getMyFriendRoomRole(room: FriendRoom): Promise<'host' | 'g
   if (room.hostUid === uid) return 'host'
   if (room.guestUid === uid) return 'guest'
   return null
+}
+
+/** Register the current browser's readiness only; no card lists are uploaded. */
+export async function setFriendRoomReady(
+  room: FriendRoom, ready: boolean,
+): Promise<FriendRoom> {
+  const role = await getMyFriendRoomRole(room)
+  if (!role) throw new Error('このルームの参加者ではありません。')
+  if (!room.guestUid) throw new Error('もう1人の参加を待ってください。')
+  const field = role === 'host' ? 'hostReady' : 'guestReady'
+  const updated = await firestore<FirestoreRoom>(
+    `/${room.code}?updateMask.fieldPaths=${field}`,
+    { method: 'PATCH', body: JSON.stringify({ fields: { [field]: boolValue(ready) } }) },
+  )
+  return roomFromDocument(room.code, updated)
 }
