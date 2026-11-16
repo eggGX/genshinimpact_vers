@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   createFriendRoom, fetchFriendRoom, getMyFriendRoomRole,
   isFriendRoomsConfigured, joinFriendRoom, normalizeRoomCode, setFriendRoomReady, startFriendMatch,
@@ -21,10 +21,11 @@ function saveActiveRoom(code: string | null) {
   } catch { /* Browsers with disabled storage still support a live session. */ }
 }
 
-export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
+export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }: {
   onBack: () => void
   deck: DeckDefinition
   onEditDeck: () => void
+  renderOnlineBattle: (match: OnlineMatchView, pending: boolean, onAction: (action: OnlineAction) => void) => ReactNode
 }) {
   const [codeInput, setCodeInput] = useState('')
   const [room, setRoom] = useState<FriendRoom | null>(null)
@@ -157,6 +158,12 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
     } catch (e) {
       setError(e instanceof Error ? e.message : '通信エラーが発生しました。')
     } finally { setPending(false) }
+  }
+
+  // The actual battle must be the original local battle scene, not a lobby panel.
+  if (room?.status === 'playing' && onlineMatch && onlineMatch.phase !== 'mulligan' && isMatchServerConfigured()) {
+    return <>{renderOnlineBattle(onlineMatch, pending, action => { void sendMatchAction(action) })}
+      {matchError && <p className="friend-room-error">{matchError}</p>}</>
   }
 
   return <div className="game">
