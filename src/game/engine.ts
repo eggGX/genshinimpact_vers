@@ -25,6 +25,13 @@ import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyr
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence } from './elemental'
 
+/** Resolve temporary elemental infusions before the card's printed normal attack element. */
+function normalAttackElement(follower: Follower) {
+  const infusion = (['anemo', 'electro', 'cryo', 'hydro', 'pyro', 'geo'] as const)
+    .find(element => follower.keywords.includes(`normal_attack_${element}`))
+  return infusion ?? getCard(follower.cardId)?.normalAttackElement
+}
+
 const deckCards = getDeckCardPool()
 
 const DECK_SIZE = 40
@@ -753,13 +760,7 @@ export function attackFollower(
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
   const currentDefender = swept.players[enemyIndex].field.find(f => f.instanceId === targetId)!
   const counterDamage = effectiveAttack(swept, enemy.id, currentDefender)
-  const attackerElement = boostedAttacker.keywords.includes('normal_attack_anemo')
-    ? 'anemo' : boostedAttacker.keywords.includes('normal_attack_electro')
-    ? 'electro' : boostedAttacker.keywords.includes('normal_attack_cryo')
-      ? 'cryo' : boostedAttacker.keywords.includes('normal_attack_hydro')
-        ? 'hydro' : boostedAttacker.keywords.includes('normal_attack_pyro')
-          ? 'pyro' : boostedAttacker.keywords.includes('normal_attack_geo')
-          ? 'geo' : getCard(attacker.cardId)?.normalAttackElement
+  const attackerElement = normalAttackElement(boostedAttacker)
   const defenderElement = getCard(defender.cardId)?.normalAttackElement
 
   // 両フォロワーの被ダメージを先に確定し、反応の副次効果を解決する。
@@ -863,7 +864,7 @@ export function attackLeader(
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const damagedLeader = damageLeader(
     buffed.players[enemyIndex], effectiveAttack(buffed, owner.id, boostedAttacker),
-    getCard(boostedAttacker.cardId)?.normalAttackElement
+    normalAttackElement(boostedAttacker)
   )
   const hp = damagedLeader.leaderHealth
 
