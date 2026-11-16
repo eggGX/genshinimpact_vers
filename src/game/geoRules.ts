@@ -1,8 +1,8 @@
 import { captureFrame } from './presentation'
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
-import { addLeaderShield, healLeader, damageLeader } from './leaderShield'
-import { grantShield, resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { addLeaderShield, healLeader } from './leaderShield'
+import { grantShield, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 import { summonFollowers } from './neutralRules'
 
 let nextLiyueHarborId = 1
@@ -158,9 +158,7 @@ export function geoAttack(state: GameState, ownerId: string, attackerId: string)
   if (attacker.cardId === 'C092') {
     const opponent = state.players.find(p => p.id !== ownerId)
     if (!opponent) return state
-    const damaged = damageLeader(opponent, 1)
-    return { ...update(state, opponent.id, () => damaged),
-      winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId }
+    return resolveLeaderElementalHit(state, state.players.findIndex(p=>p.id===opponent.id), 1)
   }
   return state
 }
@@ -216,9 +214,7 @@ export function geoSpell(
     // Index 0 denotes the opponent's leader.
     const chosen = Math.floor(Math.random() * (targets.length + 1))
     if (chosen === 0) {
-      const damaged = damageLeader(enemy, 1, 'geo')
-      result = { ...update(result, enemy.id, () => damaged),
-        winnerId: damaged.leaderHealth === 0 ? ownerId : result.winnerId }
+      result = resolveLeaderElementalHit(result, foeIndex, 1, 'geo', ownerIndex)
     } else {
       const target = targets[chosen - 1]
       const outcome = resolveElementalDamage(target, 1, 'geo')
@@ -354,8 +350,7 @@ export function geoChioriBurst(state: GameState, ownerId: string,
     const targets=foe.field.filter(f=>f.health>0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
     const choice=Math.floor(Math.random()*(targets.length+1))
     if(choice===0){
-      const damaged=damageLeader(foe,2,'geo')
-      result={...update(result,foe.id,()=>damaged),winnerId:damaged.leaderHealth===0?ownerId:result.winnerId}
+      result=deaths(resolveLeaderElementalHit(result,1-i,2,'geo',i))
     }else{
       const victim=targets[choice-1],hit=resolveElementalDamage(victim,2,'geo')
       const updated=update(result,foe.id,p=>({...p,field:p.field.map(f=>f.instanceId===victim.instanceId?hit.follower:f)}))
