@@ -103,7 +103,13 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
             <CardArtwork cardId={f.cardId} name={card?.name ?? f.cardId}/>
             <strong>{card?.name ?? f.cardId}</strong>
             <ElementIcon element={card?.element ?? 'none'} size="xs"/>
+            <span className="online-follower-aura" aria-label={`付着：${(f.aura ?? []).map(a=>a.element).join('、') || 'なし'}`}>
+              {(f.aura ?? []).map((a,i)=><ElementIcon key={i} element={a.element} size="xs"/>)}
+            </span>
             <span className="online-stats">{f.attack} / {f.health}</span>
+            {(f.shield?.normal || f.shield?.crystallize) ? <small className="online-shield">
+              盾 {f.shield.normal}+{f.shield.crystallize}
+            </small> : null}
           </button>
           {own && <div className="online-follower-actions">
             {card?.elementalSkill && <button type="button" disabled={!canAct || f.skillUsed}
@@ -133,6 +139,11 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
         <span className="leader-health">♥ <strong>{enemy.leaderHealth}</strong> / {enemy.leaderMaxHealth}</span>
       </button>
       <div className="online-resource">PP {enemy.pp}/{enemy.maxPp}　EN {enemy.energy}/5</div>
+      <div className="online-leader-aura" aria-label="相手リーダーの元素付着">
+        {(enemy.leaderAura ?? []).map((a,i)=><ElementIcon key={i} element={a.element} size="sm"/>)}
+        {(enemy.leaderAura?.length ?? 0) === 0 && <small>付着なし</small>}
+        {enemy.leaderShield && <small>盾 {enemy.leaderShield.normal}+{enemy.leaderShield.crystallize}</small>}
+      </div>
       <div className="online-resource">山札 {enemy.deckCount}枚 · 手札 {enemy.handCount}枚（非公開）</div>
     </section>
     <section className="field online-field">
@@ -148,6 +159,11 @@ export function OnlineMatchBoard({ match, pending, onAction }: {
         <span className="leader-health">♥ <strong>{self.leaderHealth}</strong> / {self.leaderMaxHealth}</span>
       </div>
       <div className="online-resource">PP {self.pp}/{self.maxPp}　EN {self.energy}/5　山札 {self.deckCount}枚</div>
+      <div className="online-leader-aura" aria-label="自分のリーダーの元素付着">
+        {(self.leaderAura ?? []).map((a,i)=><ElementIcon key={i} element={a.element} size="sm"/>)}
+        {(self.leaderAura?.length ?? 0) === 0 && <small>付着なし</small>}
+        {self.leaderShield && <small>盾 {self.leaderShield.normal}+{self.leaderShield.crystallize}</small>}
+      </div>
       <button type="button" className="end-turn" disabled={!canAct} onClick={() => send({type:'endTurn'})}>ターン終了</button>
     </section>
     <div className="battle-message" role="status">{activeDescription}
