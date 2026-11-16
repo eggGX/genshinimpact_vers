@@ -31,12 +31,16 @@ service cloud.firestore {
           && resource.data.status == 'waiting'
           && resource.data.hostUid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostReady'])
-          && request.resource.data.hostReady is bool)
+          && request.resource.data.hostReady is bool
+          && (request.resource.data.hostReady == false
+            || exists(/databases/$(database)/documents/friendRooms/$(roomCode)/privateDecks/host)))
         ||
         (resource.data.guestUid == request.auth.uid
           && resource.data.status == 'waiting'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestReady'])
-          && request.resource.data.guestReady is bool)
+          && request.resource.data.guestReady is bool
+          && (request.resource.data.guestReady == false
+            || exists(/databases/$(database)/documents/friendRooms/$(roomCode)/privateDecks/guest)))
         ||
         // Host can start exactly once, after both players have committed ready.
         (resource.data.hostUid == request.auth.uid
