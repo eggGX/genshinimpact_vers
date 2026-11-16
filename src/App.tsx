@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -17,7 +17,8 @@ import {
   activateAbility,
   playCard,
 } from './game/engine'
-import type { Follower } from './game/types'
+import type { Follower, GameState } from './game/types'
+import { beginPresentation, captureFrame, compactPresentationFrames, withoutPresentation, type PresentationFrame } from './game/presentation'
 import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
@@ -59,6 +60,24 @@ function App() {
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
+  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number } | null>(null)
+  const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
+  const playbackLock = useRef(false)
+
+  useEffect(() => {
+    if (!playback) return
+    const timer = window.setTimeout(() => {
+      setPlayback(previous => {
+        if (!previous) return null
+        if (previous.index + 1 >= previous.frames.length) {
+          playbackLock.current = false
+          return null
+        }
+        return { ...previous, index: previous.index + 1 }
+      })
+    }, playbackDelay)
+    return () => window.clearTimeout(timer)
+  }, [playback, playbackDelay])
 
   useEffect(() => {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)) } catch { /* storage may be disabled */ }
@@ -69,12 +88,40 @@ function App() {
   }
   const beginMatch = () => {
     if (decks.some(deck => validateDeck(deck).length > 0)) return
+    playbackLock.current = false
+    setPlayback(null)
     setGame(createInitialGameState(decks))
     setMatchStarted(true)
     setMulliganSelection([])
     resetSelection()
   }
   const [game, setGame] = useState(createInitialGameState)
+  const shownGame = playback ? playback.frames[playback.index].state : game
+
+  const animateAction = (action: (state: GameState) => GameState, label: string) => {
+    if (playbackLock.current) return
+    const traced = beginPresentation(game)
+    const next = action(traced)
+    if (next === traced) return
+    const last = captureFrame(next, label)
+    const frames = compactPresentationFrames(game, last.presentationFrames ?? [])
+    setGame(withoutPresentation(last))
+    if (frames.length > 0) {
+      playbackLock.current = true
+      setPlayback({
+        frames: [
+          { label: label + '：効果を解決中', state: withoutPresentation(game) },
+          ...frames,
+        ],
+        index: 0,
+      })
+    }
+  }
+
+  const skipPlayback = () => {
+    playbackLock.current = false
+    setPlayback(null)
+  }
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
   const [selectedHandIndex, setSelectedHandIndex] =
@@ -87,14 +134,14 @@ function App() {
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
 
-  const currentPlayer = game.players.find(
-    p => p.id === game.currentPlayerId
+  const currentPlayer = shownGame.players.find(
+    p => p.id === shownGame.currentPlayerId
   )!
-  const opponent = game.players.find(
-    p => p.id !== game.currentPlayerId
+  const opponent = shownGame.players.find(
+    p => p.id !== shownGame.currentPlayerId
   )!
-  const winner = game.players.find(
-    p => p.id === game.winnerId
+  const winner = shownGame.players.find(
+    p => p.id === shownGame.winnerId
   )
 
   const selectedAttacker = currentPlayer.field.find(
@@ -108,6 +155,7 @@ function App() {
   }
 
   const handleReset = () => {
+    skipPlayback()
     setGame(createInitialGameState(decks))
     resetSelection()
     setMulliganSelection([])
@@ -130,7 +178,7 @@ function App() {
   }
 
   const handleEndTurn = () => {
-    setGame(previous => endTurn(previous))
+    animateAction(previous => endTurn(previous), 'ターン終了')
     resetSelection()
   }
 
@@ -144,7 +192,7 @@ function App() {
     if (selectedAbility?.kind === 'skill' && currentPlayer.field.some(f =>
       f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) {
       if (['pyro', 'hydro', 'cryo', 'electro'].includes(card.element)) {
-        setGame(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`))
+        animateAction(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`), 'ファルカ：元素付与')
         resetSelection()
       }
       return
@@ -162,13 +210,12 @@ function App() {
       return
     }
 
-    setGame(previous =>
+    animateAction(previous =>
       playCard(
         previous,
         previous.currentPlayerId,
         handIndex
-      )
-    )
+      ), `${card.name} をプレイ`)
     resetSelection()
   }
 
@@ -183,7 +230,7 @@ function App() {
       setSelectedHandIndex(null)
       return
     }
-    setGame(previous => activateAbility(previous, follower.instanceId, kind))
+    animateAction(previous => activateAbility(previous, follower.instanceId, kind), `${card.name}：${kind === 'skill' ? '元素スキル' : '元素爆発'}`)
     resetSelection()
   }
 
@@ -203,14 +250,13 @@ function App() {
     if (selectedHandIndex !== null) {
       const index = selectedHandIndex
 
-      setGame(previous =>
+      animateAction(previous =>
         playCard(
           previous,
           previous.currentPlayerId,
           index,
           targetId
-        )
-      )
+        ), `${getCard(currentPlayer.hand[index])?.name ?? 'カード'} をプレイ`)
       resetSelection()
       return
     }
@@ -226,12 +272,12 @@ function App() {
           return
         }
         if (firstTargetId === targetId) return
-        setGame(previous => activateAbility(
+        animateAction(previous => activateAbility(
           previous, followerId, kind,
           firstTargetId ? `${firstTargetId}|${targetId}` : targetId
-        ))
+        ), '元素スキル：指定した対象に発動')
       } else {
-        setGame(previous => activateAbility(previous, followerId, kind, targetId))
+        animateAction(previous => activateAbility(previous, followerId, kind, targetId), '元素スキル・爆発の対象効果')
       }
       resetSelection()
       return
@@ -240,9 +286,9 @@ function App() {
     if (!selectedAttackerId) return
 
     const attackerId = selectedAttackerId
-    setGame(previous =>
+    animateAction(previous =>
       attackFollower(previous, attackerId, targetId)
-    )
+    , 'フォロワー攻撃')
     resetSelection()
   }
 
@@ -251,9 +297,9 @@ function App() {
 
     const attackerId = selectedAttackerId
 
-    setGame(previous =>
+    animateAction(previous =>
       attackLeader(previous, attackerId)
-    )
+    , 'リーダー攻撃')
     resetSelection()
   }
 
@@ -319,14 +365,14 @@ function App() {
           if (isOpponent) {
             handleEnemyFollowerClick(follower.instanceId)
           } else if (isFriendlyTarget && selectedHandIndex !== null) {
-            setGame(previous => playCard(
+            animateAction(previous => playCard(
               previous, previous.currentPlayerId,
               selectedHandIndex, follower.instanceId
-            ))
+            ), '味方フォロワーを指定してプレイ')
             resetSelection()
           } else if (isFriendlyTarget && selectedAbility) {
             const { followerId, kind } = selectedAbility
-            setGame(previous => activateAbility(previous, followerId, kind, follower.instanceId))
+            animateAction(previous => activateAbility(previous, followerId, kind, follower.instanceId), '味方フォロワーへの元素能力')
             resetSelection()
           } else {
             handleSelectAttacker(follower)
@@ -609,10 +655,10 @@ function App() {
   }
 
   return (
-    <div className="game game--battle">
+    <div className={['game','game--battle',playback ? 'game--animating' : ''].join(' ')}>
       <header className="game-header game-header--battle">
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
-        <span className="turn-counter"><small>ROUND</small><strong>{game.turn}</strong></span>
+        <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
@@ -625,6 +671,23 @@ function App() {
           </button>
         </div>
       </header>
+
+      {playback && <div className="battle-playback" role="status" aria-live="polite">
+        <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
+          <span>戦闘演出　{playback.index + 1} / {playback.frames.length}</span>
+        </div>
+        <strong className="battle-playback-description">{playback.frames[playback.index].label}</strong>
+        <div className="battle-playback-controls">
+          <label>再生速度
+            <select value={playbackDelay} onChange={e => setPlaybackDelay(Number(e.target.value) as 450 | 900 | 1500)}>
+              <option value={1500}>ゆっくり</option>
+              <option value={900}>標準</option>
+              <option value={450}>速い</option>
+            </select>
+          </label>
+          <button type="button" onClick={skipPlayback}>演出をスキップ</button>
+        </div>
+      </div>}
 
       {winner && (
         <div className="winner-banner">
@@ -721,7 +784,7 @@ function App() {
         <button
           type="button"
           className="end-turn"
-          disabled={game.winnerId !== null}
+          disabled={shownGame.winnerId !== null || Boolean(playback)}
           onClick={handleEndTurn}
         >
           <span>END TURN</span><strong>ターン終了</strong>
@@ -754,8 +817,8 @@ function App() {
 
       {selectedHandIndex !== null && ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex]) && (
         <button type="button" onClick={() => {
-          setGame(previous => playCard(previous, previous.currentPlayerId,
-            selectedHandIndex, 'self'))
+          animateAction(previous => playCard(previous, previous.currentPlayerId,
+            selectedHandIndex, 'self'), '自身を強化して召喚')
           resetSelection()
         }}>
           自身を強化して召喚
