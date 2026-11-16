@@ -4578,3 +4578,33 @@ test('カード詳細：画像未登録のカードでも内容が表示され�
   assert.match(html,/ヒルチャール/)
   assert.match(html,/能力なし/)
 })
+
+test('リーダー元素付着：炎通常攻撃でリーダーに炎付着し物理攻撃では付着しない',async()=>{
+  const state=startedGame()
+  const pyro=place(state,0,'C014',2,3)
+  state.players[0].pp=4
+  const next=engine.attackLeader(state,pyro.instanceId)
+  assert.equal(next.players[1].leaderHealth,18)
+  assert.deepEqual(next.players[1].leaderAura?.map(a=>a.element),['pyro'])
+  const physical=startedGame()
+  const plain=place(physical,0,'C001',1,2)
+  const after=engine.attackLeader(physical,plain.instanceId)
+  assert.equal((after.players[1].leaderAura??[]).length,0)
+})
+test('リーダー元素付着：同一元素は重複せず蒸発で既存付着を消費する',async()=>{
+  const {damageLeader}=await vite.ssrLoadModule('/src/game/leaderShield.ts')
+  const initial=startedGame().players[1]
+  const pyro=damageLeader(initial,1,'pyro')
+  assert.deepEqual(pyro.leaderAura.map(a=>a.element),['pyro'])
+  const repeated=damageLeader(pyro,1,'pyro')
+  assert.deepEqual(repeated.leaderAura.map(a=>a.element),['pyro'])
+  const reacted=damageLeader(repeated,1,'hydro')
+  assert.deepEqual(reacted.leaderAura,[])
+  assert.equal(reacted.leaderHealth,15)
+})
+test('リーダー元素付着：水元素の歌声の環効果はリーダーに付着情報を保持する',async()=>{
+  const state=startedGame()
+  state.players[0].crests=[{id:'C034',turnsRemaining:2,usedElements:[]}]
+  const next=engine.endTurn(state)
+  assert.ok(next.players[0].leaderAura?.some(a=>a.element==='hydro'))
+})
