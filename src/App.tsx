@@ -64,6 +64,7 @@ function App({ online }: { online?: {
   match: OnlineMatchView
   pending: boolean
   onAction: (action: OnlineAction) => void
+  onLeave: () => void
 } } = {}) {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
   const [showFriendLobby, setShowFriendLobby] = useState(false)
@@ -625,7 +626,7 @@ function App({ online }: { online?: {
     </div>
   }
 
-  if (!online && showCardLibrary) {
+  if (showCardLibrary) {
     return <CardLibrary onBack={() => setShowCardLibrary(false)} />
   }
 
@@ -636,7 +637,7 @@ function App({ online }: { online?: {
       <div style={{ display: editingPlayer !== null ? 'none' : undefined }}>
         <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
           deck={decks[0]} onEditDeck={() => setEditingPlayer(0)}
-          renderOnlineBattle={(match, pending, onAction) => <App online={{match,pending,onAction}} />} />
+          renderOnlineBattle={(match, pending, onAction, onLeave) => <App online={{match,pending,onAction,onLeave}} />} />
       </div>
       {editingPlayer !== null && <DeckBuilder
         title="フレンド対戦：自分のデッキ"
@@ -794,12 +795,15 @@ function App({ online }: { online?: {
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
         <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
         <div style={{ display: 'flex', gap: 10 }}>
-          {!online && <button type="button" onClick={() => setShowCardLibrary(true)}>
+          <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
-          </button>}
-          {!online && <button type="button" onClick={() => { setMatchStarted(false); resetSelection() }}>
-            デッキ選択へ戻る
-          </button>}
+          </button>
+          <button type="button" onClick={() => {
+            if (online) online.onLeave()
+            else { setMatchStarted(false); resetSelection() }
+          }}>
+            {online ? 'ロビーへ戻る' : 'デッキ選択へ戻る'}
+          </button>
           {!online && <button type="button" onClick={handleReset}>
             ゲームリセット
           </button>}
