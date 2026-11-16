@@ -595,3 +595,8 @@
   .deck-setup-avatar{width:42px;height:42px;}
   .deck-setup-player{gap:9px;}
 }
+
+
+/* In-battle Traveler portraits retain the existing round leader framing. */
+.leader-avatar{overflow:hidden;}
+.leader-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;}
