@@ -216,7 +216,7 @@ export function geoSpell(
     // Index 0 denotes the opponent's leader.
     const chosen = Math.floor(Math.random() * (targets.length + 1))
     if (chosen === 0) {
-      const damaged = damageLeader(enemy, 1)
+      const damaged = damageLeader(enemy, 1, 'geo')
       result = { ...update(result, enemy.id, () => damaged),
         winnerId: damaged.leaderHealth === 0 ? ownerId : result.winnerId }
     } else {
@@ -354,7 +354,7 @@ export function geoChioriBurst(state: GameState, ownerId: string,
     const targets=foe.field.filter(f=>f.health>0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
     const choice=Math.floor(Math.random()*(targets.length+1))
     if(choice===0){
-      const damaged=damageLeader(foe,2)
+      const damaged=damageLeader(foe,2,'geo')
       result={...update(result,foe.id,()=>damaged),winnerId:damaged.leaderHealth===0?ownerId:result.winnerId}
     }else{
       const victim=targets[choice-1],hit=resolveElementalDamage(victim,2,'geo')
