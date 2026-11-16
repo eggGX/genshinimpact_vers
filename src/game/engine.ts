@@ -868,15 +868,16 @@ export function attackLeader(
   ), owner.id, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
-  const leaderResolved = resolveLeaderElementalHit(
+  const leaderResolved = resolveDeaths(resolveLeaderElementalHit(
     buffed, enemyIndex, effectiveAttack(buffed, owner.id, boostedAttacker),
     normalAttackElement(boostedAttacker), index
-  )
+  ))
+  const latestOwner = leaderResolved.players[index]
   const players = [...leaderResolved.players] as [Player, Player]
 
   players[index] = {
-    ...boostedOwner,
-    field: boostedOwner.field.map(f =>
+    ...latestOwner,
+    field: latestOwner.field.map(f =>
       f.instanceId === attackerId
         ? { ...f, hasAttacked: true,
           attacksThisTurn: (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0)) + 1 }
