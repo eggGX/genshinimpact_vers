@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Firebase Admin private keys: use secured server environment variables.
+*service-account*.json
+*firebase-adminsdk*.json
+firebase-key.json
+server/.env
+server/.env.*
