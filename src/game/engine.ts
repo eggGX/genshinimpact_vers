@@ -204,6 +204,8 @@ export function canPlayCard(
 
   if (!card || !['follower', 'spell', 'amulet'].includes(card.type) || card.implementationStatus === 'data_only') return false
   if (owner.pp < card.cost) return false
+  // C030 must have a living allied follower to receive its on-attack effect.
+  if (card.id === 'C030' && !owner.field.some(f => f.health > 0)) return false
   if (card.type !== 'spell' && owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
 
   // Targetless fanfares are optional: the follower can still enter the field.
@@ -383,6 +385,10 @@ export function playCard(
     if (choices.length && (!targetId ||
         !choices.some(f => f.instanceId === targetId))) return state
     if (!choices.length && targetId) return state
+  } else if (card.id === 'C030') {
+    // The spell targets an existing ally only; 'self' is reserved for fanfares.
+    if (!targetId || targetId === 'self' ||
+        !player.field.some(f => f.instanceId === targetId && f.health > 0)) return state
   } else if (needsFriendlyPlayTarget(card) &&
       (targetId !== 'self' && (!targetId ||
         !player.field.some(f => f.instanceId === targetId && f.health > 0)))) {
