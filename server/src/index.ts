@@ -151,6 +151,7 @@ function projectPlayers(state: GameState, seat: 0 | 1) {
       leaderShield: player.leaderShield ?? { normal: 0, crystallize: 0 },
       leaderBurningTurns: player.leaderBurningTurns ?? 0,
       leaderSuperconduct: player.leaderSuperconduct ?? false,
+      leaderQuickenCharges: player.leaderQuickenCharges ?? 0,
       leaderFrozenNextTurn: player.leaderFrozenNextTurn ?? false,
       bondOfLife: player.bondOfLife ?? 0,
     }))
