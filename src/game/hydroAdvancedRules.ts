@@ -1,8 +1,8 @@
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { summonFollowers } from './neutralRules'
-import { damageLeader, healLeader } from './leaderShield'
-import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
+import { healLeader } from './leaderShield'
+import { resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 
 let nextHydroAmuletId = 1
 
@@ -18,15 +18,7 @@ function updatePlayer(
 
 function dealLeaderDamage(state: GameState, targetIndex: number, amount: number, element?: 'hydro'): GameState {
   if (state.winnerId !== null) return state
-  const players = [...state.players] as [Player, Player]
-  const target = players[targetIndex]
-  const damaged = damageLeader(target, amount, element)
-  const hp = damaged.leaderHealth
-  players[targetIndex] = damaged
-  return {
-    ...state, players,
-    winnerId: hp === 0 ? players[1 - targetIndex].id : state.winnerId,
-  }
+  return resolveLeaderElementalHit(state, targetIndex, amount, element)
 }
 
 function hydroFollowerDamage(
