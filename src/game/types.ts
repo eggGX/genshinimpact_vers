@@ -155,7 +155,7 @@ export interface Player {
   leaderMaxHealth: number
   /** Normal / crystallize shields held by the leader (each capped at 10). */
   leaderShield?: Shield
-  /** Burning turns applied to the leader by burgeon. */
+  /** Burning turns applied to the leader by Pyro+Dendro or Burgeon. */
   leaderBurningTurns?: number
   /** Next physical hit on this leader deals +1 after superconduct. */
   leaderSuperconduct?: boolean
