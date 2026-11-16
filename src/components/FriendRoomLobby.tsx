@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react'
 import {
   createFriendRoom, fetchFriendRoom, getMyFriendRoomRole,
-  isFriendRoomsConfigured, joinFriendRoom, normalizeRoomCode,
+  isFriendRoomsConfigured, joinFriendRoom, normalizeRoomCode, setFriendRoomReady,
   type FriendRoom,
 } from '../online/firebaseRooms'
+import { validateDeck, type DeckDefinition } from '../data/deckRules'
+import { ElementIcon } from './ElementIcon'
 import './FriendRoomLobby.css'
 
-export function FriendRoomLobby({ onBack }: { onBack: () => void }) {
+export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
+  onBack: () => void
+  deck: DeckDefinition
+  onEditDeck: () => void
+}) {
   const [codeInput, setCodeInput] = useState('')
   const [room, setRoom] = useState<FriendRoom | null>(null)
   const [role, setRole] = useState<'host' | 'guest' | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [pollError, setPollError] = useState(false)
+  const deckErrors = validateDeck(deck)
+  const myReady = role === 'host' ? room?.hostReady : room?.guestReady
 
   useEffect(() => {
     if (!room) return
@@ -30,6 +38,18 @@ export function FriendRoomLobby({ onBack }: { onBack: () => void }) {
     const timer = window.setInterval(() => { void poll() }, 2500)
     return () => { active = false; window.clearInterval(timer) }
   }, [room?.code])
+
+  async function changeReady(ready: boolean) {
+    if (!room) return
+    setPending(true)
+    setError('')
+    try {
+      const latest = await setFriendRoomReady(room, ready)
+      setRoom(latest)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '準備状態の更新に失敗しました。')
+    } finally { setPending(false) }
+  }
 
   async function run(action: () => Promise<FriendRoom>) {
     setPending(true)
@@ -78,13 +98,32 @@ export function FriendRoomLobby({ onBack }: { onBack: () => void }) {
         <div className="friend-code-display">{room.code}</div>
         <button type="button" onClick={() => void navigator.clipboard.writeText(room.code)}>コードをコピー</button>
         <div className="friend-room-players">
-          <span>プレイヤー1（ホスト） <strong>登録済み</strong></span>
-          <span>プレイヤー2（ゲスト） <strong>{room.guestUid ? '参加済み' : '参加待ち'}</strong></span>
+          <span>プレイヤー1（ホスト） <strong>{room.hostReady ? '準備完了' : '準備待ち'}</strong></span>
+          <span>プレイヤー2（ゲスト） <strong>{!room.guestUid ? '参加待ち' : room.guestReady ? '準備完了' : '準備待ち'}</strong></span>
         </div>
+        <div className="friend-deck-selection">
+          <h3>自分のデッキ</h3>
+          <p>選択元素：{deck.elements.length
+            ? <span className="friend-deck-elements">{deck.elements.map(el =>
+                <ElementIcon key={el} element={el} size="sm" withLabel />)}</span>
+            : 'なし'}</p>
+          <p>カード：{deck.cards.length} / 40枚</p>
+          {deckErrors.length > 0 && <p className="friend-room-error">{deckErrors[0]}</p>}
+          <button type="button" disabled={pending || Boolean(myReady)}
+            onClick={onEditDeck}>デッキを編集</button>
+        </div>
+        <button type="button" className="friend-room-primary"
+          disabled={pending || !room.guestUid || deckErrors.length > 0}
+          onClick={() => void changeReady(!myReady)}>
+          {myReady ? '準備完了を解除' : 'このデッキで準備完了'}
+        </button>
+        {room.hostReady && room.guestReady
+          ? <p className="friend-room-both-ready">両プレイヤーが準備完了しました。対戦開始と行動同期は次の段階で実装します。</p>
+          : <p className="friend-room-notice">2人の準備完了を待っています。</p>
         {pollError && <p className="friend-room-error">接続を再確認しています。通信状況をご確認ください。</p>}
-        <p className="friend-room-notice">{room.guestUid
-          ? '2人の参加登録を確認しました。次の段階で対戦同期と非公開情報の分離を実装します。'
-          : 'フレンドにコードを伝えて参加してもらってください。接続状況は自動更新されます。'}</p>
+        {!room.guestUid && <p className="friend-room-notice">
+          フレンドにコードを伝えて参加してもらってください。接続状況は自動更新されます。
+        </p>}
         <button type="button" onClick={() => { setRoom(null); setRole(null); setError('') }}>ロビーを離れる</button>
       </section>}
       {pending && <p className="friend-room-wait">Firebaseに接続しています…</p>}
