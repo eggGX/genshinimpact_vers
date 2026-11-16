@@ -25,7 +25,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
   onBack: () => void
   deck: DeckDefinition
   onEditDeck: () => void
-  renderOnlineBattle: (match: OnlineMatchView, pending: boolean, onAction: (action: OnlineAction) => void) => ReactNode
+  renderOnlineBattle: (match: OnlineMatchView, pending: boolean, onAction: (action: OnlineAction) => void, onLeave: () => void) => ReactNode
 }) {
   const [codeInput, setCodeInput] = useState('')
   const [room, setRoom] = useState<FriendRoom | null>(null)
@@ -162,7 +162,9 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
 
   // The actual battle must be the original local battle scene, not a lobby panel.
   if (room?.status === 'playing' && onlineMatch && onlineMatch.phase !== 'mulligan' && isMatchServerConfigured()) {
-    return <>{renderOnlineBattle(onlineMatch, pending, action => { void sendMatchAction(action) })}
+    return <>{renderOnlineBattle(onlineMatch, pending, action => { void sendMatchAction(action) }, () => {
+      saveActiveRoom(null); setRoom(null); setRole(null); setOnlineMatch(null); setError(''); setMatchError('')
+    })}
       {matchError && <p className="friend-room-error">{matchError}</p>}</>
   }
 
