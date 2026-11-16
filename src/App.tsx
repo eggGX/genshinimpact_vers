@@ -605,7 +605,7 @@ function App() {
   }
 
   if (editingPlayer !== null) {
-    return <DeckBuilder title={editingPlayer === 0 ? 'プレイヤー1（自分）' : 'プレイヤー2（相手）'}
+    return <DeckBuilder title={editingPlayer === 0 ? '空（自分）' : '蛍（相手）'}
       deck={decks[editingPlayer]} onChange={deck => updateDeck(editingPlayer, deck)}
       onBack={() => setEditingPlayer(null)} />
   }
@@ -631,7 +631,7 @@ function App() {
                 />
                 <span aria-hidden="true">{index === 0 ? '空' : '蛍'}</span>
               </span>
-              <span>プレイヤー{index + 1}（{index === 0 ? '自分' : '相手'}）</span>
+              <span>{index === 0 ? '空' : '蛍'}（{index === 0 ? '自分' : '相手'}）</span>
             </h3>
             <strong>{deck.cards.length} / 40枚</strong>
             <div className="deck-setup-elements">
