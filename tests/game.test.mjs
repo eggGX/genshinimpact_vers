@@ -876,13 +876,31 @@ test('C010 第四降臨者の力：EN+3で最大5、カウントダウン7付与
   assert.deepEqual(next.players[0].crests[0].usedElements,[])
 })
 
-test('C010 第四降臨者の力：7回の自ターン終了で7属性が重複せずリーダー7ダメ', () => {
+test('C010 第四降臨者の力：7回の自ターン終了で7属性が重複せず攻撃し、元素反応ダメージも適用する', () => {
   let state=startedGame()
   state.players[0].pp=5
   state.players[0].hand=['C010']
   state=engine.playCard(state,'player1',0)
-  for(let i=0;i<13;i++) state=engine.endTurn(state)
-  assert.equal(state.players[1].leaderHealth,13)
+  const elements = new Set()
+  let previousHp = state.players[1].leaderHealth
+  for(let i=0;i<13;i++) {
+    state=engine.endTurn(state)
+    if (i % 2 !== 0) continue // 相手のターン終了では発動しない
+    const count = i / 2 + 1
+    const crest = state.players[0].crests.find(c => c.id === 'C010')
+    if (count < 7) {
+      assert.ok(crest, 'カウントダウン中はクレストを保持する')
+      assert.equal(crest.turnsRemaining, 7 - count)
+      assert.equal(crest.usedElements.length, count)
+      assert.equal(new Set(crest.usedElements).size, count)
+      elements.add(crest.usedElements[count - 1])
+    }
+    assert.ok(state.players[1].leaderHealth < previousHp, '自分のターン終了時にダメージを与える')
+    previousHp = state.players[1].leaderHealth
+  }
+  assert.equal(elements.size, 6)
+  // 7回目に使う元素もそれまで未使用。反応次第で実ダメージは7を超える。
+  assert.ok(state.players[1].leaderHealth <= 13)
   assert.deepEqual(state.players[0].crests,[])
 })
 
