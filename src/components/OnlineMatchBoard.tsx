@@ -1,115 +1,179 @@
 import { useState } from 'react'
+import { getCard, needsPlayTarget, needsFriendlyPlayTarget, needsAbilityTarget, needsFriendlyAbilityTarget } from '../game/engine'
+import { CardArtwork } from './CardArtwork'
+import { ElementIcon } from './ElementIcon'
+import { BattleCardTooltip } from './BattleCardTooltip'
 import type { OnlineAction } from '../../server/src/matchActions'
-import { getCard } from '../game/engine'
 import type { OnlineMatchView, OnlineFollowerView } from '../online/matchClient'
 import './OnlineMatchBoard.css'
 
-function followerLabel(f: OnlineFollowerView): string {
-  return `${getCard(f.cardId)?.name ?? f.cardId}（${f.attack}/${f.health}）`
-}
+type Choice =
+  | { kind: 'play'; index: number; friendly: boolean; firstId?: string }
+  | { kind: 'ability'; followerId: string; ability: 'skill' | 'burst'; friendly: boolean; firstId?: string }
+  | { kind: 'attack'; followerId: string }
+  | null
+
 export function OnlineMatchBoard({ match, pending, onAction }: {
   match: OnlineMatchView
   pending: boolean
   onAction: (action: OnlineAction) => void
 }) {
-  const [targetId, setTargetId] = useState('')
-  const [attackerId, setAttackerId] = useState('')
-  const [selectedHand, setSelectedHand] = useState(-1)
-  const [abilityFollower, setAbilityFollower] = useState('')
-  const [abilityKind, setAbilityKind] = useState<'skill' | 'burst'>('skill')
+  const [choice, setChoice] = useState<Choice>(null)
+  const [inspected, setInspected] = useState<string | null>(null)
   const self = match.players[match.seat]
   const enemy = match.players[1 - match.seat]
-  const myTurn = match.phase === 'main' && match.currentPlayerId === self.id
-  const targetOptions = [
-    ...enemy.field.map(f => ({ id: f.instanceId, name: `敵：${followerLabel(f)}` })),
-    ...self.field.map(f => ({ id: f.instanceId, name: `味方：${followerLabel(f)}` })),
-    { id: 'self', name: 'プレイするフォロワー自身（対応カードのみ）' },
-    ...(self.hand ?? []).map((id,i) => ({ id: `hand:${i}`, name: `自分の手札：${getCard(id)?.name ?? id}` })),
-  ]
-  const chosenAttacker = self.field.find(f => f.instanceId === attackerId)
-  const canSend = myTurn && !pending
-  return <div className="online-match-board">
-    <header>
-      <h3>オンライン対戦 · ターン{match.turn}</h3>
-      <p>{myTurn ? 'あなたのターン' : '相手のターン'} · 更新番号 {match.revision}</p>
-    </header>
-    <div className="online-match-players">
-      <section>
-        <h4>あなた · {self.name}</h4>
-        <p>リーダーHP {self.leaderHealth}/{self.leaderMaxHealth} · PP {self.pp}/{self.maxPp} · EN {self.energy}</p>
-        <p>手札 {self.handCount}枚 · 山札 {self.deckCount}枚</p>
-        <div className="online-match-field">{self.field.length
-          ? self.field.map(f => <span key={f.instanceId}>{followerLabel(f)}</span>)
-          : <span>フォロワーなし</span>}</div>
-      </section>
-      <section>
-        <h4>相手 · {enemy.name}</h4>
-        <p>リーダーHP {enemy.leaderHealth}/{enemy.leaderMaxHealth} · PP {enemy.pp}/{enemy.maxPp} · EN {enemy.energy}</p>
-        <p>手札 {enemy.handCount}枚（非公開） · 山札 {enemy.deckCount}枚</p>
-        <div className="online-match-field">{enemy.field.length
-          ? enemy.field.map(f => <span key={f.instanceId}>{followerLabel(f)}</span>)
-          : <span>フォロワーなし</span>}</div>
-      </section>
-    </div>
-    {match.winnerId && <p className="online-match-message">
-      {match.winnerId === self.id ? '勝利！' : '敗北'}
-    </p>}
-    <div className="online-match-actions">
-      <section>
-        <h4>手札からプレイ</h4>
-        <div className="online-match-hand">
-          {(self.hand ?? []).map((id, i) =>
-            <button key={i} type="button" className={selectedHand === i ? 'selected' : ''}
-              onClick={() => setSelectedHand(i)}>
-              <span>{getCard(id)?.name ?? id}</span>
-              <small>コスト {getCard(id)?.cost ?? '?'}</small>
-            </button>)}
+  const canAct = match.phase === 'main' && match.currentPlayerId === self.id && !pending && !match.winnerId
+  const send = (action: OnlineAction) => { if (canAct) { setChoice(null); onAction(action) } }
+  const chooseHand = (index: number) => {
+    if (!canAct) return
+    const card = getCard(self.hand?.[index] ?? '')
+    if (!card) return
+    if (choice?.kind === 'ability' && getCard(self.field.find(f => f.instanceId === choice.followerId)?.cardId ?? '')?.id === 'C083') {
+      send({ type: 'ability', followerId: choice.followerId, kind: choice.ability, targetId: `hand:${index}` })
+      return
+    }
+    // For fanfares that can buff the summoned follower, select "self" separately.
+    const friendly = needsFriendlyPlayTarget(card)
+    const enemyTarget = needsPlayTarget(card)
+    if (friendly || enemyTarget) { setChoice({kind:'play',index,friendly}); return }
+    send({type:'play',handIndex:index})
+  }
+  const chooseAbility = (follower: OnlineFollowerView, ability: 'skill' | 'burst') => {
+    if (!canAct) return
+    const card = getCard(follower.cardId)
+    if (!card) return
+    if (card.id === 'C083' && ability === 'skill') {
+      setChoice({kind:'ability',followerId:follower.instanceId,ability,friendly:false})
+      return
+    }
+    if (needsFriendlyAbilityTarget(card,ability) || needsAbilityTarget(card,ability)) {
+      setChoice({kind:'ability',followerId:follower.instanceId,ability,
+        friendly:needsFriendlyAbilityTarget(card,ability)})
+      return
+    }
+    send({type:'ability',followerId:follower.instanceId,kind:ability})
+  }
+  const chooseTarget = (id: string, friendly: boolean) => {
+    if (!canAct || !choice) return
+    if (choice.kind === 'attack') {
+      if (!friendly) send({type:'attackFollower',attackerId:choice.followerId,targetId:id})
+      return
+    }
+    if (choice.friendly !== friendly) return
+    if (choice.kind === 'play') {
+      send({type:'play',handIndex:choice.index,targetId:id})
+      return
+    }
+    const abilityCard = getCard(self.field.find(f=>f.instanceId===choice.followerId)?.cardId ?? '')
+    if (abilityCard?.id === 'C049' && choice.ability === 'skill' && enemy.field.length > 1 && !friendly) {
+      if (!choice.firstId) { setChoice({...choice,firstId:id}); return }
+      if (id === choice.firstId) return
+      send({type:'ability',followerId:choice.followerId,kind:choice.ability,targetId:`${choice.firstId}|${id}`})
+      return
+    }
+    send({type:'ability',followerId:choice.followerId,kind:choice.ability,targetId:id})
+  }
+  const activeDescription = !canAct ? '相手の操作を待っています'
+    : choice?.kind === 'attack' ? '攻撃先の敵フォロワー、または相手リーダーを選択'
+    : choice?.kind === 'play' ? 'カードの効果対象を選択（自身に付与できるカードは「自身」を選択）'
+    : choice?.kind === 'ability' ? '元素能力の対象を選択'
+    : '手札をクリックしてプレイ／味方フォロワーを選択して攻撃や能力を使用'
+  const renderField = (own: boolean) => {
+    const player = own ? self : enemy
+    return <div className="card-slot online-card-slot">
+      {player.field.map(f => {
+        const card = getCard(f.cardId)
+        return <div className="follower-wrapper" key={f.instanceId}>
+          <button type="button" className={[
+            'field-card',`card-element--${card?.element ?? 'none'}`,
+            `card-rarity--${card?.rarity ?? 'bronze'}`,
+            own && choice?.kind === 'attack' && choice.followerId === f.instanceId ? 'selected-card' : '',
+            choice && ((own && choice.kind !== 'attack' && choice.friendly) ||
+              (!own && (choice.kind === 'attack' || !choice.friendly))) ? 'attack-target' : '',
+          ].filter(Boolean).join(' ')} disabled={!canAct && !own}
+            onClick={() => {
+              if (!canAct) return
+              if (choice && ((own && choice.kind !== 'attack' && choice.friendly) ||
+                    (!own && (choice.kind === 'attack' || !choice.friendly)))) {
+                chooseTarget(f.instanceId,own)
+              } else if (own) { setChoice({kind:'attack',followerId:f.instanceId}) }
+            }}
+            onMouseEnter={() => setInspected(f.cardId)} onMouseLeave={() => setInspected(null)}
+            onFocus={() => setInspected(f.cardId)} onBlur={() => setInspected(null)}>
+            <CardArtwork cardId={f.cardId} name={card?.name ?? f.cardId}/>
+            <strong>{card?.name ?? f.cardId}</strong>
+            <ElementIcon element={card?.element ?? 'none'} size="xs"/>
+            <span className="online-stats">{f.attack} / {f.health}</span>
+          </button>
+          {own && <div className="online-follower-actions">
+            {card?.elementalSkill && <button type="button" disabled={!canAct || f.skillUsed}
+              onClick={() => chooseAbility(f,'skill')}>スキル</button>}
+            {card?.elementalBurst && <button type="button" disabled={!canAct || f.burstUsed}
+              onClick={() => chooseAbility(f,'burst')}>爆発</button>}
+          </div>}
         </div>
-        <button type="button" disabled={!canSend || selectedHand < 0}
-          onClick={() => onAction({ type:'play', handIndex:selectedHand, ...(targetId ? { targetId } : {}) })}>
-          選んだカードをプレイ
+      })}
+      {(player.amulets ?? []).map(a => <span key={a.instanceId} className="online-amulet">
+        {getCard(a.cardId)?.name ?? a.cardId} · {a.turnsRemaining}T
+      </span>)}
+      {player.field.length === 0 && (player.amulets?.length ?? 0) === 0 && <span className="online-empty">カード配置エリア</span>}
+    </div>
+  }
+  return <div className="online-battle game--battle">
+    <div className="online-battle-header"><strong>ELEMENTAL DUEL</strong>
+      <span>ROUND {match.turn} · {canAct ? 'あなたのターン' : '相手のターン'}</span>
+    </div>
+    <section className="player opponent online-player">
+      <div className="player-side-label">OPPONENT <strong>{enemy.name}</strong></div>
+      <button type="button" className="leader leader-button"
+        disabled={!canAct || choice?.kind !== 'attack'}
+        onClick={() => { if (choice?.kind === 'attack') send({type:'attackLeader',attackerId:choice.followerId}) }}>
+        <span className="leader-avatar"><img alt="" src={`${import.meta.env.BASE_URL}images/travelers/${match.seat === 0 ? 'lumine-icon.webp' : 'aether-icon.webp'}`}/></span>
+        <span className="leader-caption">{enemy.name}</span>
+        <span className="leader-health">♥ <strong>{enemy.leaderHealth}</strong> / {enemy.leaderMaxHealth}</span>
+      </button>
+      <div className="online-resource">PP {enemy.pp}/{enemy.maxPp}　EN {enemy.energy}/5</div>
+      <div className="online-resource">山札 {enemy.deckCount}枚 · 手札 {enemy.handCount}枚（非公開）</div>
+    </section>
+    <section className="field online-field">
+      <p className="zone-label">ENEMY FIELD</p>{renderField(false)}
+      <div className="field-divider"><span className="field-divider-emblem">✦</span><span className="field-divider-text">ELEMENTAL BATTLE</span></div>
+      <p className="zone-label">YOUR FIELD</p>{renderField(true)}
+    </section>
+    <section className="player self online-player">
+      <div className="player-side-label">YOU <strong>{self.name}</strong></div>
+      <div className="leader">
+        <span className="leader-avatar"><img alt="" src={`${import.meta.env.BASE_URL}images/travelers/${match.seat === 0 ? 'aether-icon.webp' : 'lumine-icon.webp'}`}/></span>
+        <span className="leader-caption">{self.name}</span>
+        <span className="leader-health">♥ <strong>{self.leaderHealth}</strong> / {self.leaderMaxHealth}</span>
+      </div>
+      <div className="online-resource">PP {self.pp}/{self.maxPp}　EN {self.energy}/5　山札 {self.deckCount}枚</div>
+      <button type="button" className="end-turn" disabled={!canAct} onClick={() => send({type:'endTurn'})}>ターン終了</button>
+    </section>
+    <div className="battle-message" role="status">{activeDescription}
+      {choice && <button type="button" onClick={()=>setChoice(null)}>選択を解除</button>}
+      {choice?.kind === 'play' && <button type="button" onClick={()=>send({type:'play',handIndex:choice.index,targetId:'self'})}>自身に効果を付与</button>}
+    </div>
+    <footer className="hand online-hand">
+      <div className="hand-label">YOUR HAND <strong>{self.handCount} / 9</strong></div>
+      <div className="hand-cards">{(self.hand ?? []).map((id,i) => {
+        const card = getCard(id)
+        return <button type="button" key={i} disabled={!canAct}
+          className={['hand-card',`card-element--${card?.element ?? 'none'}`,
+            `card-rarity--${card?.rarity ?? 'bronze'}`,
+            choice?.kind === 'play' && choice.index === i ? 'selected-card' : ''].join(' ')}
+          onClick={()=>chooseHand(i)} onMouseEnter={()=>setInspected(id)} onMouseLeave={()=>setInspected(null)}
+          onFocus={()=>setInspected(id)} onBlur={()=>setInspected(null)}>
+          <span className="card-cost">{card?.cost ?? '?'}</span>
+          <CardArtwork cardId={id} name={card?.name ?? id}/>
+          <strong>{card?.name ?? id}</strong>
+          <ElementIcon element={card?.element ?? 'none'} size="xs"/>
+          <span className="hand-card-stats">{card?.type === 'follower'
+            ? `${card.attack} / ${card.health}` : card?.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
         </button>
-      </section>
-      <section>
-        <h4>対象・攻撃・元素能力</h4>
-        <label>対象（必要な操作のみ指定）
-          <select value={targetId} onChange={e => setTargetId(e.target.value)}>
-            <option value="">指定なし</option>
-            {targetOptions.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-        </label>
-        <label>攻撃フォロワー
-          <select value={attackerId} onChange={e => setAttackerId(e.target.value)}>
-            <option value="">選択してください</option>
-            {self.field.map(f => <option key={f.instanceId} value={f.instanceId}>{followerLabel(f)}</option>)}
-          </select>
-        </label>
-        <div className="online-match-buttons">
-          <button type="button" disabled={!canSend || !chosenAttacker}
-            onClick={() => onAction({ type:'attackLeader', attackerId })}>リーダーを攻撃</button>
-          <button type="button" disabled={!canSend || !chosenAttacker || !enemy.field.some(f=>f.instanceId===targetId)}
-            onClick={() => onAction({ type:'attackFollower', attackerId, targetId })}>選択した敵フォロワーを攻撃</button>
-        </div>
-        <label>元素能力を使用するフォロワー
-          <select value={abilityFollower} onChange={e => setAbilityFollower(e.target.value)}>
-            <option value="">選択してください</option>
-            {self.field.map(f => <option key={f.instanceId} value={f.instanceId}>{followerLabel(f)}</option>)}
-          </select>
-        </label>
-        <label>能力の種類
-          <select value={abilityKind} onChange={e => setAbilityKind(e.target.value === 'burst' ? 'burst' : 'skill')}>
-            <option value="skill">元素スキル</option>
-            <option value="burst">元素爆発</option>
-          </select>
-        </label>
-        <button type="button" disabled={!canSend || !abilityFollower}
-          onClick={() => onAction({ type:'ability', followerId:abilityFollower, kind:abilityKind,
-            ...(targetId ? { targetId } : {}) })}>元素能力を発動</button>
-      </section>
-    </div>
-    <button type="button" className="online-match-end-turn" disabled={!canSend}
-      onClick={() => onAction({ type:'endTurn' })}>ターン終了</button>
-    <p className="online-match-note">試験用の操作画面です。特殊な複数対象指定などは、今後の対戦UI統合で対応します。
-      不正な対象・PP不足などはサーバー側で拒否されます。カード効果は既存のゲームエンジンで処理されます。</p>
+      })}</div>
+    </footer>
+    {match.winnerId && <div className="winner-banner">{match.winnerId === self.id ? '勝利！' : '敗北'}</div>}
+    {inspected && getCard(inspected) && <BattleCardTooltip card={getCard(inspected)!} ownerLabel="カード詳細"/>}
   </div>
 }
