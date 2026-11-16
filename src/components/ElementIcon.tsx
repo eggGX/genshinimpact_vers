@@ -16,6 +16,7 @@ export function ElementIcon({ element, size = 'sm', withLabel = false, className
   const visual = getElementVisual(element)
   const [failedImage, setFailedImage] = useState<string | null>(null)
   const showImage = Boolean(visual.image && failedImage !== visual.image)
+  const showSprite = !showImage && visual.spriteIndex !== undefined
   return <span
     className={['element-icon', `element-icon--${size}`, `element-icon--${element}`, className]
       .filter(Boolean).join(' ')}
@@ -27,7 +28,10 @@ export function ElementIcon({ element, size = 'sm', withLabel = false, className
       {showImage
         ? <img src={visual.image} alt="" draggable={false}
             onError={() => setFailedImage(visual.image ?? null)} />
-        : <span className="element-icon-symbol">{visual.symbol}</span>}
+        : showSprite
+          ? <span className="element-icon-sprite"
+              style={{ backgroundPositionY: `${(visual.spriteIndex ?? 0) * 100 / 6}%` }} />
+          : <span className="element-icon-symbol">{visual.symbol}</span>}
     </span>
     {withLabel && <span className="element-icon-label">{visual.label}</span>}
   </span>
