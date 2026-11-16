@@ -770,7 +770,9 @@ function App() {
               <ElementIcon element={a.element} size="sm" />
             </span>)}
           </span>}
-          <span className="leader-avatar" aria-hidden="true">✧</span>
+          <span className="leader-avatar" aria-hidden="true">
+            <img src={`${import.meta.env.BASE_URL}images/travelers/${opponent.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
+          </span>
           <span className="leader-caption">{opponent.name}</span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{opponent.leaderHealth}</strong><small>/{opponent.leaderMaxHealth}</small></span>
         </button>
@@ -817,7 +819,9 @@ function App() {
               <ElementIcon element={a.element} size="sm" />
             </span>)}
           </span>}
-          <span className="leader-avatar" aria-hidden="true">✦</span>
+          <span className="leader-avatar" aria-hidden="true">
+            <img src={`${import.meta.env.BASE_URL}images/travelers/${currentPlayer.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
+          </span>
           <span className="leader-caption">{currentPlayer.name}</span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
         </div>
