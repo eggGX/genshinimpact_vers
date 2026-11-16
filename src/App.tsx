@@ -293,11 +293,13 @@ function App() {
           : false)
 
     return (
-      <div key={follower.instanceId} style={{ display: 'inline-flex', flexDirection: 'column', gap: 4 }}>
+      <div key={follower.instanceId} className="follower-wrapper">
       <button
         type="button"
         className={[
           'field-card',
+          `card-element--${card?.element ?? 'none'}`,
+          `card-rarity--${card?.rarity ?? 'bronze'}`,
           canAttack ? 'can-attack' : '',
           isSelected ? 'selected-card' : '',
           isTarget ? 'attack-target' : '',
@@ -326,9 +328,7 @@ function App() {
           {card?.name ?? '不明なカード'}
         </strong>
 
-        <span>
-          {follower.attack} / {follower.health}
-        </span>
+        <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
 
         {follower.aura.length > 0 && (
           <small style={{ color: '#9fe7ff' }}>
@@ -404,13 +404,7 @@ function App() {
           <small>結晶シールド：{follower.shield.crystallize}</small>
         )}
 
-        <small>
-          {isOpponent
-            ? '敵フォロワー'
-            : canAttack
-              ? '攻撃可能'
-              : '攻撃不可'}
-        </small>
+        <small className="follower-ready">{isOpponent ? 'ENEMY' : canAttack ? 'READY' : 'WAIT'}</small>
       </button>
       {!isOpponent && (card?.elementalSkill || card?.elementalBurst) && (
         <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
@@ -611,10 +605,10 @@ function App() {
   }
 
   return (
-    <div className="game">
-      <header className="game-header">
-        <h1>原神カードゲーム</h1>
-        <span>TURN {game.turn}</span>
+    <div className="game game--battle">
+      <header className="game-header game-header--battle">
+        <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
+        <span className="turn-counter"><small>ROUND</small><strong>{game.turn}</strong></span>
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
@@ -635,6 +629,7 @@ function App() {
       )}
 
       <section className="player opponent">
+        <div className="player-side-label"><span className="side-label-dot" /> OPPONENT <strong>{opponent.name}</strong></div>
         <button
           type="button"
           className={[
@@ -650,19 +645,19 @@ function App() {
           }
           onClick={handleAttackLeader}
         >
-          <strong>{opponent.name}</strong>
-          <span>
-            HP {opponent.leaderHealth} /
-            {' '}{opponent.leaderMaxHealth}
-          </span>
+          <span className="leader-avatar" aria-hidden="true">✧</span>
+          <span className="leader-caption">{opponent.name}</span>
+          <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{opponent.leaderHealth}</strong><small>/{opponent.leaderMaxHealth}</small></span>
         </button>
 
-        <div className="pp">
-          PP {opponent.pp} / {opponent.maxPp} EN {opponent.energy} / 5
+        <div className="player-resources">
+          <div className="resource-head"><span className="resource-caption">PLAY POINT</span><strong>{opponent.pp}<small> / {opponent.maxPp}</small></strong></div>
+          <div className="pp-gems" aria-label={`PP ${opponent.pp} / ${opponent.maxPp}`}>{Array.from({length:10},(_,i)=><span key={i} className={i<opponent.pp?'pp-gem active':'pp-gem'}/>)}</div>
+          <div className="resource-head energy-head"><span className="resource-caption">ELEMENTAL ENERGY</span><strong>{opponent.energy}<small> / 5</small></strong></div>
+          <div className="energy-gems">{Array.from({length:5},(_,i)=><span key={i} className={i<opponent.energy?'energy-gem active':'energy-gem'}/>)}</div>
         </div>
-        <div>デッキ：{opponent.deck.length}枚</div>
-        <div>手札：{opponent.hand.length}枚</div>
-        <div>墓場：{opponent.graveyard.length}枚</div>
+        <div className="player-counts"><span>山札 <strong>{opponent.deck.length}</strong></span><span>手札 <strong>{opponent.hand.length}</strong></span><span>墓場 <strong>{opponent.graveyard.length}</strong></span></div>
+        <div className="player-effects">
         {(opponent.amulets ?? []).map(amulet => (
           <div key={amulet.instanceId}>
             アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
@@ -676,37 +671,39 @@ function App() {
         {(opponent.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{opponent.leaderBurningTurns}ターン</div>
         )}
+        </div>
       </section>
 
       <section className="field">
         <div className="field-row">
-          <p>{opponent.name} のフィールド</p>
+          <p className="zone-label"><span>ENEMY FIELD</span><small>{opponent.field.length} / 5</small></p>
           {renderField(opponent.field, true)}
         </div>
 
-        <div className="field-divider">VS</div>
+        <div className="field-divider"><span className="field-divider-emblem">✦</span><span className="field-divider-text">ELEMENTAL BATTLE</span></div>
 
         <div className="field-row">
-          <p>{currentPlayer.name} のフィールド</p>
+          <p className="zone-label"><span>YOUR FIELD</span><small>{currentPlayer.field.length} / 5</small></p>
           {renderField(currentPlayer.field, false)}
         </div>
       </section>
 
       <section className="player self">
+        <div className="player-side-label"><span className="side-label-dot" /> YOU <strong>{currentPlayer.name}</strong></div>
         <div className="leader">
-          <strong>{currentPlayer.name}</strong>
-          <span>
-            HP {currentPlayer.leaderHealth} /
-            {' '}{currentPlayer.leaderMaxHealth}
-          </span>
+          <span className="leader-avatar" aria-hidden="true">✦</span>
+          <span className="leader-caption">{currentPlayer.name}</span>
+          <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
         </div>
 
-        <div className="pp">
-          PP {currentPlayer.pp} / {currentPlayer.maxPp} EN {currentPlayer.energy} / 5
+        <div className="player-resources">
+          <div className="resource-head"><span className="resource-caption">PLAY POINT</span><strong>{currentPlayer.pp}<small> / {currentPlayer.maxPp}</small></strong></div>
+          <div className="pp-gems" aria-label={`PP ${currentPlayer.pp} / ${currentPlayer.maxPp}`}>{Array.from({length:10},(_,i)=><span key={i} className={i<currentPlayer.pp?'pp-gem active':'pp-gem'}/>)}</div>
+          <div className="resource-head energy-head"><span className="resource-caption">ELEMENTAL ENERGY</span><strong>{currentPlayer.energy}<small> / 5</small></strong></div>
+          <div className="energy-gems">{Array.from({length:5},(_,i)=><span key={i} className={i<currentPlayer.energy?'energy-gem active':'energy-gem'}/>)}</div>
         </div>
-        <div>デッキ：{currentPlayer.deck.length}枚</div>
-        <div>手札：{currentPlayer.hand.length}枚</div>
-        <div>墓場：{currentPlayer.graveyard.length}枚</div>
+        <div className="player-counts"><span>山札 <strong>{currentPlayer.deck.length}</strong></span><span>手札 <strong>{currentPlayer.hand.length}</strong></span><span>墓場 <strong>{currentPlayer.graveyard.length}</strong></span></div>
+        <div className="player-effects">
         {(currentPlayer.amulets ?? []).map(amulet => (
           <div key={amulet.instanceId}>
             アミュレット【{getCard(amulet.cardId)?.name ?? amulet.cardId}】
@@ -727,6 +724,7 @@ function App() {
         {(currentPlayer.leaderBurningTurns ?? 0) > 0 && (
           <div>リーダー燃焼：残り{currentPlayer.leaderBurningTurns}ターン</div>
         )}
+        </div>
 
         <button
           type="button"
@@ -734,11 +732,11 @@ function App() {
           disabled={game.winnerId !== null}
           onClick={handleEndTurn}
         >
-          ターン終了
+          <span>END TURN</span><strong>ターン終了</strong>
         </button>
       </section>
 
-      <div className="battle-message">
+      <div className="battle-message" role="status" aria-live="polite"><span className="battle-message-icon">✧</span>
         {winner
           ? 'ゲーム終了'
           : selectedAbility !== null
@@ -773,6 +771,8 @@ function App() {
       )}
 
       <footer className="hand">
+        <div className="hand-label"><span>YOUR HAND</span><strong>{currentPlayer.hand.length} / 9</strong></div>
+        <div className="hand-cards">
         {currentPlayer.hand.map((cardId, index) => {
           const card = getCard(cardId)
           if (!card) return null
@@ -789,19 +789,14 @@ function App() {
               type="button"
               className={[
                 'hand-card',
+                `card-element--${card.element}`,
+                `card-rarity--${card.rarity}`,
                 selected ? 'selected-card' : '',
               ].filter(Boolean).join(' ')}
               key={`${cardId}-${index}`}
               disabled={!playable}
               onClick={() => handlePlayCard(index)}
-              style={{
-                borderColor: selected
-                  ? '#ffd24d'
-                  : undefined,
-                boxShadow: selected
-                  ? '0 0 16px #ffd24d'
-                  : undefined,
-              }}
+
               title={card.description}
             >
               <span className="card-cost">
@@ -809,7 +804,7 @@ function App() {
               </span>
               <CardArtwork cardId={card.id} name={card.name} className="card-artwork--hand" />
               <strong>{card.name}</strong>
-              <span>
+              <span className="hand-card-stats">
                 {card.type === 'follower'
                   ? `${card.attack} / ${card.health}`
                   : card.type === 'spell' ? 'スペル' : 'アミュレット'}
@@ -817,6 +812,7 @@ function App() {
             </button>
           )
         })}
+        </div>
       </footer>
     </div>
   )
