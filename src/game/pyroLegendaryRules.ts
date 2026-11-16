@@ -50,7 +50,7 @@ export function resolveDilucBurst(
   if (result.winnerId !== null) return result
   const enemyIndex = 1 - ownerIndex
   const enemy = result.players[enemyIndex]
-  const damaged = damageLeader(enemy, 3)
+  const damaged = damageLeader(enemy, 3, 'pyro')
   return updateOwner({
     ...result,
     winnerId: damaged.leaderHealth === 0 ? ownerId : result.winnerId,
