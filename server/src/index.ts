@@ -176,7 +176,9 @@ async function submitMulligan(
     const room = roomSnap.data() as Room
     const seat = getSeat(room, uid)
     const stored = matchSnap.data() as Stored
-    if (stored.revision !== revision) throw new Error('対戦状態が更新されています。再読み込みしてください')
+    // Both players may submit concurrently. A stale revision caused solely by
+    // the opponent's mulligan is safe: the transaction checks this seat's flag
+    // and retries atomically if there is a conflicting write.
     if (stored.state.phase !== 'mulligan') {
       throw new Error('マリガンは終了しています')
     }
