@@ -51,7 +51,7 @@ test('match server has isolated dependencies and admin SDK', () => {
 test('server validates and routes main-phase actions by active player', () => {
   const commands = read('server/src/matchActions.ts')
   assert.match(backend, /stored\.state\.currentPlayerId !==/)
-  assert.match(backend, /applyOnlineAction\(stored\.state, action as OnlineAction\)/)
+  assert.match(backend, /recordOnlineAction\(stored\.state, action as OnlineAction, stored\.revision \+ 1\)/)
   assert.match(backend, /stored\.revision !== revision/)
   assert.match(backend, /match\[2\] === 'action'/)
   for (const type of ["'play'", "'ability'", "'attackFollower'", "'attackLeader'", "'endTurn'"]) {
@@ -123,4 +123,19 @@ test('online shared battle provides visible deployment marker for both seats', (
   assert.match(app, /ONLINE UI 20261116-B/)
   assert.match(lobby, /room\?\.status === 'playing' && onlineMatch && isMatchServerConfigured\(\)/)
   assert.doesNotMatch(lobby, /<OnlineMatchBoard/)
+})
+
+test('online action history is privacy projected per viewer before transmission', () => {
+  const recorder = read('server/src/onlinePresentation.ts')
+  const frontend = read('src/App.tsx')
+  assert.match(backend, /history: \(stored\.history \?\? \[\]\)\.map\(event =>/)
+  assert.match(backend, /state: projectFrameState\(frame\.state, seat\)/)
+  assert.match(backend, /players: projectPlayers\(state, seat\)/)
+  assert.match(backend, /index === seat \? \{ hand: player\.hand \} : \{\}/)
+  assert.match(backend, /history: \[\.\.\.\(stored\.history \?\? \[\]\), event\]\.slice\(-5\)/)
+  assert.match(recorder, /compactPresentationFrames\(state, captured\.presentationFrames \?\? \[\]\)/)
+  assert.match(recorder, /actionTitle\(state, action\)/)
+  assert.match(frontend, /onlinePlaybackQueue\.current\.push\(\.\.\.remaining\)/)
+  assert.match(frontend, /online\.match\.history \?\? \[\]/)
+  assert.match(frontend, /対戦行動履歴/)
 })
