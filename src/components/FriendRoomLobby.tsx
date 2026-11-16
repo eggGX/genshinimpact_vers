@@ -6,6 +6,8 @@ import {
 } from '../online/firebaseRooms'
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
+import { getCard } from '../game/engine'
+import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, type OnlineMatchView } from '../online/matchClient'
 import './FriendRoomLobby.css'
 
 const ACTIVE_ROOM_KEY = 'genshin-friend-room-code-v1'
@@ -27,6 +29,9 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [pollError, setPollError] = useState(false)
+  const [onlineMatch, setOnlineMatch] = useState<OnlineMatchView | null>(null)
+  const [mulliganSelection, setMulliganSelection] = useState<number[]>([])
+  const [matchError, setMatchError] = useState('')
   const deckErrors = validateDeck(deck)
   const myReady = role === 'host' ? room?.hostReady : room?.guestReady
 
@@ -65,6 +70,37 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
     const timer = window.setInterval(() => { void poll() }, 2500)
     return () => { active = false; window.clearInterval(timer) }
   }, [room?.code])
+
+  useEffect(() => {
+    if (room?.status !== 'playing' || !isMatchServerConfigured()) return
+    let active = true
+    const refresh = async () => {
+      try {
+        const latest = await fetchOnlineMatch(room.code)
+        if (!active) return
+        setOnlineMatch(latest)
+        setMatchError('')
+      } catch (error) {
+        if (active) setMatchError(error instanceof Error ? error.message : '対戦状態を確認できません')
+      }
+    }
+    void refresh()
+    const timer = window.setInterval(() => { void refresh() }, 2500)
+    return () => { active = false; window.clearInterval(timer) }
+  }, [room?.code, room?.status])
+
+  async function completeMulligan() {
+    if (!room || !onlineMatch) return
+    setPending(true)
+    setMatchError('')
+    try {
+      const latest = await submitOnlineMulligan(room.code, onlineMatch.revision, mulliganSelection)
+      setOnlineMatch(latest)
+      setMulliganSelection([])
+    } catch (error) {
+      setMatchError(error instanceof Error ? error.message : 'マリガンに失敗しました')
+    } finally { setPending(false) }
+  }
 
   async function changeReady(ready: boolean) {
     if (!room) return
@@ -141,13 +177,39 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
           <span>プレイヤー1（ホスト） <strong>{role === 'host' ? 'あなた' : '対戦相手'}</strong></span>
           <span>プレイヤー2（ゲスト） <strong>{role === 'guest' ? 'あなた' : '対戦相手'}</strong></span>
         </div>
-        <div className="friend-match-session-banner">
+        {isMatchServerConfigured() ? <div className="friend-match-session-banner">
+          {!onlineMatch ? <p>対戦サーバーから状態を取得しています。</p> : <>
+            <strong>対戦状態：{onlineMatch.phase === 'mulligan' ? 'マリガン' : '対戦準備完了'}</strong>
+            <p>自分の山札：{onlineMatch.players[onlineMatch.seat].deckCount}枚　
+              相手の手札：{onlineMatch.players[1 - onlineMatch.seat].handCount}枚
+            </p>
+            {onlineMatch.phase === 'mulligan' && onlineMatch.currentPlayerId === `player${onlineMatch.seat + 1}`
+              ? <div className="friend-mulligan">
+                  <p>交換するカードを選択してください（最大4枚）。</p>
+                  <div className="friend-mulligan-cards">
+                    {(onlineMatch.players[onlineMatch.seat].hand ?? []).map((cardId, i) =>
+                      <label key={i} className="friend-mulligan-card">
+                        <input type="checkbox" checked={mulliganSelection.includes(i)}
+                          onChange={() => setMulliganSelection(previous =>
+                            previous.includes(i) ? previous.filter(n => n !== i) : [...previous, i])}/>
+                        <span>{getCard(cardId)?.name ?? cardId}</span>
+                      </label>)}
+                  </div>
+                  <button type="button" className="friend-room-primary" disabled={pending}
+                    onClick={() => void completeMulligan()}>
+                    {mulliganSelection.length ? `${mulliganSelection.length}枚を交換して確定` : '交換せず確定'}
+                  </button>
+                </div>
+              : onlineMatch.phase === 'mulligan'
+                ? <p>相手のマリガン確定を待っています。</p>
+                : <p>マリガンが完了しました。カード操作・ターン制御の同期は次の段階で実装します。</p>}
+          </>}
+          {matchError && <p className="friend-room-error">{matchError}</p>}
+        </div> : <div className="friend-match-session-banner">
           <strong>2人の画面に対戦開始が反映されています</strong>
-          <p>現在はオンライン対戦セッションの接続確認段階です。手札・山札の同期、
-            マリガン、カード操作はまだ有効ではありません。</p>
-          <p>非公開カード情報を守るため、既存のローカル対戦画面をオンライン用として
-            そのまま起動することはしていません。</p>
-        </div>
+          <p>安全な山札生成・マリガンを利用するには、対戦サーバーの配置と
+            VITE_MATCH_SERVER_URL の設定が必要です。現在のSparkプランは変更していません。</p>
+        </div>}
         {pollError && <p className="friend-room-error">通信が不安定です。接続を確認してください。</p>}
         <button type="button" onClick={() => { saveActiveRoom(null); setRoom(null); setRole(null); setError('') }}>
           ロビー画面を閉じる
@@ -197,7 +259,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
       </section>}
       {pending && <p className="friend-room-wait">Firebaseに接続しています…</p>}
       {error && <p className="friend-room-error" role="alert">{error}</p>}
-      <p className="friend-room-footnote">対戦開始操作は同期されますが、手札・山札・マリガン・カード操作の同期はまだ未実装です。既存のローカル対戦は引き続き利用できます。</p>
+      <p className="friend-room-footnote">対戦サーバーが設定済みの場合は非公開の初期手札とマリガンを利用できます。カード操作のオンライン同期はまだ未実装です。</p>
     </main>
   </div>
 }
