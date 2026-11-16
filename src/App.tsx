@@ -186,7 +186,9 @@ function App() {
   const inspectOwner = inspectedCard?.kind === 'hand' ? '自分の手札'
     : inspectedCard?.kind === 'follower'
       ? shownGame.players.find(p => p.field.some(f => f.instanceId === inspectedCard.instanceId))?.name ?? '場'
-      : shownGame.players.find(p => p.amulets?.some(a => a.instanceId === inspectedCard?.instanceId))?.name ?? '場'
+      : inspectedCard?.kind === 'amulet'
+        ? shownGame.players.find(p => p.amulets?.some(a => a.instanceId === inspectedCard.instanceId))?.name ?? '場'
+        : '場'
 
   const selectedAttacker = currentPlayer.field.find(
     f => f.instanceId === selectedAttackerId
@@ -566,8 +568,7 @@ function App() {
               onMouseLeave={() => setInspectedCard(null)}>
               <div className={['field-card','amulet-card',
                 `card-element--${card?.element ?? 'none'}`,
-                `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}
->
+                `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}>
                 <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
                 <strong>{card?.name ?? amulet.cardId}</strong>
                 <ElementIcon element={card?.element ?? 'none'} size="xs" />
