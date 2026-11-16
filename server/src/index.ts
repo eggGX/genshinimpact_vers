@@ -4,7 +4,7 @@
  * Do not deploy until a server runtime is configured explicitly.
  */
 import { createServer } from 'node:http'
-import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app'
+import { initializeApp, applicationDefault, cert, getApps, type ServiceAccount } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { createInitialGameState, confirmMulligan } from '../../src/game/engine.ts'
@@ -12,7 +12,34 @@ import { applyOnlineAction, type OnlineAction } from './matchActions.ts'
 import { validateDeck, type DeckDefinition } from '../../src/data/deckRules.ts'
 import type { GameState } from '../../src/game/types.ts'
 
-if (!getApps().length) initializeApp({ credential: applicationDefault() })
+/**
+ * On Render, supply FIREBASE_SERVICE_ACCOUNT_JSON as a secret environment variable.
+ * Never add service account JSON to Git, Vite variables, or client responses.
+ * ADC remains supported for trusted Google Cloud / developer environments.
+ */
+function adminCredential() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
+  if (!raw) return applicationDefault()
+  let parsed: unknown
+  try { parsed = JSON.parse(raw) }
+  catch { throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON') }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON must be a service-account object')
+  }
+  const account = parsed as Record<string, unknown>
+  if (typeof account.project_id !== 'string' ||
+      typeof account.client_email !== 'string' ||
+      typeof account.private_key !== 'string' ||
+      !account.private_key.includes('BEGIN PRIVATE KEY')) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON is missing required service-account fields')
+  }
+  return cert({
+    projectId: account.project_id,
+    clientEmail: account.client_email,
+    privateKey: account.private_key,
+  } satisfies ServiceAccount)
+}
+if (!getApps().length) initializeApp({ credential: adminCredential() })
 const db = getFirestore()
 const auth = getAuth()
 const port = Number(process.env.PORT || 8080)
