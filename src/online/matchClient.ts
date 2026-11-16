@@ -26,6 +26,7 @@ export interface OnlinePlayerView {
   deckCount: number
   hand?: string[]
   field: OnlineFollowerView[]
+  amulets?: Array<{instanceId: string; cardId: string; turnsRemaining: number}>
   graveyard: string[]
 }
 export interface OnlineMatchView {
