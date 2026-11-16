@@ -159,7 +159,7 @@ export function resolvePyroTurnEnd(
     if (!crest || crest.id !== 'C015' || crest.turnsRemaining <= 0) continue
     result = hitAllEnemyFollowers(result, ownerId, 1, resolveDeaths)
     if (result.winnerId !== null) break
-    result = dealLeaderDamage(result, 1 - ownerIndex, 1)
+    result = dealLeaderDamage(result, 1 - ownerIndex, 1, 'pyro')
     result = updateOwner(result, ownerId, p => ({
       ...p,
       crests: (p.crests ?? []).map((c, index) => index === i
@@ -289,7 +289,7 @@ export function resolvePyroDestroy(
         { ...result, players }, enemyIndex, id, hit.reaction, hit.reactedElement, ownerIndex
       )
     }
-    return dealLeaderDamage(result, enemyIndex, 1)
+    return dealLeaderDamage(result, enemyIndex, 1, 'pyro')
   }
   if (destroyed.cardId !== 'C013') return state
   const ownerIndex = state.players.findIndex(p => p.id === ownerId)
