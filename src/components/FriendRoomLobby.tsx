@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   createFriendRoom, fetchFriendRoom, getMyFriendRoomRole,
-  isFriendRoomsConfigured, joinFriendRoom, normalizeRoomCode, setFriendRoomReady,
+  isFriendRoomsConfigured, joinFriendRoom, normalizeRoomCode, setFriendRoomReady, startFriendMatch,
   type FriendRoom,
 } from '../online/firebaseRooms'
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
@@ -51,6 +51,19 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
     } finally { setPending(false) }
   }
 
+  async function startMatch() {
+    if (!room || role !== 'host') return
+    setPending(true)
+    setError('')
+    try {
+      const started = await startFriendMatch(room)
+      setRoom(started)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '対戦開始に失敗しました。')
+      try { setRoom(await fetchFriendRoom(room.code)) } catch { /* polling will retry */ }
+    } finally { setPending(false) }
+  }
+
   async function run(action: () => Promise<FriendRoom>) {
     setPending(true)
     setError('')
@@ -92,7 +105,26 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
           <button type="button" disabled={pending || codeInput.length !== 8}
             onClick={() => void run(() => joinFriendRoom(codeInput))}>ルームに参加</button>
         </section>
-      </div> : <section className="friend-room-panel friend-room-active">
+      </div> : room.status === 'playing' ? <section className="friend-room-panel friend-room-active friend-match-session">
+        <span className="friend-lobby-subtitle">ONLINE MATCH SESSION</span>
+        <h3>対戦セッションを開始しました</h3>
+        <div className="friend-code-display">{room.code}</div>
+        <div className="friend-room-players">
+          <span>プレイヤー1（ホスト） <strong>{role === 'host' ? 'あなた' : '対戦相手'}</strong></span>
+          <span>プレイヤー2（ゲスト） <strong>{role === 'guest' ? 'あなた' : '対戦相手'}</strong></span>
+        </div>
+        <div className="friend-match-session-banner">
+          <strong>2人の画面に対戦開始が反映されています</strong>
+          <p>現在はオンライン対戦セッションの接続確認段階です。手札・山札の同期、
+            マリガン、カード操作はまだ有効ではありません。</p>
+          <p>非公開カード情報を守るため、既存のローカル対戦画面をオンライン用として
+            そのまま起動することはしていません。</p>
+        </div>
+        {pollError && <p className="friend-room-error">通信が不安定です。接続を確認してください。</p>}
+        <button type="button" onClick={() => { setRoom(null); setRole(null); setError('') }}>
+          ロビー画面を閉じる
+        </button>
+      </section> : <section className="friend-room-panel friend-room-active">
         <span className="friend-lobby-subtitle">{role === 'host' ? 'ルーム作成者' : 'ゲスト'}</span>
         <h3>ルームコード</h3>
         <div className="friend-code-display">{room.code}</div>
@@ -118,7 +150,15 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
           {myReady ? '準備完了を解除' : 'このデッキで準備完了'}
         </button>
         {room.hostReady && room.guestReady
-          ? <p className="friend-room-both-ready">両プレイヤーが準備完了しました。対戦開始と行動同期は次の段階で実装します。</p>
+          ? <>
+              <p className="friend-room-both-ready">両プレイヤーが準備完了しました。</p>
+              {role === 'host'
+                ? <button type="button" className="friend-room-primary friend-room-start"
+                    disabled={pending} onClick={() => void startMatch()}>
+                    対戦セッションを開始
+                  </button>
+                : <p className="friend-room-notice">ホストの開始操作を待っています。</p>}
+            </>
           : <p className="friend-room-notice">2人の準備完了を待っています。</p>}
         {pollError && <p className="friend-room-error">接続を再確認しています。通信状況をご確認ください。</p>}
         {!room.guestUid && <p className="friend-room-notice">
@@ -128,7 +168,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
       </section>}
       {pending && <p className="friend-room-wait">Firebaseに接続しています…</p>}
       {error && <p className="friend-room-error" role="alert">{error}</p>}
-      <p className="friend-room-footnote">現在はオンラインロビーの実装段階です。対戦アクションの同期はまだ有効化していません。既存のローカル対戦は引き続き利用できます。</p>
+      <p className="friend-room-footnote">対戦開始操作は同期されますが、手札・山札・マリガン・カード操作の同期はまだ未実装です。既存のローカル対戦は引き続き利用できます。</p>
     </main>
   </div>
 }
