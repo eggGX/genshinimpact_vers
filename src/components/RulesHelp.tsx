@@ -13,7 +13,7 @@ const reactions: RuleEntry[] = [
   { title:'凍結', elements:['hydro','cryo'], description:'水＋氷。対象を凍結状態にし、通常攻撃・元素スキル・元素爆発を封じます。', leaderDescription:'次の自分のターンの使用可能PP－1（最大PPは減りません）。同じターンに何回凍結しても減少量は最大1です。' },
   { title:'超電導', elements:['cryo','electro'], description:'氷＋雷。対象が次に受ける物理ダメージを＋2します。', leaderDescription:'次に受ける物理ダメージ＋1。物理ダメージを1回受けると効果を消費します。' },
   { title:'燃焼', elements:['pyro','dendro'], description:'炎＋草。燃焼状態を付与し、ターン終了時に燃焼ダメージを与えます。炎・草の追加攻撃で継続ターンが増えます。', leaderDescription:'リーダーに燃焼を1ターン分付与します。自分のターン終了時に1ダメージを受け、残りターンが減ります。再度燃焼すると継続ターンが加算されます。' },
-  { title:'原激化', elements:['dendro','electro'], description:'草＋雷。原激化状態を2回分付与します。雷・草の攻撃を受けるたび残り回数を消費します。', leaderDescription:'リーダーには原激化が発生しません（雷と草が付着していても原激化しません）。' },
+  { title:'原激化', elements:['dendro','electro'], description:'草＋雷。原激化状態を2回分付与します。雷・草の攻撃を受けるたび残り回数を消費します。', leaderDescription:'草＋雷で原激化が発生し、付着が解除されます。その後に受ける雷・草の攻撃2回で原激化の残り回数を1ずつ消費します（追加ダメージなし）。' },
   { title:'開花', elements:['dendro','hydro'], description:'草＋水。反応を起こしたプレイヤーの相手の場に草原核を生成します。既にある草原核には体力＋1。', leaderDescription:'反応を起こしたプレイヤーの相手の場に草原核を生成します。既にある場合はその草原核の体力＋1。' },
   { title:'烈開花', elements:['pyro','dendro'], description:'草原核に炎が当たると草原核を破壊し、その持ち主のリーダーを3ターンの燃焼状態にします。', leaderDescription:'リーダーには直接発生しません。草原核へ炎が当たった場合は、核の持ち主のリーダーに3ターンの燃焼を付与します。' },
   { title:'超開花', elements:['electro','dendro'], description:'草原核に雷が当たると草原核を破壊し、その持ち主の場のランダムな別フォロワー1体に3ダメージ。', leaderDescription:'リーダーには直接発生しません。草原核へ雷が当たった場合は、その持ち主の場の別フォロワー1体にランダム3ダメージ。' },
