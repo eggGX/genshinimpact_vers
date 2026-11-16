@@ -119,7 +119,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
         </button>
         {room.hostReady && room.guestReady
           ? <p className="friend-room-both-ready">両プレイヤーが準備完了しました。対戦開始と行動同期は次の段階で実装します。</p>
-          : <p className="friend-room-notice">2人の準備完了を待っています。</p>
+          : <p className="friend-room-notice">2人の準備完了を待っています。</p>}
         {pollError && <p className="friend-room-error">接続を再確認しています。通信状況をご確認ください。</p>}
         {!room.guestUid && <p className="friend-room-notice">
           フレンドにコードを伝えて参加してもらってください。接続状況は自動更新されます。
