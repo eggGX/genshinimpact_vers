@@ -97,6 +97,29 @@ function App() {
   }
   const [game, setGame] = useState(createInitialGameState)
   const shownGame = playback ? playback.frames[playback.index].state : game
+  const highlightedFollowers = new Set<string>()
+  const highlightedLeaders = new Set<string>()
+  if (playback && playback.index > 0) {
+    const before = playback.frames[playback.index - 1].state
+    const after = playback.frames[playback.index].state
+    for (let i = 0; i < 2; i++) {
+      const oldPlayer = before.players[i]
+      const newPlayer = after.players[i]
+      const oldFollowers = new Map(oldPlayer.field.map(f => [f.instanceId, f]))
+      for (const follower of newPlayer.field) {
+        const old = oldFollowers.get(follower.instanceId)
+        if (!old || old.health !== follower.health || old.attack !== follower.attack ||
+            old.shield.normal !== follower.shield.normal ||
+            old.shield.crystallize !== follower.shield.crystallize ||
+            old.aura.map(a => a.element).join() !== follower.aura.map(a => a.element).join()) {
+          highlightedFollowers.add(follower.instanceId)
+        }
+      }
+      if (oldPlayer.leaderHealth !== newPlayer.leaderHealth) {
+        highlightedLeaders.add(newPlayer.id)
+      }
+    }
+  }
 
   const animateAction = (action: (state: GameState) => GameState, label: string) => {
     if (playbackLock.current) return
@@ -343,7 +366,11 @@ function App() {
           : false)
 
     return (
-      <div key={follower.instanceId} className="follower-wrapper">
+      <div key={highlightedFollowers.has(follower.instanceId)
+        ? `${follower.instanceId}-hit-${playback?.index}`
+        : follower.instanceId}
+        className={['follower-wrapper',
+          highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : ''].join(' ')}>
       <button
         type="button"
         className={[
@@ -699,9 +726,11 @@ function App() {
         <div className="player-side-label"><span className="side-label-dot" /> OPPONENT <strong>{opponent.name}</strong></div>
         <button
           type="button"
+          key={highlightedLeaders.has(opponent.id) ? `opponent-hit-${playback?.index}` : 'opponent-leader'}
           className={[
             'leader',
             'leader-button',
+            highlightedLeaders.has(opponent.id) ? 'leader-hit' : '',
             selectedAttacker ? 'attack-target' : '',
           ].filter(Boolean).join(' ')}
           disabled={
@@ -751,7 +780,8 @@ function App() {
 
       <section className="player self">
         <div className="player-side-label"><span className="side-label-dot" /> YOU <strong>{currentPlayer.name}</strong></div>
-        <div className="leader">
+        <div key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
+          className={highlightedLeaders.has(currentPlayer.id) ? 'leader leader-hit' : 'leader'}>
           <span className="leader-avatar" aria-hidden="true">✦</span>
           <span className="leader-caption">{currentPlayer.name}</span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
