@@ -3,22 +3,22 @@ import type { ElementType } from '../game/types'
 import { ElementIcon } from './ElementIcon'
 import './RulesHelp.css'
 
-type RuleEntry = { title: string; description: string; elements?: ElementType[] }
+type RuleEntry = { title: string; description: string; leaderDescription?: string; elements?: ElementType[] }
 
 const reactions: RuleEntry[] = [
-  { title:'蒸発', elements:['pyro','hydro'], description:'炎＋水。今回の攻撃ダメージに＋2。反応した付着を解除します。' },
-  { title:'溶解', elements:['pyro','cryo'], description:'炎＋氷。今回の攻撃ダメージに＋3。反応した付着を解除します。' },
-  { title:'感電', elements:['hydro','electro'], description:'水＋雷。対象以外の敵フォロワー1体に1ダメージ。いなければ敵リーダーに1ダメージ。' },
-  { title:'過負荷', elements:['pyro','electro'], description:'炎＋雷。反応対象がコスト5以下のフォロワーなら持ち主の手札に戻します（手札上限9枚）。' },
-  { title:'凍結', elements:['hydro','cryo'], description:'水＋氷。対象を凍結状態にし、通常攻撃・元素スキル・元素爆発を封じます。' },
-  { title:'超電導', elements:['cryo','electro'], description:'氷＋雷。対象が次に受ける物理ダメージを＋2します。' },
-  { title:'燃焼', elements:['pyro','dendro'], description:'炎＋草。燃焼状態を付与し、ターン終了時に燃焼ダメージを与えます。炎・草の追加攻撃で継続ターンが増えます。' },
-  { title:'原激化', elements:['dendro','electro'], description:'草＋雷。原激化状態を2回分付与します。雷・草の攻撃を受けるたび残り回数を消費します。' },
-  { title:'開花', elements:['dendro','hydro'], description:'草＋水。反応を起こしたプレイヤーの相手の場に草原核を生成します。既にある草原核には体力＋1。' },
-  { title:'烈開花', elements:['pyro','dendro'], description:'草原核に炎が当たると草原核を破壊し、その持ち主のリーダーを3ターンの燃焼状態にします。' },
-  { title:'超開花', elements:['electro','dendro'], description:'草原核に雷が当たると草原核を破壊し、その持ち主の場のランダムな別フォロワー1体に3ダメージ。' },
-  { title:'拡散', elements:['anemo'], description:'風攻撃が炎・水・氷・雷の付着に当たると、その元素を敵の別フォロワーへ拡散し1ダメージと付着を与えます。追加の元素反応は起こりますが、再拡散はしません。' },
-  { title:'結晶', elements:['geo'], description:'岩攻撃が炎・水・氷・雷の付着に当たると、反応を起こした側のフォロワーに結晶シールドを1付与します。' },
+  { title:'蒸発', elements:['pyro','hydro'], description:'炎＋水。今回の攻撃ダメージに＋2。反応した付着を解除します。', leaderDescription:'攻撃ダメージ＋2。反応した元素付着を解除します。フォロワーへの蒸発と同じダメージ補正です。' },
+  { title:'溶解', elements:['pyro','cryo'], description:'炎＋氷。今回の攻撃ダメージに＋3。反応した付着を解除します。', leaderDescription:'攻撃ダメージ＋3。反応した元素付着を解除します。フォロワーへの溶解と同じダメージ補正です。' },
+  { title:'感電', elements:['hydro','electro'], description:'水＋雷。対象以外の敵フォロワー1体に1ダメージ。いなければ敵リーダーに1ダメージ。', leaderDescription:'反応した元素付着を解除します。別の敵への1ダメージなどの追加効果は、リーダーを直接攻撃した場合には発生しません（現行実装）。' },
+  { title:'過負荷', elements:['pyro','electro'], description:'炎＋雷。反応対象がコスト5以下のフォロワーなら持ち主の手札に戻します（手札上限9枚）。', leaderDescription:'反応した元素付着を解除します。リーダーは手札に戻せず、追加のダメージ効果もありません（現行実装）。' },
+  { title:'凍結', elements:['hydro','cryo'], description:'水＋氷。対象を凍結状態にし、通常攻撃・元素スキル・元素爆発を封じます。', leaderDescription:'反応した元素付着を解除します。リーダー自身は凍結状態にならず、カードのプレイやターン進行は制限されません（現行実装）。' },
+  { title:'超電導', elements:['cryo','electro'], description:'氷＋雷。対象が次に受ける物理ダメージを＋2します。', leaderDescription:'反応した元素付着を解除します。次の物理ダメージ＋2はリーダーには付与されません（現行実装）。' },
+  { title:'燃焼', elements:['pyro','dendro'], description:'炎＋草。燃焼状態を付与し、ターン終了時に燃焼ダメージを与えます。炎・草の追加攻撃で継続ターンが増えます。', leaderDescription:'反応した元素付着を解除します。この反応だけではリーダーに継続燃焼を付与しません。草原核による烈開花の燃焼とは別です（現行実装）。' },
+  { title:'原激化', elements:['dendro','electro'], description:'草＋雷。原激化状態を2回分付与します。雷・草の攻撃を受けるたび残り回数を消費します。', leaderDescription:'反応した元素付着を解除します。リーダーには原激化の残り回数が付与されません（現行実装）。' },
+  { title:'開花', elements:['dendro','hydro'], description:'草＋水。反応を起こしたプレイヤーの相手の場に草原核を生成します。既にある草原核には体力＋1。', leaderDescription:'反応した元素付着を解除します。リーダーに直接開花を起こしても、草原核は生成されません（現行実装）。' },
+  { title:'烈開花', elements:['pyro','dendro'], description:'草原核に炎が当たると草原核を破壊し、その持ち主のリーダーを3ターンの燃焼状態にします。', leaderDescription:'草原核に炎が当たる場合のみ発生します。草原核の持ち主のリーダーに3ターンの燃焼状態を付与します。リーダーへ炎を直接当てても烈開花にはなりません。' },
+  { title:'超開花', elements:['electro','dendro'], description:'草原核に雷が当たると草原核を破壊し、その持ち主の場のランダムな別フォロワー1体に3ダメージ。', leaderDescription:'草原核に雷が当たる場合のみ発生します。草原核の持ち主の場の別フォロワーにランダム3ダメージ。リーダーへ雷を直接当てても超開花にはなりません。' },
+  { title:'拡散', elements:['anemo'], description:'風攻撃が炎・水・氷・雷の付着に当たると、その元素を敵の別フォロワーへ拡散し1ダメージと付着を与えます。追加の元素反応は起こりますが、再拡散はしません。', leaderDescription:'風攻撃で炎・水・氷・雷の付着が反応すると、付着を解除します。リーダーを直接対象とした場合、別の敵への拡散ダメージは発生しません（現行実装）。' },
+  { title:'結晶', elements:['geo'], description:'岩攻撃が炎・水・氷・雷の付着に当たると、反応を起こした側のフォロワーに結晶シールドを1付与します。', leaderDescription:'岩攻撃で炎・水・氷・雷の付着が反応すると、付着を解除します。リーダーを直接対象とした場合、結晶シールドは生成されません（現行実装）。' },
 ]
 
 const keywords: RuleEntry[] = [
@@ -54,7 +54,10 @@ function Entries({ entries }: { entries: RuleEntry[] }) {
       <h3>{entry.elements && <span className="rules-help-elements">
         {entry.elements.map((element, i) => <ElementIcon element={element} key={i} size="sm"/>)}
       </span>}{entry.title}</h3>
-      <p>{entry.description}</p>
+      {entry.leaderDescription ? <>
+        <p><span className="rules-help-target">フォロワー</span>{entry.description}</p>
+        <p><span className="rules-help-target rules-help-target--leader">リーダー</span>{entry.leaderDescription}</p>
+      </> : <p>{entry.description}</p>}
     </article>
   )}</div>
 }
@@ -99,7 +102,7 @@ export function RulesHelp() {
           <button type="button" aria-pressed={tab === 'basics'} className={tab === 'basics' ? 'active' : ''} onClick={() => setTab('basics')}>基本ルール</button>
         </nav>
         <div className="rules-help-content" key={tab}>
-          {tab === 'reactions' && <><p className="rules-help-note">元素攻撃で付着が反応した際に起こる効果です。カード独自の能力により追加効果が発生する場合があります。</p><Entries entries={reactions} /></>}
+          {tab === 'reactions' && <><p className="rules-help-note">元素反応は対象がフォロワーかリーダーかで効果が異なる場合があります。以下は現在のゲームエンジンの実装に基づく説明です。</p><Entries entries={reactions} /></>}
           {tab === 'keywords' && <Entries entries={keywords} />}
           {tab === 'basics' && <Entries entries={basics} />}
         </div>
