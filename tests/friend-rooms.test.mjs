@@ -70,3 +70,21 @@ test('readiness is frozen when the room is playing', () => {
   assert.match(transport, /room\.status !== 'waiting'/)
   assert.match(rules, /resource\.data\.status == 'waiting'/)
 })
+
+test('a valid deck is stored privately before ready is set', () => {
+  assert.match(transport, /export async function uploadPrivateDeck/)
+  assert.match(transport, /validateDeck\(deck\)/)
+  assert.match(transport, /\/privateDecks\/\$\{role\}/)
+  assert.match(transport, /await uploadPrivateDeck\(room, deck\)/)
+  assert.match(lobby, /setFriendRoomReady\(room, ready, ready \? deck : undefined\)/)
+})
+test('Firestore restricts private deck access and freezes submitted decks when ready', () => {
+  assert.match(rules, /match \/privateDecks\/\{seat\}/)
+  assert.match(rules, /ownerOfSeat\(\) == request\.auth\.uid/)
+  assert.match(rules, /allow list: if false/)
+  assert.match(rules, /roomAllowsDeckWrite\(\)/)
+  assert.match(rules, /request\.resource\.data\.cards\.size\(\) == 40/)
+  assert.match(rules, /privateDecks\/host\)/)
+  assert.match(rules, /privateDecks\/guest\)/)
+  assert.match(rules, /allow delete: if false/)
+})
