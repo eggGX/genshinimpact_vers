@@ -920,11 +920,17 @@ function App({ online }: { online?: {
         </div>
       </header>
 
-      {online && online.match.phase === 'main' && (online.match.history?.length ?? 0) > 0 && <details className="online-action-history">
+      {online && (online.match.history?.length ?? 0) > 0 && <>
+        <div className="online-latest-action" role="status">
+          <span>直前の行動</span>
+          <strong>{online.match.history?.at(-1)?.title}</strong>
+        </div>
+        <details className="online-action-history">
         <summary>対戦行動履歴（直近{online.match.history?.length}件）</summary>
         <ol>{[...(online.match.history ?? [])].reverse().map(event =>
           <li key={event.revision}>{event.title}</li>)}</ol>
-      </details>}
+        </details>
+      </>}
       {playback && <div className="battle-playback" role="status" aria-live="polite">
         <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
           <span>戦闘演出 {playback.index + 1} / {playback.frames.length}</span>
