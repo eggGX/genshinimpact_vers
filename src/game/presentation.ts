@@ -76,6 +76,10 @@ export function describePresentationChange(
     if (before.energy !== after.energy) {
       changes.push(`${after.name} EN ${before.energy}→${after.energy}`)
     }
+    if ((before.leaderAura ?? []).map(a => a.element).join() !==
+        (after.leaderAura ?? []).map(a => a.element).join()) {
+      changes.push(`${after.name} の元素付着：${(after.leaderAura ?? []).map(a => a.element).join('・') || '解除'}`)
+    }
     if (before.leaderHealth !== after.leaderHealth) {
       changes.push(`${life(before)} → ${after.leaderHealth}`)
     }
