@@ -20,5 +20,5 @@
 .element-icon--none .element-icon-emblem{opacity:.78;}
 
 /* Seven 56px transparent crops packed vertically into one lightweight PNG. */
-.element-icon-sprite {display:block;width:100%;height:100%;background-image:url('/elements/elements-sprite.png');background-repeat:no-repeat;background-size:100% 700%;}
+.element-icon-sprite {display:block;width:100%;height:100%;background-repeat:no-repeat;background-size:100% 700%;}
 .element-icon:has(.element-icon-sprite) .element-icon-emblem {border:0;background:none;box-shadow:none;}
