@@ -168,6 +168,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
                 <ElementIcon key={el} element={el} size="sm" withLabel />)}</span>
             : 'なし'}</p>
           <p>カード：{deck.cards.length} / 40枚</p>
+          <p className="friend-deck-privacy">準備完了時にデッキを自分専用の非公開領域へ登録します。相手には公開されません。</p>
           {deckErrors.length > 0 && <p className="friend-room-error">{deckErrors[0]}</p>}
           <button type="button" disabled={pending || Boolean(myReady)}
             onClick={onEditDeck}>デッキを編集</button>
