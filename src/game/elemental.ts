@@ -1,6 +1,7 @@
 import type { ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { captureFrame } from './presentation'
+import { addLeaderShield, damageLeaderWithReaction } from './leaderShield'
 
 /** 元素生物の固有付着。風・岩も常時保持する。 */
 function inherentElement(follower: Follower): ElementType | undefined {
@@ -478,4 +479,85 @@ export function resolveReactionConsequence(
   const resolved = resolveReactionConsequenceCore(state, affectedOwnerIndex,
     affectedInstanceId, reaction, reactedElement, sourceOwnerIndex)
   return reaction ? captureFrame(resolved, `元素反応：${reactionLabels[reaction]}`) : resolved
+}
+
+/** Shared leader elemental hit path for attacks and card effects.
+ * Resolve collateral effects on the board without exposing internal state.
+ * Leaders cannot be affected by Quicken, Burgeon or Hyperbloom directly.
+ */
+export function resolveLeaderElementalHit(
+  state: GameState,
+  affectedIndex: number,
+  amount: number,
+  element?: ElementType,
+  sourceOwnerIndex: number = 1 - affectedIndex,
+): GameState {
+  const target = state.players[affectedIndex]
+  if (!target) return state
+  const hit = damageLeaderWithReaction(target, amount, element)
+  const players = [...state.players] as [Player, Player]
+  players[affectedIndex] = hit.player
+  let next: GameState = { ...state, players,
+    winnerId: hit.player.leaderHealth <= 0 ? players[1 - affectedIndex].id : state.winnerId }
+  if (next.winnerId !== null || !hit.reaction) return next
+  const opponent = players[1 - affectedIndex]
+
+  if (hit.reaction === 'bloom') {
+    // Same placement as follower Bloom: the triggering player's opponent.
+    const ownerIndex = 1 - sourceOwnerIndex
+    const owner = next.players[ownerIndex]
+    const core = owner.field.find(f => f.cardId === 'dendro-core')
+    const updated = [...next.players] as [Player, Player]
+    if (core) {
+      updated[ownerIndex] = { ...owner, field: owner.field.map(f =>
+        f.instanceId === core.instanceId
+          ? { ...f, health: f.health + 1, maxHealth: f.maxHealth + 1 } : f) }
+    } else if (owner.field.length + (owner.amulets?.length ?? 0) < 5) {
+      updated[ownerIndex] = { ...owner, field: [...owner.field, createDendroCore()] }
+    }
+    next = { ...next, players: updated }
+  } else if (hit.reaction === 'electro_charged') {
+    // The target is the leader: hit another follower first, or that leader if none exists.
+    const other = next.players[affectedIndex].field.find(f => f.health > 0)
+    if (other) {
+      const updated = [...next.players] as [Player, Player]
+      updated[affectedIndex] = { ...updated[affectedIndex], field: updated[affectedIndex].field.map(f =>
+        f.instanceId === other.instanceId ? absorbDamage(f, 1) : f) }
+      next = { ...next, players: updated }
+    } else {
+      const updated = [...next.players] as [Player, Player]
+      const current = updated[affectedIndex]
+      const shield = current.leaderShield ?? { normal: 0, crystallize: 0 }
+      let remaining = 1
+      const normal = Math.min(shield.normal, remaining)
+      remaining -= normal
+      const crystallize = Math.min(shield.crystallize, remaining)
+      remaining -= crystallize
+      const leaderHealth = Math.max(0, current.leaderHealth - remaining)
+      updated[affectedIndex] = { ...current, leaderHealth,
+        leaderShield: { normal: shield.normal - normal, crystallize: shield.crystallize - crystallize } }
+      next = { ...next, players: updated,
+        winnerId: leaderHealth <= 0 ? updated[1 - affectedIndex].id : next.winnerId }
+    }
+  } else if (hit.reaction === 'swirl' && hit.reactedElement) {
+    // Swirl from a leader spreads the absorbed element across target-side followers.
+    for (const victim of next.players[affectedIndex].field.filter(f => f.health > 0)) {
+      const current = next.players[affectedIndex].field.find(f => f.instanceId === victim.instanceId)
+      if (!current || current.health <= 0) continue
+      const outcome = resolveElementalDamage(current, 1, hit.reactedElement)
+      const updated = [...next.players] as [Player, Player]
+      updated[affectedIndex] = { ...updated[affectedIndex], field: updated[affectedIndex].field.map(f =>
+        f.instanceId === victim.instanceId ? outcome.follower : f) }
+      next = resolveReactionConsequence({ ...next, players: updated }, affectedIndex,
+        victim.instanceId, outcome.reaction, outcome.reactedElement, sourceOwnerIndex)
+      if (next.winnerId !== null) break
+    }
+  } else if (hit.reaction === 'crystallize') {
+    // Leader-target crystallize grants 1 crystallize shield to the attacking leader.
+    const updated = [...next.players] as [Player, Player]
+    updated[sourceOwnerIndex] = addLeaderShield(updated[sourceOwnerIndex], 1, 'crystallize')
+    next = { ...next, players: updated }
+  }
+
+  return captureFrame(next, `リーダーの元素反応：${reactionLabels[hit.reaction]}`)
 }
