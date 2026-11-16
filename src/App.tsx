@@ -347,7 +347,7 @@ function App() {
       : undefined
     const isFriendlyTarget = !isOpponent &&
       ((selectedHandIndex !== null &&
-        ['C021', 'C044', 'C066', 'C081'].includes(friendlyPlayId ?? '') &&
+        ['C021', 'C044', 'C066', 'C081', 'C030'].includes(friendlyPlayId ?? '') &&
         (friendlyPlayId !== 'C066' || card?.element === 'electro') &&
         (friendlyPlayId !== 'C081' || card?.element === 'anemo')) ||
        (selectedAbility?.kind === 'skill' && friendlySkillId === 'C066' &&
@@ -902,11 +902,13 @@ function App() {
               ? 'ディオナのスキル：2体目の敵フォロワーを選択してください'
               : '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
           : selectedHandIndex !== null
-            ? ['C021', 'C044', 'C066', 'C081'].includes(currentPlayer.hand[selectedHandIndex])
+            ? ['C021', 'C044', 'C066', 'C081', 'C030'].includes(currentPlayer.hand[selectedHandIndex])
               ? currentPlayer.hand[selectedHandIndex] === 'C081'
                 ? 'ファルザン：他の味方風元素フォロワーを選択してください'
                 : currentPlayer.hand[selectedHandIndex] === 'C066'
                 ? '九条裟羅：他の味方雷元素フォロワーを選択してください'
+                : currentPlayer.hand[selectedHandIndex] === 'C030'
+                ? '古華剣・裁雨留虹：効果を付与する味方フォロワーを選択してください'
                 : '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
               : 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
