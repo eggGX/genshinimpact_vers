@@ -148,7 +148,7 @@ export function advancedElectroBurst(
       const options = enemy.field.filter(f => f.health > 0)
       const index = Math.floor(Math.random() * (options.length + 1))
       if (index === options.length) {
-        const damaged = damageLeader(enemy, 2)
+        const damaged = damageLeader(enemy, 2, 'electro')
         result = edit(result, enemy.id, () => damaged)
         if (damaged.leaderHealth === 0) result = { ...result, winnerId: ownerId }
       } else {
