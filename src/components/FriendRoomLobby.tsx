@@ -7,7 +7,9 @@ import {
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
 import { getCard } from '../game/engine'
-import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, type OnlineMatchView } from '../online/matchClient'
+import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
+import type { OnlineAction } from '../../server/src/matchActions'
+import { OnlineMatchBoard } from './OnlineMatchBoard'
 import './FriendRoomLobby.css'
 
 const ACTIVE_ROOM_KEY = 'genshin-friend-room-code-v1'
@@ -88,6 +90,20 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
     const timer = window.setInterval(() => { void refresh() }, 2500)
     return () => { active = false; window.clearInterval(timer) }
   }, [room?.code, room?.status])
+
+  async function sendMatchAction(action: OnlineAction) {
+    if (!room || !onlineMatch) return
+    setPending(true)
+    setMatchError('')
+    try {
+      const next = await submitOnlineAction(room.code, onlineMatch.revision, action)
+      setOnlineMatch(next)
+    } catch (error) {
+      setMatchError(error instanceof Error ? error.message : '操作を送信できませんでした')
+      // A stale revision must be refreshed before the next action.
+      try { setOnlineMatch(await fetchOnlineMatch(room.code)) } catch { /* polling handles retry */ }
+    } finally { setPending(false) }
+  }
 
   async function completeMulligan() {
     if (!room || !onlineMatch) return
@@ -202,7 +218,8 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
                 </div>
               : onlineMatch.phase === 'mulligan'
                 ? <p>相手のマリガン確定を待っています。</p>
-                : <p>マリガンが完了しました。カード操作・ターン制御の同期は次の段階で実装します。</p>}
+                : <OnlineMatchBoard match={onlineMatch} pending={pending}
+                    onAction={action => { void sendMatchAction(action) }} />}
           </>}
           {matchError && <p className="friend-room-error">{matchError}</p>}
         </div> : <div className="friend-match-session-banner">
@@ -259,7 +276,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck }: {
       </section>}
       {pending && <p className="friend-room-wait">Firebaseに接続しています…</p>}
       {error && <p className="friend-room-error" role="alert">{error}</p>}
-      <p className="friend-room-footnote">対戦サーバーが設定済みの場合は非公開の初期手札とマリガンを利用できます。カード操作のオンライン同期はまだ未実装です。</p>
+      <p className="friend-room-footnote">対戦サーバーが設定済みなら非公開の初期手札・マリガン・基本的な対戦操作を同期できます。既存のローカル対戦UIとの統合は開発中です。</p>
     </main>
   </div>
 }
