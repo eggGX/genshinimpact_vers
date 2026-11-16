@@ -38,9 +38,33 @@ test('browser uses optional backend address and never uploads match state to Fir
   assert.match(frontend, /Authorization: `Bearer \$\{token\}`/)
   assert.match(lobby, /isMatchServerConfigured\(\)/)
   assert.match(lobby, /submitOnlineMulligan/)
-  assert.match(lobby, /手札・山札・マリガン・カード操作/)
+  assert.match(lobby, /既存のローカル対戦UIとの統合は開発中です/)
 })
 test('match server has isolated dependencies and admin SDK', () => {
   assert.ok(serverManifest.dependencies['firebase-admin'])
   assert.ok(serverManifest.dependencies.tsx)
+})
+
+test('server validates and routes main-phase actions by active player', () => {
+  const commands = read('server/src/matchActions.ts')
+  assert.match(backend, /stored\.state\.currentPlayerId !==/)
+  assert.match(backend, /applyOnlineAction\(stored\.state, action as OnlineAction\)/)
+  assert.match(backend, /stored\.revision !== revision/)
+  assert.match(backend, /match\[2\] === 'action'/)
+  for (const type of ["'play'", "'ability'", "'attackFollower'", "'attackLeader'", "'endTurn'"]) {
+    assert.ok(commands.includes(type), `Missing action type ${type}`)
+  }
+  assert.match(commands, /exactKeys\(value,/)
+  assert.match(commands, /export function validateOnlineAction/)
+  assert.match(commands, /playCard\(state, ownerId, action.handIndex, action.targetId\)/)
+  assert.match(commands, /activateAbility\(state, action.followerId, action.kind, action.targetId\)/)
+  assert.match(commands, /endTurn\(state\)/)
+})
+test('client requests actions without writing complete game state', () => {
+  const board = read('src/components/OnlineMatchBoard.tsx')
+  assert.match(frontend, /submitOnlineAction\(code: string, revision: number, action: OnlineAction\)/)
+  assert.match(frontend, /requestMatch\(code, 'POST', 'action', \{ revision, action \}\)/)
+  assert.match(lobby, /submitOnlineAction\(room.code, onlineMatch.revision, action\)/)
+  assert.match(board, /match.players\[1 - match.seat\]/)
+  assert.match(board, /手札 \{enemy.handCount\}枚（非公開）/)
 })
