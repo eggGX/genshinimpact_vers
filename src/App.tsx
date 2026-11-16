@@ -109,6 +109,8 @@ function App({ online }: { online?: {
   const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number } | null>(null)
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
+  const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
+  const lastAnnouncedTurn = useRef<string | null>(null)
   const lastOnlineRevision = useRef<number | null>(null)
   const onlinePlaybackQueue = useRef<OnlinePresentationEvent[]>([])
 
@@ -165,6 +167,19 @@ function App({ online }: { online?: {
       projectOnlinePlayer(online.match.players[1], online.match.seat === 1),
     ],
   } : localGame
+  // Detect transitions from actual game state, not from polling frequency.
+  // A new turn also includes the first turn immediately after both mulligans.
+  useEffect(() => {
+    if (game.phase !== 'main' || game.winnerId !== null) return
+    const turnKey = `${game.turn}:${game.currentPlayerId}`
+    if (lastAnnouncedTurn.current === turnKey) return
+    lastAnnouncedTurn.current = turnKey
+    const seatId = online ? online.match.players[online.match.seat].id : 'player1'
+    const playerName = game.players.find(p => p.id === game.currentPlayerId)?.name ?? ''
+    setTurnAnnouncement({ id: turnKey, own: game.currentPlayerId === seatId, playerName })
+    const timer = window.setTimeout(() => setTurnAnnouncement(null), 1800)
+    return () => window.clearTimeout(timer)
+  }, [game.phase, game.turn, game.currentPlayerId, game.winnerId, online?.match.seat])
   const onlineCanAct = !online || (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
     !online.pending && !online.match.winnerId && !playbackLock.current && !playback)
@@ -865,6 +880,14 @@ function App({ online }: { online?: {
 
   return (
     <div className={['game','game--battle',playback ? 'game--animating' : ''].join(' ')}>
+      {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
+        role="status" aria-live="polite" aria-atomic="true">
+        <div className="turn-announcement-panel">
+          <span className="turn-announcement-label">TURN START · {turnAnnouncement.playerName}</span>
+          <strong>{turnAnnouncement.own ? 'あなたのターンです' : '相手のターンです'}</strong>
+          <span className="turn-announcement-ornament">✦ ───────── ✦</span>
+        </div>
+      </div>}
       {online?.match.phase === 'mulligan' && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
         <div className="online-mulligan-dialog">
           <h2>{currentPlayer.name} のマリガン</h2>
