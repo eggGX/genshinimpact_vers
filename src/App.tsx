@@ -255,11 +255,13 @@ function App({ online }: { online?: {
   }
 
   const handleEndTurn = () => {
-    animateAction(previous => endTurn(previous), 'ターン終了')
+    if (online) onlineSend({type:'endTurn'})
+    else animateAction(previous => endTurn(previous), 'ターン終了')
     resetSelection()
   }
 
   const handlePlayCard = (handIndex: number) => {
+    if (!onlineCanAct) return
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
@@ -269,7 +271,8 @@ function App({ online }: { online?: {
     if (selectedAbility?.kind === 'skill' && currentPlayer.field.some(f =>
       f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) {
       if (['pyro', 'hydro', 'cryo', 'electro'].includes(card.element)) {
-        animateAction(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`), 'ファルカ：元素付与')
+        if (online) onlineSend({type:'ability',followerId:selectedAbility.followerId,kind:'skill',targetId:`hand:${handIndex}`})
+        else animateAction(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`), 'ファルカ：元素付与')
         resetSelection()
       }
       return
@@ -287,7 +290,8 @@ function App({ online }: { online?: {
       return
     }
 
-    animateAction(previous =>
+    if (online) onlineSend({type:'play',handIndex})
+    else animateAction(previous =>
       playCard(
         previous,
         previous.currentPlayerId,
@@ -297,7 +301,7 @@ function App({ online }: { online?: {
   }
 
   const handleUseAbility = (follower: Follower, kind: AbilityKind) => {
-    if (!canUseAbility(game, follower.instanceId, kind)) return
+    if (!onlineCanAct || !canUseAbility(game, follower.instanceId, kind)) return
     const card = getCard(follower.cardId)
     if (!card) return
     if ((card.id === 'C083' && kind === 'skill') ||
@@ -307,12 +311,13 @@ function App({ online }: { online?: {
       setSelectedHandIndex(null)
       return
     }
-    animateAction(previous => activateAbility(previous, follower.instanceId, kind), `${card.name}：${kind === 'skill' ? '元素スキル' : '元素爆発'}`)
+    if (online) onlineSend({type:'ability',followerId:follower.instanceId,kind})
+    else animateAction(previous => activateAbility(previous, follower.instanceId, kind), `${card.name}：${kind === 'skill' ? '元素スキル' : '元素爆発'}`)
     resetSelection()
   }
 
   const handleSelectAttacker = (follower: Follower) => {
-    if (game.winnerId !== null) return
+    if (!onlineCanAct || game.winnerId !== null) return
     if (!canFollowerAttack(follower)) return
 
     setSelectedHandIndex(null)
@@ -324,10 +329,12 @@ function App({ online }: { online?: {
   }
 
   const handleEnemyFollowerClick = (targetId: string) => {
+    if (!onlineCanAct) return
     if (selectedHandIndex !== null) {
       const index = selectedHandIndex
 
-      animateAction(previous =>
+      if (online) onlineSend({type:'play',handIndex:index,targetId})
+      else animateAction(previous =>
         playCard(
           previous,
           previous.currentPlayerId,
@@ -349,12 +356,14 @@ function App({ online }: { online?: {
           return
         }
         if (firstTargetId === targetId) return
-        animateAction(previous => activateAbility(
+        if (online) onlineSend({type:'ability',followerId,kind,targetId:firstTargetId ? `${firstTargetId}|${targetId}` : targetId})
+        else animateAction(previous => activateAbility(
           previous, followerId, kind,
           firstTargetId ? `${firstTargetId}|${targetId}` : targetId
         ), '元素スキル：指定した対象に発動')
       } else {
-        animateAction(previous => activateAbility(previous, followerId, kind, targetId), '元素スキル・爆発の対象効果')
+        if (online) onlineSend({type:'ability',followerId,kind,targetId})
+        else animateAction(previous => activateAbility(previous, followerId, kind, targetId), '元素スキル・爆発の対象効果')
       }
       resetSelection()
       return
@@ -363,18 +372,20 @@ function App({ online }: { online?: {
     if (!selectedAttackerId) return
 
     const attackerId = selectedAttackerId
-    animateAction(previous =>
+    if (online) onlineSend({type:'attackFollower',attackerId,targetId})
+    else animateAction(previous =>
       attackFollower(previous, attackerId, targetId)
     , 'フォロワー攻撃')
     resetSelection()
   }
 
   const handleAttackLeader = () => {
-    if (!selectedAttackerId) return
+    if (!selectedAttackerId || !onlineCanAct) return
 
     const attackerId = selectedAttackerId
 
-    animateAction(previous =>
+    if (online) onlineSend({type:'attackLeader',attackerId})
+    else animateAction(previous =>
       attackLeader(previous, attackerId)
     , 'リーダー攻撃')
     resetSelection()
