@@ -862,7 +862,8 @@ export function attackLeader(
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const damagedLeader = damageLeader(
-    buffed.players[enemyIndex], effectiveAttack(buffed, owner.id, boostedAttacker)
+    buffed.players[enemyIndex], effectiveAttack(buffed, owner.id, boostedAttacker),
+    getCard(boostedAttacker.cardId)?.normalAttackElement
   )
   const hp = damagedLeader.leaderHealth
 
