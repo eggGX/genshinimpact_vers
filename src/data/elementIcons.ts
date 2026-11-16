@@ -2,7 +2,8 @@ import type { ElementType } from '../game/types'
 
 /**
  * Element visual metadata. Seven extracted element marks are stored in /public/elements/elements-sprite.png.
- * Replace them with approved transparent individual SVGs here when
+ * The approved original black-and-white neutral emblem is /public/elements/none.png.
+ * Replace individual icons with higher-resolution transparent SVGs here when
  * available; every screen using ElementIcon will update automatically.
  *
  * Example:
@@ -19,7 +20,7 @@ export interface ElementVisual {
 }
 
 export const ELEMENT_VISUALS: Readonly<Record<ElementType, ElementVisual>> = {
-  none:    { label: '無元素', symbol: '◇', color: '#c5bdad' },
+  none:    { label: '無元素', symbol: '◇', color: '#e4e5ef', image: '/elements/none.png' },
   pyro:    { label: '炎', symbol: '炎', color: '#f07e63', spriteIndex: 0 },
   hydro:   { label: '水', symbol: '水', color: '#6bc9f1', spriteIndex: 1 },
   cryo:    { label: '氷', symbol: '氷', color: '#a1e4f0', spriteIndex: 2 },
