@@ -10,7 +10,7 @@ export function addLeaderShield(player: Player, amount: number, type: keyof Shie
 
 export type LeaderReaction =
   | 'vaporize' | 'melt' | 'overloaded' | 'superconduct' | 'frozen'
-  | 'electro_charged' | 'burning' | 'bloom' | 'swirl' | 'crystallize'
+  | 'electro_charged' | 'burning' | 'quicken' | 'bloom' | 'swirl' | 'crystallize'
 
 export interface LeaderDamageResult {
   player: Player
@@ -27,8 +27,8 @@ function leaderReaction(attached: ElementType, incoming: ElementType): LeaderRea
   if (pair.includes('hydro') && pair.includes('cryo')) return 'frozen'
   if (pair.includes('hydro') && pair.includes('electro')) return 'electro_charged'
   if (pair.includes('pyro') && pair.includes('dendro')) return 'burning'
+  if (pair.includes('dendro') && pair.includes('electro')) return 'quicken'
   if (pair.includes('hydro') && pair.includes('dendro')) return 'bloom'
-  // Quicken is deliberately excluded: it cannot occur on a leader.
   if (incoming === 'anemo' && ['pyro', 'hydro', 'cryo', 'electro'].includes(attached)) return 'swirl'
   if (incoming === 'geo' && ['pyro', 'hydro', 'cryo', 'electro'].includes(attached)) return 'crystallize'
   return null
@@ -39,11 +39,16 @@ function leaderReaction(attached: ElementType, incoming: ElementType): LeaderRea
  */
 export function damageLeaderWithReaction(player: Player, amount: number, element?: ElementType): LeaderDamageResult {
   const auras = player.leaderAura ?? []
+  // Like follower Quicken, the next two positive Electro/Dendro hits
+  // consume charges without creating another Quicken reaction.
+  const quickenHit = amount > 0 && (element === 'electro' || element === 'dendro')
+    && (player.leaderQuickenCharges ?? 0) > 0
   const incoming = element && !['none', 'anemo', 'geo'].includes(element) ? element : undefined
-  const index = element ? auras.findIndex(aura => leaderReaction(aura.element, element) !== null) : -1
+  const index = element && !quickenHit ? auras.findIndex(aura => leaderReaction(aura.element, element) !== null) : -1
   const reactedElement = index >= 0 ? auras[index].element : undefined
   const reaction = reactedElement && element ? leaderReaction(reactedElement, element) : null
-  const nextAuras = index >= 0
+  const nextAuras = quickenHit ? auras
+    : index >= 0
     ? auras.filter((_, i) => i !== index)
     : incoming && !auras.some(a => a.element === incoming)
       ? [...auras, { element: incoming }]
@@ -62,6 +67,8 @@ export function damageLeaderWithReaction(player: Player, amount: number, element
     player: {
       ...player,
       leaderAura: nextAuras,
+      leaderQuickenCharges: reaction === 'quicken' ? 2
+        : quickenHit ? (player.leaderQuickenCharges ?? 0) - 1 : (player.leaderQuickenCharges ?? 0),
       leaderShield: { normal: current.normal - normal, crystallize: current.crystallize - crystallize },
       leaderHealth: Math.max(0, player.leaderHealth - remaining),
       leaderSuperconduct: reaction === 'superconduct'
