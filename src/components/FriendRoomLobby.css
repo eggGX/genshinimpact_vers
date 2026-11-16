@@ -26,3 +26,11 @@
 .friend-room-wait,.friend-room-footnote{text-align:center;color:#a9c4c3;font-size:12px;margin-top:25px;}
 .friend-room-panel code{color:#f2d795;overflow-wrap:anywhere;}
 @media(max-width:680px){.friend-lobby-grid{grid-template-columns:1fr;}.friend-room-panel{padding:18px;}}
+
+
+.friend-deck-selection{margin:18px 0;padding:14px;border:1px solid #6c8c89;border-radius:10px;background:#091e2aaa;text-align:left;}
+.friend-deck-selection h3{font-size:14px;margin:0 0 8px;color:#e7d498;}
+.friend-deck-selection p{margin:5px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.friend-deck-elements{display:inline-flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.friend-deck-selection button{margin-top:10px;}
+.friend-room-both-ready{color:#adf5cc!important;font-weight:800;border:1px solid #529b75;padding:12px;border-radius:8px;background:#14382b;}
