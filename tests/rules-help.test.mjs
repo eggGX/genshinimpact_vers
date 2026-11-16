@@ -34,3 +34,18 @@ test('rules popup has reactions, keywords and basics tabs with card game rules',
   assert.match(help, /デッキ40枚/)
   assert.match(help, /元素エネルギー（EN）/)
 })
+
+
+test('every elemental reaction distinguishes follower and leader behavior', () => {
+  const allEntries = help.slice(help.indexOf('const reactions:'),help.indexOf('const keywords:'))
+  assert.equal((allEntries.match(/leaderDescription:/g) ?? []).length,13)
+  assert.match(help, /rules-help-target--leader/)
+  assert.match(help, /現在のゲームエンジンの実装/)
+  assert.match(help, /攻撃ダメージ＋2。反応した元素付着を解除/)
+  assert.match(help, /攻撃ダメージ＋3。反応した元素付着を解除/)
+  assert.match(help, /リーダー自身は凍結状態にならず/)
+  assert.match(help, /リーダーに直接開花を起こしても、草原核は生成されません/)
+  assert.match(help, /リーダーに3ターンの燃焼状態を付与/)
+  assert.match(read('src/game/leaderShield.ts'), /const bonus = reacted && element &&/)
+  assert.match(read('src/game/leaderShield.ts'), /leaderAura: nextAuras/)
+})
