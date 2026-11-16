@@ -16,11 +16,11 @@ function updatePlayer(
   return { ...state, players }
 }
 
-function dealLeaderDamage(state: GameState, targetIndex: number, amount: number): GameState {
+function dealLeaderDamage(state: GameState, targetIndex: number, amount: number, element?: 'hydro'): GameState {
   if (state.winnerId !== null) return state
   const players = [...state.players] as [Player, Player]
   const target = players[targetIndex]
-  const damaged = damageLeader(target, amount)
+  const damaged = damageLeader(target, amount, element)
   const hp = damaged.leaderHealth
   players[targetIndex] = damaged
   return {
