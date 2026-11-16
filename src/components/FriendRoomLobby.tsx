@@ -6,8 +6,6 @@ import {
 } from '../online/firebaseRooms'
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
-import { CardArtwork } from './CardArtwork'
-import { getCard } from '../game/engine'
 import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
 import type { OnlineAction } from '../../server/src/matchActions'
 import './FriendRoomLobby.css'
@@ -24,7 +22,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
   onBack: () => void
   deck: DeckDefinition
   onEditDeck: () => void
-  renderOnlineBattle: (match: OnlineMatchView, pending: boolean, onAction: (action: OnlineAction) => void, onLeave: () => void) => ReactNode
+  renderOnlineBattle: (match: OnlineMatchView, pending: boolean, onAction: (action: OnlineAction) => void, onMulligan: (indices: number[]) => void, onLeave: () => void) => ReactNode
 }) {
   const [codeInput, setCodeInput] = useState('')
   const [room, setRoom] = useState<FriendRoom | null>(null)
@@ -33,7 +31,6 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
   const [error, setError] = useState('')
   const [pollError, setPollError] = useState(false)
   const [onlineMatch, setOnlineMatch] = useState<OnlineMatchView | null>(null)
-  const [mulliganSelection, setMulliganSelection] = useState<number[]>([])
   const [matchError, setMatchError] = useState('')
   const deckErrors = validateDeck(deck)
   const myReady = role === 'host' ? room?.hostReady : room?.guestReady
@@ -106,14 +103,13 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
     } finally { setPending(false) }
   }
 
-  async function completeMulligan() {
+  async function completeMulligan(indices: number[]) {
     if (!room || !onlineMatch) return
     setPending(true)
     setMatchError('')
     try {
-      const latest = await submitOnlineMulligan(room.code, onlineMatch.revision, mulliganSelection)
+      const latest = await submitOnlineMulligan(room.code, onlineMatch.revision, indices)
       setOnlineMatch(latest)
-      setMulliganSelection([])
     } catch (error) {
       setMatchError(error instanceof Error ? error.message : 'マリガンに失敗しました')
     } finally { setPending(false) }
@@ -160,8 +156,8 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
   }
 
   // The actual battle must be the original local battle scene, not a lobby panel.
-  if (room?.status === 'playing' && onlineMatch && onlineMatch.phase !== 'mulligan' && isMatchServerConfigured()) {
-    return <>{renderOnlineBattle(onlineMatch, pending, action => { void sendMatchAction(action) }, () => {
+  if (room?.status === 'playing' && onlineMatch && isMatchServerConfigured()) {
+    return <>{renderOnlineBattle(onlineMatch, pending, action => { void sendMatchAction(action) }, indices => { void completeMulligan(indices) }, () => {
       saveActiveRoom(null); setRoom(null); setRole(null); setOnlineMatch(null); setError(''); setMatchError('')
     })}
       {matchError && <p className="friend-room-error">{matchError}</p>}</>
@@ -208,39 +204,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
             <p>自分の山札：{onlineMatch.players[onlineMatch.seat].deckCount}枚　
               相手の手札：{onlineMatch.players[1 - onlineMatch.seat].handCount}枚
             </p>
-            {onlineMatch.phase === 'mulligan' && !onlineMatch.mulliganReady?.[onlineMatch.seat]
-              ? <div className="friend-mulligan">
-                  <h3>マリガン · {onlineMatch.seat === 0 ? '空' : '蛍'}</h3>
-                  <p>交換するカードをクリックして選択してください。空と蛍は同時にマリガンできます。</p>
-                  <p>空：{onlineMatch.mulliganReady?.[0] ? '確定済み' : '選択中'}　
-                     蛍：{onlineMatch.mulliganReady?.[1] ? '確定済み' : '選択中'}</p>
-                  <div className="mulligan-cards friend-mulligan-cards">
-                    {(onlineMatch.players[onlineMatch.seat].hand ?? []).map((cardId, i) => {
-                      const card = getCard(cardId)
-                      const selected = mulliganSelection.includes(i)
-                      return <button key={i} type="button" disabled={pending}
-                        className={['mulligan-card', `card-element--${card?.element ?? 'none'}`,
-                          `card-rarity--${card?.rarity ?? 'bronze'}`, selected ? 'selected' : ''].join(' ')}
-                        aria-pressed={selected}
-                        onClick={() => setMulliganSelection(previous => previous.includes(i)
-                          ? previous.filter(n => n !== i) : [...previous, i])}>
-                        <span>コスト {card?.cost ?? '?'}</span>
-                        <CardArtwork cardId={cardId} name={card?.name ?? cardId} className="card-artwork--mulligan"/>
-                        <strong>{card?.name ?? cardId}</strong>
-                        <span>{card?.type === 'follower' ? `${card.attack} / ${card.health}` :
-                          card?.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
-                        <span>{selected ? '交換する ✓' : 'キープ'}</span>
-                      </button>
-                    })}
-                  </div>
-                  <button type="button" className="friend-room-primary" disabled={pending}
-                    onClick={() => void completeMulligan()}>
-                    {mulliganSelection.length ? `${mulliganSelection.length}枚を交換して確定` : 'すべてキープして確定'}
-                  </button>
-                </div>
-              : onlineMatch.phase === 'mulligan'
-                ? <p>マリガン確定済み。相手のマリガン完了を待っています。（空・蛍の両者が確定すると先攻1ターン目を開始します）</p>
-                : <p>対戦画面へ移動しています。</p>}
+            <p>対戦画面へ移動しています。</p>
           </>}
           {matchError && <p className="friend-room-error">{matchError}</p>}
         </div> : <div className="friend-match-session-banner">
