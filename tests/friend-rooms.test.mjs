@@ -42,7 +42,7 @@ test('Firestore rules can be deployed along with Hosting', () => {
 })
 test('online session switches from lobby to the shared local battle screen', () => {
   assert.match(lobby, /renderOnlineBattle\(onlineMatch, pending/)
-  assert.match(app, /<App online=\{\{match,pending,onAction,onLeave\}\}/)
+  assert.match(app, /<App online=\{\{match,pending,onAction,onMulligan,onLeave\}\}/)
   assert.match(lobby, /対戦セッションを開始しました/)
 })
 
