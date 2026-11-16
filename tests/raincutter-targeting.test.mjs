@@ -18,5 +18,5 @@ test('Raincutter damages the declared attack target with Hydro before combat', (
   assert.match(engine, /const swept = raincutterAttackFollower\(/)
   assert.match(engine, /const triggered = raincutterAttackLeader\(/)
   assert.match(hydro, /resolveElementalDamage\(target, 1, 'hydro'\)/)
-  assert.match(hydro, /damageLeader\(enemy, 1, 'hydro'\)/)
+  assert.match(hydro, /resolveLeaderElementalHit\(state, 1-index, 1, 'hydro', index\)/)
 })
