@@ -9,7 +9,8 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { createInitialGameState } from '../../src/game/engine.ts'
 import { applyIndependentMulligan, type MulliganFlags } from './mulligan.ts'
-import { applyOnlineAction, type OnlineAction } from './matchActions.ts'
+import type { OnlineAction } from './matchActions.ts'
+import { recordOnlineAction, type RecordedOnlineEvent } from './onlinePresentation.ts'
 import { validateDeck, type DeckDefinition } from '../../src/data/deckRules.ts'
 import type { GameState } from '../../src/game/types.ts'
 
@@ -56,7 +57,7 @@ type Room = {
   guestReady: boolean
   status: string
 }
-type Stored = { state: GameState; revision: number; mulliganReady?: MulliganFlags }
+type Stored = { state: GameState; revision: number; mulliganReady?: MulliganFlags; history?: RecordedOnlineEvent[] }
 
 function json(res: import('node:http').ServerResponse, status: number, data: unknown) {
   res.writeHead(status, {
@@ -108,7 +109,30 @@ function projectState(stored: Stored, seat: 0 | 1) {
     phase: state.phase,
     currentPlayerId: state.currentPlayerId,
     winnerId: state.winnerId,
-    players: state.players.map((player, index) => ({
+    history: (stored.history ?? []).map(event => ({
+      revision: event.revision,
+      actorId: event.actorId,
+      title: event.title,
+      frames: event.frames.map(frame => ({
+        label: frame.label,
+        state: projectFrameState(frame.state, seat),
+      })),
+    })),
+    players: projectPlayers(state, seat),
+  }
+}
+/** Project each frame independently: opponents never receive their rival's hand. */
+function projectFrameState(state: GameState, seat: 0 | 1) {
+  return {
+    turn: state.turn,
+    phase: state.phase,
+    currentPlayerId: state.currentPlayerId,
+    winnerId: state.winnerId,
+    players: projectPlayers(state, seat),
+  }
+}
+function projectPlayers(state: GameState, seat: 0 | 1) {
+  return state.players.map((player, index) => ({
       id: player.id,
       name: index === 0 ? '空' : '蛍',
       leaderHealth: player.leaderHealth,
@@ -127,8 +151,7 @@ function projectState(stored: Stored, seat: 0 | 1) {
       leaderShield: player.leaderShield ?? { normal: 0, crystallize: 0 },
       leaderBurningTurns: player.leaderBurningTurns ?? 0,
       bondOfLife: player.bondOfLife ?? 0,
-    })),
-  }
+    }))
 }
 function getMatchRef(code: string) { return db.collection('onlineMatches').doc(code) }
 
@@ -216,9 +239,13 @@ async function submitAction(
     if (stored.state.currentPlayerId !== `player${seat + 1}`) {
       throw new Error('相手のターンです')
     }
-    const next = applyOnlineAction(stored.state, action as OnlineAction)
-    if (next === stored.state) throw new Error('実行できない操作です')
-    const result: Stored = { state: next, revision: stored.revision + 1 }
+    const { next, event } = recordOnlineAction(stored.state, action as OnlineAction, stored.revision + 1)
+    const result: Stored = {
+      state: next,
+      revision: stored.revision + 1,
+      mulliganReady: stored.mulliganReady,
+      history: [...(stored.history ?? []), event].slice(-5),
+    }
     tx.update(matchRef, result)
     return { stored: result, seat }
   })
