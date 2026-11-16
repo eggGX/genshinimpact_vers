@@ -1,5 +1,6 @@
 import type { ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
+import { captureFrame } from './presentation'
 
 /** 元素生物の固有付着。風・岩も常時保持する。 */
 function inherentElement(follower: Follower): ElementType | undefined {
@@ -239,7 +240,7 @@ export function resolveElementalDamage(
  * 凍結：keywordsに'frozen'を付ける（通常攻撃不可）。
  * 対象選択UI・解除タイミングは今後拡張する。
  */
-export function resolveReactionConsequence(
+function resolveReactionConsequenceCore(
   state: GameState,
   affectedOwnerIndex: number,
   affectedInstanceId: string,
@@ -456,4 +457,25 @@ export function resolveReactionConsequence(
     return next
   }
   return state
+}
+
+const reactionLabels: Record<ElementalReaction,string> = {
+  vaporize:'蒸発', melt:'溶解', electro_charged:'感電', overloaded:'過負荷',
+  frozen:'凍結', superconduct:'超電導', burning:'燃焼', quicken:'激化',
+  swirl:'拡散', crystallize:'結晶', bloom:'開花', burgeon:'烈開花',
+  hyperbloom:'超開花',
+}
+
+/** Reaction names are recorded for cinematic display; rules stay synchronous. */
+export function resolveReactionConsequence(
+  state: GameState,
+  affectedOwnerIndex: number,
+  affectedInstanceId: string,
+  reaction: ElementalReaction | null,
+  reactedElement?: ElementType,
+  sourceOwnerIndex?: number,
+): GameState {
+  const resolved = resolveReactionConsequenceCore(state, affectedOwnerIndex,
+    affectedInstanceId, reaction, reactedElement, sourceOwnerIndex)
+  return reaction ? captureFrame(resolved, `元素反応：${reactionLabels[reaction]}`) : resolved
 }
