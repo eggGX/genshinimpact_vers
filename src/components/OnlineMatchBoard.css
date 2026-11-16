@@ -49,3 +49,9 @@
 .online-battle .end-turn{margin:10px auto}
 .online-battle .leader-button:disabled{opacity:1}
 @media(max-width:620px){.online-battle{padding:5px}.online-battle .online-card-slot{min-height:120px;gap:3px}.online-battle .online-card-slot .follower-wrapper{min-width:65px;max-width:93px}.online-battle .online-hand .hand-card{min-width:66px;max-width:92px;flex:1 1 76px}.online-battle .online-hand .hand-cards{gap:3px}}
+
+
+.online-battle .online-follower-aura{display:flex;justify-content:center;gap:2px;min-height:18px;margin:2px 0}
+.online-battle .online-shield{color:#c5e8ff;font-size:10px}
+.online-battle .online-leader-aura{display:flex;justify-content:center;align-items:center;gap:6px;min-height:25px;margin:4px 0;color:#d4ebf0}
+.online-battle .online-leader-aura small{font-size:10px}
