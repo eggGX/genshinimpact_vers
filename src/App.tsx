@@ -23,6 +23,7 @@ import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
 import { CardArtwork } from './components/CardArtwork'
+import { ElementIcon } from './components/ElementIcon'
 import { DeckBuilder } from './components/DeckBuilder'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
@@ -410,6 +411,7 @@ function App() {
         <strong>
           {card?.name ?? '不明なカード'}
         </strong>
+        {card && <ElementIcon element={card.element} size="xs" />}
         <span className="field-keywords" aria-label="カード状態">
           {follower.keywords.includes('guard') && <span title="守護" className="keyword-pill">守</span>}
           {follower.keywords.includes('storm') && <span title="疾走" className="keyword-pill">疾</span>}
@@ -418,7 +420,7 @@ function App() {
           {follower.keywords.includes('frozen') && <span title="凍結" className="keyword-pill keyword-pill--cryo">氷</span>}
           {follower.shield.normal > 0 && <span title={`通常シールド ${follower.shield.normal}`} className="keyword-pill">盾{follower.shield.normal}</span>}
           {follower.shield.crystallize > 0 && <span title={`結晶シールド ${follower.shield.crystallize}`} className="keyword-pill">晶{follower.shield.crystallize}</span>}
-          {follower.aura.map((a,i)=><span key={i} title={`元素付着：${a.element}`} className="keyword-pill keyword-pill--aura">✧</span>)}
+          {follower.aura.map((a,i)=><span key={i} className="keyword-element-aura"><ElementIcon element={a.element} size="xs" /></span>)}
         </span>
 
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
@@ -546,6 +548,7 @@ function App() {
                 title={card?.description || card?.name || amulet.cardId}>
                 <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
                 <strong>{card?.name ?? amulet.cardId}</strong>
+                <ElementIcon element={card?.element ?? 'none'} size="xs" />
                 <span className="amulet-type">アミュレット</span>
                 <span className="amulet-countdown">残り {amulet.turnsRemaining} ターン</span>
               </div>
@@ -889,6 +892,7 @@ function App() {
               </span>
               <CardArtwork cardId={card.id} name={card.name} className="card-artwork--hand" />
               <strong>{card.name}</strong>
+              <ElementIcon element={card.element} size="xs" />
               <span className="hand-card-stats">
                 {card.type === 'follower'
                   ? `${card.attack} / ${card.health}`
