@@ -28,13 +28,24 @@ service cloud.firestore {
         ||
         // Each player can change only their own readiness; no deck data stored.
         (resource.data.guestUid != ''
+          && resource.data.status == 'waiting'
           && resource.data.hostUid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostReady'])
           && request.resource.data.hostReady is bool)
         ||
         (resource.data.guestUid == request.auth.uid
+          && resource.data.status == 'waiting'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestReady'])
           && request.resource.data.guestReady is bool)
+        ||
+        // Host can start exactly once, after both players have committed ready.
+        (resource.data.hostUid == request.auth.uid
+          && resource.data.guestUid != ''
+          && resource.data.status == 'waiting'
+          && resource.data.hostReady == true
+          && resource.data.guestReady == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status == 'playing')
       );
 
       allow delete: if false;
