@@ -4481,3 +4481,44 @@ test('対象指定を要する敵破壊スペルは敵不在では使用でき�
  assert.equal(engine.canPlayCard(state,0),false)
  assert.equal(engine.playCard(state,'player1',0),state)
 })
+
+test('演出トレース：ランダム雷元素3連撃のHP変化を1撃ずつ記録して再生できる',async()=>{
+  const {beginPresentation,compactPresentationFrames,withoutPresentation}=
+    await vite.ssrLoadModule('/src/game/presentation.ts')
+  const state=startedGame()
+  state.players[0].pp=3
+  state.players[0].hand=['C061']
+  state.players[0].leaderHealth=11
+  place(state,1,'C001',0,10)
+  const traced=engine.playCard(beginPresentation(state),'player1',0)
+  const frames=compactPresentationFrames(state,traced.presentationFrames||[])
+  const hp=frames.map(frame=>frame.state.players[1].field[0]?.health).filter(n=>n!==undefined)
+  assert.deepEqual(hp,[9,8,7])
+  assert.equal(withoutPresentation(traced).players[1].field[0].health,7)
+  assert.ok(frames.every(frame=>frame.label.includes('雷')))
+})
+test('演出トレース：ターン終了時のランダム2連撃と次ターン開始を別フレームで記録',async()=>{
+  const {beginPresentation,compactPresentationFrames,withoutPresentation}=
+    await vite.ssrLoadModule('/src/game/presentation.ts')
+  const state=startedGame()
+  place(state,0,'token-guoba',1,3)
+  const traced=engine.endTurn(beginPresentation(state))
+  const frames=compactPresentationFrames(state,traced.presentationFrames||[])
+  const hp=frames.map(frame=>frame.state.players[1].leaderHealth)
+  assert.ok(hp.includes(18))
+  assert.ok(hp.includes(16))
+  assert.ok(hp.indexOf(18)<hp.indexOf(16))
+  assert.equal(withoutPresentation(traced).players[1].leaderHealth,16)
+  assert.ok(frames.some(frame=>frame.state.currentPlayerId==='player2'))
+})
+test('演出トレースは任意：無効化した通常のゲーム処理には記録が残らない',async()=>{
+  const {beginPresentation,captureFrame,withoutPresentation}=
+    await vite.ssrLoadModule('/src/game/presentation.ts')
+  const initial=startedGame()
+  assert.equal(captureFrame(initial,'test'),initial)
+  const traced=beginPresentation(initial)
+  const frame=captureFrame(traced,'step')
+  assert.equal(frame.presentationFrames.length,1)
+  assert.equal(frame.presentationFrames[0].state.presentationFrames,undefined)
+  assert.equal(withoutPresentation(frame).presentationFrames,undefined)
+})
