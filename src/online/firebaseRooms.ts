@@ -17,7 +17,7 @@ export type FriendRoom = {
   code: string
   hostUid: string
   guestUid: string
-  status: 'waiting' | 'paired'
+  status: 'waiting' | 'playing'
   hostReady: boolean
   guestReady: boolean
   updateTime: string
@@ -113,7 +113,7 @@ const roomFromDocument = (code: string, document: FirestoreRoom): FriendRoom => 
   code,
   hostUid: document.fields?.hostUid?.stringValue ?? '',
   guestUid: document.fields?.guestUid?.stringValue ?? '',
-  status: (document.fields?.status?.stringValue === 'paired' ? 'paired' : 'waiting'),
+  status: (document.fields?.status?.stringValue === 'playing' ? 'playing' : 'waiting'),
   hostReady: document.fields?.hostReady?.booleanValue === true,
   guestReady: document.fields?.guestReady?.booleanValue === true,
   updateTime: document.updateTime ?? '',
@@ -209,10 +209,37 @@ export async function setFriendRoomReady(
   const role = await getMyFriendRoomRole(room)
   if (!role) throw new Error('このルームの参加者ではありません。')
   if (!room.guestUid) throw new Error('もう1人の参加を待ってください。')
+  if (room.status !== 'waiting') throw new Error('対戦開始後は準備状態を変更できません。')
   const field = role === 'host' ? 'hostReady' : 'guestReady'
   const updated = await firestore<FirestoreRoom>(
     `/${room.code}?updateMask.fieldPaths=${field}`,
     { method: 'PATCH', body: JSON.stringify({ fields: { [field]: boolValue(ready) } }) },
   )
   return roomFromDocument(room.code, updated)
+}
+
+/**
+ * Transition the lobby to an online match session.
+ * Only the host can start, and the Firestore rules verify BOTH ready flags.
+ * This does not yet create or expose a game state.
+ */
+export async function startFriendMatch(room: FriendRoom): Promise<FriendRoom> {
+  const role = await getMyFriendRoomRole(room)
+  if (role !== 'host') throw new Error('対戦を開始できるのはホストだけです。')
+  if (room.status === 'playing') return room
+  if (!room.guestUid || !room.hostReady || !room.guestReady) {
+    throw new Error('2人とも準備完了してから対戦を開始してください。')
+  }
+  try {
+    const started = await firestore<FirestoreRoom>(
+      `/${room.code}?updateMask.fieldPaths=status&currentDocument.updateTime=${encodeURIComponent(room.updateTime)}`,
+      { method: 'PATCH', body: JSON.stringify({ fields: { status: value('playing') } }) },
+    )
+    return roomFromDocument(room.code, started)
+  } catch (error) {
+    if (error instanceof Error && /FAILED_PRECONDITION|PERMISSION_DENIED|ABORTED/.test(error.message)) {
+      throw new Error('準備状態が変わった可能性があります。ルームの状態を確認してください。')
+    }
+    throw error
+  }
 }
