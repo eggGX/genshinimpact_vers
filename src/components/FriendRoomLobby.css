@@ -47,3 +47,15 @@
 }
 .friend-match-session-banner strong{color:#a4f5d2;font-size:14px;}
 .friend-match-session-banner p{margin:10px 0 0;color:#d1dfd9;font-size:12px;line-height:1.8;}
+
+
+.friend-mulligan{padding-top:8px;}
+.friend-mulligan-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:15px 0;}
+.friend-mulligan-card{
+  display:flex;gap:8px;align-items:center;padding:12px;
+  border:1px solid #9c8259;border-radius:8px;
+  background:#0c2130;color:#f0e2c4;font-size:12px;cursor:pointer;
+}
+.friend-mulligan-card:has(input:checked){border-color:#72cfb5;background:#184b46;}
+.friend-mulligan-card input{accent-color:#71d7b3;flex:none;}
+@media(max-width:500px){.friend-mulligan-cards{grid-template-columns:1fr;}}
