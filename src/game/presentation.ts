@@ -86,6 +86,9 @@ export function describePresentationChange(
     if (before.leaderFrozenNextTurn !== after.leaderFrozenNextTurn) {
       changes.push(`${after.name} リーダー凍結：${after.leaderFrozenNextTurn ? '次ターンの使用可能PP－1' : '解除'}`)
     }
+    if ((before.leaderQuickenCharges ?? 0) !== (after.leaderQuickenCharges ?? 0)) {
+      changes.push(`${after.name} リーダー原激化：残り${after.leaderQuickenCharges ?? 0}回`)
+    }
     if (before.leaderSuperconduct !== after.leaderSuperconduct) {
       changes.push(`${after.name} リーダー超電導：${after.leaderSuperconduct ? '次の物理ダメージ＋1' : '消費'}`)
     }
