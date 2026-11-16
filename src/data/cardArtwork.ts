@@ -10,6 +10,16 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C004: '/card-art/C004.webp', // ワイルドハント
+  C014: '/card-art/C014.webp', // アビスの魔術師・炎
+  C029: '/card-art/C029.webp', // アビスの魔術師・水
+  C057: '/card-art/C057.webp', // グルグル雷キノコン
+  C063: '/card-art/C063.webp', // 獣域ハウンド・雷
+  C074: '/card-art/C074.webp', // 風フライム
+  C089: '/card-art/C089.webp', // ベビーヴィシャップ
+  C093: '/card-art/C093.webp', // ヴィシャップ・岩
+  C104: '/card-art/C104.webp', // 草フライム
+  C108: '/card-art/C108.webp', // エルマイト旅団・フローラルリングダンサー
   C001: '/card-art/C001.webp', // ヒルチャール
   C002: '/card-art/C002.webp', // 宝盗団・雑夫
   C003: '/card-art/C003.webp', // 遺跡守衛
