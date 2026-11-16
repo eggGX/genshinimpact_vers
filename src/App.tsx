@@ -29,6 +29,8 @@ import { DeckBuilder } from './components/DeckBuilder'
 import { FriendRoomLobby } from './components/FriendRoomLobby'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
+import type { OnlineMatchView } from './online/matchClient'
+import type { OnlineAction } from '../server/src/matchActions'
 
 type BothDecks = [DeckDefinition, DeckDefinition]
 const STORAGE_KEY = 'genshin-decks-v1'
@@ -58,7 +60,11 @@ function loadDecks(): BothDecks {
   }
 }
 
-function App() {
+function App({ online }: { online?: {
+  match: OnlineMatchView
+  pending: boolean
+  onAction: (action: OnlineAction) => void
+} } = {}) {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
   const [showFriendLobby, setShowFriendLobby] = useState(false)
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
@@ -99,7 +105,30 @@ function App() {
     setMulliganSelection([])
     resetSelection()
   }
-  const [game, setGame] = useState(createInitialGameState)
+  const [localGame, setGame] = useState(createInitialGameState)
+  // Online and local games share exactly the same battle scene.
+  const game: GameState = online ? {
+    turn: online.match.turn,
+    phase: online.match.phase,
+    currentPlayerId: online.match.currentPlayerId,
+    winnerId: online.match.winnerId,
+    players: online.match.players.map((p, i) => ({
+      ...p,
+      deck: Array(p.deckCount).fill('hidden'),
+      hand: i === online.match.seat ? (p.hand ?? []) : Array(p.handCount).fill('hidden'),
+      field: p.field.map(f => ({...f, aura:f.aura ?? [], shield:f.shield ?? {normal:0, crystallize:0}})),
+      graveyard: p.graveyard,
+      amulets: p.amulets ?? [],
+      leaderAura: p.leaderAura ?? [],
+      leaderShield: p.leaderShield ?? {normal:0, crystallize:0},
+    })) as GameState['players'],
+  } : localGame
+  const onlineCanAct = !online || (online.match.phase === 'main' &&
+    online.match.currentPlayerId === online.match.players[online.match.seat].id &&
+    !online.pending && !online.match.winnerId)
+  const onlineSend = (action: OnlineAction) => {
+    if (online && onlineCanAct) online.onAction(action)
+  }
   const shownGame = playback ? playback.frames[playback.index].state : game
   const highlightedFollowers = new Set<string>()
   const highlightedLeaders = new Set<string>()
@@ -128,7 +157,7 @@ function App() {
   }
 
   const animateAction = (action: (state: GameState) => GameState, label: string) => {
-    if (playbackLock.current) return
+    if (online || playbackLock.current) return
     const traced = beginPresentation(game)
     const next = action(traced)
     if (next === traced) return
@@ -166,12 +195,12 @@ function App() {
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
 
-  const currentPlayer = shownGame.players.find(
-    p => p.id === shownGame.currentPlayerId
-  )!
-  const opponent = shownGame.players.find(
-    p => p.id !== shownGame.currentPlayerId
-  )!
+  const currentPlayer = online
+    ? shownGame.players[online.match.seat]
+    : shownGame.players.find(p => p.id === shownGame.currentPlayerId)!
+  const opponent = online
+    ? shownGame.players[1-online.match.seat]
+    : shownGame.players.find(p => p.id !== shownGame.currentPlayerId)!
   const winner = shownGame.players.find(
     p => p.id === shownGame.winnerId
   )
@@ -583,17 +612,18 @@ function App() {
     </div>
   }
 
-  if (showCardLibrary) {
+  if (!online && showCardLibrary) {
     return <CardLibrary onBack={() => setShowCardLibrary(false)} />
   }
 
   // Keep the online lobby mounted while the deck editor is open.
   // Its room code, Firebase polling and participant role must survive navigation.
-  if (showFriendLobby && !matchStarted) {
+  if (!online && showFriendLobby && !matchStarted) {
     return <>
       <div style={{ display: editingPlayer !== null ? 'none' : undefined }}>
         <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
-          deck={decks[0]} onEditDeck={() => setEditingPlayer(0)} />
+          deck={decks[0]} onEditDeck={() => setEditingPlayer(0)}
+          renderOnlineBattle={(match, pending, onAction) => <App online={{match,pending,onAction}} />} />
       </div>
       {editingPlayer !== null && <DeckBuilder
         title="フレンド対戦：自分のデッキ"
@@ -604,13 +634,13 @@ function App() {
     </>
   }
 
-  if (editingPlayer !== null) {
+  if (!online && editingPlayer !== null) {
     return <DeckBuilder title={editingPlayer === 0 ? '空（自分）' : '蛍（相手）'}
       deck={decks[editingPlayer]} onChange={deck => updateDeck(editingPlayer, deck)}
       onBack={() => setEditingPlayer(null)} />
   }
 
-  if (!matchStarted) {
+  if (!online && !matchStarted) {
     const errors = decks.map(validateDeck)
     return <div className="game">
       <header className="game-header">
@@ -664,7 +694,7 @@ function App() {
     </div>
   }
 
-  if (game.phase === 'mulligan') {
+  if (!online && game.phase === 'mulligan') {
     return (
       <div className="game">
         <header className="game-header">
