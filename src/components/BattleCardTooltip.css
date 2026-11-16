@@ -1,7 +1,7 @@
 .battle-card-tooltip{
-  position:fixed;z-index:90;right:clamp(12px,2.2vw,32px);top:82px;
-  box-sizing:border-box;width:min(370px,calc(100vw - 24px));
-  max-height:min(76vh,750px);overflow-y:auto;pointer-events:none;
+  position:fixed;z-index:90;right:clamp(12px,2.2vw,32px);top:12px;
+  box-sizing:border-box;width:min(440px,calc(100vw - 24px));
+  height:auto;max-height:none;overflow:visible;pointer-events:none;
   padding:16px 18px 18px;border:2px solid #d6b676;border-radius:15px;
   background:linear-gradient(155deg,#1c3543f5,#0d1d2df9 75%);
   box-shadow:0 18px 44px #000d,0 0 28px #c89d4b3a,inset 0 1px #e7cc8855;
@@ -34,7 +34,7 @@
 .battle-tooltip-effects ul{margin:5px 0 0;padding-left:18px;line-height:1.8;color:#e1e7da;}
 .battle-tooltip-muted{color:#aabcc0;}
 @media(max-width:760px){
-  .battle-card-tooltip{top:auto;bottom:10px;right:10px;max-height:48vh;width:min(330px,calc(100vw - 20px));padding:10px 12px;}
+  .battle-card-tooltip{top:8px;bottom:auto;right:10px;max-height:none;overflow:visible;width:min(370px,calc(100vw - 20px));padding:10px 12px;}
   .battle-tooltip-art{width:48px;height:66px;}
   .battle-tooltip-title>strong{font-size:13px;}
 }
