@@ -44,11 +44,61 @@ service cloud.firestore {
           && resource.data.status == 'waiting'
           && resource.data.hostReady == true
           && resource.data.guestReady == true
+          && exists(/databases/$(database)/documents/friendRooms/$(roomCode)/privateDecks/host)
+          && exists(/databases/$(database)/documents/friendRooms/$(roomCode)/privateDecks/guest)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
           && request.resource.data.status == 'playing')
       );
 
       allow delete: if false;
+
+      // Private deck snapshots are readable only by their owner.
+      // Even the opponent cannot inspect a hand/deck source.
+      match /privateDecks/{seat} {
+        function ownerOfSeat() {
+          return seat == 'host'
+            ? get(/databases/$(database)/documents/friendRooms/$(roomCode)).data.hostUid
+            : get(/databases/$(database)/documents/friendRooms/$(roomCode)).data.guestUid;
+        }
+
+        function roomAllowsDeckWrite() {
+          let room = get(/databases/$(database)/documents/friendRooms/$(roomCode)).data;
+          return room.status == 'waiting'
+            && room.guestUid != ''
+            && (seat == 'host' && room.hostReady == false
+              || seat == 'guest' && room.guestReady == false);
+        }
+
+        function validDeckShape() {
+          return request.resource.data.keys().hasOnly(['ownerUid', 'elements', 'cards'])
+            && request.resource.data.keys().hasAll(['ownerUid', 'elements', 'cards'])
+            && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.elements is list
+            && request.resource.data.elements.size() <= 3
+            && request.resource.data.cards is list
+            && request.resource.data.cards.size() == 40;
+        }
+
+        allow get: if request.auth != null
+          && (seat == 'host' || seat == 'guest')
+          && ownerOfSeat() == request.auth.uid;
+        allow list: if false;
+
+        allow create: if request.auth != null
+          && (seat == 'host' || seat == 'guest')
+          && ownerOfSeat() == request.auth.uid
+          && roomAllowsDeckWrite()
+          && validDeckShape();
+
+        allow update: if request.auth != null
+          && (seat == 'host' || seat == 'guest')
+          && ownerOfSeat() == request.auth.uid
+          && resource.data.ownerUid == request.auth.uid
+          && roomAllowsDeckWrite()
+          && validDeckShape();
+
+        allow delete: if false;
+      }
     }
 
     match /{document=**} {
