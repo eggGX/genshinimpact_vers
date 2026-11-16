@@ -110,3 +110,9 @@
 .library-entry strong{font-size:14px;color:#fff2d9;text-shadow:0 2px 5px #000;}
 .library-entry .card-artwork{max-height:168px;border:1px solid #ae996b88;}
 .library-details{background:linear-gradient(135deg,#173743,#112835);border-color:#ae9163;}
+
+.library-element-chips{display:flex;align-items:center;flex-wrap:wrap;gap:5px;flex:1 1 100%;}
+.library-element-chips button{display:inline-flex;align-items:center;justify-content:center;min-height:33px;min-width:49px;border:1px solid #a88c5d;background:#1c3442;color:#f2dfbb;border-radius:22px;cursor:pointer;padding:3px 9px;}
+.library-element-chips button.active{border-color:#f4cb71;background:#395c63;box-shadow:0 0 8px #e8c87655;}
+.library-card-element{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.library-progress th[scope="row"] .element-icon{justify-content:flex-start;}
