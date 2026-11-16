@@ -102,7 +102,7 @@ export function raincutterAttackLeader(state: GameState, ownerId: string, attack
   const attacker = state.players[index].field.find(f => f.instanceId === attackerId && f.health > 0)
   if (!attacker?.keywords.includes('raincutter_on_attack')) return state
   const enemy = state.players[1-index]
-  const damaged = damageLeader(enemy, 1)
+  const damaged = damageLeader(enemy, 1, 'hydro')
   return { ...updatePlayer(state, enemy.id, () => damaged),
     winnerId: damaged.leaderHealth === 0 ? ownerId : state.winnerId }
 }
