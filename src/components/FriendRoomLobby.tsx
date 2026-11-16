@@ -10,7 +10,6 @@ import { CardArtwork } from './CardArtwork'
 import { getCard } from '../game/engine'
 import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
 import type { OnlineAction } from '../../server/src/matchActions'
-import { OnlineMatchBoard } from './OnlineMatchBoard'
 import './FriendRoomLobby.css'
 
 const ACTIVE_ROOM_KEY = 'genshin-friend-room-code-v1'
@@ -241,8 +240,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
                 </div>
               : onlineMatch.phase === 'mulligan'
                 ? <p>マリガン確定済み。相手のマリガン完了を待っています。（空・蛍の両者が確定すると先攻1ターン目を開始します）</p>
-                : <OnlineMatchBoard match={onlineMatch} pending={pending}
-                    onAction={action => { void sendMatchAction(action) }} />}
+                : <p>対戦画面へ移動しています。</p>}
           </>}
           {matchError && <p className="friend-room-error">{matchError}</p>}
         </div> : <div className="friend-match-session-banner">
