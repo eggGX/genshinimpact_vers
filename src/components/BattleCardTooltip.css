@@ -39,3 +39,10 @@
   .battle-tooltip-title>strong{font-size:13px;}
 }
 @media(prefers-reduced-motion:reduce){.battle-card-tooltip{animation:none;}}
+
+.battle-tooltip-abilities{border-top:1px solid #8d7d6080;padding-top:10px;}
+.battle-tooltip-ability{padding:7px 9px;margin:7px 0 0;border:1px solid #6f938b66;border-radius:8px;background:#203c49b3;}
+.battle-tooltip-ability-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#f7e3b8;font-size:12px;}
+.battle-tooltip-ability-heading strong{font-weight:800;line-height:1.5;}
+.battle-tooltip-ability-heading span{border:1px solid #a49b6c;border-radius:8px;padding:2px 6px;white-space:nowrap;font-weight:800;color:#ffde9b;}
+.battle-tooltip-ability p{margin:6px 0 0;line-height:1.6;white-space:pre-wrap;}
