@@ -85,26 +85,25 @@ export interface ElementalDamageResult {
 }
 
 /**
- * 既存の付着を変更せず、新しい元素を記録するための基礎処理。
- * 反応の判定は resolveElementalDamage が行う。
+ * Non-reacting elemental hits replace the previous aura, rather than stack.
+ * Elemental creatures are the exception: their inherent element stays attached.
+ * Reactions are determined by resolveElementalDamage before this step.
  */
 export function applyElementalAura(
   follower: Follower,
   element?: ElementType
 ): Follower {
+  const inherent = inherentElement(follower)
+  if (inherent && inherent !== 'none') {
+    return { ...follower, aura: [{ element: inherent }] }
+  }
+
   if (!element || element === 'none' ||
       element === 'anemo' || element === 'geo') {
-    return restoreInherentAura(follower)
+    return follower
   }
 
-  if (follower.aura.some(aura => aura.element === element)) {
-    return restoreInherentAura(follower)
-  }
-
-  return restoreInherentAura({
-    ...follower,
-    aura: [...follower.aura, { element }],
-  })
+  return { ...follower, aura: [{ element }] }
 }
 
 function reactionFor(
@@ -130,7 +129,7 @@ function reactionFor(
  * フォロワーへの通常攻撃・カード効果のダメージを共通処理する。
  * 蒸発 +2 / 溶解 +3。どちらも攻撃方向に依存しない。
  * 反応した既存の付着を取り除き、今回の攻撃元素も付着しない。
- * 未実装の反応ペアは暫定的に付着を保持する。
+ * 反応しない異元素の組み合わせでは、今回の元素で従来の付着を上書きする。
  */
 export function resolveElementalDamage(
   follower: Follower,
