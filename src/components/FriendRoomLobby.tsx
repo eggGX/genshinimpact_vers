@@ -6,6 +6,8 @@ import {
 } from '../online/firebaseRooms'
 import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
+import { SavedDeckPicker } from './SavedDeckPicker'
+import type { SavedDeck } from '../data/savedDecks'
 import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
 import type { OnlineAction } from '../../server/src/matchActions'
 import './FriendRoomLobby.css'
@@ -18,10 +20,12 @@ function saveActiveRoom(code: string | null) {
   } catch { /* Browsers with disabled storage still support a live session. */ }
 }
 
-export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }: {
+export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelectSavedDeck, renderOnlineBattle }: {
   onBack: () => void
   deck: DeckDefinition
   onEditDeck: () => void
+  savedDecks: SavedDeck[]
+  onSelectSavedDeck: (deck: DeckDefinition) => void
   renderOnlineBattle: (match: OnlineMatchView, pending: boolean, onAction: (action: OnlineAction) => void, onMulligan: (indices: number[]) => void, onLeave: () => void) => ReactNode
 }) {
   const [codeInput, setCodeInput] = useState('')
@@ -234,8 +238,9 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, renderOnlineBattle }
           <p>カード：{deck.cards.length} / 40枚</p>
           <p className="friend-deck-privacy">準備完了時にデッキを自分専用の非公開領域へ登録します。相手には公開されません。</p>
           {deckErrors.length > 0 && <p className="friend-room-error">{deckErrors[0]}</p>}
+          <SavedDeckPicker savedDecks={savedDecks} disabled={pending || Boolean(myReady)} onSelect={onSelectSavedDeck} />
           <button type="button" disabled={pending || Boolean(myReady)}
-            onClick={onEditDeck}>デッキを編集</button>
+            onClick={onEditDeck}>その場で作成・編集</button>
         </div>
         <button type="button" className="friend-room-primary"
           disabled={pending || !room.guestUid || deckErrors.length > 0}
