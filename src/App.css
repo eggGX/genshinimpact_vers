@@ -757,3 +757,10 @@
 @media(prefers-reduced-motion:reduce){
   .game--battle > .turn-announcement,.turn-announcement-panel{animation:none}
 }
+
+/* Persistent deck library: local setup controls and the top-level entry. */
+.deck-setup-header-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;}
+.deck-setup-choices{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.deck-setup-choices>.saved-deck-picker{margin:0;}
+.deck-setup-choices>button{align-self:flex-start;}
+@media(max-width:650px){.deck-setup-header-actions{width:100%;}.deck-setup-header-actions button{flex:1;}}
