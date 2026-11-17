@@ -11,9 +11,9 @@
 .deck-manager-elements,.deck-manager-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
 .deck-manager-card p{font-size:13px;color:#c8dade;margin:12px 0;}
 .deck-manager-storage-note{font-size:12px;margin-top:22px;}
-.deck-manager-savebar{position:sticky;bottom:0;z-index:12;max-width:1280px;margin:0 auto 18px;display:flex;align-items:center;gap:11px;flex-wrap:wrap;padding:14px 20px;border:2px solid #d4b875;border-radius:11px;background:#112735f7;box-shadow:0 0 28px #000a;}
+.deck-manager-savebar{position:sticky;top:0;z-index:12;max-width:1280px;margin:0 auto 18px;display:flex;align-items:center;gap:11px;flex-wrap:wrap;padding:14px 20px;border:2px solid #d4b875;border-radius:11px;background:#112735f7;box-shadow:0 0 28px #000a;}
 .deck-manager-savebar label{font-weight:800;color:#f7d894;}
 .deck-manager-savebar input{flex:1;min-width:180px;max-width:480px;padding:11px;border:1px solid #9aa9a8;border-radius:7px;background:#192e3b;color:#fff;font:inherit;}
 .deck-manager-savebar small{color:#bbcbd0;font-size:11px;flex-basis:100%;}
 .deck-manager-savebar p{margin:0;color:#ffbd96;font-size:13px;}
-@media(max-width:650px){.deck-manager{padding:0 10px 32px;}.deck-manager-heading{align-items:stretch;}.deck-manager-savebar{bottom:0;margin:0 8px;padding:12px;}.deck-manager-savebar input{max-width:none;}}
+@media(max-width:650px){.deck-manager{padding:0 10px 32px;}.deck-manager-heading{align-items:stretch;}.deck-manager-savebar{top:0;margin:0 8px;padding:12px;}.deck-manager-savebar input{max-width:none;}}
