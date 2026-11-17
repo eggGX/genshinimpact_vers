@@ -385,6 +385,16 @@ export function playCard(
     if (choices.length && (!targetId ||
         !choices.some(f => f.instanceId === targetId))) return state
     if (!choices.length && targetId) return state
+  } else if (card.id === 'C044') {
+    // Frost Spirit's fanfare may buff another existing ally, never itself.
+    // With no other ally, play the follower without triggering its buff.
+    const allies = player.field.filter(f => f.health > 0)
+    if (allies.length > 0) {
+      if (!targetId || targetId === 'self' ||
+          !allies.some(f => f.instanceId === targetId)) return state
+    } else if (targetId) {
+      return state
+    }
   } else if (card.id === 'C030') {
     // The spell targets an existing ally only; 'self' is reserved for fanfares.
     if (!targetId || targetId === 'self' ||
