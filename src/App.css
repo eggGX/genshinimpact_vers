@@ -764,3 +764,37 @@
 .deck-setup-choices>.saved-deck-picker{margin:0;}
 .deck-setup-choices>button{align-self:flex-start;}
 @media(max-width:650px){.deck-setup-header-actions{width:100%;}.deck-setup-header-actions button{flex:1;}}
+
+/* Brief public card reveal, kept clear of the central board and controls. */
+.opponent-card-reveal{
+  position:fixed;z-index:65;top:50%;left:clamp(12px,2vw,32px);
+  transform:translateY(-50%);width:clamp(136px,14vw,194px);
+  box-sizing:border-box;padding:12px 12px 14px;
+  pointer-events:none;text-align:center;
+  border:2px solid #e3bd76;border-radius:13px;
+  background:linear-gradient(155deg,#1a3444f6,#0b1b2af8);
+  color:#f9e9c9;box-shadow:0 13px 36px #000d,0 0 26px #cfaa6659;
+  animation:opponent-card-reveal-in .25s ease-out both;
+}
+.opponent-card-reveal-caption{display:block;margin-bottom:9px;font-size:10px;font-weight:800;
+  letter-spacing:.18em;color:#dfc287;}
+.opponent-card-reveal-art{overflow:hidden;border:2px solid #bc9864;border-radius:9px;
+  background:#142b37;margin-bottom:9px;aspect-ratio:3/4;}
+.opponent-card-reveal-art .card-artwork{width:100%;height:100%;object-fit:cover;}
+.opponent-card-reveal>strong{display:block;line-height:1.5;font-size:13px;overflow-wrap:anywhere;}
+.opponent-card-reveal-detail{display:block;font-size:11px;color:#c8d7d6;margin-top:4px;}
+@keyframes opponent-card-reveal-in {
+  from{opacity:0;transform:translate(-16px,-50%) scale(.92);}
+  to{opacity:1;transform:translate(0,-50%) scale(1);}
+}
+@media(max-width:700px){
+  .opponent-card-reveal{top:auto;bottom:16px;left:8px;transform:none;
+    width:118px;padding:8px;border-radius:9px;}
+  .opponent-card-reveal-caption{font-size:8px;margin-bottom:5px;}
+  .opponent-card-reveal>strong{font-size:11px;}
+  @keyframes opponent-card-reveal-in {
+    from{opacity:0;transform:translateX(-15px) scale(.92);}
+    to{opacity:1;transform:translateX(0) scale(1);}
+  }
+}
+@media(prefers-reduced-motion:reduce){.opponent-card-reveal{animation:none;}}
