@@ -11,6 +11,8 @@ export interface RecordedOnlineEvent {
   revision: number
   actorId: string
   title: string
+  /** A played card is public information; never expose unplayed hand cards. */
+  playedCardId?: string
   frames: RecordedOnlineFrame[]
 }
 
@@ -42,6 +44,9 @@ function actionTitle(state: GameState, action: OnlineAction): string {
 export function recordOnlineAction(state: GameState, action: OnlineAction, revision: number):
   { next: GameState; event: RecordedOnlineEvent } {
   const title = actionTitle(state, action)
+  // Only reveal the actual card being played, never another hand card.
+  const actor = state.players.find(p => p.id === state.currentPlayerId)
+  const playedCardId = action.type === 'play' ? actor?.hand[action.handIndex] : undefined
   const initial = beginPresentation(state)
   const traced = applyOnlineAction(initial, action)
   if (traced === initial) throw new Error('実行できない操作です')
@@ -58,6 +63,7 @@ export function recordOnlineAction(state: GameState, action: OnlineAction, revis
       revision,
       actorId: state.currentPlayerId,
       title,
+      ...(playedCardId ? { playedCardId } : {}),
       frames: [
         { label: `${title}：効果を解決中`, state: withoutPresentation(state) },
         ...selected.map(frame => ({label:frame.label,state:frame.state})),
