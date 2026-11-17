@@ -56,12 +56,12 @@ function addCrest(state: GameState, id: string, cardId: string): GameState {
   }))
 }
 
-/** C044 ally target (including self); C049 shield and C052 draw. */
+/** C044 buffs another existing ally (never itself); C049 shield and C052 draw. */
 export function cryoPlay(state: GameState, ownerId: string, id: string, sourceId: string, targetId?: string): GameState {
   if (state.winnerId !== null) return state
   if (id === 'C044') return edit(state, ownerId, p => ({
     ...p, field: p.field.map(f =>
-      f.instanceId === (targetId === 'self' ? sourceId : targetId)
+      targetId && targetId !== 'self' && f.instanceId === targetId && f.instanceId !== sourceId
         ? { ...f, attack: f.attack + 2 } : f),
   }))
   if (id === 'C049') return edit(state, ownerId, p => addLeaderShield(p, 2))
