@@ -130,3 +130,5 @@
  .card-detail-properties dl{grid-template-columns:1fr;}
 }
 @media(prefers-reduced-motion:reduce){.card-detail-view *{scroll-behavior:auto;}}
+
+.card-detail-ability-description{font-size:13px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;color:#f1ede3;margin:10px 0 5px;padding:11px 13px;border-left:3px solid #87b9b3;background:#0e253391;border-radius:0 7px 7px 0;}
