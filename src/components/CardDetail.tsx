@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { Card, CardEffect, EffectTarget } from '../game/types'
 import { getCardArtwork } from '../data/cardArtwork'
+import { getCardAbilityText } from '../data/cardAbilityText'
 import { CardArtwork } from './CardArtwork'
 import { ElementIcon } from './ElementIcon'
 import './CardDetail.css'
@@ -74,6 +75,7 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
   }, [onClose, onPrevious, onNext])
 
   const normalAttack = card.normalAttackElement ?? 'none'
+  const abilityText = getCardAbilityText(card)
   return <section className="card-detail-view" aria-label={`${card.name}のカード詳細`}>
     <header className="card-detail-header">
       <div className="card-detail-breadcrumb"><span>COLLECTION</span><span className="card-detail-breadcrumb-separator">◇</span><strong>カード詳細</strong></div>
@@ -126,7 +128,7 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
         <section className="card-detail-panel">
           <h2>カード能力</h2>
           <div className="card-detail-description">
-            {splitCardAbility(card.description).map((line, i) => <p key={i}>{line}</p>)}
+            {splitCardAbility(abilityText.basic).map((line, i) => <p key={i}>{line}</p>)}
           </div>
           {card.keywords && card.keywords.length > 0 &&
             <div className="card-detail-keywords">キーワード：{card.keywords.join('・')}</div>}
@@ -139,7 +141,8 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
               <strong>元素スキル {card.elementalSkill.name}</strong>
               <span>PP {card.elementalSkill.ppCost ?? 0}</span>
             </div>
-            {card.elementalSkill.effects.length > 0 &&
+            {abilityText.skill && <p className="card-detail-ability-description">{abilityText.skill}</p>}
+            {!abilityText.skill && card.elementalSkill.effects.length > 0 &&
               <div className="card-detail-ability-effects">
                 {card.elementalSkill.effects.map((effect, i) =>
                   <p key={i}>{describeCardEffect(effect)}</p>)}
@@ -151,13 +154,13 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
               <strong>元素爆発 {card.elementalBurst.name}</strong>
               <span>EN {card.elementalBurst.energyCost ?? 0}</span>
             </div>
-            {card.elementalBurst.effects.length > 0 &&
+            {abilityText.burst && <p className="card-detail-ability-description">{abilityText.burst}</p>}
+            {!abilityText.burst && card.elementalBurst.effects.length > 0 &&
               <div className="card-detail-ability-effects">
                 {card.elementalBurst.effects.map((effect, i) =>
                   <p key={i}>{describeCardEffect(effect)}</p>)}
               </div>}
           </div>}
-          <p className="card-detail-ability-note">詳細な使用条件と追加効果は、上のカード能力欄もご確認ください。</p>
         </section>}
 
         <section className="card-detail-panel card-detail-properties">
