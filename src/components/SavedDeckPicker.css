@@ -1,0 +1,6 @@
+.saved-deck-picker{display:flex;flex-wrap:wrap;gap:9px;align-items:end;margin:12px 0;border-radius:10px;padding:12px;background:#102734ad;border:1px solid #78969a88;}
+.saved-deck-picker label{display:flex;flex-direction:column;gap:6px;min-width:190px;flex:1;font-size:12px;font-weight:700;color:#f3d69c;}
+.saved-deck-picker select{width:100%;min-width:0;border:1px solid #a79262;border-radius:7px;background:#203d4f;color:#f7ecdd;padding:10px;font:inherit;}
+.saved-deck-picker button{white-space:nowrap;}
+.saved-deck-picker small{flex-basis:100%;font-size:11px;line-height:1.5;color:#becfd0;}
+.saved-deck-picker :disabled{opacity:.55;cursor:not-allowed;}
