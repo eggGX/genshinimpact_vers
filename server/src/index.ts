@@ -113,6 +113,7 @@ function projectState(stored: Stored, seat: 0 | 1) {
       revision: event.revision,
       actorId: event.actorId,
       title: event.title,
+      ...(event.playedCardId ? { playedCardId: event.playedCardId } : {}),
       frames: event.frames.map(frame => ({
         label: frame.label,
         state: projectFrameState(frame.state, seat),
