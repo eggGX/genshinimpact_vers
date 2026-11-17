@@ -27,6 +27,9 @@ import { BattleCardTooltip } from './components/BattleCardTooltip'
 import { ElementIcon } from './components/ElementIcon'
 import { CrestIcons } from './components/CrestIcons'
 import { DeckBuilder } from './components/DeckBuilder'
+import { DeckManager } from './components/DeckManager'
+import { SavedDeckPicker } from './components/SavedDeckPicker'
+import { loadSavedDecks, persistSavedDecks, type SavedDeck } from './data/savedDecks'
 import { FriendRoomLobby } from './components/FriendRoomLobby'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
@@ -104,6 +107,8 @@ function App({ online }: { online?: {
 } } = {}) {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
   const [showFriendLobby, setShowFriendLobby] = useState(false)
+  const [showDeckManager, setShowDeckManager] = useState(false)
+  const [savedDecks, setSavedDecks] = useState<SavedDeck[]>(loadSavedDecks)
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
@@ -143,6 +148,10 @@ function App({ online }: { online?: {
   useEffect(() => {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)) } catch { /* storage may be disabled */ }
   }, [decks])
+
+  useEffect(() => {
+    persistSavedDecks(savedDecks)
+  }, [savedDecks])
 
   const updateDeck = (index: 0 | 1, deck: DeckDefinition) => {
     setDecks(previous => index === 0 ? [deck, previous[1]] : [previous[0], deck])
@@ -726,6 +735,11 @@ function App({ online }: { online?: {
     return <CardLibrary onBack={() => setShowCardLibrary(false)} />
   }
 
+  if (!online && showDeckManager && !matchStarted) {
+    return <DeckManager savedDecks={savedDecks} onChange={setSavedDecks}
+      onBack={() => setShowDeckManager(false)} />
+  }
+
   // Keep the online lobby mounted while the deck editor is open.
   // Its room code, Firebase polling and participant role must survive navigation.
   if (!online && showFriendLobby && !matchStarted) {
@@ -733,6 +747,7 @@ function App({ online }: { online?: {
       <div style={{ display: editingPlayer !== null ? 'none' : undefined }}>
         <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
           deck={decks[0]} onEditDeck={() => setEditingPlayer(0)}
+          savedDecks={savedDecks} onSelectSavedDeck={deck => updateDeck(0, deck)}
           renderOnlineBattle={(match, pending, onAction, onMulligan, onLeave) => <App online={{match,pending,onAction,onMulligan,onLeave}} />} />
       </div>
       {editingPlayer !== null && <DeckBuilder
@@ -755,7 +770,10 @@ function App({ online }: { online?: {
     return <div className="game">
       <header className="game-header">
         <h1>原神カードゲーム</h1><span>対戦準備</span>
-        <button type="button" onClick={() => setShowCardLibrary(true)}>カード一覧</button>
+        <div className="deck-setup-header-actions">
+          <button type="button" onClick={() => setShowDeckManager(true)}>デッキ管理</button>
+          <button type="button" onClick={() => setShowCardLibrary(true)}>カード一覧</button>
+        </div>
       </header>
       <main className="deck-setup">
         <h2>デッキを選択</h2>
@@ -787,9 +805,12 @@ function App({ online }: { online?: {
             {errors[index].length === 0
               ? <p className="deck-setup-valid">構築完了</p>
               : <p className="deck-setup-warning">{errors[index][0]}</p>}
-            <button type="button" onClick={() => setEditingPlayer(index as 0 | 1)}>
-              デッキを編集
-            </button>
+            <div className="deck-setup-choices">
+              <SavedDeckPicker savedDecks={savedDecks} onSelect={chosen => updateDeck(index as 0 | 1, chosen)} />
+              <button type="button" onClick={() => setEditingPlayer(index as 0 | 1)}>
+                その場で作成・編集
+              </button>
+            </div>
           </section>)}
         </div>
         <button type="button" className="end-turn deck-start"
@@ -799,7 +820,7 @@ function App({ online }: { online?: {
         <button type="button" className="friend-match-entry" onClick={() => setShowFriendLobby(true)}>
           フレンド対戦（ルーム作成・参加）
         </button>
-        <p className="deck-setup-note">編集内容はこのブラウザに保存されます。対戦開始後は再度デッキ選択画面に戻れます。</p>
+        <p className="deck-setup-note">対戦用デッキの編集内容と登録済みデッキは、このブラウザ内にそれぞれ保存されます。対戦開始後は再度デッキ選択画面に戻れます。</p>
       </main>
     </div>
   }
