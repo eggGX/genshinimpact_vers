@@ -57,7 +57,7 @@ type Room = {
   guestReady: boolean
   status: string
 }
-type Stored = { state: GameState; revision: number; mulliganReady?: MulliganFlags; history?: RecordedOnlineEvent[] }
+type Stored = { state: GameState; revision: number; mulliganReady?: MulliganFlags; history?: RecordedOnlineEvent[]; hostUid?: string; guestUid?: string }
 
 function json(res: import('node:http').ServerResponse, status: number, data: unknown) {
   res.writeHead(status, {
@@ -164,9 +164,33 @@ async function ensureMatch(code: string, uid: string): Promise<{ stored: Stored;
   const guestRef = roomRef.collection('privateDecks').doc('guest')
   const matchRef = getMatchRef(code)
   return db.runTransaction(async tx => {
-    // Firestore transaction reads precede all writes.
-    const [roomSnap, matchSnap, hostSnap, guestSnap] = await Promise.all([
-      tx.get(roomRef), tx.get(matchRef), tx.get(hostRef), tx.get(guestRef),
+    // Read the match first. An existing match never needs the private decks
+    // again, and a match with fixed participant UIDs needs no room read.
+    const matchSnap = await tx.get(matchRef)
+    if (matchSnap.exists) {
+      const stored = matchSnap.data() as Stored
+      if (stored.hostUid && stored.guestUid) {
+        return { stored, seat: getSeat({
+          hostUid: stored.hostUid, guestUid: stored.guestUid,
+          hostReady: true, guestReady: true, status: 'playing',
+        }, uid) }
+      }
+      // Compatibility with matches created before participant UIDs were stored:
+      // validate against the immutable room membership, without reading decks.
+      const legacyRoomSnap = await tx.get(roomRef)
+      if (!legacyRoomSnap.exists) throw new Error('ルームが見つかりません')
+      const legacyRoom = legacyRoomSnap.data() as Room
+      const seat = getSeat(legacyRoom, uid)
+      if (legacyRoom.status !== 'playing' || !legacyRoom.hostReady || !legacyRoom.guestReady) {
+        throw new Error('対戦開始前です')
+      }
+      return { stored, seat }
+    }
+
+    // Initialization is the only path that reads all four documents.
+    // Firestore retries concurrent transactions and only creates the match once.
+    const [roomSnap, hostSnap, guestSnap] = await Promise.all([
+      tx.get(roomRef), tx.get(hostRef), tx.get(guestRef),
     ])
     if (!roomSnap.exists) throw new Error('ルームが見つかりません')
     const room = roomSnap.data() as Room
@@ -174,7 +198,6 @@ async function ensureMatch(code: string, uid: string): Promise<{ stored: Stored;
     if (room.status !== 'playing' || !room.hostReady || !room.guestReady) {
       throw new Error('対戦開始前です')
     }
-    if (matchSnap.exists) return { stored: matchSnap.data() as Stored, seat }
     if (hostSnap.data()?.ownerUid !== room.hostUid || guestSnap.data()?.ownerUid !== room.guestUid) {
       throw new Error('デッキ所有者が一致しません')
     }
@@ -182,7 +205,10 @@ async function ensureMatch(code: string, uid: string): Promise<{ stored: Stored;
       deckFromData(hostSnap.data()), deckFromData(guestSnap.data()),
     ]
     const state = createInitialGameState(decks)
-    const stored: Stored = { state, revision: 0, mulliganReady: [false, false] }
+    const stored: Stored = {
+      state, revision: 0, mulliganReady: [false, false],
+      hostUid: room.hostUid, guestUid: room.guestUid,
+    }
     tx.create(matchRef, stored)
     return { stored, seat }
   })
@@ -213,7 +239,8 @@ async function submitMulligan(
     const { state: next, mulliganReady } = applyIndependentMulligan(
       stored.state, stored.mulliganReady ?? [false, false], seat, indices as number[],
     )
-    const result: Stored = { state: next, mulliganReady, revision: stored.revision + 1 }
+    const result: Stored = { ...stored, state: next, mulliganReady, revision: stored.revision + 1,
+      hostUid: room.hostUid, guestUid: room.guestUid }
     tx.update(matchRef, result)
     return { stored: result, seat }
   })
@@ -248,6 +275,7 @@ async function submitAction(
       revision: stored.revision + 1,
       mulliganReady: stored.mulliganReady,
       history: [...(stored.history ?? []), event].slice(-5),
+      hostUid: room.hostUid, guestUid: room.guestUid,
     }
     tx.update(matchRef, result)
     return { stored: result, seat }
