@@ -64,12 +64,6 @@ export function DeckManager({ savedDecks, onChange, onBack }: Props) {
   }
 
   if (draft) return <div className="game">
-    <DeckBuilder
-      title={editingId ? '登録済みデッキ' : '新規デッキ'}
-      deck={draft}
-      onChange={setDraft}
-      onBack={() => { setDraft(null); setMessage('') }}
-    />
     <div className="deck-manager-savebar" role="region" aria-label="デッキ保存">
       <label htmlFor="saved-deck-name">デッキ名</label>
       <input id="saved-deck-name" type="text" maxLength={40} value={name}
@@ -82,6 +76,13 @@ export function DeckManager({ savedDecks, onChange, onBack }: Props) {
       {validateDeck(draft).length > 0 && <small>{validateDeck(draft)[0]}</small>}
       <small>デッキはこのブラウザに保存されます。編集内容は「保存」時に確定します。</small>
     </div>
+
+    <DeckBuilder
+      title={editingId ? '登録済みデッキ' : '新規デッキ'}
+      deck={draft}
+      onChange={setDraft}
+      onBack={() => { setDraft(null); setMessage('') }}
+    />
   </div>
 
   return <div className="game">
