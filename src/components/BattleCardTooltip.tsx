@@ -1,5 +1,6 @@
 import type { AmuletState, Card, ElementType, Follower } from '../game/types'
 import { CardArtwork } from './CardArtwork'
+import { getCardAbilityText } from '../data/cardAbilityText'
 import { ElementIcon } from './ElementIcon'
 import './BattleCardTooltip.css'
 
@@ -35,6 +36,7 @@ export function BattleCardTooltip({
     .find(e => follower?.keywords.includes(`normal_attack_${e}`))
     ?? card.normalAttackElement ?? 'none'
   const status = follower?.keywords.map(keywordLabel) ?? []
+  const abilityText = getCardAbilityText(card)
   const attackUsed = follower?.attacksThisTurn ?? (follower?.hasAttacked ? 1 : 0)
   const attackMax = follower?.keywords.includes('double_attack') ? 2 : 1
   return <aside className="battle-card-tooltip" role="status"
@@ -54,10 +56,19 @@ export function BattleCardTooltip({
     </div>
     <section className="battle-tooltip-section">
       <h3>カード効果</h3>
-      <p className="battle-tooltip-description">{card.description?.trim() || '能力なし'}</p>
-      {card.elementalSkill && <p><b>元素スキル：</b>{card.elementalSkill.name}（PP {card.elementalSkill.ppCost ?? 0}）</p>}
-      {card.elementalBurst && <p><b>元素爆発：</b>{card.elementalBurst.name}（EN {card.elementalBurst.energyCost ?? 0}）</p>}
+      <p className="battle-tooltip-description">{abilityText.basic || '基本効果なし'}</p>
     </section>
+    {(card.elementalSkill || card.elementalBurst) && <section className="battle-tooltip-section battle-tooltip-abilities">
+      <h3>元素能力</h3>
+      {card.elementalSkill && <div className="battle-tooltip-ability">
+        <div className="battle-tooltip-ability-heading"><strong>元素スキル：{card.elementalSkill.name}</strong><span>PP {card.elementalSkill.ppCost ?? 0}</span></div>
+        {abilityText.skill && <p>{abilityText.skill}</p>}
+      </div>}
+      {card.elementalBurst && <div className="battle-tooltip-ability">
+        <div className="battle-tooltip-ability-heading"><strong>元素爆発：{card.elementalBurst.name}</strong><span>EN {card.elementalBurst.energyCost ?? 0}</span></div>
+        {abilityText.burst && <p>{abilityText.burst}</p>}
+      </div>}
+    </section>}
     <section className="battle-tooltip-section">
       <h3>現在の状態</h3>
       {follower ? <>
