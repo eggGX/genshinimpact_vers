@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CardArtwork } from './CardArtwork'
+import { getCardAbilityText } from '../data/cardAbilityText'
 import { ElementIcon } from './ElementIcon'
 import { productionCards } from '../data/productionCards'
 import {
@@ -103,6 +104,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
         </div>
         <div className="deck-card-pool">
           {available.map(card=>{
+            const abilityText = getCardAbilityText(card)
             const count=counts.get(card.id)??0
             const enabled=deck.cards.length<DECK_SIZE&&count<MAX_CARD_COPIES
             return <div key={card.id} className="deck-card-row">
@@ -110,7 +112,11 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
               <div className="deck-card-details">
                 <strong>{card.cost}PP {card.name}</strong>
                 <small className="deck-card-meta"><ElementIcon element={card.element} size="xs" withLabel /> ・{rarityNames[card.rarity]}・{cardTypeNames[card.type]}</small>
-                <span className="deck-card-description">{card.description||'能力なし'}</span>
+                <span className="deck-card-description">{abilityText.basic || '基本効果なし'}</span>
+                {(card.elementalSkill || card.elementalBurst) && <span className="deck-card-ability-badges">
+                  {card.elementalSkill && <span title={abilityText.skill || card.elementalSkill.name}>スキル · {card.elementalSkill.name}</span>}
+                  {card.elementalBurst && <span title={abilityText.burst || card.elementalBurst.name}>爆発 · {card.elementalBurst.name}</span>}
+                </span>
               </div>
               <div className="deck-copy-buttons">
                 <span>{count} / 3</span>
