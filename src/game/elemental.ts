@@ -30,6 +30,9 @@ export function grantShield(
 }
 
 export function absorbDamage(follower: Follower, amount: number): Follower {
+  // Dendro Cores take zero damage even if it would normally bypass shields.
+  // Their turn-end -0/-1 and Pyro/Electro detonations are not damage.
+  if (follower.cardId === 'dendro-core') return follower
   let remaining = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0
   if (remaining > 0 && follower.keywords.includes('next_damage_plus_2')) remaining += 2
   if (follower.keywords.includes('damage_cap_1') && remaining >= 2) remaining = 1
@@ -145,6 +148,11 @@ export function resolveElementalDamage(
     }
   }
 
+  // All ordinary elemental damage to the Core is prevented, including
+  // Hydro/Cryo/Anemo/Geo. Pyro and Electro detonate it above.
+  if (follower.cardId === 'dendro-core') {
+    return { follower, damage: 0, reaction: null }
+  }
   const base = Number.isFinite(baseDamage)
     ? Math.max(0, Math.trunc(baseDamage)) : 0
   const physicalBonus = (!incomingElement || incomingElement === 'none') &&
