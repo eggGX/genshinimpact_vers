@@ -1,0 +1,19 @@
+.deck-manager{max-width:1160px;margin:32px auto;padding:0 18px 40px;color:#f0e5d0;}
+.deck-manager-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:24px;}
+.deck-manager-heading h2{font-size:1.6rem;color:#f1d79f;margin:0 0 8px;}
+.deck-manager-heading p,.deck-manager-storage-note{color:#b8cdd1;line-height:1.65;}
+.deck-manager button,.deck-manager-savebar button{cursor:pointer;border:1px solid #c4a66d;border-radius:8px;padding:10px 14px;color:#f8e7c6;background:linear-gradient(140deg,#385367,#182d3d);font:700 13px 'Noto Sans JP',sans-serif;}
+.deck-manager button:hover:not(:disabled),.deck-manager-savebar button:hover:not(:disabled){filter:brightness(1.18);}
+.deck-manager button:disabled,.deck-manager-savebar button:disabled{cursor:not-allowed;opacity:.5;}
+.deck-manager-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;}
+.deck-manager-card,.deck-manager-empty{padding:20px;border:1px solid #a28d68;border-radius:12px;background:linear-gradient(145deg,#1e3a48,#112636);box-shadow:0 9px 28px #0005;}
+.deck-manager-card h3{font-size:1.15rem;color:#ffedbd;overflow-wrap:anywhere;margin:0 0 13px;}
+.deck-manager-elements,.deck-manager-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+.deck-manager-card p{font-size:13px;color:#c8dade;margin:12px 0;}
+.deck-manager-storage-note{font-size:12px;margin-top:22px;}
+.deck-manager-savebar{position:sticky;bottom:0;z-index:12;max-width:1280px;margin:0 auto 18px;display:flex;align-items:center;gap:11px;flex-wrap:wrap;padding:14px 20px;border:2px solid #d4b875;border-radius:11px;background:#112735f7;box-shadow:0 0 28px #000a;}
+.deck-manager-savebar label{font-weight:800;color:#f7d894;}
+.deck-manager-savebar input{flex:1;min-width:180px;max-width:480px;padding:11px;border:1px solid #9aa9a8;border-radius:7px;background:#192e3b;color:#fff;font:inherit;}
+.deck-manager-savebar small{color:#bbcbd0;font-size:11px;flex-basis:100%;}
+.deck-manager-savebar p{margin:0;color:#ffbd96;font-size:13px;}
+@media(max-width:650px){.deck-manager{padding:0 10px 32px;}.deck-manager-heading{align-items:stretch;}.deck-manager-savebar{bottom:0;margin:0 8px;padding:12px;}.deck-manager-savebar input{max-width:none;}}
