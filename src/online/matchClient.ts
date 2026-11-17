@@ -52,6 +52,7 @@ export interface OnlinePresentationEvent {
   revision: number
   actorId: string
   title: string
+  playedCardId?: string
   frames: Array<{ label: string; state: OnlinePresentationSnapshot }>
 }
 export interface OnlineMatchView {
