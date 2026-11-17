@@ -360,9 +360,11 @@ function App({ online }: { online?: {
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
-    const noBuffAlly = ['C066', 'C081'].includes(card.id) &&
+    const noBuffAlly = (card.id === 'C044' &&
+      !currentPlayer.field.some(f => f.health > 0)) ||
+      (['C066', 'C081'].includes(card.id) &&
       !currentPlayer.field.some(f => f.health > 0 &&
-        getCard(f.cardId)?.element === (card.id === 'C066' ? 'electro' : 'anemo'))
+        getCard(f.cardId)?.element === (card.id === 'C066' ? 'electro' : 'anemo')))
     if (selectedAbility?.kind === 'skill' && currentPlayer.field.some(f =>
       f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) {
       if (['pyro', 'hydro', 'cryo', 'electro'].includes(card.element)) {
@@ -1147,6 +1149,8 @@ function App({ online }: { online?: {
                 ? '九条裟羅：他の味方雷元素フォロワーを選択してください'
                 : currentPlayer.hand[selectedHandIndex] === 'C030'
                 ? '古華剣・裁雨留虹：効果を付与する味方フォロワーを選択してください'
+                : currentPlayer.hand[selectedHandIndex] === 'C044'
+                ? '霜の精：自身以外の味方フォロワーを選択してください'
                 : '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
               : 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
@@ -1154,7 +1158,7 @@ function App({ online }: { online?: {
               : 'カードをプレイするか、攻撃可能なフォロワーを選択してください'}
       </div>
 
-      {selectedHandIndex !== null && ['C021', 'C044'].includes(currentPlayer.hand[selectedHandIndex]) && (
+      {selectedHandIndex !== null && currentPlayer.hand[selectedHandIndex] === 'C021' && (
         <button type="button" onClick={() => {
           if (online) onlineSend({type:'play',handIndex:selectedHandIndex,targetId:'self'})
           else animateAction(previous => playCard(previous, previous.currentPlayerId,
