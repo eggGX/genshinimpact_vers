@@ -73,3 +73,6 @@
 
 .deck-element-buttons button{display:inline-flex;align-items:center;justify-content:center;gap:4px;}
 .deck-card-meta,.deck-selected-entry{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+
+.deck-card-ability-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.deck-card-ability-badges>span{font-size:10px;line-height:1.4;color:#f0dfbb;background:#203e48;border:1px solid #b39b67a8;border-radius:6px;padding:3px 6px;}
