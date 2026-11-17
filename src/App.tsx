@@ -112,13 +112,25 @@ function App({ online }: { online?: {
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
-  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number } | null>(null)
+  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: { key: string; cardId: string; actorId: string } } | null>(null)
+  const [playedCardNotice, setPlayedCardNotice] = useState<{ key: string; cardId: string; actorId: string } | null>(null)
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
   const lastAnnouncedTurn = useRef<string | null>(null)
   const lastOnlineRevision = useRef<number | null>(null)
   const onlinePlaybackQueue = useRef<OnlinePresentationEvent[]>([])
+
+  // Each successful play briefly reveals the public card to both seats.
+  // The notice is independent of combat playback speed and does not block input.
+  useEffect(() => {
+    if (playback?.playedCard) setPlayedCardNotice(playback.playedCard)
+  }, [playback?.playedCard?.key])
+  useEffect(() => {
+    if (!playedCardNotice) return
+    const timer = window.setTimeout(() => setPlayedCardNotice(null), 2800)
+    return () => window.clearTimeout(timer)
+  }, [playedCardNotice?.key])
 
   useEffect(() => {
     if (!playback) return
@@ -134,6 +146,10 @@ function App({ online }: { online?: {
                 state: projectOnlineSnapshot(frame.state, online.match.seat),
               })),
               index: 0,
+              ...(nextEvent.playedCardId ? { playedCard: {
+                key: `online-${nextEvent.revision}`, cardId: nextEvent.playedCardId,
+                actorId: nextEvent.actorId,
+              } } : {}),
             }
           }
           playbackLock.current = false
@@ -160,6 +176,7 @@ function App({ online }: { online?: {
     if (decks.some(deck => validateDeck(deck).length > 0)) return
     playbackLock.current = false
     setPlayback(null)
+    setPlayedCardNotice(null)
     setGame(createInitialGameState(decks))
     setMatchStarted(true)
     setMulliganSelection([])
@@ -230,6 +247,10 @@ function App({ online }: { online?: {
         state: projectOnlineSnapshot(frame.state, online.match.seat),
       })),
       index: 0,
+      ...(first.playedCardId ? { playedCard: {
+        key: `online-${first.revision}`, cardId: first.playedCardId,
+        actorId: first.actorId,
+      } } : {}),
     })
   }, [online?.match.revision, online?.match.history, online?.match.seat])
   const highlightedFollowers = new Set<string>()
@@ -258,7 +279,7 @@ function App({ online }: { online?: {
     }
   }
 
-  const animateAction = (action: (state: GameState) => GameState, label: string) => {
+  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string) => {
     if (online || playbackLock.current) return
     const traced = beginPresentation(game)
     const next = action(traced)
@@ -274,6 +295,10 @@ function App({ online }: { online?: {
           ...frames,
         ],
         index: 0,
+        ...(playedCardId ? { playedCard: {
+          key: `local-${Date.now()}-${Math.random()}`, cardId: playedCardId,
+          actorId: game.currentPlayerId,
+        } } : {}),
       })
     }
   }
@@ -338,6 +363,7 @@ function App({ online }: { online?: {
   const handleReset = () => {
     skipPlayback()
     setGame(createInitialGameState(decks))
+    setPlayedCardNotice(null)
     resetSelection()
     setMulliganSelection([])
   }
@@ -402,7 +428,7 @@ function App({ online }: { online?: {
         previous,
         previous.currentPlayerId,
         handIndex
-      ), `${card.name} をプレイ`)
+      ), `${card.name} をプレイ`, card.id)
     resetSelection()
   }
 
@@ -446,7 +472,7 @@ function App({ online }: { online?: {
           previous.currentPlayerId,
           index,
           targetId
-        ), `${getCard(currentPlayer.hand[index])?.name ?? 'カード'} をプレイ`)
+        ), `${getCard(currentPlayer.hand[index])?.name ?? 'カード'} をプレイ`, currentPlayer.hand[index])
       resetSelection()
       return
     }
@@ -572,7 +598,7 @@ function App({ online }: { online?: {
             else animateAction(previous => playCard(
               previous, previous.currentPlayerId,
               selectedHandIndex, follower.instanceId
-            ), '味方フォロワーを指定してプレイ')
+            ), '味方フォロワーを指定してプレイ', currentPlayer.hand[selectedHandIndex])
             resetSelection()
           } else if (isFriendlyTarget && selectedAbility) {
             const { followerId, kind } = selectedAbility
@@ -916,6 +942,24 @@ function App({ online }: { online?: {
           <span className="turn-announcement-ornament">✦ ───────── ✦</span>
         </div>
       </div>}
+      {playedCardNotice &&
+        // The online opponent's played card is public; local play shows either side.
+        (!online || playedCardNotice.actorId !== online.match.players[online.match.seat].id) &&
+        getCard(playedCardNotice.cardId) && <aside key={playedCardNotice.key}
+          className="opponent-card-reveal" role="status"
+          aria-label="相手がプレイしたカード">
+          <span className="opponent-card-reveal-caption">PLAYED CARD</span>
+          <div className={`opponent-card-reveal-art card-element--${getCard(playedCardNotice.cardId)?.element ?? 'none'}`}>
+            <CardArtwork cardId={playedCardNotice.cardId}
+              name={getCard(playedCardNotice.cardId)?.name ?? playedCardNotice.cardId} />
+          </div>
+          <strong>{getCard(playedCardNotice.cardId)?.name}</strong>
+          <span className="opponent-card-reveal-detail">
+            {getCard(playedCardNotice.cardId)?.cost} PP · {
+              getCard(playedCardNotice.cardId)?.type === 'follower' ? 'フォロワー'
+                : getCard(playedCardNotice.cardId)?.type === 'spell' ? 'スペル' : 'アミュレット'}
+          </span>
+        </aside>}
       {online?.match.phase === 'mulligan' && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
         <div className="online-mulligan-dialog">
           <h2>{currentPlayer.name} のマリガン</h2>
@@ -1183,7 +1227,7 @@ function App({ online }: { online?: {
         <button type="button" onClick={() => {
           if (online) onlineSend({type:'play',handIndex:selectedHandIndex,targetId:'self'})
           else animateAction(previous => playCard(previous, previous.currentPlayerId,
-            selectedHandIndex, 'self'), '自身を強化して召喚')
+            selectedHandIndex, 'self'), '自身を強化して召喚', currentPlayer.hand[selectedHandIndex])
           resetSelection()
         }}>
           自身を強化して召喚
