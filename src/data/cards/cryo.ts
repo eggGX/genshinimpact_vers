@@ -80,7 +80,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "妖精"
     ],
-    "description": "【ファンファーレ】自分のフォロワー1体を+2/+0する（自身可）。",
+    "description": "【ファンファーレ】自身を除く自分のフォロワー1体を+2/+0する。",
     "implementationStatus": "playable"
   },
   {
