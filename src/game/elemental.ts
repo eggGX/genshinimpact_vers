@@ -11,9 +11,10 @@ function inherentElement(follower: Follower): ElementType | undefined {
 
 export function restoreInherentAura(follower: Follower): Follower {
   const element = inherentElement(follower)
-  if (!element || element === 'none' ||
-      follower.aura.some(aura => aura.element === element)) return follower
-  return { ...follower, aura: [...follower.aura, { element }] }
+  if (!element || element === 'none') return follower
+  // Creature-specific constant attachment takes precedence over any foreign aura.
+  if (follower.aura.length === 1 && follower.aura[0].element === element) return follower
+  return { ...follower, aura: [{ element }] }
 }
 
 export function grantShield(
