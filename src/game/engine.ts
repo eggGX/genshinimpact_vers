@@ -1020,27 +1020,44 @@ export function endTurn(state: GameState): GameState {
   result = captureFrame(resolveDeaths({ ...result, players: burnPlayers }), '燃焼ダメージ')
   if (result.winnerId !== null) return result
 
-  // 草原核：持ち主のターン終了時、草原核1個につき自陣ランダム1体へ2ダメージ。
-  // 草原核自身も候補に含め、複数核は順番に解決する。
-  const coreOwner = result.players[currentIndex]
-  const cores = coreOwner.field.filter(f => f.cardId === 'dendro-core')
-  let coreState = result
-  for (const core of cores) {
-    if (coreState.winnerId !== null) break
-    const current = coreState.players[currentIndex]
-    if (!current.field.some(f => f.instanceId === core.instanceId)) continue
-    const candidates = current.field.filter(f => f.health > 0)
-    if (candidates.length === 0) break
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)]
-    const players = [...coreState.players] as [Player, Player]
-    players[currentIndex] = {
-      ...current,
-      field: current.field.map(f =>
-        f.instanceId === chosen.instanceId ? absorbDamage(f, 2) : f),
+  // 草原核：ターン終了時に現在体力Xを確定し、X回発動する。
+  // 1回ごとに自身以外のランダムな味方フォロワーへ2ダメージを与え、
+  // 自身を+0/-1する（最大体力と現在体力を1ずつ減少、ダメージではない）。
+  // 対象がいなくても+0/-1は行う。複数の核は配置順に処理する。
+  const coreIds = result.players[currentIndex].field
+    .filter(f => f.cardId === 'dendro-core' && f.health > 0)
+    .map(f => f.instanceId)
+  for (const coreId of coreIds) {
+    if (result.winnerId !== null) break
+    const core = result.players[currentIndex].field.find(f => f.instanceId === coreId)
+    if (!core || core.health <= 0) continue
+    const repetitions = Math.max(0, Math.trunc(core.health))
+    for (let n = 0; n < repetitions; n++) {
+      const owner = result.players[currentIndex]
+      const activeCore = owner.field.find(f => f.instanceId === coreId)
+      if (!activeCore || activeCore.health <= 0) break
+      const candidates = owner.field.filter(f =>
+        f.instanceId !== coreId && f.health > 0)
+      const chosen = candidates.length
+        ? candidates[Math.floor(Math.random() * candidates.length)]
+        : undefined
+      const players = [...result.players] as [Player, Player]
+      players[currentIndex] = {
+        ...owner,
+        field: owner.field.map(f => {
+          if (f.instanceId === coreId) return {
+            ...f, health: f.health - 1, maxHealth: f.maxHealth - 1,
+          }
+          return chosen && f.instanceId === chosen.instanceId
+            ? absorbDamage(f, 2) : f
+        }),
+      }
+      result = captureFrame(
+        resolveDeaths({ ...result, players }), '草原核：2ダメージ・自身を+0/-1'
+      )
+      if (result.winnerId !== null) break
     }
-    coreState = captureFrame(resolveDeaths({ ...coreState, players }), '草原核のランダムダメージ')
   }
-  result = coreState
   if (result.winnerId !== null) return result
 
   // 烈開花が与えたリーダー燃焼：自ターン終了時に1ダメージ、3回で終了。
