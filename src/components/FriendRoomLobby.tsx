@@ -59,7 +59,9 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
   }, [])
 
   useEffect(() => {
-    if (!room) return
+    // Once the room enters 'playing', its membership/readiness is immutable.
+    // Poll the trusted match endpoint only; do not keep reading the room.
+    if (!room || room.status === 'playing') return
     let active = true
     const poll = async () => {
       try {
@@ -73,7 +75,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
     }
     const timer = window.setInterval(() => { void poll() }, 2500)
     return () => { active = false; window.clearInterval(timer) }
-  }, [room?.code])
+  }, [room?.code, room?.status])
 
   useEffect(() => {
     if (room?.status !== 'playing' || !isMatchServerConfigured()) return
