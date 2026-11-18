@@ -223,7 +223,7 @@ export const hydroCards: Card[] = [
     "region": [
       "ナド・クライ"
     ],
-    "description": "【ファンファーレ】「水圧装置」1つを場に出す。【元素スキル：名称未設定】PP1：敵フォロワー1体に水元素2ダメージ。自分の場の「水圧装置」すべてのカウントダウン+1。",
+    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを場に出す。【元素スキル：名称未設定】PP1：敵フォロワー1体に水元素2ダメージ。自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
         "elementalSkill": {"name":"名称未設定","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"hydro"}]},
 "implementationStatus": "playable"
   },
