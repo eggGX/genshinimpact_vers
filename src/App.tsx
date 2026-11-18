@@ -538,7 +538,7 @@ function App({ online }: { online?: {
   }
 
   const handleEnemyFollowerClick = (targetId: string) => {
-    if (!onlineCanAct) return
+    if (suppressDraggedClick.current || !onlineCanAct) return
     if (selectedHandIndex !== null) {
       const index = selectedHandIndex
 
@@ -589,7 +589,7 @@ function App({ online }: { online?: {
   }
 
   const handleAttackLeader = () => {
-    if (!selectedAttackerId || !onlineCanAct) return
+    if (suppressDraggedClick.current || !selectedAttackerId || !onlineCanAct) return
 
     const attackerId = selectedAttackerId
 
