@@ -322,6 +322,13 @@ function App({ online }: { online?: {
   } | null>(null)
   const [selectedHandIndex, setSelectedHandIndex] =
     useState<number | null>(null)
+  const handDragPointer = useRef<{
+    pointerId: number; handIndex: number; startX: number; startY: number; moved: boolean
+  } | null>(null)
+  const suppressHandDragClick = useRef(false)
+  const [handDrag, setHandDrag] = useState<{
+    handIndex: number; x: number; y: number; overField: boolean
+  } | null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{
     followerId: string
     kind: AbilityKind
@@ -397,7 +404,10 @@ function App({ online }: { online?: {
     resetSelection()
   }
 
-  const handlePlayCard = (handIndex: number) => {
+  // A hand drop uses exactly the same play/target selection workflow as a click.
+  // In particular, fanfare targets are chosen by a subsequent click, not by
+  // dropping the card onto a follower or leader.
+  const handlePlayCard = (handIndex: number, fromDrag = false) => {
     if (!onlineCanAct) return
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
@@ -423,7 +433,7 @@ function App({ online }: { online?: {
         ((needsPlayTarget(card) && (card.type === 'spell' || hasEnemyTarget)) ||
           needsFriendlyPlayTarget(card))) {
       setSelectedHandIndex(previous =>
-        previous === handIndex ? null : handIndex
+        fromDrag ? handIndex : previous === handIndex ? null : handIndex
       )
       setSelectedAttackerId(null)
       return
@@ -437,6 +447,48 @@ function App({ online }: { online?: {
         handIndex
       ), `${card.name} をプレイ`, card.id)
     resetSelection()
+  }
+
+  const handOverOwnField = (x: number, y: number): boolean =>
+    Boolean(document.elementFromPoint(x, y)?.closest('[data-hand-play-zone="self"]'))
+
+  const startHandDrag = (event: ReactPointerEvent<HTMLButtonElement>, handIndex: number) => {
+    // Farka's hand-card selection is an ability cost, not a normal card play.
+    if (!onlineCanAct || !canPlayCard(game, handIndex) ||
+        (selectedAbility?.kind === 'skill' &&
+          currentPlayer.field.some(f => f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) ||
+        (event.pointerType === 'mouse' && event.button !== 0)) return
+    handDragPointer.current = {
+      pointerId: event.pointerId, handIndex,
+      startX: event.clientX, startY: event.clientY, moved: false,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const moveHandDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const pointer = handDragPointer.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    if (!pointer.moved &&
+        Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 10) return
+    pointer.moved = true
+    setHandDrag({
+      handIndex: pointer.handIndex, x: event.clientX, y: event.clientY,
+      overField: handOverOwnField(event.clientX, event.clientY),
+    })
+  }
+
+  const finishHandDrag = (event: ReactPointerEvent<HTMLButtonElement>, cancelled = false) => {
+    const pointer = handDragPointer.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    handDragPointer.current = null
+    setHandDrag(null)
+    if (!pointer.moved) return
+    suppressHandDragClick.current = true
+    window.setTimeout(() => { suppressHandDragClick.current = false }, 0)
+    if (!cancelled && onlineCanAct && canPlayCard(game, pointer.handIndex) &&
+        handOverOwnField(event.clientX, event.clientY)) {
+      handlePlayCard(pointer.handIndex, true)
+    }
   }
 
   const handleUseAbility = (follower: Follower, kind: AbilityKind) => {
@@ -823,7 +875,10 @@ function App({ online }: { online?: {
   ) => {
     const followers = player.field
     const amulets = player.amulets ?? []
-    return <div className="card-slot" aria-label={`場：フォロワー${followers.length}体・アミュレット${amulets.length}枚`}>
+    return <div className={['card-slot', !isOpponent && handDrag ? 'hand-play-drop-zone' : '',
+        !isOpponent && handDrag?.overField ? 'hand-play-drop-hover' : ''].filter(Boolean).join(' ')}
+      data-hand-play-zone={!isOpponent ? 'self' : undefined}
+      aria-label={`場：フォロワー${followers.length}体・アミュレット${amulets.length}枚`}>
       {followers.length + amulets.length === 0
         ? 'カード配置エリア'
         : <>
@@ -1033,6 +1088,13 @@ function App({ online }: { online?: {
           <span className="turn-announcement-ornament">✦ ───────── ✦</span>
         </div>
       </div>}
+      {handDrag && getCard(currentPlayer.hand[handDrag.handIndex] ?? '') &&
+        <div className="hand-drag-ghost" aria-hidden="true"
+          style={{ left: handDrag.x, top: handDrag.y }}>
+          <CardArtwork cardId={currentPlayer.hand[handDrag.handIndex]}
+            name={getCard(currentPlayer.hand[handDrag.handIndex])?.name ?? ''} />
+          <span>{handDrag.overField ? '離してプレイ' : '自分の場へドラッグ'}</span>
+        </div>}
       {attackDrag && getCard(currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)?.cardId ?? '') &&
         <div className="attack-drag-ghost" aria-hidden="true"
           style={{ left: attackDrag.x, top: attackDrag.y }}>
@@ -1373,10 +1435,17 @@ function App({ online }: { online?: {
               key={`${cardId}-${index}`}
               disabled={!playable}
               data-hand-index={index}
+              draggable={false}
+              onPointerDown={event => startHandDrag(event, index)}
+              onPointerMove={moveHandDrag}
+              onPointerUp={event => finishHandDrag(event)}
+              onPointerCancel={event => finishHandDrag(event, true)}
               onMouseEnter={() => setInspectedCard({ kind: 'hand', cardId })}
               onFocus={() => setInspectedCard({ kind: 'hand', cardId })}
               onBlur={() => setInspectedCard(null)}
-              onClick={() => handlePlayCard(index)}
+              onClick={() => {
+                if (!suppressHandDragClick.current) handlePlayCard(index)
+              }}
             >
               <span className="card-cost">
                 {card.cost}
