@@ -1,3 +1,4 @@
+import { grantUniqueCrest } from './crestUtils'
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { summonFollowers } from './neutralRules'
@@ -104,9 +105,9 @@ export function resolveHydroAdvancedSkill(
   if (cardId === 'C034') {
     return updatePlayer(state, ownerId, p => ({
       ...p,
-      crests: [...(p.crests ?? []), {
+      crests: grantUniqueCrest(p, {
         id: 'C034', turnsRemaining: 3, usedElements: [],
-      }],
+      }),
     }))
   }
   if (cardId === 'C037') {
