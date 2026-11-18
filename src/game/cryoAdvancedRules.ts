@@ -1,3 +1,4 @@
+import { grantUniqueCrest } from './crestUtils'
 import type { Follower, GameState, Player } from './types'
 import { addLeaderShield } from './leaderShield'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
@@ -52,7 +53,7 @@ function randomCryo(state: GameState, ownerId: string, amount: number, deaths: D
 
 function addCrest(state: GameState, id: string, cardId: string): GameState {
   return edit(state, id, p => ({ ...p,
-    crests: [...(p.crests ?? []), { id: cardId, turnsRemaining: 3, usedElements: [] }],
+    crests: grantUniqueCrest(p, { id: cardId, turnsRemaining: 3, usedElements: [] }),
   }))
 }
 
