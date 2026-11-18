@@ -90,7 +90,8 @@ export function resolveNeutralPlay(
         }
       })
     case 'C004':
-      return summonFollowers(state, ownerId, 'C004', 1, ['no_last_word'])
+      // Fanfare copy retains its Last Word; only a Last Word death-spawn loses it.
+      return summonFollowers(state, ownerId, 'C004', 1)
     case 'C005':
       return summonFollowers(state, ownerId, 'C001', 4)
     case 'C006':
