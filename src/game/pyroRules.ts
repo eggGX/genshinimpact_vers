@@ -1,3 +1,4 @@
+import { grantUniqueCrest } from './crestUtils'
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
@@ -70,7 +71,7 @@ export function resolvePyroSpell(
     if (result.winnerId !== null) return result
     result = updateOwner(result, ownerId, p => ({
       ...p,
-      crests: [...(p.crests ?? []), { id: 'C015', turnsRemaining: 2, usedElements: [] }],
+      crests: grantUniqueCrest(p, { id: 'C015', turnsRemaining: 2, usedElements: [] }),
     }))
     return result
   }
