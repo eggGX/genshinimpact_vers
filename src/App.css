@@ -900,3 +900,24 @@
 .follower-emblem--lastword{color:#f4d7e5;border-color:#b78ba5;background:linear-gradient(#563449,#261927);}
 .follower-emblem--guard{color:#ddf1ff;border-color:#8ab8d7;background:linear-gradient(#34546b,#172b40);}
 .follower-emblem--bane{color:#f5d7fb;border-color:#b08bc6;background:linear-gradient(#57416b,#241a32);}
+
+/* Final mulligan hand: noninteractive, shown briefly before battle. */
+.mulligan-result-scene{
+  max-width:1060px;margin:6vh auto 0;padding:32px 18px 28px;
+  border:1px solid #cba96a88;border-radius:20px;
+  background:linear-gradient(145deg,#152e3c,#0c1c2c);
+  box-shadow:0 15px 45px #0008;text-align:center;color:#f8e9c8;
+}
+.mulligan-result-scene h2,.mulligan-result-dialog h2{
+  margin:0;color:#ffe1a0;font-size:25px;
+}
+.mulligan-result-scene p,.mulligan-result-dialog p{color:#d6e4e1;}
+.mulligan-result-cards{margin:22px 0 18px;}
+.mulligan-result-card{cursor:default;pointer-events:none;}
+.mulligan-result-card:hover{transform:none;}
+.mulligan-result-note{font-size:12px;letter-spacing:.04em;}
+.mulligan-result-overlay{z-index:2100;}
+@media(max-width:760px){
+  .mulligan-result-scene{margin:10vh 8px 0;padding:24px 8px;}
+  .mulligan-result-scene h2,.mulligan-result-dialog h2{font-size:20px;}
+}
