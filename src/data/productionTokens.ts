@@ -183,7 +183,7 @@ export const productionTokens: Card[] = [
     traits: ['岩創造物'],
     cost: 2,
     token: true,
-    description: 'タイプ：岩創造物。【カウントダウン3】【自分のターン終了時】自リーダーに結晶シールド2。',
+    description: '【カウントダウン3】【自分のターン終了時】自リーダーに結晶シールド2。',
   },
   {
     id: 'token-spinning-turbo',
@@ -194,7 +194,7 @@ export const productionTokens: Card[] = [
     traits: ['岩創造物'],
     cost: 2,
     token: true,
-    description: 'タイプ：岩創造物。【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に岩元素2ダメージ。',
+    description: '【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に岩元素2ダメージ。',
   },  {
     id: 'token-solar-isotoma',
     name: '陽華',
@@ -204,7 +204,7 @@ export const productionTokens: Card[] = [
     traits: ['岩創造物'],
     cost: 2,
     token: true,
-    description: 'タイプ：岩創造物。【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に岩元素1ダメージ。自リーダー結晶シールド1。',
+    description: '【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に岩元素1ダメージ。自リーダー結晶シールド1。',
   },  { id:'token-tamoto', name:'たもと', type:'follower', rarity:'bronze',
     element:'geo', cost:2, attack:1, health:3, token:true,
     description:'【自分のターン終了時】ランダムな敵フォロワー1体に岩元素2ダメージ。',
