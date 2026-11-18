@@ -299,6 +299,39 @@
   color:#fff;font:800 20px 'Cinzel',serif;text-shadow:0 1px 3px #000;
   box-shadow:0 0 12px #55c6ee8a;}
 .hand-card-stats{font-size:13px;font-weight:800;color:#bff2d4;text-shadow:0 2px 3px #000;}
+/* Hand card category: distinct bottom silhouettes without changing card interactions. */
+.hand-card-stats--follower{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;gap:4px;color:#f9f0da;
+}
+.hand-card-stat{
+  display:inline-flex;align-items:center;justify-content:center;gap:3px;
+  min-width:29px;padding:2px 5px;border-radius:999px;
+  font:800 13px/1.2 'Noto Sans JP',sans-serif;
+  border:1px solid #d5bb7b;
+  box-shadow:inset 0 1px 2px #ffffff33,0 2px 4px #0008;
+}
+.hand-card-stat--attack{background:linear-gradient(180deg,#663b29,#36201c);color:#ffe0b4;}
+.hand-card-stat--health{background:linear-gradient(180deg,#2f6954,#173a32);color:#d3ffde;}
+.hand-card-type-label{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  width:100%;min-height:21px;box-sizing:border-box;
+  padding:2px 4px;border-radius:3px;
+  border:1px solid;font:800 10px/1.2 'Cinzel','Noto Sans JP',serif;
+  letter-spacing:.08em;text-shadow:0 1px 2px #000;
+  box-shadow:inset 0 1px 2px #ffffff2c,0 2px 5px #0008;
+}
+.hand-card-type-label--spell{
+  color:#d9f5ff;border-color:#76c8eb;
+  background:linear-gradient(90deg,#12334e,#26688d 50%,#12334e);
+  clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%);
+}
+.hand-card-type-label--amulet{
+  color:#fff0ba;border-color:#e1c477;
+  background:linear-gradient(90deg,#51401d,#8b6c32 50%,#51401d);
+  clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);
+}
+
 .hand-card:not(:disabled):hover{transform:translateY(-18px) scale(1.07);z-index:4;filter:brightness(1.12);}
 .hand-card:disabled {opacity:.62;filter:saturate(.68);cursor:default;}
 .hand-card.selected-card{transform:translateY(-13px);z-index:3;}
@@ -380,6 +413,8 @@
   .hand-card .card-artwork{max-height:78px;}
   .hand-card strong{font-size:8px;}
   .hand-card-stats{font-size:10px;}
+  .hand-card-stat{font-size:10px;padding:2px 3px;min-width:22px;gap:2px;}
+  .hand-card-type-label{font-size:8px;min-height:18px;letter-spacing:0;}
   .hand-card .card-cost{top:-8px;left:-5px;width:24px;height:24px;font-size:15px;}
   .battle-message{font-size:10px;}
 }
