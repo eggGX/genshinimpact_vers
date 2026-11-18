@@ -1453,11 +1453,17 @@ function App({ online }: { online?: {
               <CardArtwork cardId={card.id} name={card.name} className="card-artwork--hand" />
               <strong>{card.name}</strong>
               <ElementIcon element={card.element} size="xs" />
-              <span className="hand-card-stats">
-                {card.type === 'follower'
-                  ? `${card.attack} / ${card.health}`
-                  : card.type === 'spell' ? 'スペル' : 'アミュレット'}
-              </span>
+              {card.type === 'follower' ? (
+                <span className="hand-card-stats hand-card-stats--follower" aria-label={`攻撃力 ${card.attack}、体力 ${card.health}`}>
+                  <span className="hand-card-stat hand-card-stat--attack"><span aria-hidden="true">⚔</span>{card.attack}</span>
+                  <span className="hand-card-stat hand-card-stat--health"><span aria-hidden="true">♥</span>{card.health}</span>
+                </span>
+              ) : (
+                <span className={`hand-card-type-label hand-card-type-label--${card.type}`}>
+                  <span aria-hidden="true">{card.type === 'spell' ? '✦' : '◆'}</span>
+                  {card.type === 'spell' ? 'SPELL' : 'AMULET'}
+                </span>
+              )}
             </button>
           )
         })}
