@@ -10,6 +10,15 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C015: '/card-art/C015.webp', // 旋火輪
+  C016: '/card-art/C016.webp', // 素晴らしい旅
+  C030: '/card-art/C030.webp', // 古華剣・裁雨留虹
+  C031: '/card-art/C031.webp', // シャイニングミラクル♪
+  C045: '/card-art/C045.webp', // 凛冽なる輪舞
+  C046: '/card-art/C046.webp', // 星流揺籠の夢
+  C060: '/card-art/C060.webp', // 夜の幻現
+  C061: '/card-art/C061.webp', // 御詠鳴神刈山祭
+  C102: '/card-art/C102.webp', // スメールの知恵
   C013: '/card-art/C013.webp', // ドドコ
   C017: '/card-art/C017.webp', // ファデュイ・デットエージェント・炎
   C018: '/card-art/C018.webp', // 双界の炎
