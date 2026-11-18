@@ -10,6 +10,20 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  'token-cryo-itzpapa': '/card-art/token-cryo-itzpapa.webp', // イツパパ
+  'token-oz': '/card-art/token-oz.webp', // オズ
+  'token-sesshou-sakura': '/card-art/token-sesshou-sakura.webp', // 殺生櫻
+  'token-surprising-cat-box': '/card-art/token-surprising-cat-box.webp', // ビックラキャット・ボックス
+  'token-jade-screen': '/card-art/token-jade-screen.webp', // 璇璣屏
+  'token-spinning-turbo': '/card-art/token-spinning-turbo.webp', // ぐるぐるコマちゃん
+  'token-solar-isotoma': '/card-art/token-solar-isotoma.webp', // 陽華
+  'token-tamoto': '/card-art/token-tamoto.webp', // たもと
+  'token-yuegui-jumping': '/card-art/token-yuegui-jumping.webp', // 月桂・跳躍型
+  'token-collei-amber': '/card-art/token-collei-amber.webp', // コレアンバー
+  'token-dendro-spirit': '/card-art/token-dendro-spirit.webp', // 草の霊蛇
+  'token-yuegui-throwing': '/card-art/token-yuegui-throwing.webp', // 月桂・投擲型
+  'token-lumidouce-vial': '/card-art/token-lumidouce-vial.webp', // ルミドゥースの瓶
+  'dendro-core': '/card-art/dendro-core.webp', // 草原核
   'neutral-dove': '/card-art/neutral-dove.webp', // ハト
   'token-baron-bunny': '/card-art/token-baron-bunny.webp', // ウサギ伯爵
   'token-guoba': '/card-art/token-guoba.webp', // グゥオパァー
