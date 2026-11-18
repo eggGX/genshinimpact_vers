@@ -55,7 +55,7 @@ export const productionTokens: Card[] = [
     description: '【突進】【オーラ】【威圧】【元素攻撃：炎】【自分のターン開始時】自身を破壊。【ラストワード】「幻惑のトリック・リネ」1体を召喚。',
   },  {
     id: 'token-hydro-pressure-device',
-    name: '水圧装置',
+    name: '落ち着いた方がいいカモ？',
     type: 'amulet',
     rarity: 'bronze',
     element: 'hydro',
