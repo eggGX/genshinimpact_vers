@@ -1,3 +1,4 @@
+import { grantUniqueCrest } from './crestUtils'
 import { captureFrame } from './presentation'
 import type { GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
@@ -319,7 +320,7 @@ export function geoNaviaBurst(state: GameState, ownerId: string,
   if (result.winnerId !== null) return result
   result = gainGeoCrystallize(result, ownerId, 1)
   return update(result, ownerId, p => ({ ...p,
-    crests: [...(p.crests ?? []), { id: 'C099', turnsRemaining: 2, usedElements: [] }],
+    crests: grantUniqueCrest(p, { id: 'C099', turnsRemaining: 2, usedElements: [] }),
   }))
 }
 
