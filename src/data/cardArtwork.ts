@@ -10,6 +10,17 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C013: '/card-art/C013.webp', // ドドコ
+  C017: '/card-art/C017.webp', // ファデュイ・デットエージェント・炎
+  C018: '/card-art/C018.webp', // 双界の炎
+  C044: '/card-art/C044.webp', // 霜の精
+  C047: '/card-art/C047.webp', // ファデュイ・氷蛍術師
+  C059: '/card-art/C059.webp', // 雷フライム
+  C062: '/card-art/C062.webp', // ファデュイ・雷蛍術師
+  C072: '/card-art/C072.webp', // モンド城
+  C078: '/card-art/C078.webp', // ファデュイ・烈風の従者
+  C087: '/card-art/C087.webp', // 璃月港
+  C107: '/card-art/C107.webp', // ヴァナラーナ
   C028: '/card-art/C028.webp', // コホラ仔竜
   C032: '/card-art/C032.webp', // 堅盾重甲ヤドカニ
   C043: '/card-art/C043.webp', // イクトミ仔竜
