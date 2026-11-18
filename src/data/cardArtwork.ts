@@ -10,6 +10,12 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  C075: '/card-art/C075.webp', // 魔術・アストニシングシフト
+  C076: '/card-art/C076.webp', // 禁・風霊作成・七五同構弐型
+  C090: '/card-art/C090.webp', // 天権崩玉
+  C091: '/card-art/C091.webp', // 大掃除
+  C105: '/card-art/C105.webp', // 玉顆珊々月中落
+  C106: '/card-art/C106.webp', // ニャンコトレジャー
   C015: '/card-art/C015.webp', // 旋火輪
   C016: '/card-art/C016.webp', // 素晴らしい旅
   C030: '/card-art/C030.webp', // 古華剣・裁雨留虹
