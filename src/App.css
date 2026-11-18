@@ -798,3 +798,28 @@
   }
 }
 @media(prefers-reduced-motion:reduce){.opponent-card-reveal{animation:none;}}
+
+/* Drag-to-attack: pointer capture keeps the source active while moving.
+   Drop zones light up; the preview never intercepts hit testing or clicks. */
+.field-card.can-attack{touch-action:none;user-select:none;-webkit-user-select:none;}
+.field-card.drag-attack-target,.leader-button.drag-attack-target{
+  border-color:#f8c477;
+  box-shadow:0 0 0 3px #edc56d88,0 0 20px #f5ba6577;
+}
+.field-card.drag-attack-hover,.leader-button.drag-attack-hover{
+  border-color:#ff7886;
+  box-shadow:0 0 0 4px #ff6d7c99,0 0 27px #ff7385bb;
+}
+.attack-drag-ghost{
+  position:fixed;z-index:1800;width:90px;box-sizing:border-box;
+  transform:translate(-50%,-75%);padding:5px;
+  pointer-events:none;user-select:none;
+  border:2px solid #f4d08a;border-radius:9px;
+  background:#132c3de8;box-shadow:0 6px 20px #000a;
+  color:#fff0ce;text-align:center;font-size:9px;font-weight:800;
+}
+.attack-drag-ghost .card-artwork{height:104px;width:100%;object-fit:cover;}
+.attack-drag-ghost span{display:block;margin-top:4px;}
+@media(prefers-reduced-motion:reduce){
+  .attack-drag-ghost{animation:none;}
+}
