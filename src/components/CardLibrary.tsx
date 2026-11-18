@@ -4,7 +4,7 @@ import { CardDetail } from './CardDetail'
 import { ElementIcon } from './ElementIcon'
 import { getAllCards } from '../data/cardRegistry'
 import { productionCards } from '../data/productionCards'
-import { ELEMENT_ORDER, RARITY_ORDER, validateProductionCards } from '../data/cardValidation'
+import { ELEMENT_ORDER, RARITY_ORDER } from '../data/cardValidation'
 import { filterCards } from '../data/cardFilters'
 import type { ElementType, Rarity } from '../game/types'
 import './CardLibrary.css'
@@ -24,7 +24,6 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const report = validateProductionCards(productionCards)
   const originIds = new Set(productionCards.map(card => card.id))
   const visible = filterCards(getAllCards(), { element, rarity, origin, search }, originIds)
   const selectedIndex = visible.findIndex(card => card.id === selectedId)
@@ -43,55 +42,6 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
         </div>
         <button type="button" onClick={onBack}>対戦画面へ戻る</button>
       </header>
-
-      <section className="library-status" aria-label="正式カード登録状況">
-        <div>
-          <strong>正式カード：{report.total} / {report.plannedTotal}枚</strong>
-          <p>{report.ready ? '全カード登録済み' : '登録準備中（未完成）'}</p>
-        </div>
-        <div>
-          <strong>登録データのエラー：{report.errors.length}件</strong>
-          <p>トークン24種は正式カード115枚の集計には含みません。</p>
-        </div>
-      </section>
-
-      <section className="library-progress" aria-label="元素別の登録予定">
-        <h2>元素別・レアリティ別の登録枠</h2>
-        <div className="library-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">元素</th>
-                {RARITY_ORDER.map(value => <th scope="col" key={value}>{RARITY_LABELS[value]}</th>)}
-                <th scope="col">合計</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ELEMENT_ORDER.map(value => {
-                const slots = report.slots.filter(slot => slot.element === value)
-                return (
-                  <tr key={value}>
-                    <th scope="row"><ElementIcon element={value} size="xs" withLabel /></th>
-                    {slots.map(slot => (
-                      <td key={slot.rarity}>{slot.registered} / {slot.planned}</td>
-                    ))}
-                    <td>
-                      {slots.reduce((n, slot) => n + slot.registered, 0)} /{' '}
-                      {slots.reduce((n, slot) => n + slot.planned, 0)}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-        {report.errors.length > 0 && (
-          <div className="library-errors" role="alert">
-            <strong>登録データの問題</strong>
-            <ul>{report.errors.map((error, index) => <li key={index}>{error}</li>)}</ul>
-          </div>
-        )}
-      </section>
 
       <section className="library-cards" aria-label="カード検索">
         <h2>カード検索</h2>
