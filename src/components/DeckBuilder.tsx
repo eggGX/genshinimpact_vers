@@ -116,7 +116,7 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
                 {(card.elementalSkill || card.elementalBurst) && <span className="deck-card-ability-badges">
                   {card.elementalSkill && <span title={abilityText.skill || card.elementalSkill.name}>スキル · {card.elementalSkill.name}</span>}
                   {card.elementalBurst && <span title={abilityText.burst || card.elementalBurst.name}>爆発 · {card.elementalBurst.name}</span>}
-                </span>
+                </span>}
               </div>
               <div className="deck-copy-buttons">
                 <span>{count} / 3</span>
