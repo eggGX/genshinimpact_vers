@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -313,6 +313,13 @@ function App({ online }: { online?: {
   >(null)
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
+  const dragPointer = useRef<{
+    pointerId: number; attackerId: string; startX: number; startY: number; moved: boolean
+  } | null>(null)
+  const suppressDraggedClick = useRef(false)
+  const [attackDrag, setAttackDrag] = useState<{
+    attackerId: string; x: number; y: number; target: string | null
+  } | null>(null)
   const [selectedHandIndex, setSelectedHandIndex] =
     useState<number | null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{
@@ -448,6 +455,76 @@ function App({ online }: { online?: {
     resetSelection()
   }
 
+  // Drag and click both use the same validated combat actions.
+  const canDragAttackFollower = (attacker: Follower, target: Follower): boolean =>
+    target.health > 0 && !target.keywords.includes('intimidate') &&
+    !target.keywords.includes('stealth') &&
+    (!isGuarded(opponent) || target.keywords.includes('guard') ||
+      attacker.keywords.includes('ignore_guard') ||
+      attacker.keywords.includes('plunge_attack'))
+
+  const canDragAttackLeader = (attacker: Follower): boolean =>
+    !attacker.keywords.includes('rush_only') || attacker.keywords.includes('storm')
+      ? !isGuarded(opponent) || attacker.keywords.includes('plunge_attack')
+      : false
+
+  const dragTargetAt = (x: number, y: number, attackerId: string): string | null => {
+    const attacker = currentPlayer.field.find(f => f.instanceId === attackerId)
+    if (!attacker) return null
+    const target = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-attack-drop]')
+    if (!target) return null
+    const value = target.dataset.attackDrop
+    if (value === 'leader') return canDragAttackLeader(attacker) ? value : null
+    const defender = opponent.field.find(f => f.instanceId === value)
+    return defender && canDragAttackFollower(attacker, defender) ? defender.instanceId : null
+  }
+
+  const startAttackDrag = (event: ReactPointerEvent<HTMLButtonElement>, follower: Follower) => {
+    if (!onlineCanAct || game.winnerId !== null || !canFollowerAttack(follower) ||
+        (event.pointerType === 'mouse' && event.button !== 0)) return
+    dragPointer.current = {
+      pointerId: event.pointerId, attackerId: follower.instanceId,
+      startX: event.clientX, startY: event.clientY, moved: false,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const moveAttackDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const pointer = dragPointer.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    if (!pointer.moved &&
+        Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 10) return
+    pointer.moved = true
+    setAttackDrag({
+      attackerId: pointer.attackerId, x: event.clientX, y: event.clientY,
+      target: dragTargetAt(event.clientX, event.clientY, pointer.attackerId),
+    })
+  }
+
+  const finishAttackDrag = (event: ReactPointerEvent<HTMLButtonElement>, cancelled = false) => {
+    const pointer = dragPointer.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    dragPointer.current = null
+    setAttackDrag(null)
+    if (!pointer.moved) return
+    // Pointer release may synthesize a click; never also select the attacker.
+    suppressDraggedClick.current = true
+    window.setTimeout(() => { suppressDraggedClick.current = false }, 0)
+    if (cancelled || !onlineCanAct || game.winnerId !== null) return
+    const attacker = currentPlayer.field.find(f => f.instanceId === pointer.attackerId)
+    if (!attacker || !canFollowerAttack(attacker)) return
+    const target = dragTargetAt(event.clientX, event.clientY, pointer.attackerId)
+    if (!target) return
+    if (target === 'leader') {
+      if (online) onlineSend({ type: 'attackLeader', attackerId: pointer.attackerId })
+      else animateAction(previous => attackLeader(previous, pointer.attackerId), 'リーダー攻撃')
+    } else {
+      if (online) onlineSend({ type: 'attackFollower', attackerId: pointer.attackerId, targetId: target })
+      else animateAction(previous => attackFollower(previous, pointer.attackerId, target), 'フォロワー攻撃')
+    }
+    resetSelection()
+  }
+
   const handleSelectAttacker = (follower: Follower) => {
     if (!onlineCanAct || game.winnerId !== null) return
     if (!canFollowerAttack(follower)) return
@@ -550,6 +627,11 @@ function App({ online }: { online?: {
     const isSelected =
       follower.instanceId === selectedAttackerId
 
+    const dragAttacker = attackDrag
+      ? currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)
+      : undefined
+    const isDragTarget = isOpponent && dragAttacker !== undefined &&
+      canDragAttackFollower(dragAttacker, follower)
     const isTarget =
       isOpponent && onlineCanAct &&
       game.winnerId === null &&
@@ -579,6 +661,7 @@ function App({ online }: { online?: {
       </div>}
       <button
         type="button"
+        data-attack-drop={isOpponent ? follower.instanceId : undefined}
         className={[
           'field-card',
           `card-element--${card?.element ?? 'none'}`,
@@ -586,11 +669,19 @@ function App({ online }: { online?: {
           canAttack ? 'can-attack' : '',
           isSelected ? 'selected-card' : '',
           isTarget ? 'attack-target' : '',
+          isDragTarget ? 'drag-attack-target' : '',
+          attackDrag?.target === follower.instanceId ? 'drag-attack-hover' : '',
         ].filter(Boolean).join(' ')}
-        disabled={!canAttack && !isTarget && !isFriendlyTarget}
+        disabled={!canAttack && !isTarget && !isFriendlyTarget && !isDragTarget}
+        onPointerDown={!isOpponent ? event => startAttackDrag(event, follower) : undefined}
+        onPointerMove={!isOpponent ? moveAttackDrag : undefined}
+        onPointerUp={!isOpponent ? event => finishAttackDrag(event) : undefined}
+        onPointerCancel={!isOpponent ? event => finishAttackDrag(event, true) : undefined}
+        draggable={false}
         onFocus={() => setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })}
         onBlur={() => setInspectedCard(null)}
         onClick={() => {
+          if (suppressDraggedClick.current) return
           if (isOpponent) {
             handleEnemyFollowerClick(follower.instanceId)
           } else if (isFriendlyTarget && selectedHandIndex !== null) {
@@ -942,6 +1033,14 @@ function App({ online }: { online?: {
           <span className="turn-announcement-ornament">✦ ───────── ✦</span>
         </div>
       </div>}
+      {attackDrag && getCard(currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)?.cardId ?? '') &&
+        <div className="attack-drag-ghost" aria-hidden="true"
+          style={{ left: attackDrag.x, top: attackDrag.y }}>
+          <CardArtwork
+            cardId={currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)!.cardId}
+            name={getCard(currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)!.cardId)?.name ?? ''} />
+          <span>攻撃対象へドラッグ</span>
+        </div>}
       {playedCardNotice &&
         // The online opponent's played card is public; local play shows either side.
         (!online || playedCardNotice.actorId !== online.match.players[online.match.seat].id) &&
@@ -1069,12 +1168,17 @@ function App({ online }: { online?: {
             'leader-button',
             highlightedLeaders.has(opponent.id) ? 'leader-hit' : '',
             selectedAttacker ? 'attack-target' : '',
+            attackDrag && currentPlayer.field.some(f => f.instanceId === attackDrag.attackerId &&
+              canDragAttackLeader(f)) ? 'drag-attack-target' : '',
+            attackDrag?.target === 'leader' ? 'drag-attack-hover' : '',
           ].filter(Boolean).join(' ')}
+          data-attack-drop="leader"
           disabled={
-            !selectedAttacker || !onlineCanAct ||
+            (!selectedAttacker && !attackDrag) || !onlineCanAct ||
             game.winnerId !== null ||
-            (isGuarded(opponent) && !selectedAttacker.keywords.includes('plunge_attack')) ||
-            (selectedAttacker.keywords.includes('rush_only') && !selectedAttacker.keywords.includes('storm'))
+            (selectedAttacker ? !canDragAttackLeader(selectedAttacker) :
+              !currentPlayer.field.some(f => f.instanceId === attackDrag?.attackerId &&
+                canFollowerAttack(f) && canDragAttackLeader(f)))
           }
           onClick={handleAttackLeader}
         >
