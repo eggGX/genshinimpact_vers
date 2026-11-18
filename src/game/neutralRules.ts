@@ -1,3 +1,4 @@
+import { grantUniqueCrest } from './crestUtils'
 import type { Card, ElementType, Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { resolveLeaderElementalHit } from './elemental'
@@ -121,11 +122,11 @@ export function resolveNeutralPlay(
       return editPlayer(state, ownerId, player => ({
         ...player,
         energy: Math.min(5, player.energy + 3),
-        crests: [...(player.crests ?? []), {
+        crests: grantUniqueCrest(player, {
           id: 'C010',
           turnsRemaining: 7,
           usedElements: [],
-        }],
+        }),
       }))
     default:
       return state
