@@ -652,6 +652,47 @@ function App({ online }: { online?: {
     resetSelection()
   }
 
+  /** Visible combat-keyword emblems. Last words can be defined by card effects or special destroy handlers. */
+  const followerEmblems = (follower: Follower) => {
+    const card = getCard(follower.cardId)
+    const lastWord = !follower.keywords.includes('no_last_word') && (
+      follower.keywords.includes('lastword') ||
+      follower.keywords.includes('last_word') ||
+      card?.effects?.some(effect => effect.trigger === 'on_destroy') ||
+      card?.description?.includes('【ラストワード】')
+    )
+    const guard = follower.keywords.includes('guard')
+    const bane = follower.keywords.includes('bane') ||
+      follower.keywords.includes('lethal') ||
+      follower.keywords.includes('必殺') ||
+      Boolean(card?.description?.includes('【必殺】'))
+    if (!lastWord && !guard && !bane) return null
+    return <span className="follower-emblems" aria-label={[
+      lastWord && 'ラストワード', guard && '守護', bane && '必殺',
+    ].filter(Boolean).join('、')}>
+      {lastWord && <span className="follower-emblem follower-emblem--lastword" title="ラストワード">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+          <path d="M5 14a8 8 0 1 1 14 0l-2 2v4H7v-4l-2-2Z" />
+          <circle cx="9" cy="12" r="1.3" fill="currentColor" stroke="none"/>
+          <circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/>
+          <path d="m12 14-1 2h2l-1-2ZM10 20v-2m4 2v-2"/>
+        </svg>
+      </span>}
+      {guard && <span className="follower-emblem follower-emblem--guard" title="守護">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 2 20 5v6c0 5-3 8-8 11-5-3-8-6-8-11V5l8-3Z"/>
+          <path d="M12 6v12M8 11h8"/>
+        </svg>
+      </span>}
+      {bane && <span className="follower-emblem follower-emblem--bane" title="必殺">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M14 4c4 0 7 2 8 6-3-1-6-.5-8 2-1-3-1-5 0-8Z" fill="currentColor" fillOpacity=".28"/>
+          <path d="M15 11 7 21M9 18l-4-2M14 4c4 0 7 2 8 6-3-1-6-.5-8 2"/>
+        </svg>
+      </span>}
+    </span>
+  }
+
   const renderFollower = (
     follower: Follower,
     isOpponent: boolean
@@ -759,7 +800,6 @@ function App({ online }: { online?: {
         </strong>
         {card && <ElementIcon element={card.element} size="xs" />}
         <span className="field-keywords" aria-label="カード状態">
-          {follower.keywords.includes('guard') && <span title="守護" className="keyword-pill">守</span>}
           {follower.keywords.includes('storm') && <span title="疾走" className="keyword-pill">疾</span>}
           {follower.keywords.includes('rush_only') && <span title="突進" className="keyword-pill">突</span>}
           {follower.keywords.includes('aura') && <span title="オーラ" className="keyword-pill">護</span>}
@@ -770,6 +810,7 @@ function App({ online }: { online?: {
         </span>
 
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
+        {followerEmblems(follower)}
 
         {follower.keywords.includes('double_attack') && (
           <small>【2回攻撃】このターンの攻撃：{follower.attacksThisTurn ?? (follower.hasAttacked ? 1 : 0)}/2回</small>
