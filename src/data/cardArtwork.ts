@@ -10,6 +10,16 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  'neutral-dove': '/card-art/neutral-dove.webp', // ハト
+  'token-baron-bunny': '/card-art/token-baron-bunny.webp', // ウサギ伯爵
+  'token-guoba': '/card-art/token-guoba.webp', // グゥオパァー
+  'token-funny-hat-cat': '/card-art/token-funny-hat-cat.webp', // ファニーハット・キャット
+  'token-hydro-pressure-device': '/card-art/token-hydro-pressure-device.webp', // 落ち着いた方がいいカモ？
+  'token-hydro-phantom': '/card-art/token-hydro-phantom.webp', // 虚影
+  'token-hydro-jellyfish': '/card-art/token-hydro-jellyfish.webp', // 化海月
+  'token-cryo-cicin': '/card-art/token-cryo-cicin.webp', // 氷蛍
+  'token-electro-cicin': '/card-art/token-electro-cicin.webp', // 雷蛍
+  'token-cryo-ice-lotus': '/card-art/token-cryo-ice-lotus.webp', // 氷蓮
   C075: '/card-art/C075.webp', // 魔術・アストニシングシフト
   C076: '/card-art/C076.webp', // 禁・風霊作成・七五同構弐型
   C090: '/card-art/C090.webp', // 天権崩玉
