@@ -117,6 +117,8 @@ function App({ online }: { online?: {
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
+  const [mulliganReveal, setMulliganReveal] = useState<{ playerName: string; hand: string[] } | null>(null)
+  const previousOnlinePhase = useRef(online?.match.phase ?? null)
   const lastAnnouncedTurn = useRef<string | null>(null)
   const lastOnlineRevision = useRef<number | null>(null)
   const onlinePlaybackQueue = useRef<OnlinePresentationEvent[]>([])
@@ -177,6 +179,7 @@ function App({ online }: { online?: {
     playbackLock.current = false
     setPlayback(null)
     setPlayedCardNotice(null)
+    setMulliganReveal(null)
     setGame(createInitialGameState(decks))
     setMatchStarted(true)
     setMulliganSelection([])
@@ -194,17 +197,34 @@ function App({ online }: { online?: {
       projectOnlinePlayer(online.match.players[1], online.match.seat === 1),
     ],
   } : localGame
+  // Reveal only the local seat's completed online mulligan when both players are ready.
+  // Online state is already authoritative; no extra draw or gameplay action is performed.
+  useEffect(() => {
+    if (!online) return
+    const previousPhase = previousOnlinePhase.current
+    previousOnlinePhase.current = online.match.phase
+    if (previousPhase !== 'mulligan' || online.match.phase !== 'main') return
+    const self = online.match.players[online.match.seat]
+    setMulliganReveal({ playerName: self.name, hand: [...(self.hand ?? [])] })
+  }, [online?.match.phase, online?.match.seat, online?.match.players])
+
+  useEffect(() => {
+    if (!mulliganReveal) return
+    const timer = window.setTimeout(() => setMulliganReveal(null), 2200)
+    return () => window.clearTimeout(timer)
+  }, [mulliganReveal])
+
   // Detect transitions from actual game state, not from polling frequency.
   // A new turn also includes the first turn immediately after both mulligans.
   useEffect(() => {
-    if (game.phase !== 'main' || game.winnerId !== null) return
+    if (game.phase !== 'main' || game.winnerId !== null || mulliganReveal) return
     const turnKey = `${game.turn}:${game.currentPlayerId}`
     if (lastAnnouncedTurn.current === turnKey) return
     lastAnnouncedTurn.current = turnKey
     const seatId = online ? online.match.players[online.match.seat].id : 'player1'
     const playerName = game.players.find(p => p.id === game.currentPlayerId)?.name ?? ''
     setTurnAnnouncement({ id: turnKey, own: game.currentPlayerId === seatId, playerName })
-  }, [game.phase, game.turn, game.currentPlayerId, game.winnerId, online?.match.seat])
+  }, [game.phase, game.turn, game.currentPlayerId, game.winnerId, online?.match.seat, mulliganReveal])
   // Separate dismissal effect also works under React StrictMode's effect replay.
   useEffect(() => {
     if (!turnAnnouncement) return
@@ -377,6 +397,7 @@ function App({ online }: { online?: {
   const handleReset = () => {
     skipPlayback()
     setGame(createInitialGameState(decks))
+    setMulliganReveal(null)
     setPlayedCardNotice(null)
     resetSelection()
     setMulliganSelection([])
@@ -391,10 +412,14 @@ function App({ online }: { online?: {
   }
 
   const handleConfirmMulligan = () => {
-    const indices = [...mulliganSelection]
-    setGame(previous =>
-      confirmMulligan(previous, indices)
-    )
+    if (localGame.phase !== 'mulligan') return
+    const player = localGame.players.find(p => p.id === localGame.currentPlayerId)
+    if (!player) return
+    const result = confirmMulligan(localGame, [...mulliganSelection])
+    const confirmedPlayer = result.players.find(p => p.id === player.id)
+    if (!confirmedPlayer) return
+    setGame(result)
+    setMulliganReveal({ playerName: player.name, hand: [...confirmedPlayer.hand] })
     setMulliganSelection([])
   }
 
@@ -1038,6 +1063,32 @@ function App({ online }: { online?: {
     </div>
   }
 
+  // In local play, show the newly dealt hand before the next player's
+  // mulligan (or the first turn). The opponent's hand is never revealed online.
+  if (!online && mulliganReveal) {
+    return <div className="game">
+      <main className="mulligan-result-scene" role="status" aria-live="polite">
+        <h2>{mulliganReveal.playerName} のマリガン結果</h2>
+        <p>確定した手札</p>
+        <div className="mulligan-cards mulligan-result-cards">
+          {mulliganReveal.hand.map((cardId, index) => {
+            const card = getCard(cardId)
+            if (!card) return null
+            return <div key={index} className={['mulligan-card', 'mulligan-result-card',
+              `card-element--${card.element}`, `card-rarity--${card.rarity}`].join(' ')}>
+              <span>コスト {card.cost}</span>
+              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
+              <strong>{card.name}</strong>
+              <span>{card.type === 'follower' ? `${card.attack} / ${card.health}` :
+                card.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
+            </div>
+          })}
+        </div>
+        <p className="mulligan-result-note">まもなく次の画面へ進みます</p>
+      </main>
+    </div>
+  }
+
   if (!online && game.phase === 'mulligan') {
     return (
       <div className="game">
@@ -1162,6 +1213,28 @@ function App({ online }: { online?: {
                 : getCard(playedCardNotice.cardId)?.type === 'spell' ? 'スペル' : 'アミュレット'}
           </span>
         </aside>}
+      {online && mulliganReveal && <div className="online-mulligan-overlay mulligan-result-overlay"
+        role="status" aria-live="polite">
+        <div className="online-mulligan-dialog mulligan-result-dialog">
+          <h2>マリガン結果</h2>
+          <p>あなたの確定した手札</p>
+          <div className="mulligan-cards mulligan-result-cards">
+            {mulliganReveal.hand.map((cardId, index) => {
+              const card = getCard(cardId)
+              if (!card) return null
+              return <div key={index} className={['mulligan-card', 'mulligan-result-card',
+                `card-element--${card.element}`, `card-rarity--${card.rarity}`].join(' ')}>
+                <span>コスト {card.cost}</span>
+                <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
+                <strong>{card.name}</strong>
+                <span>{card.type === 'follower' ? `${card.attack} / ${card.health}` :
+                  card.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
+              </div>
+            })}
+          </div>
+          <p className="mulligan-result-note">まもなく対戦が始まります</p>
+        </div>
+      </div>}
       {online?.match.phase === 'mulligan' && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
         <div className="online-mulligan-dialog">
           <h2>{currentPlayer.name} のマリガン</h2>
