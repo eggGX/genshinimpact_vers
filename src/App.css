@@ -884,3 +884,19 @@
   .hand-drag-ghost{width:79px;}
   .hand-drag-ghost .card-artwork{height:88px;}
 }
+
+/* Bottom-center combat emblems: last word, guard and bane. */
+.follower-emblems{
+  position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);
+  z-index:5;display:flex;align-items:center;justify-content:center;gap:3px;
+  pointer-events:none;white-space:nowrap;
+}
+.follower-emblem{
+  width:22px;height:22px;display:grid;place-items:center;flex-shrink:0;
+  border:1px solid #d4b97a;border-radius:50%;
+  color:#f8f0db;background:linear-gradient(160deg,#293b4b,#0f1825);
+  box-shadow:0 2px 5px #000b,inset 0 1px 2px #ffffff35;
+}
+.follower-emblem--lastword{color:#f4d7e5;border-color:#b78ba5;background:linear-gradient(#563449,#261927);}
+.follower-emblem--guard{color:#ddf1ff;border-color:#8ab8d7;background:linear-gradient(#34546b,#172b40);}
+.follower-emblem--bane{color:#f5d7fb;border-color:#b08bc6;background:linear-gradient(#57416b,#241a32);}
