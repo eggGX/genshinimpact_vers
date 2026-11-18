@@ -823,3 +823,29 @@
 @media(prefers-reduced-motion:reduce){
   .attack-drag-ghost{animation:none;}
 }
+
+/* Hand-to-field play: keep click targeting unchanged while adding pointer drag. */
+.hand-card:not(:disabled){touch-action:none;user-select:none;-webkit-user-select:none;}
+.card-slot.hand-play-drop-zone{
+  border-color:#d3af66;
+  box-shadow:inset 0 0 18px #d9bb5740,0 0 15px #dec27633;
+}
+.card-slot.hand-play-drop-hover{
+  border-color:#8fe5b1;
+  background:radial-gradient(ellipse at center,#7ee9b32b,#193d3b3d);
+  box-shadow:inset 0 0 22px #80e5ae50,0 0 21px #91e8ae77;
+}
+.hand-drag-ghost{
+  position:fixed;z-index:1800;width:105px;box-sizing:border-box;
+  transform:translate(-50%,-75%);padding:6px;
+  pointer-events:none;user-select:none;
+  border:2px solid #e8c886;border-radius:9px;
+  background:#112d3eed;box-shadow:0 7px 22px #000b;
+  color:#fff1d3;text-align:center;font-size:10px;font-weight:800;
+}
+.hand-drag-ghost .card-artwork{height:119px;width:100%;object-fit:cover;}
+.hand-drag-ghost span{display:block;margin-top:5px;}
+@media(max-width:700px){
+  .hand-drag-ghost{width:79px;}
+  .hand-drag-ghost .card-artwork{height:88px;}
+}
