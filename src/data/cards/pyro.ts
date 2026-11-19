@@ -172,7 +172,7 @@ export const pyroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分のターン終了時、自分の場に「グゥオパァー」があるなら自身を+1/+1する。\n【元素スキル：グゥオパァー出撃】\nコスト：PP2\n「グゥオパァー」1体を自分の場に出す。",
+    "description": "自分のターン終了時、自分の場に「グゥオパァー」があるなら、このフォロワーを+1/+1する。\n【元素スキル：グゥオパァー出撃】\nコスト：PP2\n「グゥオパァー」1体を自分の場に出す。",
     "elementalSkill": { "name": "グゥオパァー出撃", "ppCost": 2, "effects": [] },
     "implementationStatus": "playable"
   },
@@ -254,7 +254,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【疾走】\n【攻撃時】自分の場に炎元素カード3枚以上なら自身を+1/+0。\n【元素スキル：ビウィルダー・ライト】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n【元素爆発：大魔術・ミラクルパレード】エネルギー2：このフォロワーは「ファニーハット・キャット」に変身する。",
+    "description": "【疾走】\n【攻撃時】自分の場に炎元素カードが3枚以上あるなら、このフォロワーを+1/+0する。\n【元素スキル：ビウィルダー・ライト】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n【元素爆発：大魔術・ミラクルパレード】エネルギー2：このフォロワーは「ファニーハット・キャット」に変身する。",
         "keywords": ["storm"],
     "elementalSkill": { "name": "ビウィルダー・ライト", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }
