@@ -175,7 +175,7 @@ export const electroCards: Card[] = [
     "traits": [
       "荒瀧派"
     ],
-    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：越祓雷草の輪】\nコスト：PP1\n自身に1ダメージ。\n自分のリーダー2回復。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：越祓雷草の輪】\nコスト：PP1\nこのフォロワーに1ダメージ。\n自分のリーダー2回復。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"越祓雷草の輪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -232,7 +232,7 @@ export const electroCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【突進】\n【元素スキル：秘儀・律淵渡魂】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n【元素爆発：聖儀・狼駆憑走】\nコスト：元素エネルギー_3\n自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
+    "description": "【突進】\n【元素スキル：秘儀・律淵渡魂】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n【元素爆発：聖儀・狼駆憑走】\nコスト：元素エネルギー_3\nこのフォロワーを+2/+2する。\nこのフォロワーは【2回攻撃】【元素攻撃：雷】をもつ。",
     "elementalSkill": {"name":"秘儀・律淵渡魂","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "elementalBurst": {"name":"聖儀・狼駆憑走","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
@@ -273,7 +273,7 @@ export const electroCards: Card[] = [
     "traits": [
       "豊穣の邦"
     ],
-    "description": "【突進】\n【攻撃時】自身+1/+0。\n【元素スキル：夜虹の飛翔】\nコスト：PP1\n自身に【元素攻撃：雷】【落下攻撃】付与。\n【元素爆発：閃烈降臨！】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに雷元素3ダメージ。\n自身+2/+0。",
+    "description": "【突進】\n【攻撃時】このフォロワーを+1/+0する。\n【元素スキル：夜虹の飛翔】\nコスト：PP1\nこのフォロワーは【元素攻撃：雷】【落下攻撃】をもつ。\n【元素爆発：閃烈降臨！】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに雷元素3ダメージ。\nこのフォロワーを+2/+0する。",
     "elementalSkill": {"name":"夜虹の飛翔","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"閃烈降臨！","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
