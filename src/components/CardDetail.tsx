@@ -23,7 +23,7 @@ const triggerNames: Record<CardEffect['trigger'], string> = {
 const targetNames: Record<EffectTarget, string> = {
   own_leader: '自分のリーダー',
   enemy_leader: '相手のリーダー',
-  selected_enemy_follower: '指定した敵フォロワー',
+  selected_enemy_follower: '指定した相手フォロワー',
   self_follower: 'このフォロワー',
 }
 
