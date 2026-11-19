@@ -224,7 +224,7 @@ export const cryoCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "【元素攻撃：氷】【ファンファーレ】カード1枚引く。【元素スキル：フレーミング・氷点法】PP1：相手の場のフォロワー1枚を選ぶ。それは氷元素2ダメージを受ける。それは攻撃力-1。",
+    "description": "【元素攻撃：氷】【ファンファーレ】カード1枚引く。【元素スキル：フレーミング・氷点法】PP1：相手の場のフォロワー1枚を選ぶ。それは氷元素2ダメージを受け、攻撃力-1される。",
     "elementalSkill": {"name":"フレーミング・氷点法","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"cryo"}]},
     "implementationStatus": "playable",
     "normalAttackElement": "cryo"
