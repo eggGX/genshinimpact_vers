@@ -35,7 +35,7 @@ export const electroCards: Card[] = [
     "traits": [
       "キノコン"
     ],
-    "description": "【ラストワード】ランダム敵フォロワーに雷元素2ダメージ。",
+    "description": "【ラストワード】ランダムな敵フォロワー1体に雷元素2ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -107,7 +107,7 @@ export const electroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "ランダムな敵フォロワーに雷元素1ダメージ×3回。自分のリーダーの現在HPが10以下なら代わりに5回。",
+    "description": "ランダムな敵フォロワー1体に雷元素1ダメージ。これをX回行う。Xは自分のリーダーの現在HPが10以下なら5、そうでなければ3である。",
     "implementationStatus": "playable"
   },
   {
@@ -175,7 +175,7 @@ export const electroCards: Card[] = [
     "traits": [
       "荒瀧派"
     ],
-    "description": "【自分のターン終了時】自リーダー1回復。【元素スキル：越祓雷草の輪】PP1：自身に1ダメージ。自リーダー2回復。ランダム敵フォロワー1体に雷元素1ダメージ。",
+    "description": "【自分のターン終了時】自リーダー1回復。【元素スキル：越祓雷草の輪】PP1：自身に1ダメージ。自リーダー2回復。ランダムな敵フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"越祓雷草の輪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const electroCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "【自分のターン中】自分が感電を起こしたとき、ランダム敵フォロワー1体に雷元素1ダメージ（1ターン最大2回）。【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。別のランダムな敵フォロワー1体に雷元素1ダメージ。",
+    "description": "【自分のターン中】自分が感電を起こしたとき、ランダム敵フォロワー1体に雷元素1ダメージ（1ターン最大2回）。【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。選んだフォロワーとは別のランダムな敵フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"冥色のタイトロープ","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "implementationStatus": "playable"
   },
@@ -252,7 +252,7 @@ export const electroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【元素攻撃：雷】【元素スキル：野干役呪・殺生櫻】PP1：「殺生櫻」1つを出す（1ターン最大3回）。【元素爆発：大密法・天狐顕現】エネルギー3：敵フォロワーすべてに雷元素3ダメージ。自分の「殺生櫻」すべてを破壊。破壊数だけランダムな敵フォロワーまたはリーダーに雷元素2ダメージ。",
+    "description": "【元素攻撃：雷】【元素スキル：野干役呪・殺生櫻】PP1：「殺生櫻」1つを出す（1ターン最大3回）。【元素爆発：大密法・天狐顕現】エネルギー3：敵フォロワーすべてに雷元素3ダメージ。自分の「殺生櫻」すべてを破壊。ランダムな敵フォロワーまたは相手リーダー1体に雷元素2ダメージ。これをX回行う。Xはこの効果で破壊した「殺生櫻」の数である。",
     "elementalSkill": {"name":"野干役呪・殺生櫻","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"大密法・天狐顕現","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
