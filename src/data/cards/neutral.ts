@@ -59,7 +59,7 @@ export const neutralCards: Card[] = [
     health: 2,
     region: ['ナド・クライ'],
     traits: ['ワイルドハント', 'アビス'],
-    description: '【ファンファーレ】同名フォロワー1体を召喚する。\n【ラストワード】ラストワードを持たない「ワイルドハント」1体を召喚する。',
+    description: '【ファンファーレ】同名フォロワー1体を自分の場に出す。\n【ラストワード】ラストワードを持たない「ワイルドハント」1体を自分の場に出す。',
   },
   {
     id: 'C005',
@@ -69,7 +69,7 @@ export const neutralCards: Card[] = [
     rarity: 'silver',
     element: 'none',
     cost: 4,
-    description: '「ヒルチャール」4体を召喚する。',
+    description: '「ヒルチャール」4体を自分の場に出す。',
   },
   {
     id: 'C006',
@@ -95,7 +95,7 @@ export const neutralCards: Card[] = [
     attack: 1,
     health: 1,
     region: ['モンド'],
-    description: '【ファンファーレ】「ハト」2体を召喚する。\n自分のターン終了時、自分の場にハトがいないなら、このフォロワーを+1/+1する。',
+    description: '【ファンファーレ】「ハト」2体を自分の場に出す。\n自分のターン終了時、自分の場にハトがいないなら、このフォロワーを+1/+1する。',
   },
   {
     id: 'C008',
