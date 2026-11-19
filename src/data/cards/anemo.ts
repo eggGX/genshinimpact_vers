@@ -194,7 +194,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。自分の場の風元素フォロワーすべてを+1/+0。",
+    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。自分の場の風元素フォロワーすべてに+1/+0の修正を与える。",
     "elementalSkill": {"name":"非想風天","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "implementationStatus": "playable"
   },
