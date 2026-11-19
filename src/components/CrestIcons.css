@@ -27,10 +27,15 @@
   background:#131d30;border:1px solid #efd39b;border-radius:9px;min-width:17px;height:17px;padding:0 2px;
   color:#fff7dc;font:bold 11px 'Cinzel',serif;box-shadow:0 1px 5px #000a;}
 .crest-detail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-  width:100%;font-size:11px;border-top:1px solid #aa947344;padding-top:6px;color:#ded8c7;}
+  position:absolute;z-index:120;right:0;top:calc(100% + 9px);
+  width:min(370px,calc(100vw - 32px));box-sizing:border-box;
+  border:1px solid #d9bd83;border-radius:10px;padding:12px 14px;
+  background:linear-gradient(155deg,#1b3544,#0d1e2d);box-shadow:0 12px 35px #000b;
+  font-size:11px;color:#ded8c7;pointer-events:none;}
+.crest-tray--above .crest-detail{top:auto;bottom:calc(100% + 9px);}
 .crest-detail-name{font-weight:800;color:#f3dbac;}
 .crest-detail-turns{white-space:nowrap;color:#bfd4cf;}
-.crest-detail p{flex-basis:100%;margin:2px 0;font-size:11px;line-height:1.45;}
+.crest-detail p{flex-basis:100%;margin:4px 0 0;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;}
 .crest-used-elements{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 @media(max-width:680px){
   .crest-tray{gap:5px;padding:3px 5px;}
