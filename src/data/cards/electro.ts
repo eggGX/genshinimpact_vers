@@ -194,7 +194,7 @@ export const electroCards: Card[] = [
     "traits": [
       "天領奉行"
     ],
-    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：烏天狗雷霆召呪】PP1：自分の場の雷元素フォロワー1枚を選ぶ。それは+2/+0する。ランダム敵フォロワー1体に雷元素1ダメージ。",
+    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：烏天狗雷霆召呪】PP1：自分の場の雷元素フォロワー1枚を選ぶ。それは+2/+0する。ランダムな敵フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"烏天狗雷霆召呪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const electroCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "【自分のターン中】自分が感電を起こしたとき、ランダム敵フォロワー1体に雷元素1ダメージ（1ターン最大2回）。【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。選んだフォロワーとは別のランダムな敵フォロワー1体に雷元素1ダメージ。",
+    "description": "【自分のターン中】自分が感電を起こしたとき、ランダムな敵フォロワー1体に雷元素1ダメージ（1ターン最大2回）。【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。選んだフォロワーとは別のランダムな敵フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"冥色のタイトロープ","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "implementationStatus": "playable"
   },
