@@ -107,7 +107,7 @@ export const electroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "ランダムな相手フォロワー1体に雷元素1ダメージ。これをX回行う。Xは自分のリーダーの現在HPが10以下なら5、そうでなければ3である。",
+    "description": "ランダムな相手フォロワー1体に雷元素1ダメージ。これを3回行う。自分のリーダーの現在HPが10以下なら3回ではなく5回。",
     "implementationStatus": "playable"
   },
   {
@@ -156,7 +156,7 @@ export const electroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "自分のターン終了時、自分の場のランダムな「オズ」1体は【潜伏】を持つ。\n【元素スキル：夜巡りの翼】\nコスト：PP2\n「オズ」1体を自分の場に出す。",
+    "description": "自分のターン終了時、自分の場のランダムな「オズ」1体は【潜伏】をもつ。\n【元素スキル：夜巡りの翼】\nコスト：PP2\n「オズ」1体を自分の場に出す。",
     "elementalSkill": {"name":"夜巡りの翼","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -175,7 +175,7 @@ export const electroCards: Card[] = [
     "traits": [
       "荒瀧派"
     ],
-    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：越祓雷草の輪】\nコスト：PP1\nこのフォロワーに1ダメージ。\n自分のリーダー2回復。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "自分のターン終了時、自分のリーダーを1回復。\n【元素スキル：越祓雷草の輪】\nコスト：PP1\nこのフォロワーに1ダメージ。\n自分のリーダーを2回復。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"越祓雷草の輪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
