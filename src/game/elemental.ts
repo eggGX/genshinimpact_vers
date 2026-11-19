@@ -255,7 +255,8 @@ function resolveReactionConsequenceCore(
   affectedInstanceId: string,
   reaction: ElementalReaction | null,
   reactedElement?: ElementType,
-  sourceOwnerIndex?: number
+  sourceOwnerIndex?: number,
+  allowOroronTrigger = true,
 ): GameState {
   if (reaction === 'burning') {
     const index=sourceOwnerIndex ?? (1-affectedOwnerIndex)
@@ -435,32 +436,26 @@ function resolveReactionConsequenceCore(
       return { ...next, winnerId: next.players[1 - affectedOwnerIndex].id }
     }
     const actorIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
-    if (next.players[actorIndex].id !== next.currentPlayerId) return next
-    // Each Ororon separately triggers up to twice on its owner's turn.
+    if (!allowOroronTrigger || next.players[actorIndex].id !== next.currentPlayerId) return next
+    // Every separate Electro-Charged event triggers Ororon with no per-turn cap.
+    // Ororon's own bonus hit cannot trigger Ororon again (prevents loops).
     const ids = next.players[actorIndex].field
-      .filter(f => f.cardId === 'C067' && f.health > 0 &&
-        (f.electroChargedTriggersThisTurn ?? 0) < 2).map(f => f.instanceId)
+      .filter(f => f.cardId === 'C067' && f.health > 0).map(f => f.instanceId)
     for (const id of ids) {
       const actor = next.players[actorIndex]
       const ororon = actor.field.find(f => f.instanceId === id && f.health > 0)
       if (!ororon) continue
       const enemies = next.players[1 - actorIndex].field.filter(f => f.health > 0)
-      const marked = [...next.players] as [Player, Player]
-      marked[actorIndex] = { ...actor,
-        field: actor.field.map(f => f.instanceId === id
-          ? { ...f, electroChargedTriggersThisTurn: (f.electroChargedTriggersThisTurn ?? 0) + 1 }
-          : f) }
-      next = { ...next, players: marked }
-      if (!enemies.length) continue
+       if (!enemies.length) continue
       const victim = enemies[Math.floor(Math.random() * enemies.length)]
       const outcome = resolveElementalDamage(victim, 1, 'electro')
       const updated = [...next.players] as [Player, Player]
       updated[1 - actorIndex] = { ...updated[1 - actorIndex],
         field: updated[1 - actorIndex].field.map(f =>
           f.instanceId === victim.instanceId ? outcome.follower : f) }
-      // Secondary reactions are resolved once; capped trigger counts prevent loops.
+      // Resolve the secondary reaction normally without retriggering Ororon's bonus.
       next = resolveReactionConsequence({ ...next, players: updated },
-        1 - actorIndex, victim.instanceId, outcome.reaction, outcome.reactedElement, actorIndex)
+        1 - actorIndex, victim.instanceId, outcome.reaction, outcome.reactedElement, actorIndex, false)
       if (next.winnerId !== null) break
     }
     return next
@@ -483,9 +478,10 @@ export function resolveReactionConsequence(
   reaction: ElementalReaction | null,
   reactedElement?: ElementType,
   sourceOwnerIndex?: number,
+  allowOroronTrigger = true,
 ): GameState {
   const resolved = resolveReactionConsequenceCore(state, affectedOwnerIndex,
-    affectedInstanceId, reaction, reactedElement, sourceOwnerIndex)
+    affectedInstanceId, reaction, reactedElement, sourceOwnerIndex, allowOroronTrigger)
   return reaction ? captureFrame(resolved, `元素反応：${reactionLabels[reaction]}`) : resolved
 }
 
