@@ -182,17 +182,16 @@ export function resolvePyroAttackAfter(state: GameState, ownerId: string, attack
 }
 
 
-/** Bennett's fanfare chooses one allied follower, including Bennett himself. */
+/** Bennett's fanfare chooses an existing allied follower, never Bennett himself. */
 export function resolvePyroGoldPlay(
   state: GameState, ownerId: string, cardId: string,
   sourceId: string, targetId?: string
 ): GameState {
   if (cardId !== 'C021') return state
-  const recipient = targetId === 'self' ? sourceId : targetId
-  if (!recipient) return state
+  if (!targetId || targetId === 'self' || targetId === sourceId) return state
   return updateOwner(state, ownerId, player => ({
     ...player,
-    field: player.field.map(f => f.instanceId === recipient && f.health > 0
+    field: player.field.map(f => f.instanceId === targetId && f.health > 0
       ? { ...f, attack: f.attack + 1 } : f),
   }))
 }
