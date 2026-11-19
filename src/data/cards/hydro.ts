@@ -239,7 +239,7 @@ export const hydroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素攻撃：水】【元素スキル：水中幻願】PP1：「虚影」1体を召喚。【元素爆発：星命定軌】エネルギー3：敵フォロワーすべてに水元素2ダメージ。その後、相手フォロワーすべてに「次に受けるダメージ+2」を付与。",
+    "description": "【元素攻撃：水】【元素スキル：水中幻願】PP1：「虚影」1体を召喚。【元素爆発：星命定軌】エネルギー3：相手フォロワーすべてに水元素2ダメージ。その後、相手フォロワーすべてに「次に受けるダメージ+2」を付与。",
         "elementalSkill": {"name":"水中幻願","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"星命定軌","energyCost":3,"effects":[]},
 "implementationStatus": "playable",
@@ -278,7 +278,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【元素スキル：魔王武装・狂瀾】PP1：自身に【突進】【2回攻撃】【元素攻撃：水】付与。【元素爆発：極悪技・尽滅閃】エネルギー4：敵フォロワーすべてと相手リーダーに水元素3ダメージ。このターン自身が攻撃済みなら代わりに5。",
+    "description": "【元素スキル：魔王武装・狂瀾】PP1：自身に【突進】【2回攻撃】【元素攻撃：水】付与。【元素爆発：極悪技・尽滅閃】エネルギー4：相手フォロワーすべてと相手リーダーに水元素3ダメージ。このターン自身が攻撃済みなら代わりに5。",
         "elementalSkill": {"name":"魔王武装・狂瀾","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"極悪技・尽滅閃","energyCost":4,"effects":[]},
 "implementationStatus": "playable"
