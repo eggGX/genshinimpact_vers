@@ -78,7 +78,7 @@ export const anemoCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "「ビックラキャット・ボックス」1体を召喚。",
+    "description": "「ビックラキャット・ボックス」1体を自分の場に出す。",
     "implementationStatus": "playable"
   },
   {
@@ -106,7 +106,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "【突進】\n【攻撃時】「ヒルチャール」1体召喚。",
+    "description": "【突進】\n【攻撃時】「ヒルチャール」1体を自分の場に出す。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
