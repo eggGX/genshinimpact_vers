@@ -121,7 +121,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【ファンファーレ】「氷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に氷蛍がいれば自身に通常シールド2。",
+    "description": "【ファンファーレ】「氷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に「氷蛍」がいれば、このフォロワーに通常シールド2を付与する。",
     "implementationStatus": "playable"
   },
   {
