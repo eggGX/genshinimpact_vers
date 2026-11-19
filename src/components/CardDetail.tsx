@@ -139,7 +139,7 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
           {card.elementalSkill && <div className="card-detail-ability">
             <div className="card-detail-ability-title">
               <strong>元素スキル {card.elementalSkill.name}</strong>
-              <span>{(card.elementalSkill.ppCost ?? 0) === 0 ? 'コスト：なし' : `PP ${card.elementalSkill.ppCost}`}</span>
+              <span>{card.id === 'C083' ? 'コスト：手札1枚' : (card.elementalSkill.ppCost ?? 0) === 0 ? 'コスト：なし' : `PP ${card.elementalSkill.ppCost}`}</span>
             </div>
             {abilityText.skill && <p className="card-detail-ability-description">{abilityText.skill}</p>}
             {!abilityText.skill && card.elementalSkill.effects.length > 0 &&
