@@ -223,8 +223,8 @@ export const hydroCards: Card[] = [
     "region": [
       "ナド・クライ"
     ],
-    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを場に出す。\n【元素スキル：名称未設定】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに水元素2ダメージ。\n自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
-        "elementalSkill": {"name":"名称未設定","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"hydro"}]},
+    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを自分の場に出す。\n【元素スキル：アイデアキャッチャー】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに水元素2ダメージ。\n自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
+        "elementalSkill": {"name":"アイデアキャッチャー","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"hydro"}]},
 "implementationStatus": "playable"
   },
   {
@@ -239,7 +239,7 @@ export const hydroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素攻撃：水】\n【元素スキル：水中幻願】\nコスト：PP1\n「虚影」1体を自分の場に出す。\n【元素爆発：星命定軌】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに水元素2ダメージ。\nその後、相手の場のフォロワーすべてに「次に受けるダメージ+2」を付与。",
+    "description": "【元素攻撃：水】\n【元素スキル：水中幻願】\nコスト：PP1\n「虚影」1体を自分の場に出す。\n【元素爆発：星命定軌】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに水元素2ダメージ。\nその後、相手の場のフォロワーすべては「次に受けるダメージ+2」をもつ。",
         "elementalSkill": {"name":"水中幻願","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"星命定軌","energyCost":3,"effects":[]},
 "implementationStatus": "playable",
@@ -257,7 +257,7 @@ export const hydroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【元素攻撃：水】\n自分のターン終了時、自分のリーダー2回復。\n【元素スキル：海月の誓い】\nコスト：PP1\n「化海月」1体を自分の場に出す。\n【元素爆発：海人の羽衣】\nコスト：元素エネルギー_3\n自身+2/+0、【守護】【突進】\n【攻撃時：自分のリーダー2回復】付与。",
+    "description": "【元素攻撃：水】\n自分のターン終了時、自分のリーダーを2回復。\n【元素スキル：海月の誓い】\nコスト：PP1\n「化海月」1体を自分の場に出す。\n【元素爆発：海人の羽衣】\nコスト：元素エネルギー_3\nこのフォロワーを+2/+0する。\nこのフォロワーは【守護】【突進】をもつ。\nこのフォロワーは「【攻撃時】自分のリーダーを2回復。」をもつ。",
         "elementalSkill": {"name":"海月の誓い","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"海人の羽衣","energyCost":3,"effects":[]},
 "implementationStatus": "playable",
@@ -278,7 +278,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【元素スキル：魔王武装・狂瀾】\nコスト：PP1\n自身に【突進】【2回攻撃】【元素攻撃：水】付与。\n【元素爆発：極悪技・尽滅閃】\nコスト：元素エネルギー_4\n相手の場のフォロワーすべてと相手のリーダーに水元素3ダメージ。このターン自身が攻撃済みなら代わりに5。",
+    "description": "【元素スキル：魔王武装・狂瀾】\nコスト：PP1\nこのフォロワーは【突進】【2回攻撃】【元素攻撃：水】をもつ。\n【元素爆発：極悪技・尽滅閃】\nコスト：元素エネルギー_4\n相手の場のフォロワーすべてと相手のリーダーに水元素3ダメージ。このターンにこのフォロワーが攻撃していたなら、代わりに水元素5ダメージ。",
         "elementalSkill": {"name":"魔王武装・狂瀾","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"極悪技・尽滅閃","energyCost":4,"effects":[]},
 "implementationStatus": "playable"
