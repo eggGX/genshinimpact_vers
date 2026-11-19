@@ -8,7 +8,7 @@ const anemo = readFileSync(new URL('../src/game/anemoAdvancedRules.ts', import.m
 
 test('Rush-only restriction does not block leader attack after Storm is gained', () => {
   assert.match(engine, /attacker\.keywords\.includes\('rush_only'\) && !attacker\.keywords\.includes\('storm'\)/)
-  assert.match(app, /selectedAttacker\.keywords\.includes\('rush_only'\) && !selectedAttacker\.keywords\.includes\('storm'\)/)
+  assert.match(app, /!attacker\.keywords\.includes\('rush_only'\) \|\| attacker\.keywords\.includes\('storm'\)/)
 })
 test('Xiao burst grants Storm and canAttack while retaining plunge attack', () => {
   assert.match(anemo, /if \(cardId === 'C084'\) return edit/)
