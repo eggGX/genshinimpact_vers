@@ -8,7 +8,7 @@ import './CrestIcons.css'
 type Props = { crests?: CrestState[]; ownerName: string; placement?: 'above' | 'below' }
 
 const customTitles: Record<string, string> = {
-  C034: '歌声の環',
+  C034: '公演、開始♪',
   C053: '降衆天華',
   C099: '晴天を衝く霰弾の名射手',
 }
