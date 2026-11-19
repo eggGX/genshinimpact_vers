@@ -160,7 +160,7 @@ export const anemoCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【潜伏】【元素スキル：嗚呼流・風隠急進】PP1：敵フォロワー1体に風元素2ダメージ。自身+1/+0。",
+    "description": "【潜伏】【元素スキル：嗚呼流・風隠急進】PP1：相手の場のフォロワー1枚を選ぶ。それは風元素2ダメージを受ける。自身+1/+0。",
     "implementationStatus": "playable",
     "keywords": [
       "stealth"
@@ -194,7 +194,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【ファンファーレ】他の自分の風元素フォロワー1体を+1/+0。【元素スキル：非想風天】PP1：敵フォロワー1体に風元素2ダメージ。自分の風元素フォロワーすべてを+1/+0。",
+    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。それは風元素2ダメージを受ける。自分の風元素フォロワーすべてを+1/+0。",
     "elementalSkill": {"name":"非想風天","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【突進】【ファンファーレ】デッキからランダムな風元素スペル1枚を手札に加える。【元素スキル：エニグマティック・フェイント】PP1：敵フォロワー1体に風元素2ダメージ。自身を1回復。",
+    "description": "【突進】【ファンファーレ】デッキからランダムな風元素スペル1枚を手札に加える。【元素スキル：エニグマティック・フェイント】PP1：相手の場のフォロワー1枚を選ぶ。それは風元素2ダメージを受ける。自身を1回復。",
     "implementationStatus": "playable",
     "keywords": ["rush"],
     "elementalSkill": {
@@ -266,7 +266,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "仙人"
     ],
-    "description": "【突進】【元素スキル：風輪両立】PP1：敵フォロワー1体に風元素2ダメージ。1ターン最大2回。【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。さらに【自分のターン終了時】自身と自リーダーに1ダメージ、を付与。",
+    "description": "【突進】【元素スキル：風輪両立】PP1：相手の場のフォロワー1枚を選ぶ。それは風元素2ダメージを受ける。1ターン最大2回。【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。さらに【自分のターン終了時】自身と自リーダーに1ダメージ、を付与。",
     "keywords": ["rush"],
     "elementalSkill": {"name":"風輪両立","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "elementalBurst": {"name":"靖妖儺舞","energyCost":4,"effects":[]},
