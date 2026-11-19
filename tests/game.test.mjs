@@ -2971,7 +2971,7 @@ test('C067 オロルン：自ターン感電の追加雷1に回数制限を設�
     state.players[1].field=state.players[1].field.map(f=>f.instanceId===enemy.instanceId?r.follower:f)
     state=resolveReactionConsequence(state,1,enemy.instanceId,r.reaction,r.reactedElement,0)
   }
-  assert.equal(state.players[0].field.find(f=>f.instanceId===ororon.instanceId).electroChargedTriggersThisTurn ?? 0,0)
+  assert.equal(state.players[1].field.reduce((total,f)=>total+f.health,0),18)
   assert.ok(state.players[1].field.find(f=>f.instanceId===other.instanceId).health<=9)
 })
 
