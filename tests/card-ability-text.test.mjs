@@ -15,8 +15,8 @@ test('card detail splits only authored newlines, not inline keywords or quoted e
   const c030 = getCard('C030')
   const c091 = getCard('C091')
   assert.deepEqual(splitCardAbilityLines(getCardAbilityText(c030).basic), [c030.description])
-  assert.deepEqual(splitCardAbilityLines(getCardAbilityText(c091).basic), c091.description.split('\\n'))
-  assert.deepEqual(splitCardAbilityLines('【守護】\\n【ラストワード】1ダメージ。'), ['【守護】', '【ラストワード】1ダメージ。'])
+  assert.deepEqual(splitCardAbilityLines(getCardAbilityText(c091).basic), c091.description.split('\n'))
+  assert.deepEqual(splitCardAbilityLines('【守護】\n【ラストワード】1ダメージ。'), ['【守護】', '【ラストワード】1ダメージ。'])
 })
 
 test('separate base, skill, and burst without losing inner keyword tags', () => {
