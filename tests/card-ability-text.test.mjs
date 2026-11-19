@@ -8,8 +8,16 @@ const vite = await createServer({
   logLevel: 'error',
 })
 after(async () => { await vite.close() })
-const { getCardAbilityText } = await vite.ssrLoadModule('/src/data/cardAbilityText.ts')
+const { getCardAbilityText, splitCardAbilityLines } = await vite.ssrLoadModule('/src/data/cardAbilityText.ts')
 const { getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
+
+test('card detail splits only authored newlines, not inline keywords or quoted effects', () => {
+  const c030 = getCard('C030')
+  const c091 = getCard('C091')
+  assert.deepEqual(splitCardAbilityLines(getCardAbilityText(c030).basic), [c030.description])
+  assert.deepEqual(splitCardAbilityLines(getCardAbilityText(c091).basic), c091.description.split('\\n'))
+  assert.deepEqual(splitCardAbilityLines('【守護】\\n【ラストワード】1ダメージ。'), ['【守護】', '【ラストワード】1ダメージ。'])
+})
 
 test('separate base, skill, and burst without losing inner keyword tags', () => {
   const card = {
