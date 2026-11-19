@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import type { Card, CardEffect, EffectTarget } from '../game/types'
 import { getCardArtwork } from '../data/cardArtwork'
-import { getCardAbilityText } from '../data/cardAbilityText'
+import { getCardAbilityText, splitCardAbilityLines } from '../data/cardAbilityText'
 import { CardArtwork } from './CardArtwork'
 import { ElementIcon } from './ElementIcon'
 import './CardDetail.css'
@@ -38,11 +38,6 @@ function describeCardEffect(effect: CardEffect): string {
     case 'modify_stats':
       return `${targetNames[effect.target]}を攻撃力${effect.attackChange >= 0 ? '+' : ''}${effect.attackChange} / 体力${effect.healthChange >= 0 ? '+' : ''}${effect.healthChange}`
   }
-}
-
-function splitCardAbility(description: string | undefined): string[] {
-  if (!description?.trim()) return ['能力なし']
-  return description.split(/\n|(?=【)/).map(text => text.trim()).filter(Boolean)
 }
 
 interface Props {
@@ -128,7 +123,7 @@ export function CardDetail({ card, onClose, onPrevious, onNext, position, total 
         <section className="card-detail-panel">
           <h2>カード能力</h2>
           <div className="card-detail-description">
-            {splitCardAbility(abilityText.basic).map((line, i) => <p key={i}>{line}</p>)}
+            {splitCardAbilityLines(abilityText.basic).map((line, i) => <p key={i}>{line}</p>)}
           </div>
           {card.keywords && card.keywords.length > 0 &&
             <div className="card-detail-keywords">キーワード：{card.keywords.join('・')}</div>}
