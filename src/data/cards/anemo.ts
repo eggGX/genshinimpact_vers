@@ -160,7 +160,7 @@ export const anemoCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【潜伏】\n【元素スキル：嗚呼流・風隠急進】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。\n自身+1/+0。",
+    "description": "【潜伏】\n【元素スキル：嗚呼流・風隠急進】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。\n自身+1/+0。",
     "implementationStatus": "playable",
     "keywords": [
       "stealth"
@@ -194,7 +194,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。\nそれは+1/+0する。\n\n【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。\n自分の場の風元素フォロワーすべてを+1/+0する。",
+    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。それは+1/+0する。\n\n【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。\n自分の場の風元素フォロワーすべてを+1/+0する。",
     "elementalSkill": {"name":"非想風天","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【突進】\n【ファンファーレ】自分のデッキから風元素のスペルカードを1枚引く。\n\n【元素スキル：エニグマティック・フェイント】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。\n自身を1回復。",
+    "description": "【突進】\n【ファンファーレ】自分のデッキから風元素のスペルカードを1枚引く。\n\n【元素スキル：エニグマティック・フェイント】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。\n自身を1回復。",
     "implementationStatus": "playable",
     "keywords": ["rush"],
     "elementalSkill": {
@@ -266,7 +266,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "仙人"
     ],
-    "description": "【突進】\n【元素スキル：風輪両立】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。1ターン最大2回。\n\n【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。\nさらに自分のターン終了時、自身と自分のリーダーに1ダメージ、を付与。",
+    "description": "【突進】\n【元素スキル：風輪両立】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。1ターン最大2回。\n\n【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。\nさらに自分のターン終了時、自身と自分のリーダーに1ダメージ、を付与。",
     "keywords": ["rush"],
     "elementalSkill": {"name":"風輪両立","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "elementalBurst": {"name":"靖妖儺舞","energyCost":4,"effects":[]},
