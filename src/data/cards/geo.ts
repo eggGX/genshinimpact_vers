@@ -30,7 +30,7 @@ export const geoCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "アミュレット。【カウントダウン3】【自分のターン終了時】自分のデッキから「地域：璃月」のカードを1枚引く。",
+    "description": "【カウントダウン3】【自分のターン終了時】自分のデッキから「地域：璃月」のカードを1枚引く。",
     "implementationStatus": "playable"
   },
   {
