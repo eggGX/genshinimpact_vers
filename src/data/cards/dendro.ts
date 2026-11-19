@@ -157,7 +157,7 @@ export const dendroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【守護】\n【ファンファーレ】自分のリーダーに通常シールド2。\n【元素スキル：にゃんにゃん町飛脚】\nコスト：PP1\n自身に通常シールド3。\nランダムな相手フォロワー1体に草元素1ダメージ。",
+    "description": "【守護】\n【ファンファーレ】自分のリーダーは通常シールド2をもつ。\n【元素スキル：にゃんにゃん町飛脚】\nコスト：PP1\nこのフォロワーは通常シールド3をもつ。\nランダムな相手フォロワー1体に草元素1ダメージ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
