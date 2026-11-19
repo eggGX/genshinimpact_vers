@@ -85,7 +85,7 @@ export const geoCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "ランダムな相手フォロワーまたは相手のリーダー1体に岩元素1ダメージ。これをX回行う。Xは自分の場に岩創造物があれば8、なければ4である。",
+    "description": "ランダムな相手フォロワーまたは相手のリーダー1体に岩元素1ダメージ。これを4回行う。自分の場に岩創造物があるなら4回ではなく8回。",
     "implementationStatus": "playable"
   },
   {
