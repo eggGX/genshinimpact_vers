@@ -107,7 +107,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "アミュレット。【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分のフォロワーすべてを+1/+0する。",
+    "description": "【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分のフォロワーすべてを+1/+0する。",
     "implementationStatus": "playable"
   },
   {
