@@ -32,7 +32,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それに炎元素1ダメージ。",
+    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。\nそれに炎元素1ダメージ。",
     "implementationStatus": "playable",
     "effects": [
       {
@@ -71,7 +71,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "アビス"
     ],
-    "description": "【元素攻撃：炎】【ファンファーレ】このフォロワーに通常シールド3を付与。",
+    "description": "【元素攻撃：炎】\n【ファンファーレ】このフォロワーに通常シールド3を付与。",
     "implementationStatus": "playable",
     "normalAttackElement": "pyro",
     "effects": [
@@ -94,7 +94,7 @@ export const pyroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "相手の場のフォロワーすべてに炎元素1ダメージ。クレスト【旋火輪】（【カウントダウン_2】）を得る：自分のターン終了時、相手の場のフォロワーすべてと相手のリーダーに炎元素1ダメージ。",
+    "description": "相手の場のフォロワーすべてに炎元素1ダメージ。\nクレスト【旋火輪】（【カウントダウン_2】）を得る：自分のターン終了時、相手の場のフォロワーすべてと相手のリーダーに炎元素1ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -107,7 +107,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【カウントダウン_3】【自分のターン終了時】自分のリーダーを2回復。自分の場のフォロワーすべてを+1/+0する。",
+    "description": "【カウントダウン_3】\n自分のターン終了時、自分のリーダーを2回復。\n自分の場のフォロワーすべてを+1/+0する。",
     "implementationStatus": "playable"
   },
   {
@@ -124,7 +124,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【潜伏】【元素攻撃：炎】【攻撃時】自分の場に他のファデュイがいれば、攻撃後に再度【潜伏】を得る。",
+    "description": "【潜伏】【元素攻撃：炎】\n【攻撃時】自分の場に他のファデュイがいれば、攻撃後に再度【潜伏】を得る。",
     "implementationStatus": "playable"
   },
   {
@@ -137,7 +137,7 @@ export const pyroCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "相手の場のフォロワー1枚を選ぶ。それを破壊する。相手のリーダーと自分のリーダーにそれぞれ炎元素2ダメージ。",
+    "description": "相手の場のフォロワー1枚を選ぶ。\nそれを破壊する。\n相手のリーダーと自分のリーダーにそれぞれ炎元素2ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -155,7 +155,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。【元素スキル：爆弾人形】PP1：「ウサギ伯爵」1体を召喚。",
+    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。\nそれに炎元素2ダメージ。\n\n【元素スキル：爆弾人形】PP1：「ウサギ伯爵」1体を召喚。",
     "effects": [{ "type": "damage", "trigger": "on_play", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }],
     "elementalSkill": { "name": "爆弾人形", "ppCost": 1, "effects": [] },
     "implementationStatus": "playable"
@@ -172,7 +172,7 @@ export const pyroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "【自分のターン終了時】自分の場に「グゥオパァー」があるなら自身を+1/+1する。【元素スキル：グゥオパァー出撃】PP2：「グゥオパァー」1体を召喚。",
+    "description": "自分のターン終了時、自分の場に「グゥオパァー」があるなら自身を+1/+1する。\n\n【元素スキル：グゥオパァー出撃】PP2：「グゥオパァー」1体を召喚。",
     "elementalSkill": { "name": "グゥオパァー出撃", "ppCost": 2, "effects": [] },
     "implementationStatus": "playable"
   },
@@ -191,7 +191,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：溢れる情熱】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素4ダメージ。このフォロワー自身に非元素1ダメージ。",
+    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。\nそれは+1/+0する。\n\n【元素スキル：溢れる情熱】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに炎元素4ダメージ。\nこのフォロワー自身に非元素1ダメージ。",
     "elementalSkill": { "name": "溢れる情熱", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 4, "element": "pyro" },
       { "type": "damage", "trigger": "skill", "target": "self_follower", "value": 1 }
@@ -213,7 +213,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "特巡隊"
     ],
-    "description": "【自分のターン中】自分が過負荷を起こすたび、自分の場のフォロワーすべてを+1/+0する（発動回数制限なし）。【元素スキル：近迫阻止射撃・速】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。自分のリーダーを2回復。",
+    "description": "自分のターン中、自分が過負荷を起こすたび、自分の場のフォロワーすべてを+1/+0する（発動回数制限なし）。\n\n【元素スキル：近迫阻止射撃・速】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに炎元素2ダメージ。\n自分のリーダーを2回復。",
     "elementalSkill": { "name": "近迫阻止射撃・速", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" },
       { "type": "heal", "trigger": "skill", "target": "own_leader", "value": 2 }
@@ -232,7 +232,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素スキル：逆焔の刃】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。【元素爆発：黎明】エネルギー3：相手の場のフォロワーすべてと相手のリーダーに炎元素3ダメージ。",
+    "description": "【元素スキル：逆焔の刃】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに炎元素Xダメージ。\nX=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。\n\n【元素爆発：黎明】エネルギー3：相手の場のフォロワーすべてと相手のリーダーに炎元素3ダメージ。",
         "elementalSkill": { "name": "逆焔の刃", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 3, "element": "pyro" }
     ] },
@@ -254,7 +254,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【疾走】【攻撃時】自分の場に炎元素カード3枚以上なら自身を+1/+0。【元素スキル：ビウィルダー・ライト】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。【元素爆発：大魔術・ミラクルパレード】エネルギー2：このフォロワーは「ファニーハット・キャット」に変身する。",
+    "description": "【疾走】\n【攻撃時】自分の場に炎元素カード3枚以上なら自身を+1/+0。\n\n【元素スキル：ビウィルダー・ライト】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに炎元素2ダメージ。\n\n【元素爆発：大魔術・ミラクルパレード】エネルギー2：このフォロワーは「ファニーハット・キャット」に変身する。",
         "keywords": ["storm"],
     "elementalSkill": { "name": "ビウィルダー・ライト", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }
@@ -277,7 +277,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "往生堂"
     ],
-    "description": "【疾走】自分のリーダーHPが10以下なら自身攻撃力+2（条件付き）。【元素スキル：蝶導来世】PP1：自分のリーダーに3ダメージ、自身+2/+0、【元素攻撃：炎】付与。【元素爆発：安神秘法】エネルギー3：相手のリーダーに炎元素4ダメージ、自分のリーダーを3回復。",
+    "description": "【疾走】自分のリーダーHPが10以下なら自身攻撃力+2（条件付き）。\n\n【元素スキル：蝶導来世】PP1：自分のリーダーに3ダメージ、自身+2/+0、【元素攻撃：炎】付与。\n\n【元素爆発：安神秘法】エネルギー3：相手のリーダーに炎元素4ダメージ、自分のリーダーを3回復。",
         "keywords": ["storm"],
     "elementalSkill": { "name": "蝶導来世", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "own_leader", "value": 3 },
