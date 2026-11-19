@@ -85,7 +85,7 @@ export const electroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "相手の場のフォロワー1枚を選ぶ。それに雷元素3ダメージ。\n「オズ」1体を召喚する。",
+    "description": "相手の場のフォロワー1枚を選ぶ。それに雷元素3ダメージ。\n「オズ」1体を自分の場に出す。",
     "implementationStatus": "playable",
     "effects": [
       {
@@ -122,7 +122,7 @@ export const electroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【ファンファーレ】「雷蛍」2体召喚。\n自分のターン終了時、自分の場に雷蛍がいれば自身に通常シールド2。",
+    "description": "【ファンファーレ】「雷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に雷蛍がいれば自身に通常シールド2。",
     "implementationStatus": "playable"
   },
   {
@@ -156,7 +156,7 @@ export const electroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "自分のターン終了時、自分の場のランダムな「オズ」1体は【潜伏】を持つ。\n【元素スキル：夜巡りの翼】\nコスト：PP2\n「オズ」1体を召喚。",
+    "description": "自分のターン終了時、自分の場のランダムな「オズ」1体は【潜伏】を持つ。\n【元素スキル：夜巡りの翼】\nコスト：PP2\n「オズ」1体を自分の場に出す。",
     "elementalSkill": {"name":"夜巡りの翼","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
