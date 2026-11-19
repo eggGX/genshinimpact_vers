@@ -94,7 +94,7 @@ export const pyroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "相手フォロワーすべてに炎元素1ダメージ。クレスト【旋火輪】（カウントダウン2）を得る：自分のターン終了時、相手フォロワーすべてと相手リーダーに炎元素1ダメージ。",
+    "description": "相手の場のフォロワーすべてに炎元素1ダメージ。クレスト【旋火輪】（カウントダウン2）を得る：自分のターン終了時、相手の場のフォロワーすべてと相手のリーダーに炎元素1ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -107,7 +107,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分のフォロワーすべてを+1/+0する。",
+    "description": "【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分の場のフォロワーすべてに+1/+0の修正を与える。",
     "implementationStatus": "playable"
   },
   {
@@ -137,7 +137,7 @@ export const pyroCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "相手の場のフォロワー1枚を選ぶ。それを破壊する。相手リーダーと自分のリーダーにそれぞれ炎元素2ダメージ。",
+    "description": "相手の場のフォロワー1枚を選ぶ。それを破壊する。相手のリーダーと自分のリーダーにそれぞれ炎元素2ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -213,7 +213,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "特巡隊"
     ],
-    "description": "【自分のターン中】自分が過負荷を起こすたび、自分のフォロワーすべてを+1/+0する（発動回数制限なし）。【元素スキル：近迫阻止射撃・速】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。自分のリーダーを2回復。",
+    "description": "【自分のターン中】自分が過負荷を起こすたび、自分の場のフォロワーすべてに+1/+0の修正を与える（発動回数制限なし）。【元素スキル：近迫阻止射撃・速】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。自分のリーダーを2回復。",
     "elementalSkill": { "name": "近迫阻止射撃・速", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" },
       { "type": "heal", "trigger": "skill", "target": "own_leader", "value": 2 }
@@ -232,7 +232,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素スキル：逆焔の刃】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。【元素爆発：黎明】エネルギー3：相手フォロワーすべてと相手リーダーに炎元素3ダメージ。",
+    "description": "【元素スキル：逆焔の刃】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。【元素爆発：黎明】エネルギー3：相手の場のフォロワーすべてと相手のリーダーに炎元素3ダメージ。",
         "elementalSkill": { "name": "逆焔の刃", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 3, "element": "pyro" }
     ] },
@@ -277,7 +277,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "往生堂"
     ],
-    "description": "【疾走】自分のリーダーHPが10以下なら自身攻撃力+2（条件付き）。【元素スキル：蝶導来世】PP1：自分のリーダーに3ダメージ、自身+2/+0、【元素攻撃：炎】付与。【元素爆発：安神秘法】エネルギー3：相手リーダーに炎元素4ダメージ、自分のリーダーを3回復。",
+    "description": "【疾走】自分のリーダーHPが10以下なら自身攻撃力+2（条件付き）。【元素スキル：蝶導来世】PP1：自分のリーダーに3ダメージ、自身+2/+0、【元素攻撃：炎】付与。【元素爆発：安神秘法】エネルギー3：相手のリーダーに炎元素4ダメージ、自分のリーダーを3回復。",
         "keywords": ["storm"],
     "elementalSkill": { "name": "蝶導来世", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "own_leader", "value": 3 },
