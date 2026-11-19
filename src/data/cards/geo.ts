@@ -153,7 +153,7 @@ export const geoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【守護】\n【攻撃時】自分のリーダー2回復。\n【元素スキル：護心鎧】\nコスト：PP1\nこのフォロワーは通常シールド3をもつ。\n自分のリーダーは通常シールド3をもつ。",
+    "description": "【守護】\n【攻撃時】自分のリーダーを2回復。\n【元素スキル：護心鎧】\nコスト：PP1\nこのフォロワーは通常シールド3をもつ。\n自分のリーダーは通常シールド3をもつ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
