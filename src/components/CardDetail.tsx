@@ -42,7 +42,7 @@ function describeCardEffect(effect: CardEffect): string {
 
 function splitCardAbility(description: string | undefined): string[] {
   if (!description?.trim()) return ['能力なし']
-  return description.split(/(?=【)/).map(text => text.trim()).filter(Boolean)
+  return description.split(/\n|(?=【)/).map(text => text.trim()).filter(Boolean)
 }
 
 interface Props {
