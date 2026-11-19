@@ -36,6 +36,12 @@ import { isGuarded } from './game/neutralRules'
 import type { OnlineMatchView, OnlinePlayerView, OnlinePresentationEvent, OnlinePresentationSnapshot } from './online/matchClient'
 import type { OnlineAction } from '../server/src/matchActions'
 
+type BattleNotice = {
+  key: string
+  cardId: string
+  actorId: string
+  abilityKind?: AbilityKind
+}
 type BothDecks = [DeckDefinition, DeckDefinition]
 const STORAGE_KEY = 'genshin-decks-v1'
 
@@ -154,8 +160,8 @@ function App({ online }: { online?: {
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
-  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: { key: string; cardId: string; actorId: string } } | null>(null)
-  const [playedCardNotice, setPlayedCardNotice] = useState<{ key: string; cardId: string; actorId: string } | null>(null)
+  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice } | null>(null)
+  const [playedCardNotice, setPlayedCardNotice] = useState<BattleNotice | null>(null)
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
@@ -191,9 +197,11 @@ function App({ online }: { online?: {
                 state: projectOnlineSnapshot(frame.state, online.match.seat),
               })),
               index: 0,
-              ...(nextEvent.playedCardId ? { playedCard: {
-                key: `online-${nextEvent.revision}`, cardId: nextEvent.playedCardId,
+              ...((nextEvent.playedCardId || nextEvent.abilityCardId) ? { playedCard: {
+                key: `online-${nextEvent.revision}`,
+                cardId: nextEvent.playedCardId ?? nextEvent.abilityCardId!,
                 actorId: nextEvent.actorId,
+                ...(nextEvent.abilityKind ? { abilityKind: nextEvent.abilityKind } : {}),
               } } : {}),
             }
           }
@@ -318,9 +326,11 @@ function App({ online }: { online?: {
         state: projectOnlineSnapshot(frame.state, online.match.seat),
       })),
       index: 0,
-      ...(first.playedCardId ? { playedCard: {
-        key: `online-${first.revision}`, cardId: first.playedCardId,
+      ...((first.playedCardId || first.abilityCardId) ? { playedCard: {
+        key: `online-${first.revision}`,
+        cardId: first.playedCardId ?? first.abilityCardId!,
         actorId: first.actorId,
+        ...(first.abilityKind ? { abilityKind: first.abilityKind } : {}),
       } } : {}),
     })
   }, [online?.match.revision, online?.match.history, online?.match.seat])
@@ -350,7 +360,7 @@ function App({ online }: { online?: {
     }
   }
 
-  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string) => {
+  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string, abilityKind?: AbilityKind) => {
     if (online || playbackLock.current) return
     const traced = beginPresentation(game)
     const next = action(traced)
@@ -369,6 +379,7 @@ function App({ online }: { online?: {
         ...(playedCardId ? { playedCard: {
           key: `local-${Date.now()}-${Math.random()}`, cardId: playedCardId,
           actorId: game.currentPlayerId,
+          ...(abilityKind ? { abilityKind } : {}),
         } } : {}),
       })
     }
@@ -502,7 +513,7 @@ function App({ online }: { online?: {
       f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) {
       if (['pyro', 'hydro', 'cryo', 'electro'].includes(card.element)) {
         if (online) onlineSend({type:'ability',followerId:selectedAbility.followerId,kind:'skill',targetId:`hand:${handIndex}`})
-        else animateAction(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`), 'ファルカ：元素付与')
+        else animateAction(previous => activateAbility(previous, selectedAbility.followerId, 'skill', `hand:${handIndex}`), 'ファルカ：元素付与', 'C083', 'skill')
         resetSelection()
       }
       return
@@ -584,7 +595,7 @@ function App({ online }: { online?: {
       return
     }
     if (online) onlineSend({type:'ability',followerId:follower.instanceId,kind})
-    else animateAction(previous => activateAbility(previous, follower.instanceId, kind), `${card.name}：${kind === 'skill' ? '元素スキル' : '元素爆発'}`)
+    else animateAction(previous => activateAbility(previous, follower.instanceId, kind), `${card.name}：${kind === 'skill' ? '元素スキル' : '元素爆発'}`, card.id, kind)
     resetSelection()
   }
 
@@ -702,10 +713,10 @@ function App({ online }: { online?: {
         else animateAction(previous => activateAbility(
           previous, followerId, kind,
           firstTargetId ? `${firstTargetId}|${targetId}` : targetId
-        ), '元素スキル：指定した対象に発動')
+        ), '元素スキル：指定した対象に発動', cardId, kind)
       } else {
         if (online) onlineSend({type:'ability',followerId,kind,targetId})
-        else animateAction(previous => activateAbility(previous, followerId, kind, targetId), '元素スキル・爆発の対象効果')
+        else animateAction(previous => activateAbility(previous, followerId, kind, targetId), '元素スキル・爆発の対象効果', cardId, kind)
       }
       resetSelection()
       return
@@ -868,7 +879,7 @@ function App({ online }: { online?: {
           } else if (isFriendlyTarget && selectedAbility) {
             const { followerId, kind } = selectedAbility
             if (online) onlineSend({type:'ability',followerId,kind,targetId:follower.instanceId})
-            else animateAction(previous => activateAbility(previous, followerId, kind, follower.instanceId), '味方フォロワーへの元素能力')
+            else animateAction(previous => activateAbility(previous, followerId, kind, follower.instanceId), '味方フォロワーへの元素能力', currentPlayer.field.find(f => f.instanceId === followerId)?.cardId, kind)
             resetSelection()
           } else {
             handleSelectAttacker(follower)
@@ -1242,19 +1253,29 @@ function App({ online }: { online?: {
         // The online opponent's played card is public; local play shows either side.
         (!online || playedCardNotice.actorId !== online.match.players[online.match.seat].id) &&
         getCard(playedCardNotice.cardId) && <aside key={playedCardNotice.key}
-          className="opponent-card-reveal" role="status"
-          aria-label="相手がプレイしたカード">
-          <span className="opponent-card-reveal-caption">PLAYED CARD</span>
+          className={['opponent-card-reveal', playedCardNotice.abilityKind
+            ? `opponent-ability-reveal opponent-ability-reveal--${playedCardNotice.abilityKind}` : ''].join(' ')}
+          role="status"
+          aria-label={playedCardNotice.abilityKind ? '元素能力の発動' : 'プレイしたカード'}>
+          <span className="opponent-card-reveal-caption">
+            {playedCardNotice.abilityKind === 'skill' ? 'ELEMENTAL SKILL'
+              : playedCardNotice.abilityKind === 'burst' ? 'ELEMENTAL BURST' : 'PLAYED CARD'}
+          </span>
           <div className={`opponent-card-reveal-art card-element--${getCard(playedCardNotice.cardId)?.element ?? 'none'}`}>
             <CardArtwork cardId={playedCardNotice.cardId}
               name={getCard(playedCardNotice.cardId)?.name ?? playedCardNotice.cardId} />
           </div>
           <strong>{getCard(playedCardNotice.cardId)?.name}</strong>
-          <span className="opponent-card-reveal-detail">
+          {playedCardNotice.abilityKind ? <span className="opponent-card-reveal-detail opponent-ability-name">
+            {playedCardNotice.abilityKind === 'skill' ? '元素スキル' : '元素爆発'}：
+            {playedCardNotice.abilityKind === 'skill'
+              ? getCard(playedCardNotice.cardId)?.elementalSkill?.name ?? '元素スキル'
+              : getCard(playedCardNotice.cardId)?.elementalBurst?.name ?? '元素爆発'}
+          </span> : <span className="opponent-card-reveal-detail">
             {getCard(playedCardNotice.cardId)?.cost} PP · {
               getCard(playedCardNotice.cardId)?.type === 'follower' ? 'フォロワー'
                 : getCard(playedCardNotice.cardId)?.type === 'spell' ? 'スペル' : 'アミュレット'}
-          </span>
+          </span>}
         </aside>}
       {online && mulliganReveal && <div className="online-mulligan-overlay mulligan-result-overlay"
         role="status" aria-live="polite">
