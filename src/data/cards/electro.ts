@@ -213,7 +213,7 @@ export const electroCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "自分のターン中、自分が感電を起こしたとき、ランダムな相手フォロワー1体に雷元素1ダメージ（1ターン最大2回）。\n【元素スキル：冥色のタイトロープ】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n選んだフォロワーとは別のランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "自分のターン中、自分が感電を起こしたとき、ランダムな相手フォロワー1体に雷元素1ダメージ。\n【元素スキル：冥色のタイトロープ】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n選んだフォロワーとは別のランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"冥色のタイトロープ","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "implementationStatus": "playable"
   },
