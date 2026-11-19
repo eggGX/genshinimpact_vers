@@ -124,7 +124,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【潜伏】【元素攻撃：炎】\n【攻撃時】自分の場に他のファデュイがいれば、攻撃後に再度【潜伏】を得る。",
+    "description": "【潜伏】【元素攻撃：炎】\n【攻撃時】自分の場に他のファデュイがいるなら、攻撃後に再度【潜伏】を得る。",
     "implementationStatus": "playable"
   },
   {
