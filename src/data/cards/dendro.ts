@@ -28,7 +28,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "自分のデッキから草元素のカードを1枚引く。さらにカードを1枚引く。",
+    "description": "自分のデッキから草元素のカードを1枚引く。さらに自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -104,7 +104,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "アミュレット。【カウントダウン3】【自分のターン終了時】自リーダー1回復。カードを1枚引く。",
+    "description": "アミュレット。【カウントダウン3】【自分のターン終了時】自リーダー1回復。自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
