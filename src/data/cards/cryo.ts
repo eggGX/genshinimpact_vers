@@ -154,7 +154,7 @@ export const cryoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【ファンファーレ】自分のリーダーに通常シールド2。\n【元素スキル：フリーズキャッツクロー】PP2：相手の場のフォロワー2枚を選ぶ。それらに氷元素2ダメージ。\n自分のリーダーに通常シールド2。",
+    "description": "【ファンファーレ】自分のリーダーに通常シールド2。\n【元素スキル：フリーズキャッツクロー】\nコスト：PP2\n相手の場のフォロワー2枚を選ぶ。それらに氷元素2ダメージ。\n自分のリーダーに通常シールド2。",
     "elementalSkill": {"name":"フリーズキャッツクロー","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -173,7 +173,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【突進】\n【元素スキル：霜の襲撃】PP0：相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。",
+    "description": "【突進】\n【元素スキル：霜の襲撃】\nコスト：PP0\n相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
@@ -207,7 +207,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【守護】\n自分のターン終了時、ランダムな相手フォロワー1体に氷元素1ダメージ。\n【元素スキル：垂裳凛然の夜】PP1：自分のリーダーに通常シールド3。",
+    "description": "【守護】\n自分のターン終了時、ランダムな相手フォロワー1体に氷元素1ダメージ。\n【元素スキル：垂裳凛然の夜】\nコスト：PP1\n自分のリーダーに通常シールド3。",
     "keywords": ["guard"],
     "elementalSkill": {"name":"垂裳凛然の夜","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
@@ -224,7 +224,7 @@ export const cryoCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "【元素攻撃：氷】\n【ファンファーレ】自分のデッキから1枚引く。\n【元素スキル：フレーミング・氷点法】PP1：相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。\nそれは-1/+0する。",
+    "description": "【元素攻撃：氷】\n【ファンファーレ】自分のデッキから1枚引く。\n【元素スキル：フレーミング・氷点法】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。\nそれは-1/+0する。",
     "elementalSkill": {"name":"フレーミング・氷点法","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"cryo"}]},
     "implementationStatus": "playable",
     "normalAttackElement": "cryo"
@@ -244,7 +244,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "仙人"
     ],
-    "description": "【攻撃時】相手のリーダーに氷元素1ダメージ。\n【元素スキル：山沢麟跡】PP1：「氷蓮」1体召喚。\n【元素爆発：降衆天華】エネルギー3：相手の場のフォロワーすべてに氷元素2ダメージ。\nクレスト【降衆天華】（【カウントダウン_3】\n自分のターン終了時、ランダムな相手フォロワー1体に氷元素2ダメージ。これを2回行う。）付与。",
+    "description": "【攻撃時】相手のリーダーに氷元素1ダメージ。\n【元素スキル：山沢麟跡】\nコスト：PP1\n「氷蓮」1体召喚。\n【元素爆発：降衆天華】エネルギー3：相手の場のフォロワーすべてに氷元素2ダメージ。\nクレスト【降衆天華】（【カウントダウン_3】\n自分のターン終了時、ランダムな相手フォロワー1体に氷元素2ダメージ。これを2回行う。）付与。",
     "elementalSkill": {"name":"山沢麟跡","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"降衆天華","energyCost":3,"effects":[]},
     "implementationStatus": "playable"
@@ -264,7 +264,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "【潜伏】【元素攻撃：氷】\n自分のターン終了時、自分のリーダーに通常シールド2。\n【元素スキル：霜昼の黒星】PP1：「イツパパ」1体召喚。\n【元素爆発：諸曜の令】エネルギー3：相手の場のフォロワーすべてに氷元素3ダメージ。\n自分のリーダーに通常シールド3。",
+    "description": "【潜伏】【元素攻撃：氷】\n自分のターン終了時、自分のリーダーに通常シールド2。\n【元素スキル：霜昼の黒星】\nコスト：PP1\n「イツパパ」1体召喚。\n【元素爆発：諸曜の令】エネルギー3：相手の場のフォロワーすべてに氷元素3ダメージ。\n自分のリーダーに通常シールド3。",
     "elementalSkill": {"name":"霜昼の黒星","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"諸曜の令","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
@@ -288,7 +288,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "社奉行"
     ],
-    "description": "【突進】\n【元素スキル：神里流・氷華】PP1：相手の場のフォロワーすべてに氷元素1ダメージ。\n自身に【元素攻撃：氷】付与。\n【元素爆発：神里流・霜滅】エネルギー3：ランダムな相手フォロワー1体に氷元素2ダメージ。これを5回行う。",
+    "description": "【突進】\n【元素スキル：神里流・氷華】\nコスト：PP1\n相手の場のフォロワーすべてに氷元素1ダメージ。\n自身に【元素攻撃：氷】付与。\n【元素爆発：神里流・霜滅】エネルギー3：ランダムな相手フォロワー1体に氷元素2ダメージ。これを5回行う。",
     "keywords": ["rush"],
     "elementalSkill": {"name":"神里流・氷華","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"神里流・霜滅","energyCost":3,"effects":[]},
