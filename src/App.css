@@ -921,3 +921,41 @@
   .mulligan-result-scene{margin:10vh 8px 0;padding:24px 8px;}
   .mulligan-result-scene h2,.mulligan-result-dialog h2{font-size:20px;}
 }
+
+/* Mulligan exchange: selected old cards float away; replacements rise into their slots.
+   Unselected cards stay stationary, and reduced-motion users see the final hand. */
+.mulligan-swap-slot{
+  position:relative;width:168px;min-height:238px;
+  flex:0 0 168px;display:grid;place-items:stretch;
+}
+.mulligan-swap-slot>.mulligan-card{
+  grid-area:1/1;width:100%;height:100%;box-sizing:border-box;
+}
+.mulligan-swap--out{
+  animation:mulligan-card-out .58s cubic-bezier(.4,0,.8,.7) both;
+  z-index:2;
+}
+.mulligan-swap--in{
+  animation:mulligan-card-in .66s .58s cubic-bezier(.15,.8,.2,1) both;
+  z-index:1;
+}
+.mulligan-swap--keep{animation:none;}
+@keyframes mulligan-card-out{
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-110px) scale(.86);}
+}
+@keyframes mulligan-card-in{
+  0%{opacity:0;transform:translateY(110px) scale(.86);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+.online-mulligan-dialog .mulligan-swap-slot{width:clamp(130px,20vw,168px);flex-basis:clamp(130px,20vw,168px);min-height:214px;}
+@media(max-width:760px){
+  .mulligan-swap-slot{width:calc(50% - 12px);flex:0 1 calc(50% - 12px);max-width:172px;min-height:200px;}
+}
+@media(max-width:650px){
+  .online-mulligan-dialog .mulligan-swap-slot{width:calc(50% - 12px);flex:0 1 calc(50% - 12px);max-width:168px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .mulligan-swap--out{display:none;}
+  .mulligan-swap--in{animation:none;}
+}
