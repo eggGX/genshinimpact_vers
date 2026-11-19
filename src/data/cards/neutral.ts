@@ -119,7 +119,7 @@ export const neutralCards: Card[] = [
     rarity: 'gold',
     element: 'none',
     cost: 3,
-    description: 'カードを1枚引く。最大PPを+1する（上限10）。現在PPは回復しない。',
+    description: '自分のデッキから1枚引く。最大PPを+1する（上限10）。現在PPは回復しない。',
   },
   {
     id: 'C010',
