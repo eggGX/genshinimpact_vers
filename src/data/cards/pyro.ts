@@ -155,7 +155,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n【元素スキル：爆弾人形】\nコスト：PP1\n「ウサギ伯爵」1体を召喚。",
+    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n【元素スキル：爆弾人形】\nコスト：PP1\n「ウサギ伯爵」1体を自分の場に出す。",
     "effects": [{ "type": "damage", "trigger": "on_play", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }],
     "elementalSkill": { "name": "爆弾人形", "ppCost": 1, "effects": [] },
     "implementationStatus": "playable"
@@ -172,7 +172,7 @@ export const pyroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分のターン終了時、自分の場に「グゥオパァー」があるなら自身を+1/+1する。\n【元素スキル：グゥオパァー出撃】\nコスト：PP2\n「グゥオパァー」1体を召喚。",
+    "description": "自分のターン終了時、自分の場に「グゥオパァー」があるなら自身を+1/+1する。\n【元素スキル：グゥオパァー出撃】\nコスト：PP2\n「グゥオパァー」1体を自分の場に出す。",
     "elementalSkill": { "name": "グゥオパァー出撃", "ppCost": 2, "effects": [] },
     "implementationStatus": "playable"
   },
