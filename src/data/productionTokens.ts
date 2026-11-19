@@ -218,7 +218,7 @@ export const productionTokens: Card[] = [
     id: 'token-collei-amber', name: 'コレアンバー',
     type: 'amulet', rarity: 'bronze', element: 'dendro',
     cost: 0, token: true,
-    description: '【カウントダウン_2】\n自分のターン終了時、相手の場のフォロワーすべてに草元素1ダメージ.',
+    description: '【カウントダウン_2】\n自分のターン終了時、相手の場のフォロワーすべてに草元素1ダメージ。',
   },  {
     id: 'token-dendro-spirit', name: '草の霊蛇',
     type: 'follower', rarity: 'bronze', element: 'dendro',
