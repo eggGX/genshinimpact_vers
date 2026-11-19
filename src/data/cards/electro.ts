@@ -156,7 +156,7 @@ export const electroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "【自分のターン終了時】自分の場のランダムな「オズ」1体に【潜伏】を付与。【元素スキル：夜巡りの翼】PP2：「オズ」1体を召喚。",
+    "description": "【自分のターン終了時】自分の場のランダムな「オズ」1体は【潜伏】を持つ。【元素スキル：夜巡りの翼】PP2：「オズ」1体を召喚。",
     "elementalSkill": {"name":"夜巡りの翼","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
