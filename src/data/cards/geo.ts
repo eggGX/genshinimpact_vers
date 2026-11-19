@@ -196,7 +196,7 @@ export const geoCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【ファンファーレ】自分の場の岩元素フォロワーすべてに+0/+1の修正を与える。【元素スキル：犬坂の陣構え】PP1：自分の場の岩元素フォロワーすべてに+1/+1の修正を与える。",
+    "description": "【ファンファーレ】自分の場の岩元素フォロワーすべてを+0/+1する。【元素スキル：犬坂の陣構え】PP1：自分の場の岩元素フォロワーすべてを+1/+1する。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "犬坂の陣構え",
