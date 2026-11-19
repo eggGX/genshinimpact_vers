@@ -122,7 +122,7 @@ export const electroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【ファンファーレ】「雷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に「雷蛍」がいれば、このフォロワーに通常シールド2を付与する。",
+    "description": "【ファンファーレ】「雷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に「雷蛍」がいれば、このフォロワーは通常シールド2をもつ。",
     "implementationStatus": "playable"
   },
   {
