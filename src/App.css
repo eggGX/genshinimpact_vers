@@ -959,3 +959,21 @@
   .mulligan-swap--out{display:none;}
   .mulligan-swap--in{animation:none;}
 }
+
+/* Clearly distinguish activated abilities from normal card plays. */
+.opponent-ability-reveal{border-width:2px;}
+.opponent-ability-reveal--skill{
+  border-color:#76dcf1;
+  background:linear-gradient(155deg,#153c55f6,#0b2032f8);
+  box-shadow:0 13px 36px #000d,0 0 27px #54c8e47a;
+}
+.opponent-ability-reveal--burst{
+  border-color:#e9baff;
+  background:linear-gradient(155deg,#4c285df6,#1b1337f8);
+  box-shadow:0 13px 36px #000d,0 0 32px #b17ce18c;
+}
+.opponent-ability-reveal--skill .opponent-card-reveal-caption{color:#a9edff;}
+.opponent-ability-reveal--burst .opponent-card-reveal-caption{color:#f5d6ff;}
+.opponent-ability-reveal--skill .opponent-card-reveal-art{border-color:#76dcf1;}
+.opponent-ability-reveal--burst .opponent-card-reveal-art{border-color:#e9baff;}
+.opponent-ability-name{margin-top:8px;font-weight:800;line-height:1.6;overflow-wrap:anywhere;color:#f6e7cf;}
