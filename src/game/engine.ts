@@ -170,7 +170,7 @@ export function confirmMulligan(
 /**
  * プレイ時の対象選択判定
  */
-/** A self-buff fanfare can choose an existing ally or the new follower itself. */
+/** Targeted friendly fanfares select existing allies only, never the summoned follower. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
   return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030'].includes(card.id)
 }
@@ -385,8 +385,8 @@ export function playCard(
     if (choices.length && (!targetId ||
         !choices.some(f => f.instanceId === targetId))) return state
     if (!choices.length && targetId) return state
-  } else if (card.id === 'C044') {
-    // Frost Spirit's fanfare may buff another existing ally, never itself.
+  } else if (card.id === 'C044' || card.id === 'C021') {
+    // Friendly fanfares may buff another existing ally, never the summoned follower.
     // With no other ally, play the follower without triggering its buff.
     const allies = player.field.filter(f => f.health > 0)
     if (allies.length > 0) {
@@ -400,8 +400,8 @@ export function playCard(
     if (!targetId || targetId === 'self' ||
         !player.field.some(f => f.instanceId === targetId && f.health > 0)) return state
   } else if (needsFriendlyPlayTarget(card) &&
-      (targetId !== 'self' && (!targetId ||
-        !player.field.some(f => f.instanceId === targetId && f.health > 0)))) {
+      (!targetId || targetId === 'self' ||
+        !player.field.some(f => f.instanceId === targetId && f.health > 0))) {
     return state
   }
 
