@@ -69,7 +69,7 @@ export const geoCards: Card[] = [
     "traits": [
       "ヴィシャップ"
     ],
-    "description": "【突進】【攻撃時】自リーダーに結晶シールド1。",
+    "description": "【突進】【攻撃時】自分のリーダーに結晶シールド1。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
@@ -85,7 +85,7 @@ export const geoCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "ランダムな相手フォロワーまたは相手リーダー1体に岩元素1ダメージ。これをX回行う。Xは自分の場に岩創造物があれば8、なければ4である。",
+    "description": "ランダムな相手フォロワーまたは相手のリーダー1体に岩元素1ダメージ。これをX回行う。Xは自分の場に岩創造物があれば8、なければ4である。",
     "implementationStatus": "playable"
   },
   {
@@ -98,7 +98,7 @@ export const geoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "自分の場のフォロワー1枚を選ぶ。それは+2/+0する。それは「【元素攻撃：岩】」「【攻撃時】相手フォロワーすべてに岩元素1ダメージ。」をもつ。",
+    "description": "自分の場のフォロワー1枚を選ぶ。それは+2/+0する。それは「【元素攻撃：岩】」「【攻撃時】相手の場のフォロワーすべてに岩元素1ダメージ。」をもつ。",
     "implementationStatus": "playable"
   },
   {
@@ -113,7 +113,7 @@ export const geoCards: Card[] = [
     "traits": [
       "アビス"
     ],
-    "description": "【元素攻撃：岩】【攻撃時】相手リーダーに非元素1ダメージ。",
+    "description": "【元素攻撃：岩】【攻撃時】相手のリーダーに非元素1ダメージ。",
     "implementationStatus": "playable",
     "normalAttackElement": "geo"
   },
@@ -132,7 +132,7 @@ export const geoCards: Card[] = [
     "traits": [
       "ヴィシャップ"
     ],
-    "description": "【守護】【交戦時】自リーダーに結晶シールド2。",
+    "description": "【守護】【交戦時】自分のリーダーに結晶シールド2。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -153,7 +153,7 @@ export const geoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【守護】【攻撃時】自リーダー2回復。【元素スキル：護心鎧】PP1：自身と自リーダーに通常シールド3。",
+    "description": "【守護】【攻撃時】自分のリーダー2回復。【元素スキル：護心鎧】PP1：自身と自分のリーダーに通常シールド3。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -179,7 +179,7 @@ export const geoCards: Card[] = [
     "traits": [
       "璃月七星"
     ],
-    "description": "【元素攻撃：岩】【ファンファーレ】自リーダー結晶シールド2。【元素スキル：璇璣屏】PP1：「璇璣屏」1つを場に出す。",
+    "description": "【元素攻撃：岩】【ファンファーレ】自分のリーダー結晶シールド2。【元素スキル：璇璣屏】PP1：「璇璣屏」1つを場に出す。",
     "implementationStatus": "playable",
     "normalAttackElement": "geo",
     "elementalSkill": {"name":"璇璣屏","ppCost":1,"effects":[]}
@@ -196,7 +196,7 @@ export const geoCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【ファンファーレ】自分の岩元素フォロワーすべて+0/+1。【元素スキル：犬坂の陣構え】PP1：自分の岩元素フォロワーすべて+1/+1。",
+    "description": "【ファンファーレ】自分の場の岩元素フォロワーすべてに+0/+1の修正を与える。【元素スキル：犬坂の陣構え】PP1：自分の場の岩元素フォロワーすべてに+1/+1の修正を与える。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "犬坂の陣構え",
@@ -219,7 +219,7 @@ export const geoCards: Card[] = [
     "traits": [
       "こだまの子"
     ],
-    "description": "【ファンファーレ】自リーダー結晶シールド2。【元素スキル：いけ、ぐるぐるコマちゃん！】PP1：「ぐるぐるコマちゃん」1つを場に出す。",
+    "description": "【ファンファーレ】自分のリーダー結晶シールド2。【元素スキル：いけ、ぐるぐるコマちゃん！】PP1：「ぐるぐるコマちゃん」1つを場に出す。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"いけ、ぐるぐるコマちゃん！","ppCost":1,"effects":[]}
   },
@@ -236,7 +236,7 @@ export const geoCards: Card[] = [
       "フォンテーヌ",
       "稲妻"
     ],
-    "description": "【ファンファーレ】自分の場に岩創造物があるなら「たもと」1体召喚。【元素スキル：羽袖一触】PP1：「たもと」1体召喚。【元素爆発：二刀の型・比翼】エネルギー3：相手フォロワーすべてに岩元素3ダメージ。ランダムな相手フォロワーまたは相手リーダー1体に岩元素2ダメージ。これをX回行う。Xは自分の場の「たもと」の数である。",
+    "description": "【ファンファーレ】自分の場に岩創造物があるなら「たもと」1体召喚。【元素スキル：羽袖一触】PP1：「たもと」1体召喚。【元素爆発：二刀の型・比翼】エネルギー3：相手の場のフォロワーすべてに岩元素3ダメージ。ランダムな相手フォロワーまたは相手のリーダー1体に岩元素2ダメージ。これをX回行う。Xは自分の場の「たもと」の数である。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"羽袖一触","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"二刀の型・比翼","energyCost":3,"effects":[]}
@@ -256,7 +256,7 @@ export const geoCards: Card[] = [
     "traits": [
       "棘薔薇の会"
     ],
-    "description": "【自分のターン中】自リーダーが結晶シールドを獲得するたび自身+1/+0（最大3回/ターン）。【元素スキル：セレモニアル・クリスタルショット】自リーダーの結晶シールドを自動消費（最大3、PP消費なし）。相手の場のフォロワー1枚を選ぶ。それに岩元素Xダメージ。X=1+消費数×2。【元素爆発：晴天を衝く霰弾の名射手】エネルギー3：相手フォロワーすべてに岩元素1ダメージ。自リーダー結晶シールド1。クレスト【晴天を衝く霰弾の名射手】（カウントダウン2、自ターン終了時：相手フォロワーすべてに岩元素1ダメージ＆自リーダー結晶シールド1）付与。",
+    "description": "【自分のターン中】自分のリーダーが結晶シールドを獲得するたび自身+1/+0（最大3回/ターン）。【元素スキル：セレモニアル・クリスタルショット】自分のリーダーの結晶シールドを自動消費（最大3、PP消費なし）。相手の場のフォロワー1枚を選ぶ。それに岩元素Xダメージ。X=1+消費数×2。【元素爆発：晴天を衝く霰弾の名射手】エネルギー3：相手の場のフォロワーすべてに岩元素1ダメージ。自分のリーダー結晶シールド1。クレスト【晴天を衝く霰弾の名射手】（カウントダウン2、自ターン終了時：相手の場のフォロワーすべてに岩元素1ダメージ＆自分のリーダー結晶シールド1）付与。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"セレモニアル・クリスタルショット","ppCost":0,"effects":[]},
     "elementalBurst": {"name":"晴天を衝く霰弾の名射手","energyCost":3,"effects":[]}
@@ -276,7 +276,7 @@ export const geoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【自分のターン終了時】自リーダー結晶シールド1。【元素スキル：創生術・擬似陽華】PP1：「陽華」1つを場に出す。【元素爆発：誕生式・大地の潮】エネルギー3：相手フォロワーすべてに岩元素2ダメージ。自分の場に岩創造物があれば追加で岩元素2ダメージ。",
+    "description": "【自分のターン終了時】自分のリーダー結晶シールド1。【元素スキル：創生術・擬似陽華】PP1：「陽華」1つを場に出す。【元素爆発：誕生式・大地の潮】エネルギー3：相手の場のフォロワーすべてに岩元素2ダメージ。自分の場に岩創造物があれば追加で岩元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"創生術・擬似陽華","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"誕生式・大地の潮","energyCost":3,"effects":[]}
