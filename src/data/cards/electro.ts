@@ -71,7 +71,7 @@ export const electroCards: Card[] = [
     "traits": [
       "フライム"
     ],
-    "description": "【元素生物：雷】【ラストワード】相手リーダーに雷元素2ダメージ。",
+    "description": "【元素生物：雷】【ラストワード】相手のリーダーに雷元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalCreature": true
   },
@@ -137,7 +137,7 @@ export const electroCards: Card[] = [
     "traits": [
       "アビス"
     ],
-    "description": "【元素攻撃：雷】【攻撃時】相手リーダーに非元素1ダメージ。",
+    "description": "【元素攻撃：雷】【攻撃時】相手のリーダーに非元素1ダメージ。",
     "implementationStatus": "playable",
     "normalAttackElement": "electro"
   },
@@ -175,7 +175,7 @@ export const electroCards: Card[] = [
     "traits": [
       "荒瀧派"
     ],
-    "description": "【自分のターン終了時】自リーダー1回復。【元素スキル：越祓雷草の輪】PP1：自身に1ダメージ。自リーダー2回復。ランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "【自分のターン終了時】自分のリーダー1回復。【元素スキル：越祓雷草の輪】PP1：自身に1ダメージ。自分のリーダー2回復。ランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"越祓雷草の輪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -252,7 +252,7 @@ export const electroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【元素攻撃：雷】【元素スキル：野干役呪・殺生櫻】PP1：「殺生櫻」1つを出す（1ターン最大3回）。【元素爆発：大密法・天狐顕現】エネルギー3：相手フォロワーすべてに雷元素3ダメージ。自分の「殺生櫻」すべてを破壊。ランダムな相手フォロワーまたは相手リーダー1体に雷元素2ダメージ。これをX回行う。Xはこの効果で破壊した「殺生櫻」の数である。",
+    "description": "【元素攻撃：雷】【元素スキル：野干役呪・殺生櫻】PP1：「殺生櫻」1つを出す（1ターン最大3回）。【元素爆発：大密法・天狐顕現】エネルギー3：相手の場のフォロワーすべてに雷元素3ダメージ。自分の「殺生櫻」すべてを破壊。ランダムな相手フォロワーまたは相手のリーダー1体に雷元素2ダメージ。これをX回行う。Xはこの効果で破壊した「殺生櫻」の数である。",
     "elementalSkill": {"name":"野干役呪・殺生櫻","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"大密法・天狐顕現","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
@@ -273,7 +273,7 @@ export const electroCards: Card[] = [
     "traits": [
       "豊穣の邦"
     ],
-    "description": "【突進】【攻撃時】自身+1/+0。【元素スキル：夜虹の飛翔】PP1：自身に【元素攻撃：雷】【落下攻撃】付与。【元素爆発：閃烈降臨！】エネルギー3：相手フォロワーすべてに雷元素3ダメージ。自身+2/+0。",
+    "description": "【突進】【攻撃時】自身+1/+0。【元素スキル：夜虹の飛翔】PP1：自身に【元素攻撃：雷】【落下攻撃】付与。【元素爆発：閃烈降臨！】エネルギー3：相手の場のフォロワーすべてに雷元素3ダメージ。自身+2/+0。",
     "elementalSkill": {"name":"夜虹の飛翔","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"閃烈降臨！","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
