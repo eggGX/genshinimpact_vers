@@ -51,5 +51,5 @@ test('Frost Spirit must select an ally if a valid existing ally is available', (
 })
 
 test('card description excludes itself', () => {
-  assert.match(engine.getCard('C044').description, /自身を除く/)
+  assert.match(engine.getCard('C044').description, /自分の場の他のフォロワー1枚を選ぶ/)
 })
