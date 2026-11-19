@@ -69,7 +69,7 @@ export const geoCards: Card[] = [
     "traits": [
       "ヴィシャップ"
     ],
-    "description": "【突進】\n【攻撃時】自分のリーダーに結晶シールド1。",
+    "description": "【突進】\n【攻撃時】自分のリーダーは結晶シールド1をもつ。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
@@ -132,7 +132,7 @@ export const geoCards: Card[] = [
     "traits": [
       "ヴィシャップ"
     ],
-    "description": "【守護】\n【交戦時】自分のリーダーに結晶シールド2。",
+    "description": "【守護】\n【交戦時】自分のリーダーは結晶シールド2をもつ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -153,7 +153,7 @@ export const geoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【守護】\n【攻撃時】自分のリーダー2回復。\n【元素スキル：護心鎧】\nコスト：PP1\n自身と自分のリーダーに通常シールド3。",
+    "description": "【守護】\n【攻撃時】自分のリーダー2回復。\n【元素スキル：護心鎧】\nコスト：PP1\nこのフォロワーは通常シールド3をもつ。\n自分のリーダーは通常シールド3をもつ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -179,7 +179,7 @@ export const geoCards: Card[] = [
     "traits": [
       "璃月七星"
     ],
-    "description": "【元素攻撃：岩】\n【ファンファーレ】自分のリーダー結晶シールド2。\n【元素スキル：璇璣屏】\nコスト：PP1\n「璇璣屏」1つを場に出す。",
+    "description": "【元素攻撃：岩】\n【ファンファーレ】自分のリーダーは結晶シールド2をもつ。\n【元素スキル：璇璣屏】\nコスト：PP1\n「璇璣屏」1つを場に出す。",
     "implementationStatus": "playable",
     "normalAttackElement": "geo",
     "elementalSkill": {"name":"璇璣屏","ppCost":1,"effects":[]}
@@ -219,7 +219,7 @@ export const geoCards: Card[] = [
     "traits": [
       "こだまの子"
     ],
-    "description": "【ファンファーレ】自分のリーダー結晶シールド2。\n【元素スキル：いけ、ぐるぐるコマちゃん！】\nコスト：PP1\n「ぐるぐるコマちゃん」1つを場に出す。",
+    "description": "【ファンファーレ】自分のリーダーは結晶シールド2をもつ。\n【元素スキル：いけ、ぐるぐるコマちゃん！】\nコスト：PP1\n「ぐるぐるコマちゃん」1つを場に出す。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"いけ、ぐるぐるコマちゃん！","ppCost":1,"effects":[]}
   },
@@ -256,7 +256,7 @@ export const geoCards: Card[] = [
     "traits": [
       "棘薔薇の会"
     ],
-    "description": "自分のターン中、自分のリーダーが結晶シールドを獲得するたび自身+1/+0（最大3回/ターン）。\n【元素スキル：セレモニアル・クリスタルショット】\nコスト：なし\n自分のリーダーの結晶シールドを最大3まで消費する。\n相手の場のフォロワー1枚を選ぶ。それに岩元素Xダメージ。Xは消費した結晶シールドの数×2に1を足した数である。\n【元素爆発：晴天を衝く霰弾の名射手】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに岩元素1ダメージ。\n自分のリーダー結晶シールド1。\n自分は『クレスト：晴天を衝く霰弾の名射手』をもつ。\n【クレスト】\n【カウントダウン_2】\n自分のターン終了時、相手の場のフォロワーすべてに岩元素1ダメージ。自分のリーダーに結晶シールド1を付与する。",
+    "description": "自分のターン中、自分のリーダーが結晶シールドを獲得するたび自身+1/+0（最大3回/ターン）。\n【元素スキル：セレモニアル・クリスタルショット】\nコスト：なし\n自分のリーダーの結晶シールドを最大3まで消費する。\n相手の場のフォロワー1枚を選ぶ。それに岩元素Xダメージ。Xは消費した結晶シールドの数×2に1を足した数である。\n【元素爆発：晴天を衝く霰弾の名射手】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに岩元素1ダメージ。\n自分のリーダーは結晶シールド1をもつ。\n自分は『クレスト：晴天を衝く霰弾の名射手』をもつ。\n【クレスト】\n【カウントダウン_2】\n自分のターン終了時、相手の場のフォロワーすべてに岩元素1ダメージ。自分のリーダーは結晶シールド1をもつ。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"セレモニアル・クリスタルショット","ppCost":0,"effects":[]},
     "elementalBurst": {"name":"晴天を衝く霰弾の名射手","energyCost":3,"effects":[]}
@@ -276,7 +276,7 @@ export const geoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "自分のターン終了時、自分のリーダー結晶シールド1。\n【元素スキル：創生術・擬似陽華】\nコスト：PP1\n「陽華」1つを場に出す。\n【元素爆発：誕生式・大地の潮】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに岩元素2ダメージ。\n自分の場に岩創造物があれば追加で岩元素2ダメージ。",
+    "description": "自分のターン終了時、自分のリーダーは結晶シールド1をもつ。\n【元素スキル：創生術・擬似陽華】\nコスト：PP1\n「陽華」1つを場に出す。\n【元素爆発：誕生式・大地の潮】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに岩元素2ダメージ。\n自分の場に岩創造物があれば追加で岩元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"創生術・擬似陽華","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"誕生式・大地の潮","energyCost":3,"effects":[]}
