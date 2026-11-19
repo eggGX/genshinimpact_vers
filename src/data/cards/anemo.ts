@@ -30,7 +30,7 @@ export const anemoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【カウントダウン_3】【自分のターン終了時】自分のデッキから「地域：モンド」のカードを1枚引く。",
+    "description": "【カウントダウン_3】\n自分のターン終了時、自分のデッキから「地域：モンド」のカードを1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -64,7 +64,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "フライム"
     ],
-    "description": "【元素生物：風】【ラストワード】相手のリーダーに風元素2ダメージ。",
+    "description": "【元素生物：風】\n【ラストワード】相手のリーダーに風元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalCreature": true
   },
@@ -91,7 +91,7 @@ export const anemoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【カウントダウン_3】【自分のターン終了時】相手の場のフォロワーすべてに風元素1ダメージ。このアミュレットが初めて起こした拡散元素（炎・水・氷・雷）を記録し、以後同時にその元素1ダメージを相手の場のフォロワーすべてに与える。",
+    "description": "【カウントダウン_3】\n自分のターン終了時、相手の場のフォロワーすべてに風元素1ダメージ。\nこのアミュレットが初めて起こした拡散元素（炎・水・氷・雷）を記録し、以後同時にその元素1ダメージを相手の場のフォロワーすべてに与える。",
     "implementationStatus": "playable"
   },
   {
@@ -106,7 +106,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "【突進】【攻撃時】「ヒルチャール」1体召喚。",
+    "description": "【突進】\n【攻撃時】「ヒルチャール」1体召喚。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
@@ -124,7 +124,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【元素攻撃：風】【ファンファーレ】相手のリーダーに【命の契約3】を付与。【ターン終了時】相手のリーダーに命の契約が残るなら、相手のリーダーに非元素1ダメージ（双方のターン終了時）。",
+    "description": "【元素攻撃：風】\n【ファンファーレ】相手のリーダーに【命の契約3】を付与。\nターン終了時、相手のリーダーに命の契約が残るなら、相手のリーダーに非元素1ダメージ（双方のターン終了時）。",
     "normalAttackElement": "anemo",
     "implementationStatus": "playable"
   },
@@ -143,7 +143,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【元素攻撃：風】【自分のターン中】自分が拡散を起こすたび自分のデッキから1枚引く（1ターン最大1回）。【元素スキル：風霊作成・六三〇八】PP1：相手の場のフォロワーすべてに風元素1ダメージ。",
+    "description": "【元素攻撃：風】\n自分のターン中、自分が拡散を起こすたび自分のデッキから1枚引く（1ターン最大1回）。\n\n【元素スキル：風霊作成・六三〇八】PP1：相手の場のフォロワーすべてに風元素1ダメージ。",
     "elementalSkill": {"name":"風霊作成・六三〇八","ppCost":1,"effects":[]},
     "implementationStatus": "playable",
     "normalAttackElement": "anemo"
@@ -160,7 +160,7 @@ export const anemoCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【潜伏】【元素スキル：嗚呼流・風隠急進】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。自身+1/+0。",
+    "description": "【潜伏】\n【元素スキル：嗚呼流・風隠急進】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。\n自身+1/+0。",
     "implementationStatus": "playable",
     "keywords": [
       "stealth"
@@ -194,7 +194,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。自分の場の風元素フォロワーすべてを+1/+0する。",
+    "description": "【ファンファーレ】自分の場の他の風元素フォロワー1枚を選ぶ。\nそれは+1/+0する。\n\n【元素スキル：非想風天】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。\n自分の場の風元素フォロワーすべてを+1/+0する。",
     "elementalSkill": {"name":"非想風天","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【突進】【ファンファーレ】自分のデッキから風元素のスペルカードを1枚引く。【元素スキル：エニグマティック・フェイント】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。自身を1回復。",
+    "description": "【突進】\n【ファンファーレ】自分のデッキから風元素のスペルカードを1枚引く。\n\n【元素スキル：エニグマティック・フェイント】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。\n自身を1回復。",
     "implementationStatus": "playable",
     "keywords": ["rush"],
     "elementalSkill": {
@@ -245,7 +245,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【疾走】【2回攻撃】【ファンファーレ】自分のデッキから「タイプ：西風騎士団」のフォロワーカードを1枚引く。【攻撃時】自分の場の西風騎士団フォロワーすべてを+1/+1する。【攻撃後】自身の元素攻撃が炎/水/氷/雷ならそれを風元素攻撃に上書き（ターン終了まで）。【元素スキル：堕ちる烈風】コスト：手札の炎/水/氷/雷カード1枚を捨てる。同元素攻撃を得る。【元素爆発：我こそ朔風】エネルギー3：相手の場のフォロワーすべてに風元素2ダメージ。",
+    "description": "【疾走】【2回攻撃】\n【ファンファーレ】自分のデッキから「タイプ：西風騎士団」のフォロワーカードを1枚引く。\n\n【攻撃時】自分の場の西風騎士団フォロワーすべてを+1/+1する。\n\n【攻撃後】自身の元素攻撃が炎/水/氷/雷ならそれを風元素攻撃に上書き（ターン終了まで）。\n\n【元素スキル：堕ちる烈風】コスト：手札の炎/水/氷/雷カード1枚を捨てる。\n同元素攻撃を得る。\n\n【元素爆発：我こそ朔風】エネルギー3：相手の場のフォロワーすべてに風元素2ダメージ。",
     "keywords": ["storm","double_attack"],
     "elementalSkill": {"name":"堕ちる烈風","ppCost":0,"effects":[]},
     "elementalBurst": {"name":"我こそ朔風","energyCost":3,"effects":[]},
@@ -266,7 +266,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "仙人"
     ],
-    "description": "【突進】【元素スキル：風輪両立】PP1：相手の場のフォロワー1枚を選ぶ。それに風元素2ダメージ。1ターン最大2回。【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。さらに【自分のターン終了時】自身と自分のリーダーに1ダメージ、を付与。",
+    "description": "【突進】\n【元素スキル：風輪両立】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに風元素2ダメージ。1ターン最大2回。\n\n【元素爆発：靖妖儺舞】エネルギー4：自身+2/+2、【疾走】【落下攻撃】【元素攻撃：風】付与。\nさらに自分のターン終了時、自身と自分のリーダーに1ダメージ、を付与。",
     "keywords": ["rush"],
     "elementalSkill": {"name":"風輪両立","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"anemo"}]},
     "elementalBurst": {"name":"靖妖儺舞","energyCost":4,"effects":[]},
@@ -287,7 +287,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【元素攻撃：風】【オーラ】【元素スキル：羽画・風姿華歌】PP1：自身+2/+0、このターン【疾走】付与。【元素爆発：狂言・式楽伍番】エネルギー3：ランダムな相手フォロワーまたは相手のリーダー1体に風元素2ダメージ。これを5回行う。",
+    "description": "【元素攻撃：風】【オーラ】\n【元素スキル：羽画・風姿華歌】PP1：自身+2/+0、このターン【疾走】付与。\n\n【元素爆発：狂言・式楽伍番】エネルギー3：ランダムな相手フォロワーまたは相手のリーダー1体に風元素2ダメージ。これを5回行う。",
     "keywords": ["aura"],
     "normalAttackElement": "anemo",
     "elementalSkill": {"name":"羽画・風姿華歌","ppCost":1,"effects":[]},
