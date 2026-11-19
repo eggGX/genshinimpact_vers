@@ -148,7 +148,7 @@ export const productionTokens: Card[] = [
     attack: 3,
     health: 3,
     token: true,
-    description: '【自分のターン終了時】ランダムな敵フォロワー1体に雷元素3ダメージ。',
+    description: '自分のターン終了時、ランダムな相手フォロワー1体に雷元素3ダメージ。',
   },
   {
     id: 'token-sesshou-sakura',
@@ -158,7 +158,7 @@ export const productionTokens: Card[] = [
     element: 'electro',
     cost: 1,
     token: true,
-    description: '【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に雷元素2ダメージ。',
+    description: '【カウントダウン_3】\n自分のターン終了時、ランダムな相手フォロワー1体に雷元素2ダメージ。',
   },
   {
     id: 'token-surprising-cat-box',
@@ -171,7 +171,7 @@ export const productionTokens: Card[] = [
     health: 8,
     token: true,
     keywords: ['guard'],
-    description: '【守護】【自分のターン終了時】ランダムな敵フォロワー1体に風元素2ダメージ。【交戦時】相手が炎/水/氷/雷属性カードなら、同属性2ダメージをそのフォロワーに与える。',
+    description: '【守護】\n自分のターン終了時、ランダムな相手フォロワー1体に風元素2ダメージ。\n【交戦時】交戦相手が炎・水・氷・雷元素のカードなら、そのフォロワーに同じ元素の2ダメージ。',
   },
 
   {
@@ -183,7 +183,7 @@ export const productionTokens: Card[] = [
     traits: ['岩創造物'],
     cost: 2,
     token: true,
-    description: '【カウントダウン3】【自分のターン終了時】自リーダーに結晶シールド2。',
+    description: '【カウントダウン_3】\n自分のターン終了時、自分のリーダーは結晶シールド2をもつ。',
   },
   {
     id: 'token-spinning-turbo',
