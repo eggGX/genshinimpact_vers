@@ -46,6 +46,6 @@ test('every elemental reaction distinguishes follower and leader behavior', () =
   assert.match(help, /同じターンに何回凍結しても減少量は最大1/)
   assert.match(help, /反応を起こしたプレイヤーの相手の場に草原核を生成/)
   assert.match(help, /核の持ち主のリーダーに3ターンの燃焼を付与/)
-  assert.match(read('src/game/leaderShield.ts'), /const bonus = reaction === 'vaporize'/)
+  assert.match(read('src/game/leaderShield.ts'), /const bonus = amount > 0 && \(reaction === 'vaporize'/)
   assert.match(read('src/game/leaderShield.ts'), /leaderAura: nextAuras/)
 })
