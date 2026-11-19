@@ -1343,18 +1343,21 @@ test('グゥオパァー：敵フォロワーがいなければ毎自ターン�
   assert.equal(state.players[1].leaderHealth, 12)
 })
 
-test('C021 ベネット：召喚時は味方一体か自身を指定して攻撃力+1', () => {
+test('C021 ベネット：既存の味方だけを+1し、味方不在時は本体だけプレイ', () => {
   let state = startedGame()
   state.players[0].hand = ['C021']
   state.players[0].pp = 3
   assert.equal(engine.needsFriendlyPlayTarget(engine.getCard('C021')), true)
-  assert.equal(engine.playCard(state, 'player1', 0), state)
-  state = engine.playCard(state, 'player1', 0, 'self')
-  assert.equal(state.players[0].field[0].attack, 3)
+  state = engine.playCard(state, 'player1', 0)
+  assert.equal(state.players[0].field[0].attack, 2)
+  assert.equal(state.players[0].hand.length, 0)
+
   const withAlly = startedGame()
   withAlly.players[0].hand = ['C021']
   withAlly.players[0].pp = 3
   const ally = place(withAlly, 0, 'C001', 1, 2)
+  assert.equal(engine.playCard(withAlly, 'player1', 0), withAlly)
+  assert.equal(engine.playCard(withAlly, 'player1', 0, 'self'), withAlly)
   const next = engine.playCard(withAlly, 'player1', 0, ally.instanceId)
   assert.equal(next.players[0].field[0].attack, 2)
   assert.equal(next.players[0].field[1].attack, 2)
@@ -2371,18 +2374,21 @@ test('STEP33 氷9枚の実装状態とスキル・爆発コストを原本照合
   assert.deepEqual(['C053','C054','C055'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,3,3])
 })
 
-test('C044 霜の精：味方を選び+2攻撃、本人も指定可能、無指定不可',()=>{
+test('C044 霜の精：既存の味方を+2攻撃、本人は対象外、味方不在なら本体だけプレイ',()=>{
   let state=startedGame()
   state.players[0].hand=['C044'];state.players[0].pp=3
   const ally=place(state,0,'C001',1,2)
   assert.equal(engine.needsFriendlyPlayTarget(engine.getCard('C044')),true)
   assert.equal(engine.playCard(state,'player1',0),state)
+  assert.equal(engine.playCard(state,'player1',0,'self'),state)
   let next=engine.playCard(state,'player1',0,ally.instanceId)
   assert.equal(next.players[0].field[0].attack,3)
   assert.equal(next.players[0].field[1].attack,2)
-  next=engine.playCard(state,'player1',0,'self')
-  assert.equal(next.players[0].field[0].attack,1)
-  assert.equal(next.players[0].field[1].attack,4)
+  const solo=startedGame()
+  solo.players[0].hand=['C044'];solo.players[0].pp=3
+  next=engine.playCard(solo,'player1',0)
+  assert.equal(next.players[0].field.length,1)
+  assert.equal(next.players[0].field[0].attack,2)
 })
 
 test('C045 凛冽なる輪舞：カウント3、毎自ターン終了で氷2を2回',()=>{
