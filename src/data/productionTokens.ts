@@ -26,7 +26,7 @@ export const productionTokens: Card[] = [
     health: 3,
     token: true,
     keywords: ['guard', 'damage_cap_1'],
-    description: '【守護】【ラストワード】相手のフォロワーすべてとリーダーに炎元素1ダメージ。受ける2以上のダメージを1にする。',
+    description: '【守護】\nこのフォロワーが受ける2以上のダメージを1にする。\n【ラストワード】相手の場のフォロワーすべてと相手のリーダーに炎元素1ダメージ。',
   },
   {
     id: 'token-guoba',
@@ -38,7 +38,7 @@ export const productionTokens: Card[] = [
     attack: 1,
     health: 3,
     token: true,
-    description: '【自分のターン終了時】ランダムな敵フォロワーまたはリーダーに炎元素2ダメージ。これを2回。',
+    description: '自分のターン終了時、ランダムな相手フォロワーまたは相手のリーダー1体に炎元素2ダメージ。これを2回行う。',
   },
   {
     id: 'token-funny-hat-cat',
@@ -52,7 +52,7 @@ export const productionTokens: Card[] = [
     token: true,
     normalAttackElement: 'pyro',
     keywords: ['rush', 'aura', 'intimidate'],
-    description: '【突進】【オーラ】【威圧】【元素攻撃：炎】【自分のターン開始時】自身を破壊。【ラストワード】「幻惑のトリック・リネ」1体を召喚。',
+    description: '【突進】\n【オーラ】\n【威圧】\n【元素攻撃：炎】\n自分のターン開始時、このフォロワーを破壊する。\n【ラストワード】「幻惑のトリック・リネ」1体を自分の場に出す。',
   },  {
     id: 'token-hydro-pressure-device',
     name: '落ち着いた方がいいカモ？',
@@ -61,7 +61,7 @@ export const productionTokens: Card[] = [
     element: 'hydro',
     cost: 1,
     token: true,
-    description: '【カウントダウン2】【自分のターン終了時】ランダムな敵フォロワー1体に水元素1ダメージ。',
+    description: '【カウントダウン_2】\n自分のターン終了時、ランダムな相手フォロワー1体に水元素1ダメージ。',
   },
   {
     id: 'token-hydro-phantom',
