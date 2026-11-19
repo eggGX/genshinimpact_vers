@@ -191,7 +191,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。それは+1/+0する。\n【元素スキル：溢れる情熱】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素4ダメージ。\nこのフォロワー自身に非元素1ダメージ。",
+    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。それは+1/+0する。\n【元素スキル：溢れる情熱】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素4ダメージ。\nこのフォロワーに1ダメージ。",
     "elementalSkill": { "name": "溢れる情熱", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 4, "element": "pyro" },
       { "type": "damage", "trigger": "skill", "target": "self_follower", "value": 1 }
@@ -213,7 +213,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "特巡隊"
     ],
-    "description": "自分のターン中、自分が過負荷を起こすたび、自分の場のフォロワーすべてを+1/+0する（発動回数制限なし）。\n【元素スキル：近迫阻止射撃・速】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n自分のリーダーを2回復。",
+    "description": "自分のターン中、自分が過負荷を起こすたび、自分の場のフォロワーすべてを+1/+0する。\n【元素スキル：近迫阻止射撃・速】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n自分のリーダーを2回復。",
     "elementalSkill": { "name": "近迫阻止射撃・速", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" },
       { "type": "heal", "trigger": "skill", "target": "own_leader", "value": 2 }
@@ -232,7 +232,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素スキル：逆焔の刃】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。\n【元素爆発：黎明】エネルギー3：相手の場のフォロワーすべてと相手のリーダーに炎元素3ダメージ。",
+    "description": "【元素スキル：逆焔の刃】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。Xはこのターンに使用した「逆焔の刃」の回数+2である。このスキルは1ターンに最大3回まで使用可能。\n【元素爆発：黎明】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてと相手のリーダーに炎元素3ダメージ。",
         "elementalSkill": { "name": "逆焔の刃", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 3, "element": "pyro" }
     ] },
@@ -254,7 +254,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【疾走】\n【攻撃時】自分の場に炎元素カードが3枚以上あるなら、このフォロワーを+1/+0する。\n【元素スキル：ビウィルダー・ライト】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n【元素爆発：大魔術・ミラクルパレード】エネルギー2：このフォロワーは「ファニーハット・キャット」に変身する。",
+    "description": "【疾走】\n【攻撃時】自分の場に炎元素カードが3枚以上あるなら、このフォロワーを+1/+0する。\n【元素スキル：ビウィルダー・ライト】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。\n【元素爆発：大魔術・ミラクルパレード】\nコスト：元素エネルギー_2\nこのフォロワーは「ファニーハット・キャット」に変身する。",
         "keywords": ["storm"],
     "elementalSkill": { "name": "ビウィルダー・ライト", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" }
@@ -277,7 +277,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "往生堂"
     ],
-    "description": "【疾走】自分のリーダーHPが10以下なら自身攻撃力+2（条件付き）。\n【元素スキル：蝶導来世】\nコスト：PP1\n自分のリーダーに3ダメージ、自身+2/+0、【元素攻撃：炎】付与。\n【元素爆発：安神秘法】エネルギー3：相手のリーダーに炎元素4ダメージ、自分のリーダーを3回復。",
+    "description": "【疾走】\n自分のリーダーのHPが10以下なら、このフォロワーを+2/+0する。\n【元素スキル：蝶導来世】\nコスト：PP1\n自分のリーダーに3ダメージ。\nこのフォロワーを+2/+0する。\nこのフォロワーは【元素攻撃：炎】をもつ。\n【元素爆発：安神秘法】\nコスト：元素エネルギー_3\n相手のリーダーに炎元素4ダメージ。\n自分のリーダーを3回復。",
         "keywords": ["storm"],
     "elementalSkill": { "name": "蝶導来世", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "own_leader", "value": 3 },
