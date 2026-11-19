@@ -104,7 +104,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "【カウントダウン_3】\n自分のターン終了時、自分のリーダー1回復。\n自分のデッキから1枚引く。",
+    "description": "【カウントダウン_3】\n自分のターン終了時、自分のリーダーを1回復。\n自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -137,7 +137,7 @@ export const dendroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：雲閣団々降清白】\nコスト：PP1\n「月桂・投擲型」1体を自分の場に出す。",
+    "description": "自分のターン終了時、自分のリーダーを1回復。\n【元素スキル：雲閣団々降清白】\nコスト：PP1\n「月桂・投擲型」1体を自分の場に出す。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "雲閣団々降清白",
