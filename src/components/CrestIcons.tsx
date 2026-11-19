@@ -9,6 +9,8 @@ type Props = { crests?: CrestState[]; ownerName: string; placement?: 'above' | '
 
 const customTitles: Record<string, string> = {
   C034: '歌声の環',
+  C053: '降衆天華',
+  C099: '晴天を衝く霰弾の名射手',
 }
 
 const crestSymbols: Record<string, string> = {
@@ -61,7 +63,6 @@ export function CrestIcons({ crests = [], ownerName, placement = 'below' }: Prop
           type="button"
           className={`crest-button${active?.key === key ? ' crest-button--selected' : ''}`}
           key={key}
-          title={tooltip}
           onMouseEnter={() => setHovered(key)}
           onMouseLeave={() => setHovered(null)}
           onFocus={() => setHovered(key)}
