@@ -179,7 +179,7 @@ export const geoCards: Card[] = [
     "traits": [
       "璃月七星"
     ],
-    "description": "【元素攻撃：岩】\n【ファンファーレ】自分のリーダーは結晶シールド2をもつ。\n【元素スキル：璇璣屏】\nコスト：PP1\n「璇璣屏」1つを場に出す。",
+    "description": "【元素攻撃：岩】\n【ファンファーレ】自分のリーダーは結晶シールド2をもつ。\n【元素スキル：璇璣屏】\nコスト：PP1\n「璇璣屏」1つを自分の場に出す。",
     "implementationStatus": "playable",
     "normalAttackElement": "geo",
     "elementalSkill": {"name":"璇璣屏","ppCost":1,"effects":[]}
@@ -219,7 +219,7 @@ export const geoCards: Card[] = [
     "traits": [
       "こだまの子"
     ],
-    "description": "【ファンファーレ】自分のリーダーは結晶シールド2をもつ。\n【元素スキル：いけ、ぐるぐるコマちゃん！】\nコスト：PP1\n「ぐるぐるコマちゃん」1つを場に出す。",
+    "description": "【ファンファーレ】自分のリーダーは結晶シールド2をもつ。\n【元素スキル：いけ、ぐるぐるコマちゃん！】\nコスト：PP1\n「ぐるぐるコマちゃん」1つを自分の場に出す。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"いけ、ぐるぐるコマちゃん！","ppCost":1,"effects":[]}
   },
@@ -276,7 +276,7 @@ export const geoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "自分のターン終了時、自分のリーダーは結晶シールド1をもつ。\n【元素スキル：創生術・擬似陽華】\nコスト：PP1\n「陽華」1つを場に出す。\n【元素爆発：誕生式・大地の潮】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに岩元素2ダメージ。\n自分の場に岩創造物があれば追加で岩元素2ダメージ。",
+    "description": "自分のターン終了時、自分のリーダーは結晶シールド1をもつ。\n【元素スキル：創生術・擬似陽華】\nコスト：PP1\n「陽華」1つを自分の場に出す。\n【元素爆発：誕生式・大地の潮】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに岩元素2ダメージ。\n自分の場に岩創造物があれば追加で岩元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {"name":"創生術・擬似陽華","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"誕生式・大地の潮","energyCost":3,"effects":[]}
