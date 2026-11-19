@@ -53,6 +53,8 @@ export interface OnlinePresentationEvent {
   actorId: string
   title: string
   playedCardId?: string
+  abilityCardId?: string
+  abilityKind?: 'skill' | 'burst'
   frames: Array<{ label: string; state: OnlinePresentationSnapshot }>
 }
 export interface OnlineMatchView {
