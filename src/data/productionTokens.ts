@@ -229,12 +229,12 @@ export const productionTokens: Card[] = [
     id:'token-yuegui-throwing',name:'月桂・投擲型',
     type:'follower',rarity:'bronze',element:'dendro',
     cost:2,attack:0,health:3,token:true,
-    description:'【自分のターン終了時】ランダムな敵フォロワー1体に草元素1ダメージ。自リーダー1回復。',
+    description:'自分のターン終了時、ランダムな相手フォロワー1体に草元素1ダメージ。\n自分のリーダーを1回復。',
   },  {
     id:'token-lumidouce-vial',name:'ルミドゥースの瓶',
     type:'amulet',rarity:'bronze',element:'dendro',
     cost:2,token:true,
-    description:'【カウントダウン3】【自分のターン終了時】ランダムな敵フォロワー1体に草元素1ダメージ。相手の場に燃焼状態フォロワーがいれば代わりに3ダメージ。',
+    description:'【カウントダウン_3】\n自分のターン終了時、ランダムな相手フォロワー1体に草元素1ダメージ。相手の場に燃焼状態のフォロワーがいるなら、代わりに草元素3ダメージ。',
   },  {
     id: 'dendro-core',
     name: '草原核',
@@ -246,6 +246,6 @@ export const productionTokens: Card[] = [
     health: 1,
     token: true,
     keywords: ['cannot_attack'],
-    description: '【攻撃不可】このカードが受けるダメージは0になる。【自分のターン終了時】自分の場のランダムな他のフォロワー1体に2ダメージ。このフォロワーを+0/-1する。これをX回行う。Xはこのフォロワーの体力の値である。開花で相手の場に出る。再開花時は+0/+1。炎・雷で破壊され、それぞれ烈開花・超開花が発生する。',
+    description: '【攻撃不可】\nこのフォロワーが受けるダメージは0になる。\n自分のターン終了時、自分の場のランダムな他のフォロワー1体に2ダメージ。このフォロワーを+0/-1する。これをX回行う。Xはこのフォロワーの体力の値である。\n開花で相手の場に出る。\n再開花時、このフォロワーを+0/+1する。\n炎・雷で破壊され、それぞれ烈開花・超開花が発生する。',
   },
 ]
