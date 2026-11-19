@@ -85,7 +85,7 @@ export const electroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "相手の場のフォロワー1枚を選ぶ。\nそれに雷元素3ダメージ。\n「オズ」1体を召喚する。",
+    "description": "相手の場のフォロワー1枚を選ぶ。それに雷元素3ダメージ。\n「オズ」1体を召喚する。",
     "implementationStatus": "playable",
     "effects": [
       {
@@ -194,7 +194,7 @@ export const electroCards: Card[] = [
     "traits": [
       "天領奉行"
     ],
-    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。\nそれは+1/+0する。\n\n【元素スキル：烏天狗雷霆召呪】PP1：自分の場の雷元素フォロワー1枚を選ぶ。\nそれは+2/+0する。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。それは+1/+0する。\n\n【元素スキル：烏天狗雷霆召呪】PP1：自分の場の雷元素フォロワー1枚を選ぶ。それは+2/+0する。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"烏天狗雷霆召呪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const electroCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "自分のターン中、自分が感電を起こしたとき、ランダムな相手フォロワー1体に雷元素1ダメージ（1ターン最大2回）。\n\n【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに雷元素2ダメージ。\n選んだフォロワーとは別のランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "自分のターン中、自分が感電を起こしたとき、ランダムな相手フォロワー1体に雷元素1ダメージ（1ターン最大2回）。\n\n【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n選んだフォロワーとは別のランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"冥色のタイトロープ","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "implementationStatus": "playable"
   },
@@ -232,7 +232,7 @@ export const electroCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【突進】\n【元素スキル：秘儀・律淵渡魂】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに雷元素2ダメージ。\n\n【元素爆発：聖儀・狼駆憑走】エネルギー3：自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
+    "description": "【突進】\n【元素スキル：秘儀・律淵渡魂】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n\n【元素爆発：聖儀・狼駆憑走】エネルギー3：自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
     "elementalSkill": {"name":"秘儀・律淵渡魂","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "elementalBurst": {"name":"聖儀・狼駆憑走","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
