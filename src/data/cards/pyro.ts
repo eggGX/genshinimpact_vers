@@ -56,7 +56,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【ラストワード】ランダムな敵フォロワー1体に炎元素2ダメージ。",
+    "description": "【ラストワード】ランダムな相手フォロワー1体に炎元素2ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -94,7 +94,7 @@ export const pyroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "敵フォロワーすべてに炎元素1ダメージ。クレスト【旋火輪】（カウントダウン2）を得る：自分のターン終了時、敵フォロワーすべてと相手リーダーに炎元素1ダメージ。",
+    "description": "相手フォロワーすべてに炎元素1ダメージ。クレスト【旋火輪】（カウントダウン2）を得る：自分のターン終了時、相手フォロワーすべてと相手リーダーに炎元素1ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -232,7 +232,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素スキル：逆焔の刃】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。【元素爆発：黎明】エネルギー3：敵フォロワーすべてと相手リーダーに炎元素3ダメージ。",
+    "description": "【元素スキル：逆焔の刃】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素Xダメージ。X=このターンに使用した「逆焔の刃」の回数+2（今回を含む）。1ターン最大3回。【元素爆発：黎明】エネルギー3：相手フォロワーすべてと相手リーダーに炎元素3ダメージ。",
         "elementalSkill": { "name": "逆焔の刃", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 3, "element": "pyro" }
     ] },
