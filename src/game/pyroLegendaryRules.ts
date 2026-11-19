@@ -1,7 +1,7 @@
 import type { Follower, GameState, Player } from './types'
 import { getCard } from '../data/cardRegistry'
 import { resolveLeaderElementalHit } from './elemental'
-import { createSummonedFollower, summonFollowers } from './neutralRules'
+import { createSummonedFollower } from './neutralRules'
 import { resolveElementalDamage, resolveReactionConsequence } from './elemental'
 import { hitAllEnemyFollowers } from './pyroRules'
 
@@ -95,32 +95,18 @@ export function effectiveAttack(
   return Math.max(0, follower.attack + (follower.cardId === 'C025' && hp <= 10 ? 2 : 0))
 }
 
-/** Starts of owner turns: Funny Hat Cat destroys itself, triggering its last word. */
+/** At the start of its owner's turn, Funny Hat Cat transforms into a fresh Lyney. */
 export function resolveLegendaryTurnStart(
-  state: GameState, ownerId: string,
-  resolveDeaths: (state: GameState) => GameState
+  state: GameState, ownerId: string
 ): GameState {
   const ownerIndex = state.players.findIndex(p => p.id === ownerId)
   if (ownerIndex < 0) return state
-  const ids = state.players[ownerIndex].field
-    .filter(f => f.cardId === 'token-funny-hat-cat' && f.health > 0)
-    .map(f => f.instanceId)
-  let result = state
-  for (const id of ids) {
-    if (result.winnerId !== null) break
-    result = updateOwner(result, ownerIndex, p => ({
-      ...p,
-      field: p.field.map(f => f.instanceId === id ? { ...f, health: 0 } : f),
-    }))
-    result = resolveDeaths(result)
-  }
-  return result
-}
-
-/** Cat death summons one Lyney with no fanfare; transformations don't come here. */
-export function resolveLegendaryDestroy(
-  state: GameState, ownerId: string, destroyed: Follower
-): GameState {
-  if (destroyed.cardId !== 'token-funny-hat-cat') return state
-  return summonFollowers(state, ownerId, 'C024', 1)
+  return updateOwner(state, ownerIndex, p => ({
+    ...p,
+    field: p.field.map(f =>
+      f.cardId === 'token-funny-hat-cat' && f.health > 0
+        ? createSummonedFollower('C024')
+        : f
+    ),
+  }))
 }
