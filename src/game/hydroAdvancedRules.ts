@@ -237,12 +237,13 @@ export function resolveHydroPermanentsTurnEnd(
     result = updatePlayer(result, ownerId, p => ({
       ...p,
       ...healLeader(p, 3),
-      // Barbara's self-Hydro application also obeys the single-aura leader rule.
-      leaderAura: [{ element: 'hydro' }],
       crests: (p.crests ?? []).map((c, i) => i === crestIndex ? {
         ...c, turnsRemaining: c.turnsRemaining - 1,
       } : c),
     }))
+    // Apply Hydro through the leader reaction resolver, not by replacing the aura.
+    // For self-application, reactions such as Bloom belong on the affected side.
+    result = resolveDeaths(resolveLeaderElementalHit(result, index, 0, 'hydro', 1 - index))
   }
   result = updatePlayer(result, ownerId, p => ({
     ...p, crests: (p.crests ?? []).filter(c => c.turnsRemaining > 0),
