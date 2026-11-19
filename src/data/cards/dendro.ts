@@ -78,7 +78,7 @@ export const dendroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "「月桂・跳躍型」2体を自分の場に出す。\n自分の場のフォロワーすべてと自分のリーダーに2回復。",
+    "description": "「月桂・跳躍型」2体を自分の場に出す。\n自分の場のフォロワーすべてと自分のリーダーを2回復。",
     "implementationStatus": "playable"
   },
   {
