@@ -69,7 +69,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "アビス"
     ],
-    "description": "【元素攻撃：水】\n【ファンファーレ】このフォロワーに通常シールド3。",
+    "description": "【元素攻撃：水】\n【ファンファーレ】このフォロワーは通常シールド3をもつ。",
     "implementationStatus": "playable",
     "normalAttackElement": "hydro",
     "effects": [
@@ -92,7 +92,7 @@ export const hydroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分の場のフォロワー1枚を選ぶ。それは「\n【攻撃時】今攻撃している対象に水元素1ダメージを与える。」をもつ。",
+    "description": "自分の場のフォロワー1枚を選ぶ。それは「【攻撃時】対象に水元素1ダメージ。」をもつ。",
     "implementationStatus": "playable"
   },
   {
@@ -123,7 +123,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "原海アベラント"
     ],
-    "description": "【守護】\n自分のターン終了時、自身に通常シールド2。",
+    "description": "【守護】\n自分のターン終了時、このフォロワーは通常シールド2をもつ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -198,7 +198,7 @@ export const hydroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "【守護】\n【元素スキル：聖儀・蒼鷺による庇護】\nコスト：PP1\n自身に通常シールド3。\n相手の場のフォロワー1枚を選ぶ。それに水元素2ダメージ。",
+    "description": "【守護】\n【元素スキル：聖儀・蒼鷺による庇護】\nコスト：PP1\nこのフォロワーは通常シールド3をもつ。\n相手の場のフォロワー1枚を選ぶ。それに水元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "聖儀・蒼鷺による庇護", "ppCost": 1,
