@@ -80,7 +80,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "妖精"
     ],
-    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。それは+2/+0する。",
+    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。それを+2/+0する。",
     "implementationStatus": "playable"
   },
   {
@@ -224,7 +224,7 @@ export const cryoCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "【元素攻撃：氷】\n【ファンファーレ】自分のデッキから1枚引く。\n【元素スキル：フレーミング・氷点法】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。\nそれは-1/+0する。",
+    "description": "【元素攻撃：氷】\n【ファンファーレ】自分のデッキから1枚引く。\n【元素スキル：フレーミング・氷点法】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。\nそれを-1/+0する。",
     "elementalSkill": {"name":"フレーミング・氷点法","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"cryo"}]},
     "implementationStatus": "playable",
     "normalAttackElement": "cryo"
