@@ -120,13 +120,13 @@ test('風・岩・無元素の攻撃は付着せず、同元素は重複登録�
   assert.deepEqual(twice.aura, [{ element: 'hydro' }])
 })
 
-test('異なる元素の重なりは保持するが反応を起こさない（STEP14）', async () => {
+test('反応しない別元素の付着は新元素で上書きされる', async () => {
   const { applyElementalAura } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
   const target = place(state, 1, 'C001', 1, 4)
   const hydro = applyElementalAura(target, 'hydro')
   const cryo = applyElementalAura(hydro, 'cryo')
-  assert.deepEqual(cryo.aura.map(a => a.element), ['hydro', 'cryo'])
+  assert.deepEqual(cryo.aura.map(a => a.element), ['cryo'])
   assert.equal(cryo.health, 4)
 })
 
@@ -456,26 +456,25 @@ test('超開花：雷で草原核を破壊し自陣別フォロワーに3ダメ�
   assert.equal(target.health, 8)
 })
 
-test('草原核への物理攻撃はシールドで防げる', async () => {
+test('草原核への物理攻撃は無効化されシールドも減らない', async () => {
   const { createDendroCore, grantShield, resolveElementalDamage } =
     await vite.ssrLoadModule('/src/game/elemental.ts')
   const core = grantShield(createDendroCore(), 'normal', 2)
   const hit = resolveElementalDamage(core, 1)
   assert.equal(hit.reaction, null)
   assert.equal(hit.follower.health, 1)
-  assert.equal(hit.follower.shield.normal, 1)
+  assert.equal(hit.follower.shield.normal, 2)
 })
 
-test('草原核のターン終了時自傷2ダメージは通常シールドから吸収する', async () => {
+test('草原核のターン終了時体力減少はシールドを無視して消滅する', async () => {
   const { createDendroCore } = await vite.ssrLoadModule('/src/game/elemental.ts')
   const state = startedGame()
   const core = createDendroCore()
   core.shield.normal = 2
   state.players[0].field.push(core)
   const next = engine.endTurn(state)
-  assert.equal(next.players[0].field.length, 1)
-  assert.equal(next.players[0].field[0].health, 1)
-  assert.equal(next.players[0].field[0].shield.normal, 0)
+  assert.equal(next.players[0].field.length, 0)
+  assert.ok(next.players[0].graveyard.includes('dendro-core'))
 })
 
 test('草原核の自傷で破壊されたトークンも墓場に送られる', async () => {
@@ -668,7 +667,7 @@ test('無元素カードの説明には確定した能力を保持し未実装�
   assert.match(neutralCards[6].description, /ハト/)
   assert.match(neutralCards[7].description, /突進/)
   assert.match(neutralCards[8].description, /最大PP/)
-  assert.match(neutralCards[9].description, /カウントダウン7/)
+  assert.match(neutralCards[9].description, /カウントダウン_7/)
 })
 
 test('無元素・炎・水の登録数は100/115で残り15枚', async () => {
@@ -740,14 +739,14 @@ test('C003 遺跡守衛：守護がいると敵リーダーや非守護への攻
   assert.equal(next.players[1].field[0].health, 5)
 })
 
-test('C004 ワイルドハント：登場時に同名を召喚し分身はファンファーレを連鎖しない', () => {
+test('C004 ワイルドハント：登場時の分身はファンファーレを連鎖せずラストワードを維持する', () => {
   const state = startedGame()
   state.players[0].pp = 4
   state.players[0].hand = ['C004']
   const next = engine.playCard(state, 'player1', 0)
   assert.equal(next.players[0].field.length, 2)
   assert.deepEqual(next.players[0].field.map(f => f.cardId), ['C004', 'C004'])
-  assert.ok(next.players[0].field[1].keywords.includes('no_last_word'))
+  assert.equal(next.players[0].field[1].keywords.includes('no_last_word'), false)
 })
 
 test('C004 ワイルドハント：本体の破壊で分身を召喚、分身はラストワード無し', () => {
@@ -945,7 +944,7 @@ test('炎元素15枚は原本どおり種類・地域・二つ名・効果説明
     [2,2],[2,2],[1,2],[2,2],[3,2],
     [2,3],[2,3],[2,4],[3,4],[4,5],[2,3],[3,4],
   ])
-  assert.equal(pyroCards.find(c=>c.id==='C023').description.includes('1ターン最大3回'),true)
+  assert.equal(pyroCards.find(c=>c.id==='C023').description.includes('1ターンに最大3回まで使用可能'),true)
   assert.equal(pyroCards.find(c=>c.id==='C024').traits[0],'ファデュイ')
   assert.equal(pyroCards.find(c=>c.id==='C025').region[0],'璃月')
 })
@@ -1223,7 +1222,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['ハト', 1, 1, 1],
     ['ウサギ伯爵', 1, 0, 3], ['グゥオパァー', 2, 1, 3],
     ['ファニーハット・キャット', 5, 5, 5],
-    ['水圧装置', 1, undefined, undefined],
+    ['落ち着いた方がいいカモ？', 1, undefined, undefined],
     ['虚影', 1, 0, 2],
     ['化海月', 2, 0, 4],
     ['氷蛍', 1, 1, 1],
@@ -1239,7 +1238,7 @@ test('専用トークン：ウサギ伯爵とグゥオパァーの原本ステ�
     ['たもと', 2, 1, 3],
     ['月桂・跳躍型', 2, 0, 3],
     ['コレアンバー', 0, undefined, undefined],
-    ['草霊', 2, 2, 2],
+    ['草の霊蛇', 2, 2, 2],
     ['月桂・投擲型', 2, 0, 3],
     ['ルミドゥースの瓶', 2, undefined, undefined],
     ['草原核', 0, 0, 1],
@@ -1788,7 +1787,7 @@ test('C030はVer.1.0.1で対戦対応し味方フォロワー不在時は対象�
   state.players[0].pp=10
   state.players[0].hand=['C030']
   assert.equal(engine.getCard('C030').implementationStatus,'playable')
-  assert.match(engine.getCard('C030').description,/今攻撃している対象/)
+  assert.match(engine.getCard('C030').description,/【攻撃時】対象に水元素1ダメージ。/)
   assert.equal(engine.playCard(state,'player1',0),state)
   const ally=place(state,0,'C001',1,2)
   const played=engine.playCard(state,'player1',0,ally.instanceId)
@@ -1930,7 +1929,7 @@ test('STEP31 6枚の水ゴールド・レジェンドに確定したスキル/�
   const ids=['C034','C035','C037','C038','C039','C040']
   assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.ppCost),[2,1,1,1,1,1])
   assert.deepEqual(ids.map(id=>engine.getCard(id).elementalSkill.name),[
-    '公演、開始♪','古華剣・画雨籠山','名称未設定','水中幻願','海月の誓い','魔王武装・狂瀾'])
+    '公演、開始♪','古華剣・画雨籠山','アイデアキャッチャー','水中幻願','海月の誓い','魔王武装・狂瀾'])
   assert.deepEqual(['C038','C039','C040'].map(id=>engine.getCard(id).elementalBurst.energyCost),[3,3,4])
   assert.equal(engine.getCard('C030').implementationStatus,'playable')
 })
@@ -2953,7 +2952,7 @@ test('C067 オロルン：別対象がいなければ指定敵のみ雷2',()=>{
   assert.equal(state.players[1].field[0].health,7)
 })
 
-test('C067 オロルン：自ターン感電で追加雷1、回数は最大2',async()=>{
+test('C067 オロルン：自ターン感電の追加雷1に回数制限を設けない',async()=>{
   const {resolveElementalDamage,resolveReactionConsequence}=await vite.ssrLoadModule('/src/game/elemental.ts')
   let state=startedGame()
   const ororon=place(state,0,'C067',2,4)
@@ -2966,7 +2965,7 @@ test('C067 オロルン：自ターン感電で追加雷1、回数は最大2',as
     state.players[1].field=state.players[1].field.map(f=>f.instanceId===enemy.instanceId?r.follower:f)
     state=resolveReactionConsequence(state,1,enemy.instanceId,r.reaction,r.reactedElement,0)
   }
-  assert.equal(state.players[0].field.find(f=>f.instanceId===ororon.instanceId).electroChargedTriggersThisTurn,2)
+  assert.equal(state.players[0].field.find(f=>f.instanceId===ororon.instanceId).electroChargedTriggersThisTurn ?? 0,0)
   assert.ok(state.players[1].field.find(f=>f.instanceId===other.instanceId).health<=9)
 })
 
@@ -3824,7 +3823,7 @@ test('C093 岩ヴィシャップは敵に攻撃されても交戦時シールド
   assert.equal(state.players[0].leaderShield.crystallize,2)
 })
 
-test('C094 ノエルは守護、PP1スキルで自身とリーダーへ通常シールド3',()=>{
+test('C094 ノエルは守護、PP1スキルで自身に通常盾3、リーダーに通常盾1',()=>{
   let state=startedGame()
   const noelle=place(state,0,'C094',2,5)
   noelle.keywords=['guard']
@@ -3832,7 +3831,7 @@ test('C094 ノエルは守護、PP1スキルで自身とリーダーへ通常シ
   state=engine.activateAbility(state,noelle.instanceId,'skill')
   assert.equal(state.players[0].pp,0)
   assert.equal(state.players[0].energy,1)
-  assert.equal(state.players[0].leaderShield.normal,3)
+  assert.equal(state.players[0].leaderShield.normal,1)
   assert.equal(state.players[0].field[0].shield.normal,3)
 })
 
@@ -4599,8 +4598,8 @@ test('カード詳細：画像未登録のカードでも内容が表示され�
   const { renderToStaticMarkup } = await import('react-dom/server')
   const { CardDetail } = await vite.ssrLoadModule('/src/components/CardDetail.tsx')
   const { getCard } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  // C001 now has registered art. Use a card whose artwork is still absent.
-  const card = getCard('C013')
+  // Use an unregistered artwork ID to exercise the fallback independently of new art assets.
+  const card = { ...getCard('C013'), id: 'test-missing-artwork' }
   const html = renderToStaticMarkup(React.createElement(CardDetail, {
     card, onClose: () => {}, position: 1, total: 139,
   }))
