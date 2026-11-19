@@ -91,7 +91,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "相手の場のフォロワーすべてに草元素1ダメージ。\n「コレアンバー」1つを自分の場に出す。\n「コレアンバー」の効果：\n【カウントダウン_2】\n自分のターン終了時、相手の場のフォロワーすべてに草元素1ダメージ。",
+    "description": "相手の場のフォロワーすべてに草元素1ダメージ。\n「コレアンバー」1つを自分の場に出す。",
     "implementationStatus": "playable"
   },
   {
