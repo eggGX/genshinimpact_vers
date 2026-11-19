@@ -122,7 +122,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "エルマイト旅団"
     ],
-    "description": "【ファンファーレ】「草の霊蛇」1体を自分の場に出す。\n【攻撃時】自分の場に草の霊蛇がいれば自身+2/+0。",
+    "description": "【ファンファーレ】「草の霊蛇」1体を自分の場に出す。\n【攻撃時】自分の場に「草の霊蛇」がいれば、このフォロワーを+2/+0する。",
     "implementationStatus": "playable"
   },
   {
