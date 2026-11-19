@@ -91,7 +91,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "相手の場のフォロワーすべてに草元素1ダメージ。アミュレット「コレアンバー」を場に出す（カウントダウン2、自ターン終了時：相手の場のフォロワーすべてに草元素1ダメージ）。",
+    "description": "相手の場のフォロワーすべてに草元素1ダメージ。アミュレット「コレアンバー」を場に出す（【カウントダウン_2】、自ターン終了時：相手の場のフォロワーすべてに草元素1ダメージ）。",
     "implementationStatus": "playable"
   },
   {
@@ -104,7 +104,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "【カウントダウン3】【自分のターン終了時】自分のリーダー1回復。自分のデッキから1枚引く。",
+    "description": "【カウントダウン_3】【自分のターン終了時】自分のリーダー1回復。自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
