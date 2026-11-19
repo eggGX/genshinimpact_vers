@@ -107,7 +107,7 @@ export const pyroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分の場のフォロワーすべてに+1/+0の修正を与える。",
+    "description": "【カウントダウン3】【自分のターン終了時】自分のリーダーを2回復。自分の場のフォロワーすべてを+1/+0する。",
     "implementationStatus": "playable"
   },
   {
@@ -213,7 +213,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "特巡隊"
     ],
-    "description": "【自分のターン中】自分が過負荷を起こすたび、自分の場のフォロワーすべてに+1/+0の修正を与える（発動回数制限なし）。【元素スキル：近迫阻止射撃・速】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。自分のリーダーを2回復。",
+    "description": "【自分のターン中】自分が過負荷を起こすたび、自分の場のフォロワーすべてを+1/+0する（発動回数制限なし）。【元素スキル：近迫阻止射撃・速】PP1：相手の場のフォロワー1枚を選ぶ。それに炎元素2ダメージ。自分のリーダーを2回復。",
     "elementalSkill": { "name": "近迫阻止射撃・速", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 2, "element": "pyro" },
       { "type": "heal", "trigger": "skill", "target": "own_leader", "value": 2 }
