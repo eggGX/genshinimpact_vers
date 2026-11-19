@@ -143,7 +143,7 @@ export const anemoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【元素攻撃：風】【自分のターン中】自分が拡散を起こすたびカード1枚引く（1ターン最大1回）。【元素スキル：風霊作成・六三〇八】PP1：敵フォロワーすべてに風元素1ダメージ。",
+    "description": "【元素攻撃：風】【自分のターン中】自分が拡散を起こすたび自分のデッキから1枚引く（1ターン最大1回）。【元素スキル：風霊作成・六三〇八】PP1：敵フォロワーすべてに風元素1ダメージ。",
     "elementalSkill": {"name":"風霊作成・六三〇八","ppCost":1,"effects":[]},
     "implementationStatus": "playable",
     "normalAttackElement": "anemo"
