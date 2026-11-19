@@ -92,7 +92,7 @@ export const hydroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分の場のフォロワー1枚を選ぶ。\nそれは「\n【攻撃時】今攻撃している対象に水元素1ダメージを与える。」をもつ。",
+    "description": "自分の場のフォロワー1枚を選ぶ。それは「\n【攻撃時】今攻撃している対象に水元素1ダメージを与える。」をもつ。",
     "implementationStatus": "playable"
   },
   {
@@ -162,7 +162,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "西風教会"
     ],
-    "description": "【元素攻撃：水】\n自分のターン終了時、自分の場のフォロワーすべてに1回復。\n\n【元素スキル：公演、開始♪】PP2：自分のリーダーにクレスト【歌声の環】（【カウントダウン_3】\n、自分ターン終了時：自分のリーダー3回復して水元素付着）付与。",
+    "description": "【元素攻撃：水】\n自分のターン終了時、自分の場のフォロワーすべてに1回復。\n\n【元素スキル：公演、開始♪】PP2：自分のリーダーにクレスト【歌声の環】（【カウントダウン_3】\n自分ターン終了時：自分のリーダー3回復して水元素付着）付与。",
         "elementalSkill": {"name":"公演、開始♪","ppCost":2,"effects":[]},
 "implementationStatus": "playable",
     "normalAttackElement": "hydro"
@@ -198,7 +198,7 @@ export const hydroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "【守護】\n【元素スキル：聖儀・蒼鷺による庇護】PP1：自身に通常シールド3。\n相手の場のフォロワー1枚を選ぶ。\nそれに水元素2ダメージ。",
+    "description": "【守護】\n【元素スキル：聖儀・蒼鷺による庇護】PP1：自身に通常シールド3。\n相手の場のフォロワー1枚を選ぶ。それに水元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "聖儀・蒼鷺による庇護", "ppCost": 1,
@@ -223,7 +223,7 @@ export const hydroCards: Card[] = [
     "region": [
       "ナド・クライ"
     ],
-    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを場に出す。\n\n【元素スキル：名称未設定】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに水元素2ダメージ。\n自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
+    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを場に出す。\n\n【元素スキル：名称未設定】PP1：相手の場のフォロワー1枚を選ぶ。それに水元素2ダメージ。\n自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
         "elementalSkill": {"name":"名称未設定","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"hydro"}]},
 "implementationStatus": "playable"
   },
