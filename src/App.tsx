@@ -1441,7 +1441,7 @@ function App({ online }: { online?: {
         </div>
         <div className="player-counts"><span>山札 <strong>{opponent.deck.length}</strong></span><span>手札 <strong>{opponent.hand.length}</strong></span><span>墓場 <strong>{opponent.graveyard.length}</strong></span></div>
         <div className="player-effects">
-        <CrestIcons crests={opponent.crests} ownerName={opponent.name} />
+        <CrestIcons crests={opponent.crests} ownerName={opponent.name} placement="below" />
         {(opponent.bondOfLife ?? 0) > 0 && <div>命の契約：{opponent.bondOfLife}</div>}
         {opponent.leaderShield && (
           <div>リーダーシールド：通常 {opponent.leaderShield.normal} ／ 結晶 {opponent.leaderShield.crystallize}</div>
@@ -1509,7 +1509,7 @@ function App({ online }: { online?: {
         </div>
         <div className="player-counts"><span>山札 <strong>{currentPlayer.deck.length}</strong></span><span>手札 <strong>{currentPlayer.hand.length}</strong></span><span>墓場 <strong>{currentPlayer.graveyard.length}</strong></span></div>
         <div className="player-effects">
-        <CrestIcons crests={currentPlayer.crests} ownerName={currentPlayer.name} />
+        <CrestIcons crests={currentPlayer.crests} ownerName={currentPlayer.name} placement="above" />
         {(currentPlayer.bondOfLife ?? 0) > 0 && <div>命の契約：{currentPlayer.bondOfLife}</div>}
         {currentPlayer.leaderShield && (
           <div>リーダーシールド：通常 {currentPlayer.leaderShield.normal} ／ 結晶 {currentPlayer.leaderShield.crystallize}</div>
