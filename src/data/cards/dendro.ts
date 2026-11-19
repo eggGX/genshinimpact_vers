@@ -28,7 +28,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "自分のデッキから草元素のカードを1枚引く。さらに自分のデッキから1枚引く。",
+    "description": "自分のデッキから草元素のカードを1枚引く。\nさらに自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -64,7 +64,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "フライム"
     ],
-    "description": "【元素生物：草】【ラストワード】相手のリーダーに草元素2ダメージ。",
+    "description": "【元素生物：草】\n【ラストワード】相手のリーダーに草元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalCreature": true
   },
@@ -78,7 +78,7 @@ export const dendroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "「月桂・跳躍型」2体召喚。自分の場のフォロワーすべてと自分のリーダーに2回復。",
+    "description": "「月桂・跳躍型」2体召喚。\n自分の場のフォロワーすべてと自分のリーダーに2回復。",
     "implementationStatus": "playable"
   },
   {
@@ -91,7 +91,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "相手の場のフォロワーすべてに草元素1ダメージ。アミュレット「コレアンバー」を場に出す（【カウントダウン_2】、自ターン終了時：相手の場のフォロワーすべてに草元素1ダメージ）。",
+    "description": "相手の場のフォロワーすべてに草元素1ダメージ。\nアミュレット「コレアンバー」を場に出す（【カウントダウン_2】\n、自ターン終了時：相手の場のフォロワーすべてに草元素1ダメージ）。",
     "implementationStatus": "playable"
   },
   {
@@ -104,7 +104,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "【カウントダウン_3】【自分のターン終了時】自分のリーダー1回復。自分のデッキから1枚引く。",
+    "description": "【カウントダウン_3】\n自分のターン終了時、自分のリーダー1回復。\n自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -122,7 +122,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "エルマイト旅団"
     ],
-    "description": "【ファンファーレ】「草の霊蛇」1体召喚。【攻撃時】自分の場に草の霊蛇がいれば自身+2/+0。",
+    "description": "【ファンファーレ】「草の霊蛇」1体召喚。\n\n【攻撃時】自分の場に草の霊蛇がいれば自身+2/+0。",
     "implementationStatus": "playable"
   },
   {
@@ -137,7 +137,7 @@ export const dendroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "【自分のターン終了時】自分のリーダー1回復。【元素スキル：雲閣団々降清白】PP1：「月桂・投擲型」1体召喚。",
+    "description": "自分のターン終了時、自分のリーダー1回復。\n\n【元素スキル：雲閣団々降清白】PP1：「月桂・投擲型」1体召喚。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "雲閣団々降清白",
@@ -157,7 +157,7 @@ export const dendroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【守護】【ファンファーレ】自分のリーダーに通常シールド2。【元素スキル：にゃんにゃん町飛脚】PP1：自身に通常シールド3。ランダムな相手フォロワー1体に草元素1ダメージ。",
+    "description": "【守護】\n【ファンファーレ】自分のリーダーに通常シールド2。\n\n【元素スキル：にゃんにゃん町飛脚】PP1：自身に通常シールド3。\nランダムな相手フォロワー1体に草元素1ダメージ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -183,7 +183,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "レンジャー"
     ],
-    "description": "【ファンファーレ】自分のデッキから草元素のスペルカードを1枚引く。【元素スキル：花触葉讃】PP1：相手の場のフォロワー1枚を選ぶ。それに草元素2ダメージ。相手の場の別のフォロワー1枚を選ぶ。それに草元素1ダメージ。",
+    "description": "【ファンファーレ】自分のデッキから草元素のスペルカードを1枚引く。\n\n【元素スキル：花触葉讃】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに草元素2ダメージ。\n相手の場の別のフォロワー1枚を選ぶ。\nそれに草元素1ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "花触葉讃",
@@ -206,7 +206,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【ファンファーレ】相手の場に草原核があるなら、その草原核+0/+1。【元素スキル：精緻なる絵図】PP1：相手の場のフォロワー1枚を選ぶ。それに草元素2ダメージ。相手の場に草原核があるなら、相手のリーダーに草原核の体力と同じダメージ（最大3）。",
+    "description": "【ファンファーレ】相手の場に草原核があるなら、その草原核+0/+1。\n\n【元素スキル：精緻なる絵図】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに草元素2ダメージ。\n相手の場に草原核があるなら、相手のリーダーに草原核の体力と同じダメージ（最大3）。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "精緻なる絵図",
@@ -229,7 +229,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "レンジャー"
     ],
-    "description": "【攻撃時】ランダムな相手フォロワー1体に草元素1ダメージ。【元素スキル：識果榴弾】PP1：相手の場のフォロワー1枚を選ぶ。それに草元素2ダメージ。それは-1/+0する。【元素爆発：造生・蔓纏いの矢】エネルギー3：ランダムな相手フォロワーまたは相手のリーダー1体に草元素2ダメージ。これを4回行う。",
+    "description": "【攻撃時】ランダムな相手フォロワー1体に草元素1ダメージ。\n\n【元素スキル：識果榴弾】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに草元素2ダメージ。\nそれは-1/+0する。\n\n【元素爆発：造生・蔓纏いの矢】エネルギー3：ランダムな相手フォロワーまたは相手のリーダー1体に草元素2ダメージ。これを4回行う。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "識果榴弾",
@@ -254,7 +254,7 @@ export const dendroCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "【元素スキル：撰香】PP1：「ルミドゥースの瓶」1つを場に出す。【元素爆発：香の軌跡】エネルギー3：相手の場のフォロワーすべてに草元素2ダメージ。相手の場に燃焼状態フォロワーがいるなら追加で草元素2ダメージ。",
+    "description": "【元素スキル：撰香】PP1：「ルミドゥースの瓶」1つを場に出す。\n\n【元素爆発：香の軌跡】エネルギー3：相手の場のフォロワーすべてに草元素2ダメージ。\n相手の場に燃焼状態フォロワーがいるなら追加で草元素2ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "撰香",
@@ -282,7 +282,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "懸木の民"
     ],
-    "description": "【突進】【自分のターン中】自分が燃焼反応を起こすたび自身+1/+0（最大2回/ターン）。【元素スキル：懸狩り・遊猟】PP1：相手の場のフォロワー1枚を選ぶ。それに草元素3ダメージ。【元素爆発：偉大なる聖龍を崇拝せよ】エネルギー3：相手の場のフォロワーすべてに草元素2ダメージ、相手のリーダーに草元素3ダメージ。",
+    "description": "【突進】\n自分のターン中、自分が燃焼反応を起こすたび自身+1/+0（最大2回/ターン）。\n\n【元素スキル：懸狩り・遊猟】PP1：相手の場のフォロワー1枚を選ぶ。\nそれに草元素3ダメージ。\n\n【元素爆発：偉大なる聖龍を崇拝せよ】エネルギー3：相手の場のフォロワーすべてに草元素2ダメージ、相手のリーダーに草元素3ダメージ。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
