@@ -106,7 +106,7 @@ export const cryoCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "自分の場のフォロワーすべてと自分のリーダーに通常シールド2。\n相手の場のフォロワーすべてに氷元素1ダメージ。",
+    "description": "自分の場のフォロワーすべては通常シールド2をもつ。\n自分のリーダーは通常シールド2をもつ。\n相手の場のフォロワーすべてに氷元素1ダメージ。",
     "implementationStatus": "playable"
   },
   {
@@ -121,7 +121,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "ファデュイ"
     ],
-    "description": "【ファンファーレ】「氷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に「氷蛍」がいれば、このフォロワーに通常シールド2を付与する。",
+    "description": "【ファンファーレ】「氷蛍」2体を自分の場に出す。\n自分のターン終了時、自分の場に「氷蛍」がいれば、このフォロワーは通常シールド2をもつ。",
     "implementationStatus": "playable"
   },
   {
@@ -136,7 +136,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "【守護】\n自分のターン終了時、自身に通常シールド3。",
+    "description": "【守護】\n自分のターン終了時、このフォロワーは通常シールド3をもつ。",
     "implementationStatus": "playable",
     "keywords": [
       "guard"
@@ -154,7 +154,7 @@ export const cryoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【ファンファーレ】自分のリーダーに通常シールド2。\n【元素スキル：フリーズキャッツクロー】\nコスト：PP2\n相手の場のフォロワー2枚を選ぶ。それらに氷元素2ダメージ。\n自分のリーダーに通常シールド2。",
+    "description": "【ファンファーレ】自分のリーダーは通常シールド2をもつ。\n【元素スキル：フリーズキャッツクロー】\nコスト：PP2\n相手の場のフォロワー2枚を選ぶ。それらに氷元素2ダメージ。\n自分のリーダーは通常シールド2をもつ。",
     "elementalSkill": {"name":"フリーズキャッツクロー","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -207,7 +207,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【守護】\n自分のターン終了時、ランダムな相手フォロワー1体に氷元素1ダメージ。\n【元素スキル：垂裳凛然の夜】\nコスト：PP1\n自分のリーダーに通常シールド3。",
+    "description": "【守護】\n自分のターン終了時、ランダムな相手フォロワー1体に氷元素1ダメージ。\n【元素スキル：垂裳凛然の夜】\nコスト：PP1\n自分のリーダーは通常シールド3をもつ。",
     "keywords": ["guard"],
     "elementalSkill": {"name":"垂裳凛然の夜","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
@@ -264,7 +264,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "【潜伏】【元素攻撃：氷】\n自分のターン終了時、自分のリーダーに通常シールド2。\n【元素スキル：霜昼の黒星】\nコスト：PP1\n「イツパパ」1体を自分の場に出す。\n【元素爆発：諸曜の令】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに氷元素3ダメージ。\n自分のリーダーに通常シールド3。",
+    "description": "【潜伏】【元素攻撃：氷】\n自分のターン終了時、自分のリーダーは通常シールド2をもつ。\n【元素スキル：霜昼の黒星】\nコスト：PP1\n「イツパパ」1体を自分の場に出す。\n【元素爆発：諸曜の令】\nコスト：元素エネルギー_3\n相手の場のフォロワーすべてに氷元素3ダメージ。\n自分のリーダーは通常シールド3をもつ。",
     "elementalSkill": {"name":"霜昼の黒星","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"諸曜の令","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
