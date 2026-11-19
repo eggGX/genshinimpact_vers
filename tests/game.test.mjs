@@ -1605,22 +1605,27 @@ test('ファニーハット・キャット：突進で敵フォロワー攻撃�
   assert.equal(next.players[1].field[0].health,4)
 })
 
-test('ファニーハット・キャット：次の自分ターン開始で破壊、リネを無ファンファーレ召喚', () => {
+test('ファニーハット・キャット：次の自分ターン開始でリネへ変身、墓場に送られない', () => {
   let state=startedGame()
   const lyney=place(state,0,'C024',2,3)
   state.players[0].energy=2
   state=engine.activateAbility(state,lyney.instanceId,'burst')
-  assert.equal(state.players[0].field[0].cardId,'token-funny-hat-cat')
+  const cat=state.players[0].field[0]
+  assert.equal(cat.cardId,'token-funny-hat-cat')
   state=engine.endTurn(state)
   assert.equal(state.players[0].field[0].cardId,'token-funny-hat-cat')
   state=engine.endTurn(state)
-  assert.equal(state.players[0].field[0].cardId,'C024')
-  assert.equal(state.players[0].field[0].attack,2)
-  assert.ok(state.players[0].graveyard.includes('token-funny-hat-cat'))
+  const transformed=state.players[0].field[0]
+  assert.equal(transformed.cardId,'C024')
+  assert.notEqual(transformed.instanceId,cat.instanceId)
+  assert.deepEqual([transformed.attack,transformed.health,transformed.maxHealth],[2,3,3])
+  assert.equal(transformed.hasAttacked,false)
+  assert.equal(transformed.canAttack,true)
+  assert.equal(state.players[0].graveyard.includes('token-funny-hat-cat'),false)
   assert.equal(state.players[0].graveyard.includes('C024'),false)
 })
 
-test('ファニーハット・キャット：オーラと威圧が有効、破壊時にもリネを召喚', () => {
+test('ファニーハット・キャット：オーラと威圧が有効、破壊時にリネを召喚しない', () => {
   let state=startedGame()
   const lyney=place(state,0,'C024',2,3)
   state.players[0].energy=2
@@ -1631,10 +1636,12 @@ test('ファニーハット・キャット：オーラと威圧が有効、破�
   assert.equal(engine.attackFollower(p2,enemy.instanceId,cat.instanceId),p2)
   p2.players[1].hand=['C018'];p2.players[1].pp=4
   assert.equal(engine.canPlayCard(p2,0),false)
-  // Destruction through a non-targeted combat result is represented by removing health.
+  // Normal destruction does not activate transformation or spawn Lyney.
   p2.players[0].field[0].health=0
   const next=engine.endTurn(p2)
-  assert.ok(next.players[0].field.some(f=>f.cardId==='C024'))
+  assert.equal(next.players[0].field.some(f=>f.cardId==='C024'),false)
+  assert.equal(next.players[0].field.some(f=>f.cardId==='token-funny-hat-cat'),false)
+  assert.ok(next.players[0].graveyard.includes('token-funny-hat-cat'))
 })
 
 test('C025 胡桃：疾走とHP10以下限定の+2攻撃力', () => {
