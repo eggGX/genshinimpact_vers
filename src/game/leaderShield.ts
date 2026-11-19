@@ -54,7 +54,8 @@ export function damageLeaderWithReaction(player: Player, amount: number, element
     : incoming ? [{ element: incoming }] : auras.slice(0, 1)
 
   const physical = !element || element === 'none'
-  const bonus = reaction === 'vaporize' || reaction === 'melt' || reaction === 'overloaded' ? 1 : 0
+  // Element application without damage can trigger reactions, but must not turn into a damage hit.
+  const bonus = amount > 0 && (reaction === 'vaporize' || reaction === 'melt' || reaction === 'overloaded') ? 1 : 0
   const physicalBonus = physical && player.leaderSuperconduct && amount > 0 ? 1 : 0
   let remaining = Math.max(0, Math.trunc(amount) + bonus + physicalBonus)
   const current = player.leaderShield ?? { normal: 0, crystallize: 0 }
