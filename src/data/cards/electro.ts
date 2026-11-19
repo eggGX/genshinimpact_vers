@@ -156,7 +156,7 @@ export const electroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "自分のターン終了時、自分の場のランダムな「オズ」1体は【潜伏】を持つ。\n【元素スキル：夜巡りの翼】PP2：「オズ」1体を召喚。",
+    "description": "自分のターン終了時、自分の場のランダムな「オズ」1体は【潜伏】を持つ。\n【元素スキル：夜巡りの翼】\nコスト：PP2\n「オズ」1体を召喚。",
     "elementalSkill": {"name":"夜巡りの翼","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -175,7 +175,7 @@ export const electroCards: Card[] = [
     "traits": [
       "荒瀧派"
     ],
-    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：越祓雷草の輪】PP1：自身に1ダメージ。\n自分のリーダー2回復。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：越祓雷草の輪】\nコスト：PP1\n自身に1ダメージ。\n自分のリーダー2回復。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"越祓雷草の輪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -194,7 +194,7 @@ export const electroCards: Card[] = [
     "traits": [
       "天領奉行"
     ],
-    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。それは+1/+0する。\n【元素スキル：烏天狗雷霆召呪】PP1：自分の場の雷元素フォロワー1枚を選ぶ。それは+2/+0する。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。それは+1/+0する。\n【元素スキル：烏天狗雷霆召呪】\nコスト：PP1\n自分の場の雷元素フォロワー1枚を選ぶ。それは+2/+0する。\nランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"烏天狗雷霆召呪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const electroCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "自分のターン中、自分が感電を起こしたとき、ランダムな相手フォロワー1体に雷元素1ダメージ（1ターン最大2回）。\n【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n選んだフォロワーとは別のランダムな相手フォロワー1体に雷元素1ダメージ。",
+    "description": "自分のターン中、自分が感電を起こしたとき、ランダムな相手フォロワー1体に雷元素1ダメージ（1ターン最大2回）。\n【元素スキル：冥色のタイトロープ】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n選んだフォロワーとは別のランダムな相手フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"冥色のタイトロープ","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "implementationStatus": "playable"
   },
@@ -232,7 +232,7 @@ export const electroCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【突進】\n【元素スキル：秘儀・律淵渡魂】PP1：相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n【元素爆発：聖儀・狼駆憑走】エネルギー3：自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
+    "description": "【突進】\n【元素スキル：秘儀・律淵渡魂】\nコスト：PP1\n相手の場のフォロワー1枚を選ぶ。それに雷元素2ダメージ。\n【元素爆発：聖儀・狼駆憑走】エネルギー3：自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
     "elementalSkill": {"name":"秘儀・律淵渡魂","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "elementalBurst": {"name":"聖儀・狼駆憑走","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
@@ -252,7 +252,7 @@ export const electroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【元素攻撃：雷】\n【元素スキル：野干役呪・殺生櫻】PP1：「殺生櫻」1つを出す（1ターン最大3回）。\n【元素爆発：大密法・天狐顕現】エネルギー3：相手の場のフォロワーすべてに雷元素3ダメージ。\n自分の「殺生櫻」すべてを破壊。\nランダムな相手フォロワーまたは相手のリーダー1体に雷元素2ダメージ。これをX回行う。Xはこの効果で破壊した「殺生櫻」の数である。",
+    "description": "【元素攻撃：雷】\n【元素スキル：野干役呪・殺生櫻】\nコスト：PP1\n「殺生櫻」1つを出す（1ターン最大3回）。\n【元素爆発：大密法・天狐顕現】エネルギー3：相手の場のフォロワーすべてに雷元素3ダメージ。\n自分の「殺生櫻」すべてを破壊。\nランダムな相手フォロワーまたは相手のリーダー1体に雷元素2ダメージ。これをX回行う。Xはこの効果で破壊した「殺生櫻」の数である。",
     "elementalSkill": {"name":"野干役呪・殺生櫻","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"大密法・天狐顕現","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
@@ -273,7 +273,7 @@ export const electroCards: Card[] = [
     "traits": [
       "豊穣の邦"
     ],
-    "description": "【突進】\n【攻撃時】自身+1/+0。\n【元素スキル：夜虹の飛翔】PP1：自身に【元素攻撃：雷】【落下攻撃】付与。\n【元素爆発：閃烈降臨！】エネルギー3：相手の場のフォロワーすべてに雷元素3ダメージ。\n自身+2/+0。",
+    "description": "【突進】\n【攻撃時】自身+1/+0。\n【元素スキル：夜虹の飛翔】\nコスト：PP1\n自身に【元素攻撃：雷】【落下攻撃】付与。\n【元素爆発：閃烈降臨！】エネルギー3：相手の場のフォロワーすべてに雷元素3ダメージ。\n自身+2/+0。",
     "elementalSkill": {"name":"夜虹の飛翔","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"閃烈降臨！","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
