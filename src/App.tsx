@@ -98,6 +98,48 @@ function projectOnlineSnapshot(snapshot: OnlinePresentationSnapshot, seat: 0 | 1
   }
 }
 
+type MulliganReveal = {
+  playerName: string
+  originalHand: string[]
+  hand: string[]
+  replacedIndices: number[]
+}
+
+/** Keep the original four card positions during the exchange animation. */
+function MulliganSwapCards({ reveal }: { reveal: MulliganReveal }) {
+  const replaced = new Set(reveal.replacedIndices)
+  const replacementCards = reveal.hand.slice(reveal.originalHand.length - replaced.size)
+  let replacementIndex = 0
+  const slots = reveal.originalHand.map((oldId, index) => ({
+    index, oldId,
+    swapped: replaced.has(index),
+    newId: replaced.has(index) ? replacementCards[replacementIndex++] : oldId,
+  }))
+  return <div className="mulligan-cards mulligan-result-cards">
+    {slots.map(({ index, oldId, newId, swapped }) => {
+      const oldCard = getCard(oldId)
+      const newCard = getCard(newId)
+      if (!oldCard || !newCard) return null
+      const renderCard = (card: NonNullable<typeof oldCard>, role: 'out' | 'in' | 'keep') =>
+        <div className={['mulligan-card', 'mulligan-result-card',
+          `card-element--${card.element}`, `card-rarity--${card.rarity}`,
+          `mulligan-swap--${role}`].join(' ')}>
+          <span>コスト {card.cost}</span>
+          <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
+          <strong>{card.name}</strong>
+          <span>{card.type === 'follower' ? `${card.attack} / ${card.health}` :
+            card.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
+        </div>
+      return <div key={index} className="mulligan-swap-slot">
+        {swapped ? <>
+          {renderCard(oldCard, 'out')}
+          {renderCard(newCard, 'in')}
+        </> : renderCard(oldCard, 'keep')}
+      </div>
+    })}
+  </div>
+}
+
 function App({ online }: { online?: {
   match: OnlineMatchView
   pending: boolean
@@ -117,8 +159,9 @@ function App({ online }: { online?: {
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
-  const [mulliganReveal, setMulliganReveal] = useState<{ playerName: string; hand: string[] } | null>(null)
+  const [mulliganReveal, setMulliganReveal] = useState<MulliganReveal | null>(null)
   const previousOnlinePhase = useRef(online?.match.phase ?? null)
+  const onlineMulliganDraft = useRef<{ originalHand: string[]; replacedIndices: number[] } | null>(null)
   const lastAnnouncedTurn = useRef<string | null>(null)
   const lastOnlineRevision = useRef<number | null>(null)
   const onlinePlaybackQueue = useRef<OnlinePresentationEvent[]>([])
@@ -205,12 +248,20 @@ function App({ online }: { online?: {
     previousOnlinePhase.current = online.match.phase
     if (previousPhase !== 'mulligan' || online.match.phase !== 'main') return
     const self = online.match.players[online.match.seat]
-    setMulliganReveal({ playerName: self.name, hand: [...(self.hand ?? [])] })
-  }, [online?.match.phase, online?.match.seat, online?.match.players])
+    const finalHand = [...(self.hand ?? [])]
+    const draft = onlineMulliganDraft.current
+    setMulliganReveal({
+      playerName: self.name,
+      originalHand: draft?.originalHand ?? finalHand,
+      hand: finalHand,
+      replacedIndices: draft?.replacedIndices ?? [],
+    })
+    onlineMulliganDraft.current = null
+  }, [online?.match.phase, online?.match.seat])
 
   useEffect(() => {
     if (!mulliganReveal) return
-    const timer = window.setTimeout(() => setMulliganReveal(null), 2200)
+    const timer = window.setTimeout(() => setMulliganReveal(null), 3200)
     return () => window.clearTimeout(timer)
   }, [mulliganReveal])
 
@@ -419,7 +470,12 @@ function App({ online }: { online?: {
     const confirmedPlayer = result.players.find(p => p.id === player.id)
     if (!confirmedPlayer) return
     setGame(result)
-    setMulliganReveal({ playerName: player.name, hand: [...confirmedPlayer.hand] })
+    setMulliganReveal({
+      playerName: player.name,
+      originalHand: [...player.hand],
+      hand: [...confirmedPlayer.hand],
+      replacedIndices: [...mulliganSelection],
+    })
     setMulliganSelection([])
   }
 
@@ -1070,20 +1126,7 @@ function App({ online }: { online?: {
       <main className="mulligan-result-scene" role="status" aria-live="polite">
         <h2>{mulliganReveal.playerName} のマリガン結果</h2>
         <p>確定した手札</p>
-        <div className="mulligan-cards mulligan-result-cards">
-          {mulliganReveal.hand.map((cardId, index) => {
-            const card = getCard(cardId)
-            if (!card) return null
-            return <div key={index} className={['mulligan-card', 'mulligan-result-card',
-              `card-element--${card.element}`, `card-rarity--${card.rarity}`].join(' ')}>
-              <span>コスト {card.cost}</span>
-              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
-              <strong>{card.name}</strong>
-              <span>{card.type === 'follower' ? `${card.attack} / ${card.health}` :
-                card.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
-            </div>
-          })}
-        </div>
+        <MulliganSwapCards reveal={mulliganReveal} />
         <p className="mulligan-result-note">まもなく次の画面へ進みます</p>
       </main>
     </div>
@@ -1218,20 +1261,7 @@ function App({ online }: { online?: {
         <div className="online-mulligan-dialog mulligan-result-dialog">
           <h2>マリガン結果</h2>
           <p>あなたの確定した手札</p>
-          <div className="mulligan-cards mulligan-result-cards">
-            {mulliganReveal.hand.map((cardId, index) => {
-              const card = getCard(cardId)
-              if (!card) return null
-              return <div key={index} className={['mulligan-card', 'mulligan-result-card',
-                `card-element--${card.element}`, `card-rarity--${card.rarity}`].join(' ')}>
-                <span>コスト {card.cost}</span>
-                <CardArtwork cardId={card.id} name={card.name} className="card-artwork--mulligan" />
-                <strong>{card.name}</strong>
-                <span>{card.type === 'follower' ? `${card.attack} / ${card.health}` :
-                  card.type === 'spell' ? 'スペル' : 'アミュレット'}</span>
-              </div>
-            })}
-          </div>
+          <MulliganSwapCards reveal={mulliganReveal} />
           <p className="mulligan-result-note">まもなく対戦が始まります</p>
         </div>
       </div>}
@@ -1262,7 +1292,13 @@ function App({ online }: { online?: {
               })}
             </div>
             <button type="button" className="end-turn mulligan-confirm" disabled={online.pending}
-              onClick={() => online.onMulligan([...onlineMulliganSelection])}>
+              onClick={() => {
+                onlineMulliganDraft.current = {
+                  originalHand: [...currentPlayer.hand],
+                  replacedIndices: [...onlineMulliganSelection],
+                }
+                online.onMulligan([...onlineMulliganSelection])
+              }}>
               {onlineMulliganSelection.length ? `${onlineMulliganSelection.length}枚交換して確定` : 'すべてキープして確定'}
             </button>
           </> : <div className="online-mulligan-waiting" role="status">
