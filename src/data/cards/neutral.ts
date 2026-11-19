@@ -82,7 +82,7 @@ export const neutralCards: Card[] = [
     attack: 2,
     health: 2,
     region: ['モンド'],
-    description: '【ファンファーレ】自分の場のヒルチャール・タイプフォロワーすべてに+1/+1の修正を与える。',
+    description: '【ファンファーレ】自分の場のヒルチャール・タイプフォロワーすべてを+1/+1する。',
   },
   {
     id: 'C007',
