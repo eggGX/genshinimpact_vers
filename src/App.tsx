@@ -504,7 +504,7 @@ function App({ online }: { online?: {
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
-    const noBuffAlly = (card.id === 'C044' &&
+    const noBuffAlly = (['C044', 'C021'].includes(card.id) &&
       !currentPlayer.field.some(f => f.health > 0)) ||
       (['C066', 'C081'].includes(card.id) &&
       !currentPlayer.field.some(f => f.health > 0 &&
@@ -1553,23 +1553,14 @@ function App({ online }: { online?: {
                 ? '古華剣・裁雨留虹：効果を付与する味方フォロワーを選択してください'
                 : currentPlayer.hand[selectedHandIndex] === 'C044'
                 ? '霜の精：自身以外の味方フォロワーを選択してください'
-                : '味方強化のファンファーレ：味方フォロワーか「自身」を選択してください'
+                : '味方強化のファンファーレ：他の味方フォロワーを選択してください'
               : 'ファンファーレの対象となる敵フォロワーを選択してください'
             : selectedAttacker
               ? '攻撃対象を選択してください'
               : 'カードをプレイするか、攻撃可能なフォロワーを選択してください'}
       </div>
 
-      {selectedHandIndex !== null && currentPlayer.hand[selectedHandIndex] === 'C021' && (
-        <button type="button" onClick={() => {
-          if (online) onlineSend({type:'play',handIndex:selectedHandIndex,targetId:'self'})
-          else animateAction(previous => playCard(previous, previous.currentPlayerId,
-            selectedHandIndex, 'self'), '自身を強化して召喚', currentPlayer.hand[selectedHandIndex])
-          resetSelection()
-        }}>
-          自身を強化して召喚
-        </button>
-      )}
+
 
       <footer className="hand">
         <div className="hand-label"><span>YOUR HAND</span><strong>{currentPlayer.hand.length} / 9</strong></div>
