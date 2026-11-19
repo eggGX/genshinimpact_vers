@@ -85,7 +85,7 @@ export const electroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "敵フォロワー1体に雷元素3ダメージ。「オズ」1体を召喚する。",
+    "description": "相手の場のフォロワー1枚を選ぶ。それは雷元素3ダメージを受ける。「オズ」1体を召喚する。",
     "implementationStatus": "playable",
     "effects": [
       {
@@ -194,7 +194,7 @@ export const electroCards: Card[] = [
     "traits": [
       "天領奉行"
     ],
-    "description": "【ファンファーレ】他の自分の雷元素フォロワー1体を+1/+0。【元素スキル：烏天狗雷霆召呪】PP1：自分の雷元素フォロワー1体を+2/+0。ランダム敵フォロワー1体に雷元素1ダメージ。",
+    "description": "【ファンファーレ】自分の場の他の雷元素フォロワー1枚を選ぶ。それは+1/+0する。【元素スキル：烏天狗雷霆召呪】PP1：自分の場の雷元素フォロワー1枚を選ぶ。それは+2/+0する。ランダム敵フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"烏天狗雷霆召呪","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -213,7 +213,7 @@ export const electroCards: Card[] = [
     "traits": [
       "謎煙の主"
     ],
-    "description": "【自分のターン中】自分が感電を起こしたとき、ランダム敵フォロワー1体に雷元素1ダメージ（1ターン最大2回）。【元素スキル：冥色のタイトロープ】PP1：敵フォロワー1体に雷元素2ダメージ。別のランダムな敵フォロワー1体に雷元素1ダメージ。",
+    "description": "【自分のターン中】自分が感電を起こしたとき、ランダム敵フォロワー1体に雷元素1ダメージ（1ターン最大2回）。【元素スキル：冥色のタイトロープ】PP1：相手の場のフォロワー1枚を選ぶ。それは雷元素2ダメージを受ける。別のランダムな敵フォロワー1体に雷元素1ダメージ。",
     "elementalSkill": {"name":"冥色のタイトロープ","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "implementationStatus": "playable"
   },
@@ -232,7 +232,7 @@ export const electroCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【突進】【元素スキル：秘儀・律淵渡魂】PP1：敵フォロワー1体に雷元素2ダメージ。【元素爆発：聖儀・狼駆憑走】エネルギー3：自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
+    "description": "【突進】【元素スキル：秘儀・律淵渡魂】PP1：相手の場のフォロワー1枚を選ぶ。それは雷元素2ダメージを受ける。【元素爆発：聖儀・狼駆憑走】エネルギー3：自身+2/+2、【2回攻撃】【元素攻撃：雷】を付与。",
     "elementalSkill": {"name":"秘儀・律淵渡魂","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"electro"}]},
     "elementalBurst": {"name":"聖儀・狼駆憑走","energyCost":3,"effects":[]},
     "implementationStatus": "playable",
