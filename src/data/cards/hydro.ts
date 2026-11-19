@@ -92,7 +92,7 @@ export const hydroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分のフォロワー1体を選ぶ。そのフォロワーは【攻撃時】今攻撃している対象に水元素1ダメージを与える能力を持つ。",
+    "description": "自分の場のフォロワー1枚を選ぶ。それは【攻撃時】今攻撃している対象に水元素1ダメージを与える能力を持つ。",
     "implementationStatus": "playable"
   },
   {
@@ -198,7 +198,7 @@ export const hydroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "【守護】【元素スキル：聖儀・蒼鷺による庇護】PP1：自身に通常シールド3。敵フォロワー1体に水元素2ダメージ。",
+    "description": "【守護】【元素スキル：聖儀・蒼鷺による庇護】PP1：自身に通常シールド3。相手の場のフォロワー1枚を選ぶ。それは水元素2ダメージを受ける。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "聖儀・蒼鷺による庇護", "ppCost": 1,
@@ -223,7 +223,7 @@ export const hydroCards: Card[] = [
     "region": [
       "ナド・クライ"
     ],
-    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを場に出す。【元素スキル：名称未設定】PP1：敵フォロワー1体に水元素2ダメージ。自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
+    "description": "【ファンファーレ】「落ち着いた方がいいカモ？」1つを場に出す。【元素スキル：名称未設定】PP1：相手の場のフォロワー1枚を選ぶ。それは水元素2ダメージを受ける。自分の場の「落ち着いた方がいいカモ？」すべてのカウントダウン+1。",
         "elementalSkill": {"name":"名称未設定","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"hydro"}]},
 "implementationStatus": "playable"
   },
