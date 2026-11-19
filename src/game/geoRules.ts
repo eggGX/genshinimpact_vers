@@ -138,7 +138,7 @@ export function geoSkill(state: GameState, ownerId: string, sourceId: string, ca
   if (cardId === 'C100') return createGeoConstruct(state, ownerId, 'token-solar-isotoma')
   if (cardId === 'C098') return summonFollowers(state,ownerId,'token-tamoto',1)
   if (cardId === 'C094') return update(state, ownerId, p => ({
-    ...addLeaderShield(p, 3),
+    ...addLeaderShield(p, 1),
     field: p.field.map(f => f.instanceId === sourceId ? grantShield(f, 'normal', 3) : f),
   }))
   if (cardId === 'C096') return update(state, ownerId, p => ({
