@@ -20,7 +20,7 @@ import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, 
 
 import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd, dendroLegendarySkill, dendroLegendaryBurst, dendroLegendaryAttack, dendroLumidouceTurnEnd } from './dendroRules'
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
-import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart, resolveLegendaryDestroy } from './pyroLegendaryRules'
+import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
@@ -279,7 +279,6 @@ function resolveDeaths(state: GameState): GameState {
       )
       result = resolveNeutralDestroy(result, ownerId, follower)
       result = resolvePyroDestroy(result, ownerId, follower)
-      result = resolveLegendaryDestroy(result, ownerId, follower)
       result = resolveHydroAdvancedDestroy(result, ownerId, follower)
       result = cryoDestroy(result, ownerId, follower, resolveDeaths)
       result = electroDestroy(result, ownerId, follower)
@@ -1150,8 +1149,8 @@ export function endTurn(state: GameState): GameState {
     return result
   }
 
-  // The Funny Hat Cat's self-destruction resolves before other start effects.
-  result = captureFrame(resolveLegendaryTurnStart(result, nextId, resolveDeaths), 'ターン開始時の変身・破壊')
+  // Funny Hat Cat transforms directly to Lyney, without destruction or Last Words.
+  result = captureFrame(resolveLegendaryTurnStart(result, nextId), 'ターン開始時の変身')
   if (result.winnerId !== null) return result
 
   // 3. ターン開始時効果
