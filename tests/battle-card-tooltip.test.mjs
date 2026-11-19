@@ -19,7 +19,7 @@ test('hand cards expose hover and focus inspection', () => {
 test('inspection includes live stats, aura, shields, effects and abilities', () => {
   for (const term of ['follower.attack','follower.health','follower.aura','follower.shield.normal',
     'follower.shield.crystallize','follower.keywords','follower.skillUsed','follower.burstUsed',
-    'amulet.turnsRemaining','card.description','card.elementalSkill','card.elementalBurst']) {
+    'amulet.turnsRemaining','getCardAbilityText(card)','card.elementalSkill','card.elementalBurst']) {
     assert.ok(tooltip.includes(term), `missing ${term}`)
   }
   assert.match(css, /pointer-events:none/)
