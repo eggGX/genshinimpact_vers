@@ -71,7 +71,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "アビス"
     ],
-    "description": "【元素攻撃：炎】\n【ファンファーレ】このフォロワーに通常シールド3を付与。",
+    "description": "【元素攻撃：炎】\n【ファンファーレ】このフォロワーは通常シールド3をもつ。",
     "implementationStatus": "playable",
     "normalAttackElement": "pyro",
     "effects": [
