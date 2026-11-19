@@ -162,7 +162,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "西風教会"
     ],
-    "description": "【元素攻撃：水】\n自分のターン終了時、自分の場のフォロワーすべてに1回復。\n【元素スキル：公演、開始♪】\nコスト：PP2\n自分のリーダーにクレスト【歌声の環】（【カウントダウン_3】\n自分のターン終了時、自分のリーダー3回復して水元素付着）付与。",
+    "description": "【元素攻撃：水】\n自分のターン終了時、自分の場のフォロワーすべてに1回復。\n【元素スキル：公演、開始♪】\nコスト：PP2\n自分は『クレスト：歌声の環』をもつ。\n【クレスト】\n【カウントダウン_3】\n自分のターン終了時、自分のリーダーを3回復し、水元素を付着させる。",
         "elementalSkill": {"name":"公演、開始♪","ppCost":2,"effects":[]},
 "implementationStatus": "playable",
     "normalAttackElement": "hydro"
