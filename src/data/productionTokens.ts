@@ -52,7 +52,7 @@ export const productionTokens: Card[] = [
     token: true,
     normalAttackElement: 'pyro',
     keywords: ['rush', 'aura', 'intimidate'],
-    description: '【突進】\n【オーラ】\n【威圧】\n【元素攻撃：炎】\n自分のターン開始時、このフォロワーを破壊する。\n【ラストワード】「幻惑のトリック・リネ」1体を自分の場に出す。',
+    description: '【突進】\n【オーラ】\n【威圧】\n【元素攻撃：炎】\n自分のターン開始時、このフォロワーは「幻惑のトリック・リネ」に変身する。',
   },  {
     id: 'token-hydro-pressure-device',
     name: '落ち着いた方がいいカモ？',
