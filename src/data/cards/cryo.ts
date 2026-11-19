@@ -93,7 +93,7 @@ export const cryoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "クレスト【凛冽なる輪舞】（カウントダウン3）：自分のターン終了時、ランダムな敵フォロワー1体に氷元素2ダメージ。これを2回。",
+    "description": "クレスト【凛冽なる輪舞】（カウントダウン3）：自分のターン終了時、ランダムな敵フォロワー1体に氷元素2ダメージ。これを2回行う。",
     "implementationStatus": "playable"
   },
   {
@@ -207,7 +207,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "教令院"
     ],
-    "description": "【守護】【自分のターン終了時】ランダム敵フォロワー1体に氷元素1ダメージ。【元素スキル：垂裳凛然の夜】PP1：自リーダーに通常シールド3。",
+    "description": "【守護】【自分のターン終了時】ランダムな敵フォロワー1体に氷元素1ダメージ。【元素スキル：垂裳凛然の夜】PP1：自リーダーに通常シールド3。",
     "keywords": ["guard"],
     "elementalSkill": {"name":"垂裳凛然の夜","ppCost":1,"effects":[]},
     "implementationStatus": "playable"
@@ -244,7 +244,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "仙人"
     ],
-    "description": "【攻撃時】相手リーダーに氷元素1ダメージ。【元素スキル：山沢麟跡】PP1：「氷蓮」1体召喚。【元素爆発：降衆天華】エネルギー3：敵フォロワーすべてに氷元素2ダメージ。クレスト【降衆天華】（カウントダウン3：自ターン終了時、ランダム敵フォロワーへ氷元素2ダメージ×2）付与。",
+    "description": "【攻撃時】相手リーダーに氷元素1ダメージ。【元素スキル：山沢麟跡】PP1：「氷蓮」1体召喚。【元素爆発：降衆天華】エネルギー3：敵フォロワーすべてに氷元素2ダメージ。クレスト【降衆天華】（カウントダウン3：自ターン終了時、ランダムな敵フォロワー1体に氷元素2ダメージ。これを2回行う。）付与。",
     "elementalSkill": {"name":"山沢麟跡","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"降衆天華","energyCost":3,"effects":[]},
     "implementationStatus": "playable"
@@ -288,7 +288,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "社奉行"
     ],
-    "description": "【突進】【元素スキル：神里流・氷華】PP1：敵フォロワーすべてに氷元素1ダメージ。自身に【元素攻撃：氷】付与。【元素爆発：神里流・霜滅】エネルギー3：ランダムな敵フォロワー1体に氷元素2ダメージ×5回。",
+    "description": "【突進】【元素スキル：神里流・氷華】PP1：敵フォロワーすべてに氷元素1ダメージ。自身に【元素攻撃：氷】付与。【元素爆発：神里流・霜滅】エネルギー3：ランダムな敵フォロワー1体に氷元素2ダメージ。これを5回行う。",
     "keywords": ["rush"],
     "elementalSkill": {"name":"神里流・氷華","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"神里流・霜滅","energyCost":3,"effects":[]},
