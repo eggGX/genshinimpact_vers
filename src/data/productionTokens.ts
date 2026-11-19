@@ -74,7 +74,7 @@ export const productionTokens: Card[] = [
     health: 2,
     token: true,
     keywords: ['guard'],
-    description: '【守護】【ラストワード】ランダムな敵フォロワー1体に水元素2ダメージ。',
+    description: '【守護】\n【ラストワード】ランダムな相手フォロワー1体に水元素2ダメージ。',
   },
   {
     id: 'token-hydro-jellyfish',
@@ -86,7 +86,7 @@ export const productionTokens: Card[] = [
     attack: 0,
     health: 4,
     token: true,
-    description: '【自分のターン終了時】自リーダーと自分のフォロワーすべてを1回復。ランダムな敵フォロワー1体に水元素1ダメージ。',
+    description: '自分のターン終了時、自分のリーダーと自分の場のフォロワーすべてを1回復。\nランダムな相手フォロワー1体に水元素1ダメージ。',
   },  {
     id: 'token-cryo-cicin',
     name: '氷蛍',
@@ -111,7 +111,7 @@ export const productionTokens: Card[] = [
     health: 3,
     token: true,
     keywords: ['guard'],
-    description: '【守護】【ラストワード】敵フォロワーすべてに氷元素1ダメージ。',
+    description: '【守護】\n【ラストワード】相手の場のフォロワーすべてに氷元素1ダメージ。',
   },
   {
     id: 'token-cryo-itzpapa',
@@ -123,7 +123,7 @@ export const productionTokens: Card[] = [
     attack: 1,
     health: 3,
     token: true,
-    description: '【自分のターン終了時】ランダムな敵フォロワー1体に氷元素1ダメージ。自リーダーに通常シールド1。',
+    description: '自分のターン終了時、ランダムな相手フォロワー1体に氷元素1ダメージ。\n自分のリーダーは通常シールド1をもつ。',
   },
   {
     id: 'token-electro-cicin',
