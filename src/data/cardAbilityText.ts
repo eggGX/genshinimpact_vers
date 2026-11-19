@@ -1,5 +1,11 @@
 import type { Card } from '../game/types'
 
+/** Display the authored line breaks without splitting inline keyword tags. */
+export function splitCardAbilityLines(description: string | undefined): string[] {
+  if (!description?.trim()) return ['能力なし']
+  return description.split(/\r?\n/).map(text => text.trim()).filter(Boolean)
+}
+
 export interface CardAbilityText {
   basic: string
   skill: string
