@@ -109,7 +109,7 @@ export const neutralCards: Card[] = [
     attack: 3,
     health: 4,
     traits: ['ヒルチャール'],
-    description: '【突進】\n【攻撃時】自分の場に他のヒルチャール・フォロワーがいればこのフォロワーを+1/+0する。',
+    description: '【突進】\n【攻撃時】自分の場に他のヒルチャール・フォロワーがいるなら、このフォロワーを+1/+0する。',
   },
   {
     id: 'C009',
