@@ -173,7 +173,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【突進】\n【元素スキル：霜の襲撃】\nコスト：PP0\n相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。",
+    "description": "【突進】\n【元素スキル：霜の襲撃】\nコスト：なし\n相手の場のフォロワー1枚を選ぶ。それに氷元素2ダメージ。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
