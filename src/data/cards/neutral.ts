@@ -82,7 +82,7 @@ export const neutralCards: Card[] = [
     attack: 2,
     health: 2,
     region: ['モンド'],
-    description: '【ファンファーレ】自分の場のヒルチャール・タイプフォロワーすべてを+1/+1する。',
+    description: '【ファンファーレ】自分の場のヒルチャール・フォロワーすべてを+1/+1する。',
   },
   {
     id: 'C007',
@@ -95,7 +95,7 @@ export const neutralCards: Card[] = [
     attack: 1,
     health: 1,
     region: ['モンド'],
-    description: '【ファンファーレ】「ハト」2体を自分の場に出す。\n自分のターン終了時、自分の場にハトがいないなら、このフォロワーを+1/+1する。',
+    description: '【ファンファーレ】「ハト」2体を自分の場に出す。\n自分のターン終了時、自分の場に「ハト」がいないなら、このフォロワーを+1/+1する。',
   },
   {
     id: 'C008',
@@ -109,7 +109,7 @@ export const neutralCards: Card[] = [
     attack: 3,
     health: 4,
     traits: ['ヒルチャール'],
-    description: '【突進】\n【攻撃時】他の味方ヒルチャール・タイプのフォロワーがいれば自身を+1/+0する。',
+    description: '【突進】\n【攻撃時】自分の場に他のヒルチャール・フォロワーがいればこのフォロワーを+1/+0する。',
   },
   {
     id: 'C009',
@@ -119,7 +119,7 @@ export const neutralCards: Card[] = [
     rarity: 'gold',
     element: 'none',
     cost: 3,
-    description: '自分のデッキから1枚引く。\n最大PPを+1する（上限10）。\n現在PPは回復しない。',
+    description: '自分のデッキから1枚引く。\n最大PPを+1する。',
   },
   {
     id: 'C010',
