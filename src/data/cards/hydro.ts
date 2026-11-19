@@ -105,7 +105,7 @@ export const hydroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "自分のフォロワーすべてとリーダーを2回復。カードを1枚引く。",
+    "description": "自分のフォロワーすべてとリーダーを2回復。自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -182,7 +182,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "古華派"
     ],
-    "description": "【ファンファーレ】1枚引く。【元素スキル：古華剣・画雨籠山】PP1：自身に【2回攻撃】【突進】【元素攻撃：水】付与。",
+    "description": "【ファンファーレ】自分のデッキから1枚引く。【元素スキル：古華剣・画雨籠山】PP1：自身に【2回攻撃】【突進】【元素攻撃：水】付与。",
         "elementalSkill": {"name":"古華剣・画雨籠山","ppCost":1,"effects":[]},
 "implementationStatus": "playable"
   },
