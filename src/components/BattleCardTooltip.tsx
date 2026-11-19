@@ -61,7 +61,7 @@ export function BattleCardTooltip({
     {(card.elementalSkill || card.elementalBurst) && <section className="battle-tooltip-section battle-tooltip-abilities">
       <h3>元素能力</h3>
       {card.elementalSkill && <div className="battle-tooltip-ability">
-        <div className="battle-tooltip-ability-heading"><strong>元素スキル：{card.elementalSkill.name}</strong><span>PP {card.elementalSkill.ppCost ?? 0}</span></div>
+        <div className="battle-tooltip-ability-heading"><strong>元素スキル：{card.elementalSkill.name}</strong><span>{(card.elementalSkill.ppCost ?? 0) === 0 ? 'コスト：なし' : `PP ${card.elementalSkill.ppCost}`}</span></div>
         {abilityText.skill && <p>{abilityText.skill}</p>}
       </div>}
       {card.elementalBurst && <div className="battle-tooltip-ability">
