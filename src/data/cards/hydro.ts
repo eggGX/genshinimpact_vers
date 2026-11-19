@@ -141,7 +141,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "【突進】\n【攻撃時】「ヒルチャール」1体を召喚する。",
+    "description": "【突進】\n【攻撃時】「ヒルチャール」1体を自分の場に出す。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
@@ -239,7 +239,7 @@ export const hydroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【元素攻撃：水】\n【元素スキル：水中幻願】\nコスト：PP1\n「虚影」1体を召喚。\n【元素爆発：星命定軌】エネルギー3：相手の場のフォロワーすべてに水元素2ダメージ。\nその後、相手の場のフォロワーすべてに「次に受けるダメージ+2」を付与。",
+    "description": "【元素攻撃：水】\n【元素スキル：水中幻願】\nコスト：PP1\n「虚影」1体を自分の場に出す。\n【元素爆発：星命定軌】エネルギー3：相手の場のフォロワーすべてに水元素2ダメージ。\nその後、相手の場のフォロワーすべてに「次に受けるダメージ+2」を付与。",
         "elementalSkill": {"name":"水中幻願","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"星命定軌","energyCost":3,"effects":[]},
 "implementationStatus": "playable",
@@ -257,7 +257,7 @@ export const hydroCards: Card[] = [
     "region": [
       "稲妻"
     ],
-    "description": "【元素攻撃：水】\n自分のターン終了時、自分のリーダー2回復。\n【元素スキル：海月の誓い】\nコスト：PP1\n「化海月」1体を召喚。\n【元素爆発：海人の羽衣】エネルギー3：自身+2/+0、【守護】【突進】\n【攻撃時：自分のリーダー2回復】付与。",
+    "description": "【元素攻撃：水】\n自分のターン終了時、自分のリーダー2回復。\n【元素スキル：海月の誓い】\nコスト：PP1\n「化海月」1体を自分の場に出す。\n【元素爆発：海人の羽衣】エネルギー3：自身+2/+0、【守護】【突進】\n【攻撃時：自分のリーダー2回復】付与。",
         "elementalSkill": {"name":"海月の誓い","ppCost":1,"effects":[]},
     "elementalBurst": {"name":"海人の羽衣","energyCost":3,"effects":[]},
 "implementationStatus": "playable",
