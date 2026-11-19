@@ -33,7 +33,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "自分のターン終了時、自分の場のフォロワーすべてに1回復。",
+    "description": "自分のターン終了時、自分の場のフォロワーすべてを1回復。",
     "implementationStatus": "playable"
   },
   {
