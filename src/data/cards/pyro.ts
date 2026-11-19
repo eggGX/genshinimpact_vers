@@ -191,7 +191,7 @@ export const pyroCards: Card[] = [
     "traits": [
       "冒険者協会"
     ],
-    "description": "【ファンファーレ】自分のフォロワー1体を+1/+0する（自身可）。【元素スキル：溢れる情熱】PP1：敵フォロワー1体に炎元素4ダメージ。このフォロワー自身に非元素1ダメージ。",
+    "description": "【ファンファーレ】他の自分のフォロワー1体を+1/+0する。【元素スキル：溢れる情熱】PP1：敵フォロワー1体に炎元素4ダメージ。このフォロワー自身に非元素1ダメージ。",
     "elementalSkill": { "name": "溢れる情熱", "ppCost": 1, "effects": [
       { "type": "damage", "trigger": "skill", "target": "selected_enemy_follower", "value": 4, "element": "pyro" },
       { "type": "damage", "trigger": "skill", "target": "self_follower", "value": 1 }
