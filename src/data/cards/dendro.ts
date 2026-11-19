@@ -78,7 +78,7 @@ export const dendroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "「月桂・跳躍型」2体召喚。\n自分の場のフォロワーすべてと自分のリーダーに2回復。",
+    "description": "「月桂・跳躍型」2体を自分の場に出す。\n自分の場のフォロワーすべてと自分のリーダーに2回復。",
     "implementationStatus": "playable"
   },
   {
@@ -122,7 +122,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "エルマイト旅団"
     ],
-    "description": "【ファンファーレ】「草の霊蛇」1体召喚。\n【攻撃時】自分の場に草の霊蛇がいれば自身+2/+0。",
+    "description": "【ファンファーレ】「草の霊蛇」1体を自分の場に出す。\n【攻撃時】自分の場に草の霊蛇がいれば自身+2/+0。",
     "implementationStatus": "playable"
   },
   {
@@ -137,7 +137,7 @@ export const dendroCards: Card[] = [
     "region": [
       "璃月"
     ],
-    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：雲閣団々降清白】\nコスト：PP1\n「月桂・投擲型」1体召喚。",
+    "description": "自分のターン終了時、自分のリーダー1回復。\n【元素スキル：雲閣団々降清白】\nコスト：PP1\n「月桂・投擲型」1体を自分の場に出す。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "雲閣団々降清白",
