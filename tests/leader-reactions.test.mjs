@@ -148,11 +148,12 @@ test('Compatibility helper applies one-damage bonus and persists boolean flags',
   assert.equal(typeof result.player.leaderSuperconduct,'boolean')
 })
 
-test('Barbara crest self-Hydro does not stack another leader aura', async () => {
+test('Barbara crest self-Hydro reacts with Dendro once, consuming the leader aura', async () => {
   const { resolveHydroPermanentsTurnEnd } = await vite.ssrLoadModule('/src/game/hydroAdvancedRules.ts')
   const state = battle()
   state.players[0].leaderAura = [{ element: 'dendro' }]
   state.players[0].crests = [{ id: 'C034', turnsRemaining: 2, usedElements: [] }]
   const changed = resolveHydroPermanentsTurnEnd(state, 'player1', s => s)
-  assert.deepEqual(changed.players[0].leaderAura, [{ element: 'hydro' }])
+  assert.deepEqual(changed.players[0].leaderAura, [])
+  assert.equal(changed.players[0].field.filter(f => f.cardId === 'dendro-core').length, 1)
 })
