@@ -32,7 +32,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "ヒルチャール"
     ],
-    "description": "【ファンファーレ】敵フォロワー1体に氷元素1ダメージ。",
+    "description": "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それは氷元素1ダメージを受ける。",
     "implementationStatus": "playable",
     "effects": [
       {
@@ -80,7 +80,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "妖精"
     ],
-    "description": "【ファンファーレ】自身を除く自分のフォロワー1体を+2/+0する。",
+    "description": "【ファンファーレ】自分の場の他のフォロワー1枚を選ぶ。それは+2/+0する。",
     "implementationStatus": "playable"
   },
   {
@@ -154,7 +154,7 @@ export const cryoCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "【ファンファーレ】自リーダーに通常シールド2。【元素スキル：フリーズキャッツクロー】PP2：敵フォロワー2体に氷元素2ダメージ。自リーダーに通常シールド2。",
+    "description": "【ファンファーレ】自リーダーに通常シールド2。【元素スキル：フリーズキャッツクロー】PP2：相手の場のフォロワー2枚を選ぶ。それらは氷元素2ダメージを受ける。自リーダーに通常シールド2。",
     "elementalSkill": {"name":"フリーズキャッツクロー","ppCost":2,"effects":[]},
     "implementationStatus": "playable"
   },
@@ -173,7 +173,7 @@ export const cryoCards: Card[] = [
     "traits": [
       "西風騎士団"
     ],
-    "description": "【突進】【元素スキル：霜の襲撃】PP0：敵フォロワー1体に氷元素2ダメージ。",
+    "description": "【突進】【元素スキル：霜の襲撃】PP0：相手の場のフォロワー1枚を選ぶ。それは氷元素2ダメージを受ける。",
     "implementationStatus": "playable",
     "keywords": [
       "rush"
@@ -224,7 +224,7 @@ export const cryoCards: Card[] = [
     "region": [
       "フォンテーヌ"
     ],
-    "description": "【元素攻撃：氷】【ファンファーレ】カード1枚引く。【元素スキル：フレーミング・氷点法】PP1：敵フォロワー1体に氷元素2ダメージ。そのフォロワーの攻撃力-1。",
+    "description": "【元素攻撃：氷】【ファンファーレ】カード1枚引く。【元素スキル：フレーミング・氷点法】PP1：相手の場のフォロワー1枚を選ぶ。それは氷元素2ダメージを受ける。それは攻撃力-1。",
     "elementalSkill": {"name":"フレーミング・氷点法","ppCost":1,"effects":[{"type":"damage","trigger":"skill","target":"selected_enemy_follower","value":2,"element":"cryo"}]},
     "implementationStatus": "playable",
     "normalAttackElement": "cryo"
