@@ -28,7 +28,7 @@ export const dendroCards: Card[] = [
     "region": [
       "スメール"
     ],
-    "description": "デッキからランダムな草元素カード1枚を手札に加え、さらにカードを1枚引く。",
+    "description": "自分のデッキから草元素のカードを1枚引く。さらにカードを1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -183,7 +183,7 @@ export const dendroCards: Card[] = [
     "traits": [
       "レンジャー"
     ],
-    "description": "【ファンファーレ】デッキからランダムな草元素スペル1枚を手札に加える。【元素スキル：花触葉讃】PP1：相手の場のフォロワー1枚を選ぶ。それに草元素2ダメージ。相手の場の別のフォロワー1枚を選ぶ。それに草元素1ダメージ。",
+    "description": "【ファンファーレ】自分のデッキから草元素のスペルカードを1枚引く。【元素スキル：花触葉讃】PP1：相手の場のフォロワー1枚を選ぶ。それに草元素2ダメージ。相手の場の別のフォロワー1枚を選ぶ。それに草元素1ダメージ。",
     "implementationStatus": "playable",
     "elementalSkill": {
       "name": "花触葉讃",
