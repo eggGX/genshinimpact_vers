@@ -31,7 +31,7 @@ export const neutralCards: Card[] = [
     attack: 2,
     health: 1,
     traits: ['宝盗団'],
-    description: '【ファンファーレ】デッキからランダムなブロンズカード1枚を手札に加える。',
+    description: '【ファンファーレ】自分のデッキからブロンズのカードを1枚引く。',
   },
   {
     id: 'C003',
