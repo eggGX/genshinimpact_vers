@@ -446,7 +446,7 @@ function resolveReactionConsequenceCore(
       const ororon = actor.field.find(f => f.instanceId === id && f.health > 0)
       if (!ororon) continue
       const enemies = next.players[1 - actorIndex].field.filter(f => f.health > 0)
-       if (!enemies.length) continue
+      if (!enemies.length) continue
       const victim = enemies[Math.floor(Math.random() * enemies.length)]
       const outcome = resolveElementalDamage(victim, 1, 'electro')
       const updated = [...next.players] as [Player, Player]
