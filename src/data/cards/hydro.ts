@@ -105,7 +105,7 @@ export const hydroCards: Card[] = [
     "region": [
       "モンド"
     ],
-    "description": "自分の場のフォロワーすべてと自分のリーダーに2回復。\n自分のデッキから1枚引く。",
+    "description": "自分の場のフォロワーすべてを2回復。\n自分のリーダーを2回復。\n自分のデッキから1枚引く。",
     "implementationStatus": "playable"
   },
   {
@@ -162,7 +162,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "西風教会"
     ],
-    "description": "【元素攻撃：水】\n自分のターン終了時、自分の場のフォロワーすべてを1回復。\n【元素スキル：公演、開始♪】\nコスト：PP2\n自分は『クレスト：歌声の環』をもつ。\n【クレスト】\n【カウントダウン_3】\n自分のターン終了時、自分のリーダーを3回復し、水元素を付着させる。",
+    "description": "【元素攻撃：水】\n自分のターン終了時、自分の場のフォロワーすべてを1回復。\n【元素スキル：公演、開始♪】\nコスト：PP2\n自分は『クレスト：公演、開始♪』をもつ。\n【クレスト】\n【カウントダウン_3】\n自分のターン終了時、自分のリーダーを3回復し、水元素を付着させる。",
         "elementalSkill": {"name":"公演、開始♪","ppCost":2,"effects":[]},
 "implementationStatus": "playable",
     "normalAttackElement": "hydro"
@@ -182,7 +182,7 @@ export const hydroCards: Card[] = [
     "traits": [
       "古華派"
     ],
-    "description": "【ファンファーレ】自分のデッキから1枚引く。\n【元素スキル：古華剣・画雨籠山】\nコスト：PP1\n自身に【2回攻撃】【突進】【元素攻撃：水】付与。",
+    "description": "【ファンファーレ】自分のデッキから1枚引く。\n【元素スキル：古華剣・画雨籠山】\nコスト：PP1\nこのフォロワーは【2回攻撃】【突進】【元素攻撃：水】をもつ。",
         "elementalSkill": {"name":"古華剣・画雨籠山","ppCost":1,"effects":[]},
 "implementationStatus": "playable"
   },
