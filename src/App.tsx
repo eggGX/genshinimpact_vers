@@ -914,7 +914,7 @@ function App({ online }: { online?: {
           <small>【元素攻撃：雷】</small>
         )}
         {follower.keywords.includes('plunge_attack') && (
-          <small>【落下攻撃】守護無視・攻撃後敵全体雷1</small>
+          <small>【落下攻撃】守護無視・攻撃後相手全体雷1</small>
         )}
         {follower.keywords.includes('normal_attack_cryo') && (
           <small>【元素攻撃：氷】</small>
@@ -1541,8 +1541,8 @@ function App({ online }: { online?: {
               : currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId === 'C066'
               ? '九条裟羅：強化する味方雷元素フォロワーを選択してください'
               : selectedAbility.firstTargetId
-              ? 'ディオナのスキル：2体目の敵フォロワーを選択してください'
-              : '元素スキル・元素爆発の対象となる敵フォロワーを選択してください'
+              ? 'ディオナのスキル：2体目の相手フォロワーを選択してください'
+              : '元素スキル・元素爆発の対象となる相手フォロワーを選択してください'
           : selectedHandIndex !== null
             ? ['C021', 'C044', 'C066', 'C081', 'C030'].includes(currentPlayer.hand[selectedHandIndex])
               ? currentPlayer.hand[selectedHandIndex] === 'C081'
@@ -1554,7 +1554,7 @@ function App({ online }: { online?: {
                 : currentPlayer.hand[selectedHandIndex] === 'C044'
                 ? '霜の精：自身以外の味方フォロワーを選択してください'
                 : '味方強化のファンファーレ：他の味方フォロワーを選択してください'
-              : 'ファンファーレの対象となる敵フォロワーを選択してください'
+              : 'ファンファーレの対象となる相手フォロワーを選択してください'
             : selectedAttacker
               ? '攻撃対象を選択してください'
               : 'カードをプレイするか、攻撃可能なフォロワーを選択してください'}
