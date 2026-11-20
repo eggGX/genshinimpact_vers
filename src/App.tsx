@@ -518,6 +518,7 @@ function App({ online }: { online?: {
     useState<string | null>(null)
   const [abilityFocusId, setAbilityFocusId] = useState<string | null>(null)
   const [expandedHandIndex, setExpandedHandIndex] = useState<number | null>(null)
+  const [handOpen, setHandOpen] = useState(false)
   const dragPointer = useRef<{
     pointerId: number; attackerId: string; startX: number; startY: number; moved: boolean
   } | null>(null)
@@ -580,6 +581,7 @@ function App({ online }: { online?: {
     setSelectedHandIndex(null)
     setSelectedAbility(null)
     setExpandedHandIndex(null)
+    setHandOpen(false)
   }
 
   const handleReset = () => {
@@ -627,6 +629,7 @@ function App({ online }: { online?: {
   // dropping the card onto a follower or leader.
   const handlePlayCard = (handIndex: number, fromDrag = false) => {
     setExpandedHandIndex(null)
+    setHandOpen(false)
     if (!onlineCanAct) return
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
@@ -1301,7 +1304,20 @@ function App({ online }: { online?: {
   }
 
   return (
-    <div ref={battleScreenRef} className={['game','game--battle','game--battle-fit',playback ? 'game--animating' : ''].join(' ')}>
+    <div ref={battleScreenRef}
+      className={['game','game--battle','game--battle-fit',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
+      onClick={event => {
+        if (!handOpen) return
+        const target = event.target
+        if (!(target instanceof Element)) return
+        // A blank part of the battlefield dismisses the hand. Cards, buttons
+        // and leader interaction must retain their existing click behaviour.
+        if (target.closest('.field') && !target.closest('.follower-wrapper, button, [data-attack-drop]')) {
+          setHandOpen(false)
+          setExpandedHandIndex(null)
+          setInspectedCard(null)
+        }
+      }}>
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
@@ -1685,7 +1701,7 @@ function App({ online }: { online?: {
 
 
 
-      <footer className="hand">
+      <footer className="hand" onClick={() => { if (!handOpen) setHandOpen(true) }}>
         <div className="hand-label"><span>YOUR HAND</span><strong>{currentPlayer.hand.length} / 9</strong></div>
         <div className="hand-cards"
           onMouseMove={event => {
@@ -1732,6 +1748,11 @@ function App({ online }: { online?: {
               onBlur={() => setInspectedCard(null)}
               onClick={() => {
                 if (suppressHandDragClick.current) return
+                if (!handOpen) {
+                  setHandOpen(true)
+                  setExpandedHandIndex(null)
+                  return
+                }
                 if (expandedHandIndex !== index) {
                   setExpandedHandIndex(index)
                   setInspectedCard({ kind: 'hand', cardId })
