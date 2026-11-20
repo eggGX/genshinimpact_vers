@@ -2211,3 +2211,89 @@
 .game--battle-fit .hand-card.hand-card--unplayable:hover {
   filter:brightness(.8) saturate(.75) !important;
 }
+
+
+/* A disabled hand card stays solid: darken the actual artwork rather than
+   lowering its opacity (which exposed the board through the card). */
+.game--battle-fit .hand-card.hand-card--unplayable,
+.game--battle-fit.game--hand-open .hand-card.hand-card--unplayable,
+.game--battle-fit.game--hand-open .hand-card.hand-card--unplayable.hand-card--expanded,
+.game--battle-fit.game--hand-open .hand-card.hand-card--unplayable[aria-disabled="true"] {
+  opacity:1 !important;
+  filter:brightness(.58) saturate(.62) !important;
+}
+.game--battle-fit .hand-card.hand-card--unplayable:hover {
+  opacity:1 !important;
+  filter:brightness(.74) saturate(.72) !important;
+}
+
+/* Shared bottom badge rotates through passive/keyword abilities in a single slot. */
+.game--battle-fit .follower-emblems,
+.follower-emblems {
+  width:24px;height:24px;
+  isolation:isolate;
+}
+.follower-emblems .follower-emblem {
+  position:absolute;
+  inset:0;
+}
+.follower-emblem--triggered {
+  border-color:#e0c87a;
+  background:linear-gradient(#564e2c,#24271e);
+  color:#fff2c8;
+}
+.follower-emblem-flag {font-size:15px;line-height:1;}
+.follower-emblems .follower-emblem--rotating {
+  opacity:0;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  pointer-events:none;
+}
+.follower-emblems .follower-emblem--count-2 {animation-name:follower-emblem-cycle-2;}
+.follower-emblems .follower-emblem--count-3 {animation-name:follower-emblem-cycle-3;}
+.follower-emblems .follower-emblem--count-4 {animation-name:follower-emblem-cycle-4;}
+@keyframes follower-emblem-cycle-2 {
+  0%,42% {opacity:1;}
+  50%,100% {opacity:0;}
+}
+@keyframes follower-emblem-cycle-3 {
+  0%,27% {opacity:1;}
+  33.333%,100% {opacity:0;}
+}
+@keyframes follower-emblem-cycle-4 {
+  0%,20% {opacity:1;}
+  25%,100% {opacity:0;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .follower-emblems .follower-emblem--rotating {animation:none!important;opacity:0;}
+  .follower-emblems .follower-emblem--rotating:first-child {opacity:1;}
+}
+
+/* Compact circular countdown, anchored to the lower-right of the amulet. */
+.game--battle-fit .amulet-card {position:relative;}
+.game--battle-fit .amulet-card .amulet-countdown,
+.game--battle-fit .amulet-countdown {
+  position:absolute;
+  z-index:8;
+  left:auto;
+  right:-8px;
+  bottom:-8px;
+  top:auto;
+  transform:none;
+  display:grid;
+  place-items:center;
+  width:27px;
+  height:27px;
+  box-sizing:border-box;
+  padding:0;
+  font:800 24px/1 'Noto Sans JP',sans-serif;
+  color:#ffdf9f;
+  border:0;
+  border-radius:50%;
+  background:#193349;
+  text-shadow:0 1px 3px #000;
+  box-shadow:0 2px 7px #000a;
+}
+@media(max-width:760px){
+  .game--battle-fit .amulet-countdown {right:-4px;bottom:-4px;width:22px;height:22px;font-size:20px;}
+}
