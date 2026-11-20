@@ -1696,3 +1696,60 @@
   }
   .game--battle-fit .battle-opponent-card-back:nth-child(even) {transform:rotate(2deg);}
 }
+
+
+/* Shadowverse-style hand dock: small at lower-right by default, unfolding
+   above the own leader on click. Empty battlefield click closes the tray. */
+@media (min-width:900px) and (min-height:640px) {
+  .game--battle-fit > .hand:not(.unused-selector),
+  .game--battle-fit:has(> .online-latest-action) > .hand:not(.unused-selector) {
+    left:auto;right:6%;bottom:-5%;
+    width:clamp(255px,25vw,430px);
+    height:clamp(108px,16dvh,148px);
+    transition:left .2s ease,right .2s ease,width .2s ease,bottom .2s ease;
+  }
+  .game--battle-fit:not(.game--hand-open) .hand-cards {
+    justify-content:flex-end;align-items:flex-start;
+    gap:0;cursor:pointer;
+  }
+  .game--battle-fit:not(.game--hand-open) .hand-card,
+  .game--battle-fit:not(.game--hand-open) .hand-card:has(.card-artwork) {
+    flex:0 0 clamp(46px,5.1vw,72px);
+    width:clamp(46px,5.1vw,72px);
+    height:clamp(105px,15dvh,145px);
+    margin-left:-8px;
+    padding:3px 2px;
+    transform:none;
+    transition:transform .16s ease,filter .16s ease;
+  }
+  .game--battle-fit:not(.game--hand-open) .hand-card:first-child {margin-left:0;}
+  .game--battle-fit:not(.game--hand-open) .hand-card .card-artwork {max-height:clamp(65px,9dvh,95px);}
+  .game--battle-fit:not(.game--hand-open) .hand-card strong {font-size:7px;}
+  .game--battle-fit:not(.game--hand-open) .hand-card .card-cost {
+    width:20px;height:20px;font-size:12px;left:-3px;top:-6px;
+  }
+  .game--battle-fit:not(.game--hand-open) .hand-card-stats,
+  .game--battle-fit:not(.game--hand-open) .hand-card-type-label {font-size:8px;}
+  .game--battle-fit:not(.game--hand-open) .hand-card:hover,
+  .game--battle-fit:not(.game--hand-open) .hand-card.selected-card {
+    transform:translateY(-12px);z-index:7;filter:brightness(1.12);
+  }
+  .game--battle-fit.game--hand-open > .hand,
+  .game--battle-fit.game--hand-open:has(> .online-latest-action) > .hand {
+    left:18%;right:19%;bottom:-7%;
+    width:auto;height:clamp(160px,27dvh,260px);
+  }
+  .game--battle-fit.game--hand-open .hand-cards {
+    justify-content:center;align-items:flex-start;gap:clamp(1px,.4vw,6px);
+  }
+  .game--battle-fit.game--hand-open .hand-card,
+  .game--battle-fit.game--hand-open .hand-card:has(.card-artwork) {
+    flex:0 1 clamp(75px,9.2vw,143px);
+    width:clamp(75px,9.2vw,143px);
+    height:clamp(138px,22dvh,205px);
+    margin-left:0;padding:6px 5px 4px;
+  }
+  .game--battle-fit.game--hand-open .hand-card .card-artwork {
+    max-height:clamp(70px,13dvh,132px);
+  }
+}
