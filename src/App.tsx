@@ -986,6 +986,7 @@ function App({ online }: { online?: {
       <button
         type="button"
         data-attack-drop={isOpponent ? follower.instanceId : undefined}
+        title={card?.name ?? '不明なカード'}
         className={[
           'field-card',
           `card-element--${card?.element ?? 'none'}`,
@@ -1026,9 +1027,6 @@ function App({ online }: { online?: {
         }}
       >
         {card && <CardArtwork cardId={card.id} name={card.name} className="card-artwork--field" />}
-        <strong className="battle-field-card-name">
-          {card?.name ?? '不明なカード'}
-        </strong>
         <span className="field-keywords" aria-label="カード状態">
           {follower.keywords.includes('storm') && <span title="疾走" className="keyword-pill">疾</span>}
           {follower.keywords.includes('rush_only') && <span title="突進" className="keyword-pill">突</span>}
@@ -1042,76 +1040,6 @@ function App({ online }: { online?: {
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
         {followerEmblems(follower)}
 
-        {follower.keywords.includes('double_attack') && (
-          <small>【2回攻撃】このターンの攻撃：{follower.attacksThisTurn ?? (follower.hasAttacked ? 1 : 0)}/2回</small>
-        )}
-        {follower.keywords.includes('next_damage_plus_2') && (
-          <small>次の被ダメージ+2（モナの星命定軌）</small>
-        )}
-        {follower.keywords.includes('normal_attack_electro') && (
-          <small>【元素攻撃：雷】</small>
-        )}
-        {follower.keywords.includes('plunge_attack') && (
-          <small>【落下攻撃】守護無視・攻撃後相手全体雷1</small>
-        )}
-        {follower.keywords.includes('normal_attack_cryo') && (
-          <small>【元素攻撃：氷】</small>
-        )}
-        {follower.keywords.includes('normal_attack_hydro') && (
-          <small>【元素攻撃：水】</small>
-        )}
-        {follower.keywords.includes('attack_heal_2') && (
-          <small>【攻撃時】自分のリーダーを2回復</small>
-        )}
-        {follower.keywords.includes('guard') && (
-          <small>【守護】他の味方とリーダーを守る</small>
-        )}
-        {follower.keywords.includes('rush') && (
-          <small>【突進】登場ターンはフォロワーのみ攻撃可能</small>
-        )}
-        {follower.keywords.includes('storm') && (
-          <small>【疾走】登場ターンから攻撃可能</small>
-        )}
-        {follower.keywords.includes('stealth') && (
-          <small>【潜伏】攻撃・対象指定不可（攻撃時解除）</small>
-        )}
-        {follower.keywords.includes('aura') && (
-          <small>【オーラ】効果の対象に選べない</small>
-        )}
-        {follower.keywords.includes('intimidate') && (
-          <small>【威圧】フォロワーから攻撃されない</small>
-        )}
-        {follower.cardId === 'C025' && (
-          <small>
-            HP10以下：攻撃力+2
-            （{(isOpponent ? opponent : currentPlayer).leaderHealth <= 10 ? '有効' : '無効'}）
-          </small>
-        )}
-        {follower.keywords.includes('frozen') && (
-          <small style={{ color: '#aee1ff', fontWeight: 'bold' }}>
-            凍結中（攻撃不可）
-          </small>
-        )}
-        {follower.keywords.includes('superconduct') && (
-          <small>超電導：次の物理被ダメージ+2</small>
-        )}
-        {follower.keywords.filter(k => k.startsWith('burning:')).map(k => (
-          <small key={k}>燃焼：残り{k.slice(8)}ターン</small>
-        ))}
-        {follower.keywords.filter(k => k.startsWith('quicken:')).map(k => (
-          <small key={k}>原激化：残り{k.slice(8)}回</small>
-        ))}
-        {follower.cardId === 'dendro-core' && (
-          <small style={{ color: '#b5ed91' }}>草原核（攻撃不可）</small>
-        )}
-        {follower.shield.normal > 0 && (
-          <small>通常シールド：{follower.shield.normal}</small>
-        )}
-        {follower.shield.crystallize > 0 && (
-          <small>結晶シールド：{follower.shield.crystallize}</small>
-        )}
-
-        <small className="follower-ready">{isOpponent ? 'ENEMY' : canAttack ? 'READY' : 'WAIT'}</small>
       </button>
       </div>
     )
@@ -1160,8 +1088,6 @@ function App({ online }: { online?: {
               <div className={['field-card', `card-element--${card?.element ?? 'none'}`,
                 `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}>
                 {card && <CardArtwork cardId={card.id} name={card.name} className="card-artwork--field" />}
-                <strong>{card?.name ?? follower.cardId}</strong>
-                {card && <ElementIcon element={card.element} size="xs" />}
                 <span className="follower-stats">
                   <b className="stat-attack">{follower.attack}</b>
                   <b className="stat-health">{follower.health}</b>
