@@ -334,8 +334,29 @@ function App({ online }: { online?: {
       } } : {}),
     })
   }, [online?.match.revision, online?.match.history, online?.match.seat])
+  // All cues are derived from recorded snapshots; animations never affect rules.
   const highlightedFollowers = new Set<string>()
   const highlightedLeaders = new Set<string>()
+  const damagedFollowers = new Map<string, { amount: number; kind: 'damage' | 'heal' | 'shield' }>()
+  const damagedLeaders = new Map<string, { amount: number; kind: 'damage' | 'heal' | 'shield' }>()
+  let attackingFollowerId: string | null = null
+  if (playback && playback.index === 0 && /攻撃/.test(playback.frames[0].label)) {
+    const start = playback.frames[0].state
+    const end = playback.frames[playback.frames.length - 1].state
+    const actor = start.players.find(p => p.id === start.currentPlayerId)
+    const actorEnd = end.players.find(p => p.id === start.currentPlayerId)
+    if (actor && actorEnd) {
+      // Use the attack counter first. The title fallback also handles an attacker
+      // destroyed by simultaneous counter-damage during the resolution.
+      const source = actor.field.find(f => {
+        const after = actorEnd.field.find(g => g.instanceId === f.instanceId)
+        return after && (after.attacksThisTurn ?? (after.hasAttacked ? 1 : 0)) >
+          (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0))
+      }) ?? actor.field.find(f => playback.frames[0].label.includes(
+        `${getCard(f.cardId)?.name ?? f.cardId}が`))
+      attackingFollowerId = source?.instanceId ?? null
+    }
+  }
   if (playback && playback.index > 0) {
     const before = playback.frames[playback.index - 1].state
     const after = playback.frames[playback.index].state
@@ -345,12 +366,33 @@ function App({ online }: { online?: {
       const oldFollowers = new Map(oldPlayer.field.map(f => [f.instanceId, f]))
       for (const follower of newPlayer.field) {
         const old = oldFollowers.get(follower.instanceId)
+        if (old) {
+          const shieldBefore = old.shield.normal + old.shield.crystallize
+          const shieldAfter = follower.shield.normal + follower.shield.crystallize
+          if (follower.health < old.health) {
+            damagedFollowers.set(follower.instanceId, { amount: old.health - follower.health, kind: 'damage' })
+          } else if (follower.health > old.health) {
+            damagedFollowers.set(follower.instanceId, { amount: follower.health - old.health, kind: 'heal' })
+          } else if (shieldAfter < shieldBefore) {
+            damagedFollowers.set(follower.instanceId, { amount: shieldBefore - shieldAfter, kind: 'shield' })
+          }
+        }
         if (!old || old.health !== follower.health || old.attack !== follower.attack ||
             old.shield.normal !== follower.shield.normal ||
             old.shield.crystallize !== follower.shield.crystallize ||
             old.aura.map(a => a.element).join() !== follower.aura.map(a => a.element).join()) {
           highlightedFollowers.add(follower.instanceId)
         }
+      }
+      const shieldBefore = (oldPlayer.leaderShield?.normal ?? 0) + (oldPlayer.leaderShield?.crystallize ?? 0)
+      const shieldAfter = (newPlayer.leaderShield?.normal ?? 0) + (newPlayer.leaderShield?.crystallize ?? 0)
+      if (newPlayer.leaderHealth !== oldPlayer.leaderHealth) {
+        damagedLeaders.set(newPlayer.id, {
+          amount: Math.abs(newPlayer.leaderHealth - oldPlayer.leaderHealth),
+          kind: newPlayer.leaderHealth < oldPlayer.leaderHealth ? 'damage' : 'heal',
+        })
+      } else if (shieldAfter < shieldBefore) {
+        damagedLeaders.set(newPlayer.id, { amount: shieldBefore - shieldAfter, kind: 'shield' })
       }
       if (oldPlayer.leaderHealth !== newPlayer.leaderHealth ||
           (oldPlayer.leaderAura ?? []).map(a=>a.element).join() !==
@@ -835,9 +877,14 @@ function App({ online }: { online?: {
         : follower.instanceId}
         className={['follower-wrapper',
           highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : '',
+          damagedFollowers.get(follower.instanceId)?.kind === 'damage' ? 'battle-damaged' : '',
+          attackingFollowerId === follower.instanceId ? 'battle-attacker' : '',
           follower.aura.length ? 'follower-has-aura' : ''].join(' ')}
         onMouseEnter={() => setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })}
         onMouseLeave={() => setInspectedCard(null)}>
+      {damagedFollowers.has(follower.instanceId) && <span className={`battle-float-number battle-float-number--${damagedFollowers.get(follower.instanceId)!.kind}`} aria-label={`ダメージ・回復表示 ${damagedFollowers.get(follower.instanceId)!.amount}`}>
+        {damagedFollowers.get(follower.instanceId)!.kind === 'heal' ? '+' : '−'}{damagedFollowers.get(follower.instanceId)!.amount}
+      </span>}
       {follower.aura.length > 0 && <div className="follower-aura-icons"
         aria-label={`元素付着：${follower.aura.map(a=>a.element).join('、')}`}>
         {follower.aura.map((a,i)=><span key={i} className="aura-icon-holder">
@@ -1400,6 +1447,7 @@ function App({ online }: { online?: {
             'leader',
             'leader-button',
             highlightedLeaders.has(opponent.id) ? 'leader-hit' : '',
+            damagedLeaders.get(opponent.id)?.kind === 'damage' ? 'leader-damaged' : '',
             selectedAttacker ? 'attack-target' : '',
             attackDrag && currentPlayer.field.some(f => f.instanceId === attackDrag.attackerId &&
               canDragAttackLeader(f)) ? 'drag-attack-target' : '',
@@ -1415,6 +1463,9 @@ function App({ online }: { online?: {
           }
           onClick={handleAttackLeader}
         >
+          {damagedLeaders.has(opponent.id) && <span className={`battle-float-number battle-float-number--${damagedLeaders.get(opponent.id)!.kind}`}>
+            {damagedLeaders.get(opponent.id)!.kind === 'heal' ? '+' : '−'}{damagedLeaders.get(opponent.id)!.amount}
+          </span>}
           <span className="leader-avatar" aria-hidden="true">
             <img src={`${import.meta.env.BASE_URL}images/travelers/${opponent.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
@@ -1482,7 +1533,10 @@ function App({ online }: { online?: {
           </span>
         </div>
         <div key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
-          className={highlightedLeaders.has(currentPlayer.id) ? 'leader leader-hit' : 'leader'}>
+          className={['leader', highlightedLeaders.has(currentPlayer.id) ? 'leader-hit' : '', damagedLeaders.get(currentPlayer.id)?.kind === 'damage' ? 'leader-damaged' : ''].filter(Boolean).join(' ')}>
+          {damagedLeaders.has(currentPlayer.id) && <span className={`battle-float-number battle-float-number--${damagedLeaders.get(currentPlayer.id)!.kind}`}>
+            {damagedLeaders.get(currentPlayer.id)!.kind === 'heal' ? '+' : '−'}{damagedLeaders.get(currentPlayer.id)!.amount}
+          </span>}
           <span className="leader-avatar" aria-hidden="true">
             <img src={`${import.meta.env.BASE_URL}images/travelers/${currentPlayer.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
