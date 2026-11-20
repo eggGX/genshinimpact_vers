@@ -7,7 +7,7 @@ const app = read('src/App.tsx')
 const css = read('src/App.css')
 
 test('local and online share a browser fullscreen control on the battle screen', () => {
-  assert.match(app, /ref=\{battleScreenRef\} className=\{\['game','game--battle','game--battle-fit'/)
+  assert.match(app, /ref=\{battleScreenRef\}\s+className=\{\['game','game--battle','game--battle-fit'/)
   assert.match(app, /document\.fullscreenElement === battleScreenRef\.current/)
   assert.match(app, /battleScreenRef\.current\.requestFullscreen\(\)/)
   assert.match(app, /document\.exitFullscreen\(\)/)
