@@ -2406,15 +2406,12 @@
   background:radial-gradient(ellipse at center,rgba(158,127,194,.4),rgba(93,71,137,.18) 52%,transparent 78%);
   animation:stealth-mist-drift-a 8.5s ease-in-out -2s infinite alternate-reverse;
 }
-/* Keep status symbols, attack values and health numbers above the mist. */
+/* Preserve the existing absolute positioning of stats and emblems.
+   Only raise their stacking order above the visual fog overlay. */
 .game--battle-fit .field-card--stealth > .field-keywords,
 .game--battle-fit .field-card--stealth > .follower-stats,
 .game--battle-fit .field-card--stealth > .follower-emblems {
-  position:relative;
   z-index:5;
-}
-.game--battle-fit .field-card--stealth > .follower-emblems {
-  position:absolute;
 }
 @keyframes stealth-mist-drift-a {
   from {transform:translate3d(-12%,-5%,0) scale(1);opacity:.52;}
