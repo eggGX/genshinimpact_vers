@@ -45,3 +45,17 @@ test('online battle history does not create extra height when actions accumulate
   assert.match(css, /\.game--battle-fit > \.online-action-history\[open\] ol/)
   assert.match(css, /max-height:160px;overflow-y:auto/)
 })
+
+test('destroyed followers linger for an impact frame and then dissolve without remaining targetable', () => {
+  assert.match(app, /const deathPreviousFields = new Map<string, Follower\[\]>\(\)/)
+  assert.match(app, /deathPreviousFields\.set\(newPlayer\.id, oldPlayer\.field\)/)
+  assert.match(app, /currentById\.get\(before\.instanceId\) \?\? before/)
+  assert.match(app, /dying: !currentById\.has\(before\.instanceId\)/)
+  assert.match(app, /if \(!dying\) return renderFollower\(follower, isOpponent\)/)
+  assert.match(app, /className="follower-wrapper battle-destroying" aria-hidden="true"/)
+  assert.match(app, /animationDuration: \`\$\{playbackDelay\}ms\`/)
+  assert.match(app, /className="battle-destruction-flash"/)
+  assert.match(css, /@keyframes battle-destruction-impact/)
+  assert.match(css, /@keyframes battle-destruction-exit/)
+  assert.match(css, /pointer-events:none;/)
+})
