@@ -488,6 +488,7 @@ function App({ online }: { online?: {
     const last = captureFrame(next, label)
     const frames = compactPresentationFrames(game, last.presentationFrames ?? [])
     setGame(withoutPresentation(last))
+    setLocalBattleLog(previous => [...previous, ...frames.map(frame => frame.label)].slice(-100))
     if (frames.length > 0) {
       playbackLock.current = true
       setPlayback({
@@ -519,6 +520,8 @@ function App({ online }: { online?: {
   const [abilityFocusId, setAbilityFocusId] = useState<string | null>(null)
   const [expandedHandIndex, setExpandedHandIndex] = useState<number | null>(null)
   const [handOpen, setHandOpen] = useState(false)
+  const [battleLogOpen, setBattleLogOpen] = useState(false)
+  const [localBattleLog, setLocalBattleLog] = useState<string[]>([])
   const dragPointer = useRef<{
     pointerId: number; attackerId: string; startX: number; startY: number; moved: boolean
   } | null>(null)
@@ -587,6 +590,8 @@ function App({ online }: { online?: {
   const handleReset = () => {
     skipPlayback()
     setGame(createInitialGameState(decks))
+    setLocalBattleLog([])
+    setBattleLogOpen(false)
     setMulliganReveal(null)
     setPlayedCardNotice(null)
     resetSelection()
@@ -1448,34 +1453,45 @@ function App({ online }: { online?: {
         </div>
       </header>
 
-      {online && (online.match.history?.length ?? 0) > 0 && <>
-        <div className="online-latest-action" role="status">
-          <span>直前の行動</span>
-          <strong>{online.match.history?.at(-1)?.title}</strong>
-        </div>
-        <details className="online-action-history">
-        <summary>対戦行動履歴（直近{online.match.history?.length}件）</summary>
-        <ol>{[...(online.match.history ?? [])].reverse().map(event =>
-          <li key={event.revision}>{event.title}</li>)}</ol>
-        </details>
-      </>}
-      {playback && <div className="battle-playback" role="status" aria-live="polite">
-        <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
-          <span>戦闘演出 {playback.index + 1} / {playback.frames.length}</span>
-        </div>
-        <strong className="battle-playback-description">{playback.frames[playback.index].label}</strong>
-        <div className="battle-playback-controls">
-          <label>再生速度
-            <select value={playbackDelay} onChange={e => setPlaybackDelay(Number(e.target.value) as 450 | 900 | 1500)}>
-              <option value={1500}>ゆっくり</option>
-              <option value={900}>標準</option>
-              <option value={450}>速い</option>
-            </select>
-          </label>
-          <button type="button" onClick={skipPlayback}>演出をスキップ</button>
-        </div>
-      </div>}
-
+      <div className="battle-log-dock">
+        <button type="button" className="battle-log-toggle"
+          aria-label="対戦ログを表示" aria-expanded={battleLogOpen}
+          aria-controls="battle-log-panel"
+          onClick={() => setBattleLogOpen(previous => !previous)}>
+          <span aria-hidden="true">☷</span><small>LOG</small>
+        </button>
+        {battleLogOpen && <section id="battle-log-panel" className="battle-log-panel"
+          aria-label="対戦ログ">
+          <div className="battle-log-header">
+            <strong>対戦ログ</strong>
+            <button type="button" onClick={() => setBattleLogOpen(false)} aria-label="ログを閉じる">×</button>
+          </div>
+          <ol className="battle-log-entries">
+            {(online
+              ? [...(online.match.history ?? [])].reverse().map(event => ({key: String(event.revision), title: event.title}))
+              : [...localBattleLog].reverse().map((title, index) => ({key: String(index), title}))
+            ).map(entry => <li key={entry.key}>{entry.title}</li>)}
+            {(online ? (online.match.history?.length ?? 0) === 0 : localBattleLog.length === 0) &&
+              <li>まだ行動履歴はありません</li>}
+          </ol>
+          {playback && <div className="battle-playback" role="status" aria-live="polite">
+            <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
+              <span>戦闘演出 {playback.index + 1} / {playback.frames.length}</span>
+            </div>
+            <strong className="battle-playback-description">{playback.frames[playback.index].label}</strong>
+            <div className="battle-playback-controls">
+              <label>再生速度
+                <select value={playbackDelay} onChange={e => setPlaybackDelay(Number(e.target.value) as 450 | 900 | 1500)}>
+                  <option value={1500}>ゆっくり</option>
+                  <option value={900}>標準</option>
+                  <option value={450}>速い</option>
+                </select>
+              </label>
+              <button type="button" onClick={skipPlayback}>演出をスキップ</button>
+            </div>
+          </div>}
+        </section>}
+      </div>
       {winner && (
         <div className="winner-banner">
           {winner.name} の勝利！
