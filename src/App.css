@@ -547,6 +547,70 @@
   .game--animating .leader-health,.battle-playback{animation:none;}
 }
 
+/* Combat readability: lunge on declaration, impact on the affected card,
+   and an HP/shield delta at the exact recorded resolution step. */
+.game--animating .follower-wrapper.battle-attacker .field-card {
+  position:relative;
+  z-index:5;
+  transform-origin:50% 50%;
+  animation:battle-attack-lunge .75s cubic-bezier(.22,.72,.28,1) both;
+  border-color:#ffe29d;
+  box-shadow:0 0 20px #ffd77a99,0 8px 24px #000b;
+}
+@keyframes battle-attack-lunge {
+  0% {transform:translateY(0) scale(1);filter:brightness(1);}
+  25% {transform:translateY(7px) scale(.95);filter:brightness(1.15);}
+  55% {transform:translateY(-30px) scale(1.13);filter:brightness(1.55);}
+  75% {transform:translateY(-24px) scale(1.08);filter:brightness(1.3);}
+  100% {transform:translateY(0) scale(1);filter:brightness(1);}
+}
+.game--animating .follower-wrapper.battle-damaged .field-card {
+  animation:battle-damage-shake .65s ease-out both;
+}
+.game--animating .leader.leader-damaged {
+  animation:battle-damage-shake .65s ease-out both;
+}
+@keyframes battle-damage-shake {
+  0% {transform:translateX(0);filter:brightness(1);}
+  12% {transform:translateX(-7px) rotate(-2deg);filter:brightness(1.8);}
+  27% {transform:translateX(6px) rotate(2deg);filter:brightness(1.3);}
+  42% {transform:translateX(-5px) rotate(-1deg);}
+  60% {transform:translateX(3px) rotate(1deg);}
+  100% {transform:none;filter:brightness(1);}
+}
+.leader {position:relative;}
+.battle-float-number {
+  position:absolute;
+  z-index:12;
+  top:-14px;
+  left:50%;
+  transform:translateX(-50%);
+  display:block;
+  pointer-events:none;
+  white-space:nowrap;
+  font:900 clamp(20px,2.5vw,29px) 'Cinzel',sans-serif;
+  letter-spacing:.03em;
+  -webkit-text-stroke:1px #1c1720;
+  text-shadow:0 2px 2px #000,0 0 13px currentColor;
+  animation:battle-number-rise .78s ease-out both;
+}
+.battle-float-number--damage {color:#ff7171;}
+.battle-float-number--heal {color:#71f7ac;}
+.battle-float-number--shield {color:#8bd4ff;}
+@keyframes battle-number-rise {
+  0% {opacity:0;transform:translate(-50%,16px) scale(.7);}
+  20% {opacity:1;transform:translate(-50%,-5px) scale(1.28);}
+  55% {opacity:1;transform:translate(-50%,-16px) scale(1);}
+  100% {opacity:0;transform:translate(-50%,-29px) scale(.94);}
+}
+@media(prefers-reduced-motion:reduce){
+  .game--animating .follower-wrapper.battle-attacker .field-card,
+  .game--animating .follower-wrapper.battle-damaged .field-card,
+  .game--animating .leader.leader-damaged,
+  .battle-float-number {animation:none;}
+  .battle-float-number {transform:translateX(-50%);opacity:1;}
+}
+
 /* Re-trigger a readable hit flash on each recorded change, including repeated random hits. */
 .follower-wrapper.battle-hit .field-card {
   animation: battle-target-impact .82s ease-out both;
