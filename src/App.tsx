@@ -422,6 +422,8 @@ function App({ online }: { online?: {
           } else if (follower.health > old.health) {
             damagedFollowers.set(follower.instanceId, { amount: follower.health - old.health, kind: 'heal' })
           } else if (shieldAfter < shieldBefore) {
+            const element = hitElementForPlayback(playback.frames, playback.index, newPlayer.id, playback.attackerId, playback.playedCard?.cardId)
+            if (element) hitElements.set(follower.instanceId, element)
             damagedFollowers.set(follower.instanceId, { amount: shieldBefore - shieldAfter, kind: 'shield' })
           }
         }
