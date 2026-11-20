@@ -1403,6 +1403,9 @@ function App({ online }: { online?: {
           </div>}
         </div>
       </div>}
+      <div className="battle-opponent-hand" aria-label={`相手の手札 ${opponent.hand.length}枚`}>
+        {opponent.hand.map((_, index) => <span key={index} className="battle-opponent-card-back" aria-hidden="true">✦</span>)}
+      </div>
       <header className="game-header game-header--battle">
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
         <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
