@@ -1299,3 +1299,45 @@
   .game--battle-fit .field-card:has(.card-artwork) {height:clamp(65px,10dvh,87px);}
   .game--battle-fit .field-card .card-artwork {max-height:clamp(24px,4dvh,38px);}
 }
+
+
+/* Online-only history bars occupy their own bounded tracks, without creating
+   implicit grid rows. Expanded history opens as an overlay, not a tall row. */
+@media (min-width:761px) and (min-height:620px) {
+  .game--battle-fit:has(> .online-latest-action) {
+    grid-template-rows:auto 26px 26px minmax(0,auto) minmax(0,1fr) minmax(0,auto) auto minmax(0,auto);
+  }
+  .game--battle-fit:has(> .online-latest-action) > .online-latest-action {grid-row:2;}
+  .game--battle-fit:has(> .online-latest-action) > .online-action-history {grid-row:3;}
+  .game--battle-fit:has(> .online-latest-action) > .player.opponent {grid-row:4;}
+  .game--battle-fit:has(> .online-latest-action) > .field {grid-row:5;}
+  .game--battle-fit:has(> .online-latest-action) > .player.self {grid-row:6;}
+  .game--battle-fit:has(> .online-latest-action) > .battle-message {grid-row:7;}
+  .game--battle-fit:has(> .online-latest-action) > .hand {grid-row:8;}
+  .game--battle-fit > .online-latest-action,
+  .game--battle-fit > .online-action-history {
+    box-sizing:border-box;
+    margin:0 auto;
+    padding:2px 9px;
+    min-height:0;
+    max-height:26px;
+    width:min(680px,95%);
+    font-size:10px;
+  }
+  .game--battle-fit > .online-latest-action strong {
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+  }
+  .game--battle-fit > .online-action-history {z-index:20;overflow:visible;}
+  .game--battle-fit > .online-action-history[open] ol {
+    position:absolute;top:100%;left:0;right:0;
+    max-height:160px;overflow-y:auto;margin:0;
+    padding:8px 14px 8px 30px;border:1px solid #a78c5a;
+    border-radius:8px;background:#0b2231;
+    box-shadow:0 12px 24px #000b;
+  }
+  .game--battle-fit > .winner-banner {
+    position:absolute;z-index:50;top:45%;left:50%;
+    transform:translate(-50%,-50%);margin:0;
+    pointer-events:none;
+  }
+}
