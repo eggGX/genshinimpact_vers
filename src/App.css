@@ -2047,3 +2047,81 @@
   color:#ffe4ae;
   pointer-events:none;
 }
+
+
+/* 2026-11-20: Keep both PP counters inside the resource panel at 10/10. */
+.game--battle-fit .pp-resource-head {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:3px;
+  min-width:0;
+}
+.game--battle-fit .pp-resource-head > .resource-caption {
+  width:100%;
+  text-align:left;
+}
+.game--battle-fit .pp-values {
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  gap:4px;
+}
+.game--battle-fit .pp-current,
+.game--battle-fit .pp-max {
+  box-sizing:border-box;
+  min-width:0;
+  padding:2px 5px;
+  gap:3px;
+  flex:0 1 auto;
+  justify-content:center;
+}
+.game--battle-fit .pp-values small,
+.game--battle-fit .resource-head .pp-values small {font-size:9px;}
+.game--battle-fit .pp-values strong,
+.game--battle-fit .resource-head .pp-values strong {font-size:16px;line-height:1.15;}
+
+/* Animate the whole hand dock and its cards in BOTH directions.
+   Use right + width in both states; left:auto cannot interpolate to left:18%. */
+@media (min-width:900px) and (min-height:640px) {
+  .game--battle-fit > .hand,
+  .game--battle-fit:has(> .online-latest-action) > .hand {
+    left:auto;
+    transition:right .32s cubic-bezier(.22,1,.36,1),
+               width .32s cubic-bezier(.22,1,.36,1),
+               bottom .32s cubic-bezier(.22,1,.36,1),
+               height .32s cubic-bezier(.22,1,.36,1);
+    will-change:right,width;
+  }
+  .game--battle-fit.game--hand-open > .hand,
+  .game--battle-fit.game--hand-open:has(> .online-latest-action) > .hand {
+    left:auto;
+    right:19%;
+    width:63%;
+  }
+  .game--battle-fit .hand-card,
+  .game--battle-fit .hand-card:has(.card-artwork),
+  .game--battle-fit:not(.game--hand-open) .hand-card,
+  .game--battle-fit:not(.game--hand-open) .hand-card:has(.card-artwork) {
+    transition:width .32s cubic-bezier(.22,1,.36,1),
+               height .32s cubic-bezier(.22,1,.36,1),
+               flex-basis .32s cubic-bezier(.22,1,.36,1),
+               margin-left .32s cubic-bezier(.22,1,.36,1),
+               padding .32s cubic-bezier(.22,1,.36,1),
+               transform .2s ease,filter .2s ease,box-shadow .2s ease;
+  }
+  .game--battle-fit .hand-card .card-artwork {
+    transition:max-height .32s cubic-bezier(.22,1,.36,1);
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .game--battle-fit > .hand,
+  .game--battle-fit .hand-card,
+  .game--battle-fit .hand-card:has(.card-artwork),
+  .game--battle-fit .hand-card .card-artwork {
+    transition:none!important;
+  }
+}
