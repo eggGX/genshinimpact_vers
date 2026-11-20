@@ -1572,7 +1572,7 @@
   .game--battle-fit .hand-label {display:none;}
   .game--battle-fit .hand-cards {
     display:flex;align-items:flex-start;justify-content:center;
-    gap:clamp(-4px,.4vw,6px);height:100%;min-height:0;
+    gap:clamp(1px,.4vw,6px);height:100%;min-height:0;
     width:100%;overflow:visible;pointer-events:auto;
   }
   .game--battle-fit .hand-card,
@@ -1650,4 +1650,25 @@
   .game--battle-fit .battle-ability-rail-source {flex:1;font-size:10px;}
   .game--battle-fit .battle-ability-rail-button {padding:5px 8px;color:#fff0c6;background:#394a61;border:1px solid #b99b65;border-radius:20px;}
   .game--battle-fit .battle-ability-rail-button:disabled {opacity:.45;}
+}
+
+
+@media(min-width:900px) and (min-height:640px) {
+  /* Hover/click details open in the left information area, away from actions. */
+  .battle-card-tooltip {
+    left:16px;right:auto;top:57px;
+    width:min(405px,26vw);
+    max-height:57dvh;overflow-y:auto;
+    border-radius:9px;
+    padding:11px 13px;
+  }
+  .battle-tooltip-head {gap:9px;padding-bottom:7px;}
+  .battle-tooltip-art {width:64px;height:83px;}
+  .battle-tooltip-section {margin-top:7px;}
+  .battle-tooltip-section h3 {margin-bottom:4px;}
+  .battle-tooltip-section p {line-height:1.48;}
+  .game--battle-fit .hand-card--unplayable {opacity:.72;}
+  .game--battle-fit .hand-card--unplayable.hand-card--expanded {opacity:1;}
+  .game--battle-fit .hand-card[aria-disabled="true"] {cursor:zoom-in;}
+  .game--battle-fit .hand-card.hand-card--expanded {cursor:pointer;}
 }
