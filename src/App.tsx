@@ -420,6 +420,9 @@ function App({ online }: { online?: {
       attackingFollowerId = playback.attackerId ?? source?.instanceId ?? null
     }
   }
+  // Keep a visual copy of a follower only during the frame in which it dies.
+  // The underlying game state and all targets already reflect the destruction.
+  const deathPreviousFields = new Map<string, Follower[]>()
   const hitElements = new Map<string, HitElement>()
   if (playback && playback.index > 0) {
     const before = playback.frames[playback.index - 1].state
@@ -428,6 +431,9 @@ function App({ online }: { online?: {
       const oldPlayer = before.players[i]
       const newPlayer = after.players[i]
       const oldFollowers = new Map(oldPlayer.field.map(f => [f.instanceId, f]))
+      if (oldPlayer.field.some(f => !newPlayer.field.some(next => next.instanceId === f.instanceId))) {
+        deathPreviousFields.set(newPlayer.id, oldPlayer.field)
+      }
       for (const follower of newPlayer.field) {
         const old = oldFollowers.get(follower.instanceId)
         if (old) {
@@ -1131,15 +1137,53 @@ function App({ online }: { online?: {
     isOpponent: boolean
   ) => {
     const followers = player.field
+    const beforeDeaths = deathPreviousFields.get(player.id)
+    const currentById = new Map(followers.map(f => [f.instanceId, f]))
+    const previousIds = new Set(beforeDeaths?.map(f => f.instanceId) ?? [])
+    const visibleFollowers = beforeDeaths
+      ? [
+          ...beforeDeaths.map(before => ({
+            follower: currentById.get(before.instanceId) ?? before,
+            dying: !currentById.has(before.instanceId),
+          })),
+          ...followers.filter(f => !previousIds.has(f.instanceId)).map(f => ({ follower: f, dying: false })),
+        ]
+      : followers.map(f => ({ follower: f, dying: false }))
     const amulets = player.amulets ?? []
     return <div className={['card-slot', !isOpponent && handDrag ? 'hand-play-drop-zone' : '',
         !isOpponent && handDrag?.overField ? 'hand-play-drop-hover' : ''].filter(Boolean).join(' ')}
       data-hand-play-zone={!isOpponent ? 'self' : undefined}
       aria-label={`場：フォロワー${followers.length}体・アミュレット${amulets.length}枚`}>
-      {followers.length + amulets.length === 0
+      {visibleFollowers.length + amulets.length === 0
         ? 'カード配置エリア'
         : <>
-          {followers.map(f => renderFollower(f, isOpponent))}
+          {visibleFollowers.map(({ follower, dying }) => {
+            if (!dying) return renderFollower(follower, isOpponent)
+            const card = getCard(follower.cardId)
+            const element = playback
+              ? hitElementForPlayback(playback.frames, playback.index, player.id,
+                  playback.attackerId, playback.playedCard?.cardId)
+              : null
+            return <div key={`${follower.instanceId}-destroy-${playback?.index}`}
+              className="follower-wrapper battle-destroying" aria-hidden="true"
+              style={{ animationDuration: `${playbackDelay}ms` }}>
+              {element && <span className={`elemental-hit elemental-hit--${element}`}>
+                {Array.from({ length: 7 }, (_, i) => <i key={i} className="elemental-hit-particle" />)}
+                <i className="elemental-hit-ring" />
+              </span>}
+              <span className="battle-destruction-flash" />
+              <div className={['field-card', `card-element--${card?.element ?? 'none'}`,
+                `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}>
+                {card && <CardArtwork cardId={card.id} name={card.name} className="card-artwork--field" />}
+                <strong>{card?.name ?? follower.cardId}</strong>
+                {card && <ElementIcon element={card.element} size="xs" />}
+                <span className="follower-stats">
+                  <b className="stat-attack">{follower.attack}</b>
+                  <b className="stat-health">{follower.health}</b>
+                </span>
+              </div>
+            </div>
+          })}
           {amulets.map(amulet => {
             const card = getCard(amulet.cardId)
             return <div className="follower-wrapper" key={amulet.instanceId}
