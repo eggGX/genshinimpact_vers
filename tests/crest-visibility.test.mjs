@@ -19,3 +19,15 @@ test('crest icons show artwork or elemental fallback, turns and details', () => 
     assert.ok(crest.includes(item), 'Missing feature: ' + item)
   }
 })
+
+
+test('five crest sockets remain visible before any crest is gained', () => {
+  const css = read('src/components/CrestIcons.css')
+  assert.doesNotMatch(crest, /if \(!crests\.length\) return null/)
+  assert.match(crest, /Math\.max\(5, entries\.length\)/)
+  assert.match(crest, /className="crest-empty-slot"/)
+  assert.match(crest, /const entry = entries\[index\]/)
+  assert.match(crest, /if \(!entry\) return/)
+  assert.match(css, /\.crest-empty-slot/)
+  assert.match(css, /pointer-events:none/)
+})
