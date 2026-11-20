@@ -879,44 +879,54 @@ function App({ online }: { online?: {
     resetSelection()
   }
 
-  /** Visible combat-keyword emblems. Last words can be defined by card effects or special destroy handlers. */
+  /** One rotating emblem slot for a follower's independent combat abilities. */
   const followerEmblems = (follower: Follower) => {
     const card = getCard(follower.cardId)
+    const description = card?.description ?? ''
     const lastWord = !follower.keywords.includes('no_last_word') && (
       follower.keywords.includes('lastword') ||
       follower.keywords.includes('last_word') ||
       card?.effects?.some(effect => effect.trigger === 'on_destroy') ||
-      card?.description?.includes('【ラストワード】')
+      description.includes('【ラストワード】')
     )
     const guard = follower.keywords.includes('guard')
     const bane = follower.keywords.includes('bane') ||
       follower.keywords.includes('lethal') ||
       follower.keywords.includes('必殺') ||
-      Boolean(card?.description?.includes('【必殺】'))
-    if (!lastWord && !guard && !bane) return null
-    return <span className="follower-emblems" aria-label={[
-      lastWord && 'ラストワード', guard && '守護', bane && '必殺',
-    ].filter(Boolean).join('、')}>
-      {lastWord && <span className="follower-emblem follower-emblem--lastword" title="ラストワード">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
-          <path d="M5 14a8 8 0 1 1 14 0l-2 2v4H7v-4l-2-2Z" />
-          <circle cx="9" cy="12" r="1.3" fill="currentColor" stroke="none"/>
-          <circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/>
-          <path d="m12 14-1 2h2l-1-2ZM10 20v-2m4 2v-2"/>
-        </svg>
-      </span>}
-      {guard && <span className="follower-emblem follower-emblem--guard" title="守護">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 2 20 5v6c0 5-3 8-8 11-5-3-8-6-8-11V5l8-3Z"/>
-          <path d="M12 6v12M8 11h8"/>
-        </svg>
-      </span>}
-      {bane && <span className="follower-emblem follower-emblem--bane" title="必殺">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M14 4c4 0 7 2 8 6-3-1-6-.5-8 2-1-3-1-5 0-8Z" fill="currentColor" fillOpacity=".28"/>
-          <path d="M15 11 7 21M9 18l-4-2M14 4c4 0 7 2 8 6-3-1-6-.5-8 2"/>
-        </svg>
-      </span>}
+      description.includes('【必殺】')
+    // These passives work independently of skills, bursts and fanfare.
+    const triggered = card?.effects?.some(effect =>
+      effect.trigger === 'turn_start' || effect.trigger === 'turn_end') ||
+      /(?:ターン開始時|ターン終了時|攻撃時|交戦時|自分のターン開始時|自分のターン終了時|相手のターン開始時|相手のターン終了時|攻撃するたび|攻撃したとき|攻撃されるたび|反応を起こすたび|元素反応を起こすたび|シールドを獲得するたび)/.test(description)
+    const emblems: Array<{key:string; label:string; content: React.ReactNode}> = []
+    if (lastWord) emblems.push({key:'lastword',label:'ラストワード',content:
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 14a8 8 0 1 1 14 0l-2 2v4H7v-4l-2-2Z" />
+        <circle cx="9" cy="12" r="1.3" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/>
+        <path d="m12 14-1 2h2l-1-2ZM10 20v-2m4 2v-2"/>
+      </svg>})
+    if (guard) emblems.push({key:'guard',label:'守護',content:
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 2 20 5v6c0 5-3 8-8 11-5-3-8-6-8-11V5l8-3Z"/>
+        <path d="M12 6v12M8 11h8"/>
+      </svg>})
+    if (bane) emblems.push({key:'bane',label:'必殺',content:
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M14 4c4 0 7 2 8 6-3-1-6-.5-8 2-1-3-1-5 0-8Z" fill="currentColor" fillOpacity=".28"/>
+        <path d="M15 11 7 21M9 18l-4-2M14 4c4 0 7 2 8 6-3-1-6-.5-8 2"/>
+      </svg>})
+    if (triggered) emblems.push({key:'triggered',label:'自動発動能力',content:
+      <span className="follower-emblem-flag" aria-hidden="true">🏳</span>})
+    if (emblems.length === 0) return null
+    return <span className="follower-emblems" aria-label={emblems.map(emblem => emblem.label).join('、')}>
+      {emblems.map((emblem, index) => <span key={emblem.key}
+        className={`follower-emblem follower-emblem--${emblem.key} ${emblems.length > 1 ? 'follower-emblem--rotating' : ''}`}
+        style={emblems.length > 1 ? {
+          animationDelay: `${index * 2}s`,
+          animationDuration: `${emblems.length * 2}s`,
+        } : undefined}
+        title={emblem.label}>{emblem.content}</span>)}
     </span>
   }
 
@@ -1112,7 +1122,7 @@ function App({ online }: { online?: {
                 `card-element--${card?.element ?? 'none'}`,
                 `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}>
                 <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
-                <span className="amulet-countdown">残り {amulet.turnsRemaining} ターン</span>
+                <span className="amulet-countdown" title={`残り${amulet.turnsRemaining}ターン`}>{amulet.turnsRemaining >= 1 && amulet.turnsRemaining <= 20 ? String.fromCharCode(0x2460 + amulet.turnsRemaining - 1) : String(amulet.turnsRemaining)}</span>
               </div>
             </div>
           })}
