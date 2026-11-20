@@ -1788,9 +1788,10 @@ function App({ online }: { online?: {
                 `card-rarity--${card.rarity}`,
                 selected ? 'selected-card' : '',
                 expandedHandIndex === index ? 'hand-card--expanded' : '',
+                !playable ? 'hand-card--unplayable' : '',
               ].filter(Boolean).join(' ')}
               key={`${cardId}-${index}`}
-              disabled={!playable}
+              aria-disabled={!playable}
               data-hand-index={index}
               draggable={false}
               onPointerDown={event => startHandDrag(event, index)}
