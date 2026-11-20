@@ -1120,3 +1120,93 @@
 .opponent-ability-reveal--skill .opponent-card-reveal-art{border-color:#76dcf1;}
 .opponent-ability-reveal--burst .opponent-card-reveal-art{border-color:#e9baff;}
 .opponent-ability-name{margin-top:8px;font-weight:800;line-height:1.6;overflow-wrap:anywhere;color:#f6e7cf;}
+
+
+/* Viewport-conscious battlefield: compress only the battle scene, not library or deck screens.
+   Preserve a scroll fallback on short/narrow displays instead of clipping controls. */
+.game--battle-fit {
+  min-height:100dvh;
+  padding-bottom:4px;
+}
+.game--battle-fit:fullscreen {
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  overflow-x:hidden;
+  overflow-y:auto;
+  background-color:#091521;
+}
+.game--battle-fit .battle-header-actions {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.game--battle-fit .battle-fullscreen-toggle {border-color:#89bfae;color:#d5fff2;}
+.game--battle-fit .battle-fullscreen-toggle:focus-visible {outline:2px solid #fff2ad;outline-offset:3px;}
+@media (min-width:761px) {
+  .game--battle-fit .game-header--battle {min-height:clamp(44px,6dvh,65px);padding-block:5px;}
+  .game--battle-fit .brand-crest {height:34px;width:34px;font-size:24px;}
+  .game--battle-fit .turn-counter {padding:3px 12px;}
+  .game--battle-fit .turn-counter strong {font-size:23px;}
+  .game--battle-fit .player {gap:8px;padding:6px 10px 5px;grid-template-columns:125px minmax(200px,1fr) auto;}
+  .game--battle-fit .player.self {grid-template-columns:125px minmax(200px,1fr) auto 112px;margin-top:5px;}
+  .game--battle-fit .leader {min-height:74px;padding:3px 5px;gap:1px;}
+  .game--battle-fit .leader-avatar {width:38px;height:38px;font-size:24px;}
+  .game--battle-fit .leader-health {padding:2px 8px;}
+  .game--battle-fit .leader-health strong {font-size:17px;}
+  .game--battle-fit .player-resources {gap:2px;padding:5px 10px;}
+  .game--battle-fit .pp-gems,.game--battle-fit .energy-gems {min-height:10px;gap:5px;}
+  .game--battle-fit .pp-gem {width:11px;height:11px;margin:0 2px;}
+  .game--battle-fit .energy-gem {height:8px;width:17px;}
+  .game--battle-fit .player-counts span {padding:4px 6px;}
+  .game--battle-fit .player-counts strong {font-size:13px;}
+  .game--battle-fit .player-effects {min-height:10px;gap:3px;}
+  .game--battle-fit .player-effects>div:not(.crest-tray) {padding:2px 5px;font-size:9px;}
+  .game--battle-fit .player.self .end-turn {height:80px;width:102px;}
+  .game--battle-fit .field {min-height:0;margin-top:8px;padding:9px 16px;border-radius:17px;}
+  .game--battle-fit .field::before {inset:5px;}
+  .game--battle-fit .field-row {min-height:0;}
+  .game--battle-fit .zone-label {margin-bottom:3px;font-size:9px;}
+  .game--battle-fit .field-divider {height:17px;}
+  .game--battle-fit .field-divider-emblem {font-size:18px;}
+  .game--battle-fit .card-slot {min-height:clamp(96px,15dvh,140px);padding:5px 8px;gap:8px;flex-wrap:nowrap;}
+  .game--battle-fit .follower-wrapper {width:clamp(68px,9.1dvh,98px);max-width:19%;}
+  .game--battle-fit .field-card {width:100%;min-height:clamp(76px,10dvh,110px);padding:3px 3px 6px;}
+  .game--battle-fit .field-card:has(.card-artwork) {min-height:clamp(90px,13dvh,132px);}
+  .game--battle-fit .field-card .card-artwork {max-height:clamp(41px,7dvh,70px);}
+  .game--battle-fit .field-card strong {font-size:9px;padding:2px 1px;}
+  .game--battle-fit .follower-stats b {min-width:22px;height:22px;font-size:14px;}
+  .game--battle-fit .follower-wrapper>div>button {padding:2px 4px;font-size:8px;}
+  .game--battle-fit .battle-message {min-height:22px;font-size:10px;padding:2px 4px;}
+  .game--battle-fit .hand {gap:3px;padding:4px 14px 6px;}
+  .game--battle-fit .hand-cards {min-height:clamp(85px,14dvh,145px);}
+  .game--battle-fit .hand-card {height:clamp(88px,14dvh,144px);padding:5px 4px 3px;}
+  .game--battle-fit .hand-card:has(.card-artwork) {height:clamp(98px,16dvh,154px);}
+  .game--battle-fit .hand-card .card-artwork {max-height:clamp(44px,8dvh,78px);}
+  .game--battle-fit .hand-card strong {font-size:9px;padding:2px 0;}
+  .game--battle-fit .hand-card .card-cost {width:26px;height:26px;font-size:16px;top:-7px;left:-5px;}
+  .game--battle-fit .hand-card-stat {font-size:10px;padding:1px 3px;min-width:21px;}
+  .game--battle-fit .hand-card-type-label {font-size:8px;min-height:16px;}
+}
+@media (min-width:761px) and (max-height:740px) {
+  .game--battle-fit .game-header--battle {min-height:42px;}
+  .game--battle-fit .game-brand small {display:none;}
+  .game--battle-fit .player {padding-block:3px;}
+  .game--battle-fit .leader {min-height:62px;}
+  .game--battle-fit .leader-avatar {width:30px;height:30px;}
+  .game--battle-fit .field {margin-top:4px;padding:5px 12px;}
+  .game--battle-fit .card-slot {min-height:86px;padding:3px 6px;}
+  .game--battle-fit .field-card:has(.card-artwork) {min-height:85px;}
+  .game--battle-fit .field-card .card-artwork {max-height:40px;}
+  .game--battle-fit .hand {padding-block:2px;}
+  .game--battle-fit .hand-cards {min-height:88px;}
+  .game--battle-fit .hand-card:has(.card-artwork) {height:97px;}
+  .game--battle-fit .hand-card .card-artwork {max-height:46px;}
+  .game--battle-fit .player.self .end-turn {height:65px;}
+}
+@media (max-width:760px) {
+  .game--battle-fit .battle-header-actions {gap:4px;}
+  .game--battle-fit .battle-fullscreen-toggle {font-size:10px;padding:6px;}
+}
