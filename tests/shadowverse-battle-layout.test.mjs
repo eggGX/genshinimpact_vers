@@ -71,3 +71,23 @@ test('compact hand is left of ability controls and both hand modes keep stats ab
   assert.match(override, /margin-top:auto/)
   assert.match(override, /box-sizing:border-box/)
 })
+
+
+test('leaders and follower board share a centerline with larger leader portraits', () => {
+  const refinements = css.split('/* Duel composition refinements:')[1]
+  assert.ok(refinements, 'layout refinements are present')
+  assert.match(refinements, /\.player \.leader-avatar \{/)
+  assert.match(refinements, /width:clamp\(102px,7\.9vw,130px\)/)
+  assert.match(refinements, /left:50%/)
+  assert.match(refinements, /left:12%;\s*right:12%/)
+})
+
+test('crest details stay within the viewport, and expanded hand is fully opaque', () => {
+  const refinements = css.split('/* Duel composition refinements:')[1]
+  assert.ok(refinements)
+  assert.match(refinements, /\.crest-tray \.crest-detail \{/)
+  assert.match(refinements, /left:0;\s*right:auto/)
+  assert.match(refinements, /max-height:min\(320px,55dvh\)/)
+  assert.match(refinements, /\.game--hand-open \.hand-card--unplayable/)
+  assert.match(refinements, /opacity:1/)
+})
