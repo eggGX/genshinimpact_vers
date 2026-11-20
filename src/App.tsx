@@ -941,6 +941,22 @@ function App({ online }: { online?: {
       game.winnerId === null &&
       canFollowerAttack(follower)
 
+    // Visual attack readiness follows the same target restrictions as actual combat.
+    // Normal followers can attack leaders too after summoning sickness has ended.
+    const canAttackLeaderNow = canAttack &&
+      (!follower.keywords.includes('rush_only') || follower.keywords.includes('storm')) &&
+      (!isGuarded(opponent) || follower.keywords.includes('plunge_attack'))
+    const canAttackFollowerNow = canAttack && opponent.field.some(target =>
+      target.health > 0 &&
+      !target.keywords.includes('intimidate') &&
+      !target.keywords.includes('stealth') &&
+      (!isGuarded(opponent) || target.keywords.includes('guard') ||
+        follower.keywords.includes('ignore_guard') ||
+        follower.keywords.includes('plunge_attack'))
+    )
+    const attackReadyClass = canAttackLeaderNow ? 'attack-ready--leader'
+      : canAttackFollowerNow ? 'attack-ready--follower' : ''
+
     const friendlyPlayId = selectedHandIndex === null
       ? undefined : currentPlayer.hand[selectedHandIndex]
     const friendlySkillId = selectedAbility
@@ -1010,6 +1026,7 @@ function App({ online }: { online?: {
           `card-element--${card?.element ?? 'none'}`,
           `card-rarity--${card?.rarity ?? 'bronze'}`,
           canAttack ? 'can-attack' : '',
+          attackReadyClass,
           isSelected ? 'selected-card' : '',
           isTarget ? 'attack-target' : '',
           isDragTarget ? 'drag-attack-target' : '',
