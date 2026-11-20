@@ -66,3 +66,16 @@ test('snapshot damage and shield loss display hit effects without changing the g
   assert.match(css, /@keyframes battle-number-rise/)
   assert.match(css, /prefers-reduced-motion:reduce/)
 })
+
+test('seven element hit visuals use recorded target changes and respect reduced motion', () => {
+  for (const element of ['pyro','hydro','cryo','electro','anemo','geo','dendro']) {
+    assert.ok(css.includes(`.elemental-hit--${element} {`), `Missing ${element} effect`)
+  }
+  assert.match(app, /function hitElementForPlayback\(/)
+  assert.match(app, /hitElements\.set\(follower\.instanceId, element\)/)
+  assert.match(app, /hitElements\.set\(newPlayer\.id, element\)/)
+  assert.match(app, /elemental-hit--\$\{hitElements\.get\(follower\.instanceId\)\}/)
+  assert.match(css, /@keyframes elemental-hit-spark/)
+  assert.match(css, /@keyframes elemental-hit-wave/)
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)/)
+})
