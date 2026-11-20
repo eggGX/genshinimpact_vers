@@ -45,8 +45,6 @@ function getCrestEffect(description?: string): string {
 export function CrestIcons({ crests = [], ownerName, placement = 'below' }: Props) {
   const [selected, setSelected] = useState<string | null>(null)
   const [hovered, setHovered] = useState<string | null>(null)
-  if (!crests.length) return null
-
   const entries = crests.map((crest, index) => {
     const card = getCard(crest.id)
     const name = customTitles[crest.id] ?? card?.name ?? crest.id
@@ -57,7 +55,11 @@ export function CrestIcons({ crests = [], ownerName, placement = 'below' }: Prop
   return <div className={`crest-tray crest-tray--${placement}`} aria-label={`${ownerName}のクレスト`}>
     <span className="crest-tray-label">CREST</span>
     <div className="crest-tray-icons">
-      {entries.map(({ crest, card, name, key }) => {
+      {Array.from({ length: Math.max(5, entries.length) }, (_, index) => {
+        const entry = entries[index]
+        if (!entry) return <span key={`empty-${index}`}
+          className="crest-empty-slot" aria-label={`空きクレスト枠 ${index + 1}`} />
+        const { crest, card, name, key } = entry
         const tooltip = `${name}：残り${crest.turnsRemaining}ターン`
         return <button
           type="button"
