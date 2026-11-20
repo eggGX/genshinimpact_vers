@@ -1027,6 +1027,7 @@ function App({ online }: { online?: {
           `card-rarity--${card?.rarity ?? 'bronze'}`,
           canAttack ? 'can-attack' : '',
           attackReadyClass,
+          follower.keywords.includes('stealth') ? 'field-card--stealth' : '',
           isSelected ? 'selected-card' : '',
           isTarget ? 'attack-target' : '',
           isDragTarget ? 'drag-attack-target' : '',
@@ -1062,6 +1063,11 @@ function App({ online }: { online?: {
         }}
       >
         {card && <CardArtwork cardId={card.id} name={card.name} className="card-artwork--field" />}
+        {follower.keywords.includes('stealth') && <span className="stealth-mist" aria-hidden="true">
+          <span className="stealth-mist-cloud stealth-mist-cloud--one" />
+          <span className="stealth-mist-cloud stealth-mist-cloud--two" />
+          <span className="stealth-mist-cloud stealth-mist-cloud--three" />
+        </span>}
         <span className="field-keywords" aria-label="カード状態">
           {follower.keywords.includes('storm') && <span title="疾走" className="keyword-pill">疾</span>}
           {follower.keywords.includes('rush_only') && <span title="突進" className="keyword-pill">突</span>}
