@@ -2317,3 +2317,34 @@
     bottom:-18px;
   }
 }
+
+
+/* Attack readiness: yellow = follower targets only, mint = enemy leader available.
+   No glow means exhausted, newly summoned without Rush/Storm, or no valid target.
+   These are selection cues only; battle logic is unchanged. */
+.game--battle-fit .field-card.can-attack.attack-ready--follower {
+  border-color:#ffdc71;
+  box-shadow:inset 0 0 0 2px #70552288,
+             0 0 10px #ffd35acc,0 0 22px #ffc94077,0 6px 13px #000a;
+  cursor:pointer;
+}
+.game--battle-fit .field-card.can-attack.attack-ready--leader {
+  border-color:#acff9c;
+  box-shadow:inset 0 0 0 2px #2c6b4088,
+             0 0 11px #a4ffa8d9,0 0 24px #8af7a48c,0 6px 13px #000a;
+  cursor:pointer;
+}
+/* Selected attacker/valid defender/drag target feedback should remain distinct. */
+.game--battle-fit .field-card.can-attack.selected-card {
+  border-color:#ffe194;
+  box-shadow:0 0 18px #ffce67,0 7px 15px #000a;
+}
+.game--battle-fit .field-card.attack-target,
+.game--battle-fit .field-card.drag-attack-target {
+  border-color:#fa6d73;
+  box-shadow:0 0 20px #ec5d6ec4;
+}
+.game--battle-fit .field-card.drag-attack-hover {
+  border-color:#ff7886;
+  box-shadow:0 0 0 4px #ff6d7c99,0 0 27px #ff7385bb;
+}
