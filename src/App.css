@@ -1555,7 +1555,7 @@
   }
   .game--battle-fit .follower-emblems {position:absolute;z-index:7;bottom:0;left:50%;transform:translateX(-50%);}
   .game--battle-fit .follower-aura-icons {top:-30px;}
-  .game--battle-fit .follower-wrapper>div:not(.follower-aura-icons) {width:auto;flex-wrap:wrap;}
+  .game--battle-fit .follower-wrapper>div:not(.follower-aura-icons) {width:100%;flex-wrap:nowrap;}
   .game--battle-fit .amulet-countdown {
     position:absolute;z-index:6;bottom:-13px;left:50%;transform:translateX(-50%);
   }
