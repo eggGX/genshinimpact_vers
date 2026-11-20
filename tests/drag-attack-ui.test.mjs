@@ -46,3 +46,23 @@ test('guard, stealth, intimidate and rush checks are reused for drag drop', () =
   assert.match(app, /attacker\.keywords\.includes\('rush_only'\)/)
   assert.match(app, /canFollowerAttack\(attacker\)/)
 })
+
+test('attack playback lunges the actual attacking follower before resolved hits', () => {
+  assert.match(app, /attackingFollowerId = playback\.attackerId \?\? source\?\.instanceId/)
+  assert.match(app, /attackingFollowerId === follower\.instanceId \? 'battle-attacker'/)
+  assert.match(app, /'フォロワー攻撃', undefined, undefined, attackerId/)
+  assert.match(app, /'リーダー攻撃', undefined, undefined, attackerId/)
+  assert.match(css, /\.game--animating \.follower-wrapper\.battle-attacker \.field-card/)
+  assert.match(css, /@keyframes battle-attack-lunge/)
+})
+
+test('snapshot damage and shield loss display hit effects without changing the game engine', () => {
+  assert.match(app, /const damagedFollowers = new Map/)
+  assert.match(app, /const damagedLeaders = new Map/)
+  assert.match(app, /follower\.health < old\.health/)
+  assert.match(app, /shieldAfter < shieldBefore/)
+  assert.match(app, /battle-float-number--/)
+  assert.match(css, /@keyframes battle-damage-shake/)
+  assert.match(css, /@keyframes battle-number-rise/)
+  assert.match(css, /prefers-reduced-motion:reduce/)
+})
