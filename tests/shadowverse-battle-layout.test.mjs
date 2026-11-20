@@ -100,3 +100,15 @@ test('both follower rows shift closer to the centered duel area', () => {
   assert.match(latest, /top:29%;\s*bottom:25%/)
   assert.match(latest, /left:12%;\s*right:12%/)
 })
+
+
+test('amulets have a distinctive artifact frame without changing follower portraits', () => {
+  const styles = css.split('/* Amulets are framed artifacts rather than arched follower portraits:')[1]
+  assert.ok(styles, 'artifact frame styles are present')
+  assert.match(styles, /\.game--battle-fit \.amulet-card/)
+  assert.match(styles, /border-radius:13px 13px 7px 7px/)
+  assert.match(styles, /border-style:double/)
+  assert.match(styles, /\.amulet-card::after/)
+  assert.match(styles, /content:'◆'/)
+  assert.match(app, /'field-card','amulet-card'/)
+})
