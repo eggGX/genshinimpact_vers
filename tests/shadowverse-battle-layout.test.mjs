@@ -91,3 +91,12 @@ test('crest details stay within the viewport, and expanded hand is fully opaque'
   assert.match(refinements, /\.game--hand-open \.hand-card--unplayable/)
   assert.match(refinements, /opacity:1/)
 })
+
+
+test('both follower rows shift closer to the centered duel area', () => {
+  const latest = css.split('/* Pull both follower rows toward the same centerline.')[1]
+  assert.ok(latest, 'center adjustment rules must exist')
+  assert.match(latest, /\.game--battle-fit > \.field,/)
+  assert.match(latest, /top:29%;\s*bottom:25%/)
+  assert.match(latest, /left:12%;\s*right:12%/)
+})
