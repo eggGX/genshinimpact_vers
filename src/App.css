@@ -1672,3 +1672,27 @@
   .game--battle-fit .hand-card[aria-disabled="true"] {cursor:zoom-in;}
   .game--battle-fit .hand-card.hand-card--expanded {cursor:pointer;}
 }
+
+
+/* Face-down opponent hand exposes only the public card count. */
+.battle-opponent-hand {display:none;}
+@media (min-width:900px) and (min-height:640px) {
+  .game--battle-fit > .battle-opponent-hand {
+    position:absolute;z-index:18;top:1%;left:14%;
+    display:flex;align-items:flex-start;gap:clamp(2px,.3vw,6px);
+    height:11dvh;pointer-events:none;
+  }
+  .game--battle-fit .battle-opponent-card-back {
+    display:grid;place-items:center;
+    width:clamp(30px,4.6vw,70px);
+    height:clamp(52px,8.9dvh,90px);
+    border:3px double #aa9169;border-radius:8px;
+    color:#c8ae74;font-size:24px;
+    background:
+      repeating-radial-gradient(circle at center,#2d6380 0 2px,#10283d 4px 8px,#091a2d 10px 13px),
+      #0f2637;
+    box-shadow:0 4px 15px #000a,inset 0 0 0 4px #091c29;
+    transform:rotate(-2deg);
+  }
+  .game--battle-fit .battle-opponent-card-back:nth-child(even) {transform:rotate(2deg);}
+}
