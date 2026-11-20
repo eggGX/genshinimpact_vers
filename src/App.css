@@ -2125,3 +2125,89 @@
     transition:none!important;
   }
 }
+
+
+/* On-demand battle history dock. The board is no longer covered by playback logs. */
+.game--battle-fit > .battle-log-dock {
+  position:fixed;
+  z-index:72;
+  top:50%;
+  left:clamp(12px,1.3vw,22px);
+  transform:translateY(-50%);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  pointer-events:none;
+}
+.game--battle-fit .battle-log-toggle {
+  pointer-events:auto;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:1px;
+  width:47px;
+  height:51px;
+  padding:5px;
+  color:#f6dfac;
+  border:2px solid #cda961;
+  border-radius:11px;
+  background:linear-gradient(145deg,#29485b,#0c2132);
+  box-shadow:0 4px 15px #000a,0 0 12px #cc9f4b55;
+  cursor:pointer;
+}
+.game--battle-fit .battle-log-toggle > span {font:800 25px/1 sans-serif;}
+.game--battle-fit .battle-log-toggle > small {font:700 9px/1 'Cinzel',serif;letter-spacing:.12em;}
+.game--battle-fit .battle-log-toggle:hover,
+.game--battle-fit .battle-log-toggle[aria-expanded="true"] {filter:brightness(1.2);}
+.game--battle-fit .battle-log-panel {
+  pointer-events:auto;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  width:min(360px,calc(100vw - 95px));
+  max-height:min(60dvh,540px);
+  padding:12px;
+  border:1px solid #d5b777;
+  border-radius:12px;
+  background:linear-gradient(155deg,#152e3af7,#071824f8);
+  box-shadow:0 12px 32px #000c;
+  color:#f1e2c4;
+}
+.game--battle-fit .battle-log-header {display:flex;align-items:center;justify-content:space-between;}
+.game--battle-fit .battle-log-header strong {font-size:14px;color:#f2d69b;}
+.game--battle-fit .battle-log-header button {
+  cursor:pointer;border:1px solid #957c4e;border-radius:5px;
+  background:#213848;color:#fff0c9;padding:3px 9px;
+}
+.game--battle-fit .battle-log-entries {
+  flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  margin:0;padding:0;list-style:none;font-size:11px;line-height:1.6;
+}
+.game--battle-fit .battle-log-entries li {padding:7px 3px;border-bottom:1px solid #ba9c6240;overflow-wrap:anywhere;}
+/* Reuse the playback controls, but only within the opened log panel. */
+.game--battle-fit .battle-log-panel .battle-playback {
+  position:static;z-index:auto;left:auto;top:auto;transform:none;
+  box-sizing:border-box;width:100%;padding:9px;flex-wrap:wrap;
+  animation:none;
+}
+.game--battle-fit .battle-log-panel .battle-playback-description {flex-basis:100%;font-size:11px;}
+.game--battle-fit .battle-log-panel .battle-playback-controls {flex-wrap:wrap;white-space:normal;}
+@media(max-width:760px) {
+  .game--battle-fit > .battle-log-dock {left:6px;}
+  .game--battle-fit .battle-log-toggle {width:38px;height:43px;}
+  .game--battle-fit .battle-log-panel {width:min(300px,calc(100vw - 62px));}
+}
+
+/* Playability should be visible even when the hand is expanded or inspected. */
+.game--battle-fit .hand-card.hand-card--unplayable,
+.game--battle-fit.game--hand-open .hand-card.hand-card--unplayable,
+.game--battle-fit.game--hand-open .hand-card.hand-card--unplayable.hand-card--expanded,
+.game--battle-fit.game--hand-open .hand-card.hand-card--unplayable[aria-disabled="true"] {
+  opacity:.76 !important;
+  filter:brightness(.65) saturate(.65) !important;
+}
+.game--battle-fit .hand-card.hand-card--unplayable:hover {
+  filter:brightness(.8) saturate(.75) !important;
+}
