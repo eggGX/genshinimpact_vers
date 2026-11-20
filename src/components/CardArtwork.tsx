@@ -22,6 +22,7 @@ export function CardArtwork({ cardId, name, className = '' }: Props) {
     alt={name + 'のカードイラスト'}
     draggable={false}
     loading="lazy"
+    decoding="async"
     onError={() => setFailedSrc(src)}
   />
 }
