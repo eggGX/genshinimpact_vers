@@ -30,3 +30,18 @@ test('fullscreen does not change card targeting or the engine attack actions', (
   assert.match(app, /onlineSend\(\{type:'attackFollower',attackerId,targetId\}\)/)
   assert.match(app, /attackFollower\(previous, attackerId, targetId\)/)
 })
+
+test('crests and new followers cannot increase desktop battlefield height', () => {
+  assert.match(css, /\.game--battle-fit \{\s*height:100dvh;/)
+  assert.match(css, /\.game--battle-fit \.player-effects \{[\s\S]*?flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;/)
+  assert.match(css, /\.game--battle-fit \.crest-tray-icons \{flex-wrap:nowrap;/)
+  assert.match(css, /\.game--battle-fit \.field \{\s*display:grid;[\s\S]*?grid-template-rows:minmax\(0,1fr\) 16px minmax\(0,1fr\)/)
+  assert.match(css, /\.game--battle-fit \.card-slot \{[\s\S]*?min-height:0;[\s\S]*?height:100%/)
+  assert.match(css, /\.game--battle-fit \.follower-wrapper>div:not\(\.follower-aura-icons\)/)
+})
+
+test('online battle history does not create extra height when actions accumulate', () => {
+  assert.match(css, /\.game--battle-fit:has\(> \.online-latest-action\)/)
+  assert.match(css, /\.game--battle-fit > \.online-action-history\[open\] ol/)
+  assert.match(css, /max-height:160px;overflow-y:auto/)
+})
