@@ -42,3 +42,16 @@ test('leader damage stores aura and never attaches wind or geo', () => {
   assert.match(shield, /leaderAura: nextAuras/)
   assert.match(shield, /\['none', 'anemo', 'geo'\]/)
 })
+
+
+test('both leader portraits display attached elemental icons despite hidden side labels', () => {
+  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  const css = readFileSync(new URL('../src/App.css', import.meta.url), 'utf8')
+  const leaderPart = app.split('<section className="player opponent">')[1]
+  assert.ok(leaderPart)
+  assert.match(leaderPart, /\(opponent\.leaderAura\?\.length \?\? 0\) > 0 && <span className="leader-aura-status"/)
+  assert.match(leaderPart, /\(currentPlayer\.leaderAura\?\.length \?\? 0\) > 0 && <span className="leader-aura-status"/)
+  assert.match(css, /\.game--battle-fit \.leader > \.leader-aura-status/)
+  assert.match(css, /left:calc\(100% - 8px\)/)
+  assert.match(css, /z-index:30/)
+})
