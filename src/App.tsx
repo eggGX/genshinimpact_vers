@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -898,7 +898,7 @@ function App({ online }: { online?: {
     const triggered = card?.effects?.some(effect =>
       effect.trigger === 'turn_start' || effect.trigger === 'turn_end') ||
       /(?:ターン開始時|ターン終了時|攻撃時|交戦時|自分のターン開始時|自分のターン終了時|相手のターン開始時|相手のターン終了時|攻撃するたび|攻撃したとき|攻撃されるたび|反応を起こすたび|元素反応を起こすたび|シールドを獲得するたび)/.test(description)
-    const emblems: Array<{key:string; label:string; content: React.ReactNode}> = []
+    const emblems: Array<{key:string; label:string; content: ReactNode}> = []
     if (lastWord) emblems.push({key:'lastword',label:'ラストワード',content:
       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
         <path d="M5 14a8 8 0 1 1 14 0l-2 2v4H7v-4l-2-2Z" />
@@ -921,7 +921,7 @@ function App({ online }: { online?: {
     if (emblems.length === 0) return null
     return <span className="follower-emblems" aria-label={emblems.map(emblem => emblem.label).join('、')}>
       {emblems.map((emblem, index) => <span key={emblem.key}
-        className={`follower-emblem follower-emblem--${emblem.key} ${emblems.length > 1 ? 'follower-emblem--rotating' : ''}`}
+        className={`follower-emblem follower-emblem--${emblem.key} ${emblems.length > 1 ? 'follower-emblem--rotating follower-emblem--count-' + emblems.length : ''}`}
         style={emblems.length > 1 ? {
           animationDelay: `${index * 2}s`,
           animationDuration: `${emblems.length * 2}s`,
