@@ -1965,3 +1965,48 @@
     bottom:24%;
   }
 }
+
+
+/* Elemental attachment belongs to the visible portrait, not the now-hidden
+   .player-side-label. Place it on the upper-right edge, clear of the HP badge. */
+.game--battle-fit .leader > .leader-aura-status {
+  position:absolute;
+  top:8px;
+  left:calc(100% - 8px);
+  right:auto;
+  z-index:30;
+  transform:none;
+  display:flex;
+  align-items:center;
+  gap:3px;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.game--battle-fit .leader > .leader-aura-status .aura-icon-holder {
+  flex:0 0 32px;
+  width:32px;
+  height:32px;
+  border:2px solid #e8cd87;
+  border-radius:50%;
+  background:#102739;
+  box-shadow:0 0 12px #edc87499,0 3px 8px #000c;
+}
+.game--battle-fit .leader > .leader-aura-status .element-icon-emblem {
+  width:27px;
+  height:27px;
+}
+@media (max-width:760px) {
+  .game--battle-fit .leader > .leader-aura-status {
+    top:4px;
+    left:calc(100% - 10px);
+  }
+  .game--battle-fit .leader > .leader-aura-status .aura-icon-holder {
+    width:24px;
+    height:24px;
+    flex-basis:24px;
+  }
+  .game--battle-fit .leader > .leader-aura-status .element-icon-emblem {
+    width:20px;
+    height:20px;
+  }
+}
