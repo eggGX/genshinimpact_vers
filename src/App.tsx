@@ -880,19 +880,19 @@ function App({ online }: { online?: {
   }
 
   /** One rotating emblem slot for a follower's independent combat abilities. */
-  const followerEmblems = (follower: Follower) => {
-    const card = getCard(follower.cardId)
+  const followerEmblems = (cardId: string, keywords: readonly string[] = []) => {
+    const card = getCard(cardId)
     const description = card?.description ?? ''
-    const lastWord = !follower.keywords.includes('no_last_word') && (
-      follower.keywords.includes('lastword') ||
-      follower.keywords.includes('last_word') ||
+    const lastWord = !keywords.includes('no_last_word') && (
+      keywords.includes('lastword') ||
+      keywords.includes('last_word') ||
       card?.effects?.some(effect => effect.trigger === 'on_destroy') ||
       description.includes('【ラストワード】')
     )
-    const guard = follower.keywords.includes('guard')
-    const bane = follower.keywords.includes('bane') ||
-      follower.keywords.includes('lethal') ||
-      follower.keywords.includes('必殺') ||
+    const guard = keywords.includes('guard')
+    const bane = keywords.includes('bane') ||
+      keywords.includes('lethal') ||
+      keywords.includes('必殺') ||
       description.includes('【必殺】')
     // These passives work independently of skills, bursts and fanfare.
     const triggered = card?.effects?.some(effect =>
@@ -1056,7 +1056,7 @@ function App({ online }: { online?: {
         </span>
 
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
-        {followerEmblems(follower)}
+        {followerEmblems(follower.cardId, follower.keywords)}
 
       </button>
       </div>
@@ -1122,6 +1122,7 @@ function App({ online }: { online?: {
                 `card-element--${card?.element ?? 'none'}`,
                 `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}>
                 <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
+                {followerEmblems(amulet.cardId)}
                 <span className="amulet-countdown" title={`残り${amulet.turnsRemaining}ターン`}>{amulet.turnsRemaining >= 1 && amulet.turnsRemaining <= 20 ? String.fromCharCode(0x2460 + amulet.turnsRemaining - 1) : String(amulet.turnsRemaining)}</span>
               </div>
             </div>
