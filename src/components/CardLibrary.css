@@ -45,6 +45,14 @@
   grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
   gap: 12px;
 }
+/* Offscreen entries avoid paint/layout work where supported. */
+.library-entry {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 310px;
+}
+.library-load-more {display:flex;justify-content:center;padding:20px 0 4px;}
+.library-load-more button {border:1px solid #bba477;border-radius:8px;background:#223e50;color:#fff0d2;padding:10px 20px;cursor:pointer;}
+.library-load-more button:hover {background:#36596c;}
 .library-entry {
   min-height: 160px;
   padding: 12px;
