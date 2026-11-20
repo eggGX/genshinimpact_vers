@@ -2355,3 +2355,75 @@
   border-color:var(--element-edge,#bda56f);
   box-shadow:0 4px 12px #0008;
 }
+
+
+/* Stealth: visible smoky veil over the portrait without obscuring card information.
+   The overlay is non-interactive, so attacks, dragging and hover inspection still work. */
+.game--battle-fit .field-card--stealth {
+  isolation:isolate;
+}
+.game--battle-fit .field-card--stealth > .card-artwork {
+  filter:brightness(.77) saturate(.76);
+}
+.game--battle-fit .field-card--stealth .stealth-mist {
+  position:absolute;
+  inset:3px;
+  z-index:2;
+  overflow:hidden;
+  border-radius:8px;
+  pointer-events:none;
+  background:linear-gradient(135deg,rgba(14,13,36,.12),rgba(49,37,83,.17),rgba(8,16,35,.10));
+  box-shadow:inset 0 0 18px rgba(52,34,85,.36);
+}
+.game--battle-fit .stealth-mist-cloud {
+  position:absolute;
+  width:145%;
+  height:55%;
+  left:-22%;
+  top:4%;
+  border-radius:50%;
+  filter:blur(11px);
+  opacity:.76;
+  background:radial-gradient(ellipse at center,rgba(168,139,218,.43) 0%,rgba(108,90,168,.26) 35%,rgba(74,64,113,.13) 63%,transparent 78%);
+  animation:stealth-mist-drift-a 5.5s ease-in-out infinite alternate;
+  will-change:transform,opacity;
+}
+.game--battle-fit .stealth-mist-cloud--two {
+  top:35%;
+  left:-35%;
+  width:165%;
+  height:50%;
+  opacity:.66;
+  background:radial-gradient(ellipse at center,rgba(175,167,210,.4),rgba(94,99,143,.2) 45%,transparent 75%);
+  animation:stealth-mist-drift-b 7s ease-in-out infinite alternate;
+}
+.game--battle-fit .stealth-mist-cloud--three {
+  top:65%;
+  left:-10%;
+  width:135%;
+  height:43%;
+  opacity:.52;
+  background:radial-gradient(ellipse at center,rgba(158,127,194,.4),rgba(93,71,137,.18) 52%,transparent 78%);
+  animation:stealth-mist-drift-a 8.5s ease-in-out -2s infinite alternate-reverse;
+}
+/* Keep status symbols, attack values and health numbers above the mist. */
+.game--battle-fit .field-card--stealth > .field-keywords,
+.game--battle-fit .field-card--stealth > .follower-stats,
+.game--battle-fit .field-card--stealth > .follower-emblems {
+  position:relative;
+  z-index:5;
+}
+.game--battle-fit .field-card--stealth > .follower-emblems {
+  position:absolute;
+}
+@keyframes stealth-mist-drift-a {
+  from {transform:translate3d(-12%,-5%,0) scale(1);opacity:.52;}
+  to {transform:translate3d(13%,12%,0) scale(1.13);opacity:.83;}
+}
+@keyframes stealth-mist-drift-b {
+  from {transform:translate3d(13%,7%,0) scale(1.09);opacity:.4;}
+  to {transform:translate3d(-14%,-11%,0) scale(.96);opacity:.78;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game--battle-fit .stealth-mist-cloud {animation:none;will-change:auto;}
+}
