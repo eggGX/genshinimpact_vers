@@ -160,7 +160,7 @@ function App({ online }: { online?: {
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
-  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice } | null>(null)
+  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice, attackerId?: string } | null>(null)
   const [playedCardNotice, setPlayedCardNotice] = useState<BattleNotice | null>(null)
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
@@ -354,7 +354,7 @@ function App({ online }: { online?: {
           (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0))
       }) ?? actor.field.find(f => playback.frames[0].label.includes(
         `${getCard(f.cardId)?.name ?? f.cardId}が`))
-      attackingFollowerId = source?.instanceId ?? null
+      attackingFollowerId = playback.attackerId ?? source?.instanceId ?? null
     }
   }
   if (playback && playback.index > 0) {
@@ -402,7 +402,7 @@ function App({ online }: { online?: {
     }
   }
 
-  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string, abilityKind?: AbilityKind) => {
+  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string, abilityKind?: AbilityKind, attackerId?: string) => {
     if (online || playbackLock.current) return
     const traced = beginPresentation(game)
     const next = action(traced)
@@ -418,6 +418,7 @@ function App({ online }: { online?: {
           ...frames,
         ],
         index: 0,
+        ...(attackerId ? { attackerId } : {}),
         ...(playedCardId ? { playedCard: {
           key: `local-${Date.now()}-${Math.random()}`, cardId: playedCardId,
           actorId: game.currentPlayerId,
@@ -703,10 +704,10 @@ function App({ online }: { online?: {
     if (!target) return
     if (target === 'leader') {
       if (online) onlineSend({ type: 'attackLeader', attackerId: pointer.attackerId })
-      else animateAction(previous => attackLeader(previous, pointer.attackerId), 'リーダー攻撃')
+      else animateAction(previous => attackLeader(previous, pointer.attackerId), 'リーダー攻撃', undefined, undefined, pointer.attackerId)
     } else {
       if (online) onlineSend({ type: 'attackFollower', attackerId: pointer.attackerId, targetId: target })
-      else animateAction(previous => attackFollower(previous, pointer.attackerId, target), 'フォロワー攻撃')
+      else animateAction(previous => attackFollower(previous, pointer.attackerId, target), 'フォロワー攻撃', undefined, undefined, pointer.attackerId)
     }
     resetSelection()
   }
@@ -770,7 +771,7 @@ function App({ online }: { online?: {
     if (online) onlineSend({type:'attackFollower',attackerId,targetId})
     else animateAction(previous =>
       attackFollower(previous, attackerId, targetId)
-    , 'フォロワー攻撃')
+    , 'フォロワー攻撃', undefined, undefined, attackerId)
     resetSelection()
   }
 
@@ -782,7 +783,7 @@ function App({ online }: { online?: {
     if (online) onlineSend({type:'attackLeader',attackerId})
     else animateAction(previous =>
       attackLeader(previous, attackerId)
-    , 'リーダー攻撃')
+    , 'リーダー攻撃', undefined, undefined, attackerId)
     resetSelection()
   }
 
