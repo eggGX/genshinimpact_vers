@@ -199,6 +199,24 @@ function App({ online }: { online?: {
   onLeave: () => void
 } } = {}) {
   const [showCardLibrary, setShowCardLibrary] = useState(false)
+  const battleScreenRef = useRef<HTMLDivElement>(null)
+  const [battleFullscreen, setBattleFullscreen] = useState(false)
+  useEffect(() => {
+    const sync = () => setBattleFullscreen(document.fullscreenElement === battleScreenRef.current)
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
+  const toggleBattleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement === battleScreenRef.current) {
+        await document.exitFullscreen()
+      } else if (battleScreenRef.current) {
+        await battleScreenRef.current.requestFullscreen()
+      }
+    } catch {
+      // Unsupported or denied by browser: keep the ordinary responsive layout.
+    }
+  }
   const [showFriendLobby, setShowFriendLobby] = useState(false)
   const [showDeckManager, setShowDeckManager] = useState(false)
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>(loadSavedDecks)
@@ -1331,7 +1349,7 @@ function App({ online }: { online?: {
   }
 
   return (
-    <div className={['game','game--battle',playback ? 'game--animating' : ''].join(' ')}>
+    <div ref={battleScreenRef} className={['game','game--battle','game--battle-fit',playback ? 'game--animating' : ''].join(' ')}>
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
@@ -1437,7 +1455,13 @@ function App({ online }: { online?: {
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
         <span className="turn-counter"><small>ROUND</small><strong>{shownGame.turn}</strong></span>
         {online && <small className="online-build-marker" title="オンライン対戦画面のビルド識別子">ONLINE UI 20261116-B</small>}
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="battle-header-actions">
+          <button type="button" className="battle-fullscreen-toggle"
+            onClick={toggleBattleFullscreen}
+            aria-pressed={battleFullscreen}
+            title={battleFullscreen ? 'フルスクリーンを解除（Escでも解除可）' : 'フルスクリーンで対戦する'}>
+            {battleFullscreen ? '⤢ 通常表示' : '⛶ フルスクリーン'}
+          </button>
           <button type="button" onClick={() => setShowCardLibrary(true)}>
             カード一覧
           </button>
