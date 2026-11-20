@@ -1341,3 +1341,51 @@
     pointer-events:none;
   }
 }
+
+
+/* A follower stays in its original slot for the resolution frame in which
+   the engine removed it. Hit flash comes first, then a soft upward dissolve. */
+.game--battle .follower-wrapper.battle-destroying {
+  position:relative;
+  z-index:9;
+  pointer-events:none;
+  transform-origin:50% 58%;
+  animation-name:battle-destruction-exit;
+  animation-timing-function:ease-in-out;
+  animation-fill-mode:both;
+}
+.game--battle .battle-destroying .field-card {
+  width:100%;
+  min-height:0;
+  height:100%;
+  box-sizing:border-box;
+  filter:none;
+  animation:none;
+}
+.game--battle .battle-destruction-flash {
+  position:absolute;
+  z-index:12;
+  inset:3px;
+  pointer-events:none;
+  border:2px solid #ffeac2;
+  border-radius:13px;
+  box-shadow:0 0 18px #ffd58dbb,inset 0 0 16px #fff9;
+  animation:battle-destruction-impact .48s ease-out both;
+}
+@keyframes battle-destruction-impact {
+  0% {opacity:0;transform:scale(.85);}
+  23% {opacity:1;transform:scale(1.08);}
+  100% {opacity:0;transform:scale(1.22);}
+}
+@keyframes battle-destruction-exit {
+  0% {opacity:1;transform:translateY(0) scale(1);filter:brightness(1);}
+  18% {opacity:1;transform:translateY(2px) scale(1.045);filter:brightness(1.65);}
+  35% {opacity:1;transform:translateY(0) scale(1);filter:brightness(1.15);}
+  65% {opacity:.6;transform:translateY(-6px) scale(.97);filter:brightness(1.25);}
+  100% {opacity:0;transform:translateY(-20px) scale(.84);filter:brightness(1.4) blur(2px);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game--battle .follower-wrapper.battle-destroying,
+  .game--battle .battle-destruction-flash {animation:none;}
+  .game--battle .follower-wrapper.battle-destroying {opacity:.45;}
+}
