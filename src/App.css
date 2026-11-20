@@ -1387,3 +1387,267 @@
   .game--battle .battle-destruction-flash {animation:none;}
   .game--battle .follower-wrapper.battle-destroying {opacity:.45;}
 }
+
+
+/* Shadowverse-inspired full-bleed duel. Desktop positions are independent of
+   the number of crests/followers, preserving the entire battlefield in one view. */
+@media (min-width:900px) and (min-height:640px) {
+  .game--battle-fit,
+  .game--battle-fit:fullscreen {
+    position:relative;
+    display:block!important;
+    width:100%;height:100dvh;min-height:0;
+    padding:0;overflow:hidden;
+    background:
+      radial-gradient(ellipse at center,#40524d3b 0%,transparent 50%),
+      radial-gradient(ellipse at 50% 50%,#193c3f 0%,#10252e 61%,#060d17 100%);
+  }
+  .game--battle-fit::before {
+    inset:0;
+    background:
+      radial-gradient(ellipse 35% 47% at 50% 50%,transparent 65%,#bb99522b 66%,transparent 68%),
+      radial-gradient(ellipse 27% 33% at 50% 50%,transparent 64%,#a7895220 66%,transparent 69%),
+      repeating-linear-gradient(115deg,transparent 0 44px,#ffffff07 45px,transparent 47px);
+  }
+  .game--battle-fit > .game-header--battle {
+    position:absolute;top:0;left:0;right:0;z-index:26;
+    min-height:43px;height:43px;margin:0;padding:4px 14px;
+    border-bottom:0;background:linear-gradient(180deg,#07111bdf,transparent);
+  }
+  .game--battle-fit .game-brand {gap:6px;}
+  .game--battle-fit .game-brand strong {font-size:12px;}
+  .game--battle-fit .brand-crest {height:28px;width:28px;font-size:20px;}
+  .game--battle-fit .turn-counter {position:absolute;left:50%;top:5px;transform:translateX(-50%);}
+  .game--battle-fit .battle-header-actions {gap:5px;}
+  .game--battle-fit .battle-header-actions button {font-size:10px;padding:5px 8px;}
+
+  .game--battle-fit > .player,
+  .game--battle-fit > .player.self,
+  .game--battle-fit > .player.opponent {
+    position:absolute;z-index:12;left:0;right:0;
+    display:block;width:100%;height:0;
+    max-width:none;margin:0;padding:0;border:0;border-radius:0;
+    background:none;box-shadow:none;
+  }
+  .game--battle-fit > .player.opponent {top:5.5%;}
+  .game--battle-fit > .player.self {top:auto;bottom:20%;}
+  .game--battle-fit .player-side-label {display:none;}
+  .game--battle-fit .leader,
+  .game--battle-fit .leader.leader-hit {
+    position:absolute;left:50%;top:0;
+    width:132px;min-height:0;height:116px;box-sizing:border-box;
+    transform:translateX(-50%);padding:5px;gap:1px;
+    border-radius:48% 48% 26% 26%;
+    background:radial-gradient(ellipse,#54737b,#182b3a 80%);
+    box-shadow:0 0 0 3px #d9b26d,0 0 20px #000d;
+  }
+  .game--battle-fit .leader-avatar {
+    width:76px;height:76px;border-width:3px;
+    box-shadow:0 0 15px #e8be7299;
+  }
+  .game--battle-fit .leader-caption {font-size:10px;}
+  .game--battle-fit .leader-health {
+    position:absolute;right:-32px;bottom:-9px;
+    min-width:50px;padding:4px 6px;
+    border:2px solid #e4ba75;background:#5c2532;
+  }
+  .game--battle-fit .leader-health strong {font-size:25px;}
+  .game--battle-fit .leader-health small {font-size:8px;}
+
+  /* Left-side counters, right-side PP, battle buttons and elemental energy. */
+  .game--battle-fit .player-counts {
+    position:fixed;z-index:16;left:20px;top:12%;
+    display:flex;flex-wrap:nowrap;gap:4px;max-width:none;
+    pointer-events:none;
+  }
+  .game--battle-fit .player.self .player-counts {top:auto;bottom:11%;}
+  .game--battle-fit .player-counts span {font-size:10px;padding:5px;}
+  .game--battle-fit .player-counts strong {font-size:15px;}
+  .game--battle-fit .player-resources {
+    position:fixed;z-index:15;right:20px;top:14%;
+    display:block;width:176px;min-width:0;
+    box-sizing:border-box;padding:8px;
+    border:2px solid #b99b65;
+    background:linear-gradient(150deg,#153b45dd,#0e2537eb);
+  }
+  .game--battle-fit .player.self .player-resources {top:auto;bottom:13%;}
+  .game--battle-fit .resource-caption {font-size:10px;}
+  .game--battle-fit .pp-values {gap:3px;}
+  .game--battle-fit .pp-gems,.game--battle-fit .energy-gems {gap:4px;margin:5px 0;}
+  .game--battle-fit .pp-gem {width:10px;height:10px;margin:0 1px;}
+  .game--battle-fit .energy-gem {width:20px;height:9px;}
+  .game--battle-fit .player.self .end-turn {
+    position:fixed;z-index:30;top:38%;right:25px;
+    width:170px;height:144px;margin:0;
+    border-radius:50%;border:5px solid #c8af75;
+    background:radial-gradient(circle at 50% 35%,#148edc,#173e91 60%,#0a1d41);
+    box-shadow:0 0 0 4px #071e37,0 0 25px #35a9f888,inset 0 0 18px #96d4f2;
+  }
+  .game--battle-fit .player.self .end-turn strong {font-size:23px;}
+  .game--battle-fit .player.self .end-turn span {font-size:12px;}
+  .game--battle-fit .player-effects {
+    position:fixed;left:20px;top:20%;
+    max-width:min(300px,20vw);max-height:86px;
+    display:flex;align-items:flex-start;flex-wrap:wrap;
+    gap:3px;overflow:visible;pointer-events:auto;
+  }
+  .game--battle-fit .player.self .player-effects {top:auto;bottom:17%;}
+  .game--battle-fit .crest-tray {background:#1a3040b8;max-width:100%;height:auto;}
+  .game--battle-fit .crest-tray-icons {flex-wrap:wrap;}
+
+  /* The board is the stage itself, not a bordered panel with empty margins. */
+  .game--battle-fit > .field,
+  .game--battle-fit:has(> .online-latest-action) > .field {
+    position:absolute;z-index:8;top:23%;bottom:19%;
+    left:11%;right:13%;width:auto;height:auto;
+    max-width:none;min-height:0;margin:0;padding:0;
+    display:grid;grid-template-rows:minmax(0,1fr) 8px minmax(0,1fr);
+    border:0;border-radius:0;background:none;box-shadow:none;
+  }
+  .game--battle-fit .field::before {display:none;}
+  .game--battle-fit .field-divider {height:8px;}
+  .game--battle-fit .field-divider::before,.game--battle-fit .field-divider::after,
+  .game--battle-fit .field-divider-text,.game--battle-fit .field-divider-emblem {display:none;}
+  .game--battle-fit .field-row {display:flex;flex-direction:column;min-height:0;}
+  .game--battle-fit .zone-label {display:none;}
+  .game--battle-fit .card-slot {
+    display:flex;flex:1;align-items:center;justify-content:center;
+    flex-wrap:nowrap;gap:clamp(5px,1.2vw,18px);
+    height:100%;min-height:0;padding:0;
+    border:0;background:none;font-size:0;
+    overflow:visible;
+  }
+  .game--battle-fit .follower-wrapper {
+    position:relative;flex:0 1 clamp(95px,10.4vw,155px);
+    width:clamp(95px,10.4vw,155px);max-width:19%;
+    min-width:0;gap:0;
+  }
+  .game--battle-fit .field-card,
+  .game--battle-fit .field-card:has(.card-artwork),
+  .game--battle-fit .amulet-card,
+  .game--battle-fit .amulet-card:has(.card-artwork) {
+    position:relative;display:block;width:100%;height:clamp(125px,20dvh,184px);
+    min-height:0;padding:0;box-sizing:border-box;
+    overflow:visible;border:3px solid var(--element-edge);
+    border-radius:48% 48% 9% 9% / 22% 22% 7% 7%;
+    background:linear-gradient(180deg,#34545b,#112334);
+    box-shadow:0 0 0 2px #3b3025,0 7px 16px #000b;
+  }
+  .game--battle-fit .field-card .card-artwork {
+    position:absolute;inset:0;z-index:0;
+    width:100%;height:100%;max-height:none;max-width:none;
+    object-fit:cover;border:0;border-radius:inherit;
+    mask-image:linear-gradient(#000 82%,#000d);
+  }
+  .game--battle-fit .field-card .battle-field-card-name,
+  .game--battle-fit .field-card>small {display:none;}
+  .game--battle-fit .field-card .field-keywords {
+    position:absolute;z-index:3;top:-11px;left:50%;transform:translateX(-50%);
+    width:max-content;max-width:100%;
+  }
+  .game--battle-fit .field-card .follower-stats {
+    position:absolute;z-index:5;bottom:-17px;left:-11px;right:-11px;
+    width:auto;margin:0;transform:none;pointer-events:none;
+  }
+  .game--battle-fit .field-card .follower-stats b {
+    width:34px;min-width:34px;height:34px;font-size:22px;
+    border-width:2px;
+  }
+  .game--battle-fit .follower-emblems {position:absolute;z-index:7;bottom:0;left:50%;transform:translateX(-50%);}
+  .game--battle-fit .follower-aura-icons {top:-30px;}
+  .game--battle-fit .follower-wrapper>div:not(.follower-aura-icons) {width:auto;flex-wrap:wrap;}
+  .game--battle-fit .amulet-countdown {
+    position:absolute;z-index:6;bottom:-13px;left:50%;transform:translateX(-50%);
+  }
+  .game--battle-fit .follower-wrapper.battle-destroying .field-card {height:clamp(125px,20dvh,184px);}
+
+  /* The hand is a prominent fan overlapping the lower leader, like the reference. */
+  .game--battle-fit > .hand,
+  .game--battle-fit:has(> .online-latest-action) > .hand {
+    position:absolute;z-index:21;left:18%;right:19%;bottom:-7%;
+    width:auto;height:clamp(160px,27dvh,260px);
+    max-width:none;min-height:0;margin:0;padding:0;
+    border:0;background:none;pointer-events:none;
+  }
+  .game--battle-fit .hand-label {display:none;}
+  .game--battle-fit .hand-cards {
+    display:flex;align-items:flex-start;justify-content:center;
+    gap:clamp(-4px,.4vw,6px);height:100%;min-height:0;
+    width:100%;overflow:visible;pointer-events:auto;
+  }
+  .game--battle-fit .hand-card,
+  .game--battle-fit .hand-card:has(.card-artwork) {
+    position:relative;flex:0 1 clamp(75px,9.2vw,143px);
+    width:clamp(75px,9.2vw,143px);height:clamp(138px,22dvh,205px);
+    min-width:0;min-height:0;padding:6px 5px 4px;
+    transform-origin:50% 85%;z-index:1;
+    border-radius:12px 12px 6px 6px;
+  }
+  .game--battle-fit .hand-card .card-artwork {max-height:clamp(70px,13dvh,132px);}
+  .game--battle-fit .hand-card strong {font-size:11px;}
+  .game--battle-fit .hand-card:not(:disabled):hover,
+  .game--battle-fit .hand-card.hand-card--expanded,
+  .game--battle-fit .hand-card.selected-card {
+    transform:translateY(-54px) scale(1.35);
+    z-index:25;filter:brightness(1.1);
+    box-shadow:0 0 20px #ead09d99,0 15px 24px #000b;
+  }
+
+  /* Ability actions replace the evolution controls on the right. */
+  .game--battle-fit > .battle-ability-rail {
+    position:fixed;z-index:32;right:20px;bottom:1.5%;
+    width:176px;display:flex;flex-direction:column;gap:5px;
+    padding:8px;box-sizing:border-box;
+    border:1px solid #b89d68;border-radius:13px;
+    background:linear-gradient(150deg,#152f40ec,#0b1728f5);
+    box-shadow:0 5px 18px #0009;
+  }
+  .game--battle-fit .battle-ability-rail-title {font-size:11px;color:#edce91;font-weight:800;text-align:center;}
+  .game--battle-fit .battle-ability-rail-source {font-size:10px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .game--battle-fit .battle-ability-rail-button {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 9px;border:2px solid #bca56c;border-radius:25px;
+    color:#fce9b7;background:linear-gradient(#756027,#392c19);
+    cursor:pointer;font-weight:800;
+  }
+  .game--battle-fit .battle-ability-rail-button--burst {border-color:#ae90db;background:linear-gradient(#594b87,#2a2352);}
+  .game--battle-fit .battle-ability-rail-button:disabled {opacity:.45;cursor:default;}
+  .game--battle-fit .battle-ability-rail-button small {font-size:10px;}
+  .game--battle-fit > .battle-message {
+    position:absolute;z-index:27;bottom:2%;left:14px;
+    max-width:270px;min-height:0;background:#061523b8;
+    font-size:10px;padding:4px;border-radius:6px;
+  }
+  .game--battle-fit > .online-latest-action {
+    position:fixed;z-index:30;left:16px;top:46px;
+    width:260px;margin:0;padding:5px 8px;
+  }
+  .game--battle-fit > .online-action-history {
+    position:fixed;z-index:30;left:16px;top:81px;
+    width:260px;margin:0;padding:5px 8px;
+  }
+}
+@media (min-width:900px) and (min-height:640px) and (max-height:760px) {
+  .game--battle-fit > .field {top:24%;bottom:19%;}
+  .game--battle-fit .field-card,
+  .game--battle-fit .field-card:has(.card-artwork) {height:clamp(105px,18dvh,148px);}
+  .game--battle-fit .leader-avatar {height:57px;width:57px;}
+  .game--battle-fit .leader {height:96px;width:114px;}
+  .game--battle-fit .hand-card,
+  .game--battle-fit .hand-card:has(.card-artwork) {height:clamp(112px,20dvh,150px);}
+  .game--battle-fit .hand-card .card-artwork {max-height:75px;}
+  .game--battle-fit .follower-wrapper.battle-destroying .field-card {height:clamp(105px,18dvh,148px);}
+}
+@media(max-width:899px), (max-height:639px) {
+  .game--battle-fit .battle-ability-rail {
+    position:relative;z-index:15;margin:5px auto;
+    width:min(450px,95%);display:flex;flex-direction:row;
+    flex-wrap:wrap;align-items:center;gap:5px;
+    padding:6px;border:1px solid #b99b65;border-radius:10px;
+    background:#102d3c;
+  }
+  .game--battle-fit .battle-ability-rail-title {font-weight:800;font-size:11px;}
+  .game--battle-fit .battle-ability-rail-source {flex:1;font-size:10px;}
+  .game--battle-fit .battle-ability-rail-button {padding:5px 8px;color:#fff0c6;background:#394a61;border:1px solid #b99b65;border-radius:20px;}
+  .game--battle-fit .battle-ability-rail-button:disabled {opacity:.45;}
+}
