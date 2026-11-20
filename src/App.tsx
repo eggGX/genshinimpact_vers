@@ -17,7 +17,7 @@ import {
   activateAbility,
   playCard,
 } from './game/engine'
-import type { Follower, GameState, Player } from './game/types'
+import type { ElementType, Follower, GameState, Player } from './game/types'
 import { beginPresentation, captureFrame, compactPresentationFrames, withoutPresentation, type PresentationFrame } from './game/presentation'
 import type { AbilityKind } from './game/engine'
 import './App.css'
@@ -42,6 +42,51 @@ type BattleNotice = {
   actorId: string
   abilityKind?: AbilityKind
 }
+type HitElement = Exclude<ElementType, 'none'>
+
+/** Infer the visual source from public attack/ability metadata and captured board state.
+ * This is presentation-only: an unknown/physical hit gets no elemental particles.
+ */
+function hitElementForPlayback(
+  frames: PresentationFrame[], index: number, affectedPlayerId: string,
+  attackerId?: string, abilityCardId?: string,
+): HitElement | null {
+  if (index <= 0) return null
+  const start = frames[0].state
+  const actor = start.players.find(p => p.id === start.currentPlayerId)
+  const label = frames[index].label
+  const elementNames: Array<[string, HitElement]> = [
+    ['炎', 'pyro'], ['水', 'hydro'], ['氷', 'cryo'], ['雷', 'electro'],
+    ['風', 'anemo'], ['岩', 'geo'], ['草', 'dendro'],
+  ]
+  // Explicit elemental hit labels (and burning ticks) take priority.
+  const named = elementNames.find(([name]) =>
+    label.includes(`${name}元素`) || label.includes(`${name}ダメージ`) ||
+    (name === '炎' && label.includes('燃焼ダメージ')))
+  if (named) return named[1]
+  if (actor && /攻撃/.test(frames[0].label)) {
+    const source = attackerId
+      ? actor.field.find(f => f.instanceId === attackerId)
+      : actor.field.find(f => frames[0].label.includes(`${getCard(f.cardId)?.name ?? f.cardId}が`))
+    if (!source) return null
+    const opponent = start.players.find(p => p.id !== actor.id)
+    const other = opponent?.field.find(f => {
+      const card = getCard(f.cardId)
+      return frames[0].label.includes(`${card?.name ?? f.cardId}を攻撃`)
+    })
+    const hitter = affectedPlayerId === actor.id ? other : source
+    if (!hitter) return null
+    const infused = hitter.keywords.find(k => k.startsWith('normal_attack_'))?.slice(14) as ElementType | undefined
+    const element = infused ?? getCard(hitter.cardId)?.normalAttackElement ?? 'none'
+    return element !== 'none' ? element : null
+  }
+  if (actor && affectedPlayerId !== actor.id && abilityCardId) {
+    const element = getCard(abilityCardId)?.element ?? 'none'
+    return element !== 'none' ? element : null
+  }
+  return null
+}
+
 type BothDecks = [DeckDefinition, DeckDefinition]
 const STORAGE_KEY = 'genshin-decks-v1'
 
@@ -357,6 +402,7 @@ function App({ online }: { online?: {
       attackingFollowerId = playback.attackerId ?? source?.instanceId ?? null
     }
   }
+  const hitElements = new Map<string, HitElement>()
   if (playback && playback.index > 0) {
     const before = playback.frames[playback.index - 1].state
     const after = playback.frames[playback.index].state
@@ -370,6 +416,8 @@ function App({ online }: { online?: {
           const shieldBefore = old.shield.normal + old.shield.crystallize
           const shieldAfter = follower.shield.normal + follower.shield.crystallize
           if (follower.health < old.health) {
+            const element = hitElementForPlayback(playback.frames, playback.index, newPlayer.id, playback.attackerId, playback.playedCard?.cardId)
+            if (element) hitElements.set(follower.instanceId, element)
             damagedFollowers.set(follower.instanceId, { amount: old.health - follower.health, kind: 'damage' })
           } else if (follower.health > old.health) {
             damagedFollowers.set(follower.instanceId, { amount: follower.health - old.health, kind: 'heal' })
@@ -386,6 +434,10 @@ function App({ online }: { online?: {
       }
       const shieldBefore = (oldPlayer.leaderShield?.normal ?? 0) + (oldPlayer.leaderShield?.crystallize ?? 0)
       const shieldAfter = (newPlayer.leaderShield?.normal ?? 0) + (newPlayer.leaderShield?.crystallize ?? 0)
+      if (newPlayer.leaderHealth < oldPlayer.leaderHealth || shieldAfter < shieldBefore) {
+        const element = hitElementForPlayback(playback.frames, playback.index, newPlayer.id, playback.attackerId, playback.playedCard?.cardId)
+        if (element) hitElements.set(newPlayer.id, element)
+      }
       if (newPlayer.leaderHealth !== oldPlayer.leaderHealth) {
         damagedLeaders.set(newPlayer.id, {
           amount: Math.abs(newPlayer.leaderHealth - oldPlayer.leaderHealth),
@@ -883,6 +935,10 @@ function App({ online }: { online?: {
           follower.aura.length ? 'follower-has-aura' : ''].join(' ')}
         onMouseEnter={() => setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })}
         onMouseLeave={() => setInspectedCard(null)}>
+      {hitElements.has(follower.instanceId) && <span className={`elemental-hit elemental-hit--${hitElements.get(follower.instanceId)}`} aria-hidden="true">
+        {Array.from({ length: 7 }, (_, i) => <i key={i} className="elemental-hit-particle" />)}
+        <i className="elemental-hit-ring" />
+      </span>}
       {damagedFollowers.has(follower.instanceId) && <span className={`battle-float-number battle-float-number--${damagedFollowers.get(follower.instanceId)!.kind}`} aria-label={`ダメージ・回復表示 ${damagedFollowers.get(follower.instanceId)!.amount}`}>
         {damagedFollowers.get(follower.instanceId)!.kind === 'heal' ? '+' : '−'}{damagedFollowers.get(follower.instanceId)!.amount}
       </span>}
@@ -1464,6 +1520,10 @@ function App({ online }: { online?: {
           }
           onClick={handleAttackLeader}
         >
+          {hitElements.has(opponent.id) && <span className={`elemental-hit elemental-hit--${hitElements.get(opponent.id)}`} aria-hidden="true">
+            {Array.from({ length: 7 }, (_, i) => <i key={i} className="elemental-hit-particle" />)}
+            <i className="elemental-hit-ring" />
+          </span>}
           {damagedLeaders.has(opponent.id) && <span className={`battle-float-number battle-float-number--${damagedLeaders.get(opponent.id)!.kind}`}>
             {damagedLeaders.get(opponent.id)!.kind === 'heal' ? '+' : '−'}{damagedLeaders.get(opponent.id)!.amount}
           </span>}
@@ -1535,6 +1595,10 @@ function App({ online }: { online?: {
         </div>
         <div key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
           className={['leader', highlightedLeaders.has(currentPlayer.id) ? 'leader-hit' : '', damagedLeaders.get(currentPlayer.id)?.kind === 'damage' ? 'leader-damaged' : ''].filter(Boolean).join(' ')}>
+          {hitElements.has(currentPlayer.id) && <span className={`elemental-hit elemental-hit--${hitElements.get(currentPlayer.id)}`} aria-hidden="true">
+            {Array.from({ length: 7 }, (_, i) => <i key={i} className="elemental-hit-particle" />)}
+            <i className="elemental-hit-ring" />
+          </span>}
           {damagedLeaders.has(currentPlayer.id) && <span className={`battle-float-number battle-float-number--${damagedLeaders.get(currentPlayer.id)!.kind}`}>
             {damagedLeaders.get(currentPlayer.id)!.kind === 'heal' ? '+' : '−'}{damagedLeaders.get(currentPlayer.id)!.amount}
           </span>}
