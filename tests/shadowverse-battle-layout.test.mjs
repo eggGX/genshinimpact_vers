@@ -42,3 +42,18 @@ test('viewport layout falls back on narrower displays', () => {
   assert.match(css, /@media \(min-width:900px\) and \(min-height:640px\)/)
   assert.match(css, /@media\(max-width:899px\), \(max-height:639px\)/)
 })
+
+test('hand defaults to compact right dock and expands only after a hand click', () => {
+  assert.match(app, /const \[handOpen, setHandOpen\] = useState\(false\)/)
+  assert.match(app, /handOpen \? 'game--hand-open' : ''/)
+  assert.match(app, /if \(!handOpen\) \{\s*setHandOpen\(true\)/)
+  assert.match(css, /\.game--battle-fit:not\(\.game--hand-open\) \.hand-cards/)
+  assert.match(css, /\.game--battle-fit\.game--hand-open > \.hand/)
+})
+
+test('blank battlefield dismisses expanded hand without intercepting interactive cards', () => {
+  assert.match(app, /target\.closest\('\.field'\) && !target\.closest\('\.follower-wrapper, button, \[data-attack-drop\]'\)/)
+  assert.match(app, /setHandOpen\(false\)/)
+  assert.match(app, /setExpandedHandIndex\(null\)/)
+  assert.match(app, /onPointerDown=\{event => startHandDrag\(event, index\)\}/)
+})
