@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { CardArtwork } from './CardArtwork'
 import { CardDetail } from './CardDetail'
 import { ElementIcon } from './ElementIcon'
@@ -6,7 +6,7 @@ import { getAllCards } from '../data/cardRegistry'
 import { productionCards } from '../data/productionCards'
 import { ELEMENT_ORDER, RARITY_ORDER } from '../data/cardValidation'
 import { filterCards } from '../data/cardFilters'
-import type { ElementType, Rarity } from '../game/types'
+import type { Card, ElementType, Rarity } from '../game/types'
 import './CardLibrary.css'
 
 const ELEMENT_LABELS: Record<ElementType, string> = {
@@ -17,6 +17,66 @@ const RARITY_LABELS: Record<Rarity, string> = {
   bronze: 'ブロンズ', silver: 'シルバー', gold: 'ゴールド', legendary: 'レジェンド',
 }
 
+const ALL_CARDS = getAllCards()
+const ORIGIN_IDS = new Set(productionCards.map(card => card.id))
+const INITIAL_CARDS = 32
+const MORE_CARDS = 24
+
+// Keep card contents stable when only the selected card or filter controls change.
+const LibraryEntry = memo(function LibraryEntry({
+  card, selected, onSelect,
+}: { card: Card; selected: boolean; onSelect: (id: string) => void }) {
+  return <button type="button"
+    className={selected ? 'library-entry selected' : 'library-entry'}
+    onClick={() => onSelect(card.id)}>
+    <span className="library-card-element">コスト {card.cost} <ElementIcon element={card.element} size="xs" withLabel /></span>
+    <strong>{card.name}</strong>
+    <span>{RARITY_LABELS[card.rarity]}</span>
+    <CardArtwork cardId={card.id} name={card.name} className="card-artwork--library" />
+    {card.type === 'follower' && <span>{card.attack} / {card.health}</span>}
+    <small>{card.token ? 'トークン（デッキ不可）' : '正式'}</small>
+    {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
+  </button>
+})
+
+// Incremental mounting avoids decoding and laying out the full 139-card catalogue
+// up front. The sentinel adds a batch *before* it reaches the visible viewport.
+function LibraryGrid({
+  cards, selectedId, onSelect,
+}: { cards: Card[]; selectedId: string | null; onSelect: (id: string) => void }) {
+  const [count, setCount] = useState(INITIAL_CARDS)
+  const sentinel = useRef<HTMLDivElement>(null)
+  const hasMore = count < cards.length
+
+  useEffect(() => {
+    const node = sentinel.current
+    if (!node || !hasMore || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setCount(previous => Math.min(previous + MORE_CARDS, cards.length))
+      }
+    }, { rootMargin: '600px 0px' })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [cards, count, hasMore])
+
+  return <>
+    <div className="library-card-grid">
+      {cards.slice(0, count).map(card => (
+        <LibraryEntry key={card.id} card={card}
+          selected={selectedId === card.id} onSelect={onSelect} />
+      ))}
+      {cards.length === 0 && <p>該当するカードはありません。</p>}
+    </div>
+    {hasMore && <div ref={sentinel} className="library-load-more">
+      <button type="button"
+        onClick={() => setCount(previous => Math.min(previous + MORE_CARDS, cards.length))}>
+        さらに表示（{Math.min(count, cards.length)} / {cards.length}枚）
+      </button>
+    </div>}
+  </>
+}
+
 export function CardLibrary({ onBack }: { onBack: () => void }) {
   const [element, setElement] = useState<ElementType | 'all'>('all')
   const [rarity, setRarity] = useState<Rarity | 'all'>('all')
@@ -24,8 +84,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const originIds = new Set(productionCards.map(card => card.id))
-  const visible = filterCards(getAllCards(), { element, rarity, origin, search }, originIds)
+  const visible = useMemo(() => filterCards(ALL_CARDS, { element, rarity, origin, search }, ORIGIN_IDS), [element, rarity, origin, search])
   const selectedIndex = visible.findIndex(card => card.id === selectedId)
   const selected = selectedIndex >= 0 ? visible[selectedIndex] : undefined
   const selectNeighbor = (offset: -1 | 1) => {
@@ -99,22 +158,8 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
           </label>
         </div>
         <p aria-live="polite">表示：{visible.length}枚</p>
-        <div className="library-card-grid">
-          {visible.map(card => (
-            <button type="button" key={card.id}
-              className={selectedId === card.id ? 'library-entry selected' : 'library-entry'}
-              onClick={() => setSelectedId(card.id)}>
-              <span className="library-card-element">コスト {card.cost} <ElementIcon element={card.element} size="xs" withLabel /></span>
-              <strong>{card.name}</strong>
-              <span>{RARITY_LABELS[card.rarity]}</span>
-              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--library" />
-              {card.type === 'follower' && <span>{card.attack} / {card.health}</span>}
-              <small>{card.token ? 'トークン（デッキ不可）' : '正式'}</small>
-              {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
-            </button>
-          ))}
-          {visible.length === 0 && <p>該当するカードはありません。</p>}
-        </div>
+        <LibraryGrid key={`${element}|${rarity}|${origin}|${search}`}
+          cards={visible} selectedId={selectedId} onSelect={setSelectedId} />
 
       </section>
       {selected && <div className="card-detail-overlay" role="dialog" aria-modal="true"
