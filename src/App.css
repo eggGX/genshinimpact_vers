@@ -1470,7 +1470,7 @@
     border:2px solid #b99b65;
     background:linear-gradient(150deg,#153b45dd,#0e2537eb);
   }
-  .game--battle-fit .player.self .player-resources {top:auto;bottom:13%;}
+  .game--battle-fit .player.self .player-resources {top:auto;bottom:26%;}
   .game--battle-fit .resource-caption {font-size:10px;}
   .game--battle-fit .pp-values {gap:3px;}
   .game--battle-fit .pp-gems,.game--battle-fit .energy-gems {gap:4px;margin:5px 0;}
