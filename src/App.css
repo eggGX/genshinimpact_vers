@@ -1356,8 +1356,6 @@
 }
 .game--battle .battle-destroying .field-card {
   width:100%;
-  min-height:0;
-  height:100%;
   box-sizing:border-box;
   filter:none;
   animation:none;
