@@ -2348,3 +2348,10 @@
   border-color:#ff7886;
   box-shadow:0 0 0 4px #ff6d7c99,0 0 27px #ff7385bb;
 }
+
+
+/* An attack-ready follower with no legal target stays visually neutral. */
+.game--battle-fit .field-card.can-attack:not(.attack-ready--leader):not(.attack-ready--follower):not(.selected-card) {
+  border-color:var(--element-edge,#bda56f);
+  box-shadow:0 4px 12px #0008;
+}
