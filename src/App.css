@@ -547,6 +547,85 @@
   .game--animating .leader-health,.battle-playback{animation:none;}
 }
 
+/* Per-element hit particles: all shapes are lightweight CSS, no image assets.
+   Colors, streaks and particle outlines vary by element. */
+.follower-wrapper,.leader {position:relative;}
+.elemental-hit {
+  --hit-color:#fff;
+  --hit-glow:#fff9;
+  --hit-shape:50%;
+  position:absolute;
+  z-index:11;
+  inset:4% 0;
+  overflow:visible;
+  pointer-events:none;
+  display:block;
+  filter:drop-shadow(0 0 9px var(--hit-glow));
+}
+.elemental-hit--pyro {--hit-color:#ff853f;--hit-glow:#fa432dcc;--hit-shape:18% 80% 35% 70%;}
+.elemental-hit--hydro {--hit-color:#6bd5ff;--hit-glow:#268eedcc;--hit-shape:8% 85% 65% 70%;}
+.elemental-hit--electro {--hit-color:#e5a0ff;--hit-glow:#a94bffd9;--hit-shape:0;}
+.elemental-hit--cryo {--hit-color:#b9f4ff;--hit-glow:#68d9ffbb;--hit-shape:15%;}
+.elemental-hit--anemo {--hit-color:#73f5bf;--hit-glow:#4beab6a8;--hit-shape:45% 0;}
+.elemental-hit--geo {--hit-color:#ffc45d;--hit-glow:#b78a27bb;--hit-shape:12%;}
+.elemental-hit--dendro {--hit-color:#a7ef68;--hit-glow:#62bb34bb;--hit-shape:0 80% 0 80%;}
+.elemental-hit-ring {
+  position:absolute;
+  left:50%;top:50%;
+  width:65%;height:60%;
+  border:3px solid var(--hit-color);
+  border-radius:50%;
+  box-shadow:0 0 16px var(--hit-glow),inset 0 0 12px var(--hit-glow);
+  animation:elemental-hit-wave .65s ease-out both;
+}
+.elemental-hit--hydro .elemental-hit-ring {border-style:double;border-width:5px;transform:rotate(-14deg);}
+.elemental-hit--electro .elemental-hit-ring {border-radius:12%;border-style:dashed;}
+.elemental-hit--cryo .elemental-hit-ring {border-radius:20%;transform:rotate(45deg);}
+.elemental-hit--anemo .elemental-hit-ring {border-style:dashed;border-radius:48% 50% 12% 50%;}
+.elemental-hit--geo .elemental-hit-ring {border-radius:14%;transform:rotate(20deg);}
+.elemental-hit--dendro .elemental-hit-ring {border-radius:0 80% 0 80%;}
+.elemental-hit-particle {
+  position:absolute;
+  top:45%;left:50%;
+  width:9px;height:15px;
+  background:var(--hit-color);
+  border:1px solid #ffffffaa;
+  border-radius:var(--hit-shape);
+  box-shadow:0 0 9px var(--hit-glow);
+  opacity:0;
+  --angle:0deg;
+  --distance:43px;
+  animation:elemental-hit-spark .68s ease-out both;
+}
+.elemental-hit-particle:nth-child(1){--angle:-90deg;--distance:46px;}
+.elemental-hit-particle:nth-child(2){--angle:-45deg;--distance:52px;animation-delay:25ms;}
+.elemental-hit-particle:nth-child(3){--angle:5deg;--distance:46px;animation-delay:40ms;}
+.elemental-hit-particle:nth-child(4){--angle:55deg;--distance:53px;animation-delay:10ms;}
+.elemental-hit-particle:nth-child(5){--angle:110deg;--distance:45px;animation-delay:50ms;}
+.elemental-hit-particle:nth-child(6){--angle:165deg;--distance:49px;animation-delay:20ms;}
+.elemental-hit-particle:nth-child(7){--angle:215deg;--distance:56px;animation-delay:35ms;}
+.elemental-hit--hydro .elemental-hit-particle {width:8px;height:17px;clip-path:polygon(50% 0,85% 50%,70% 94%,30% 94%,15% 50%);}
+.elemental-hit--electro .elemental-hit-particle {width:13px;height:26px;clip-path:polygon(55% 0,15% 49%,52% 45%,35% 100%,95% 34%,56% 38%);}
+.elemental-hit--cryo .elemental-hit-particle {width:13px;height:18px;clip-path:polygon(50% 0,65% 35%,100% 50%,65% 65%,50% 100%,35% 65%,0 50%,35% 35%);}
+.elemental-hit--anemo .elemental-hit-particle {width:18px;height:6px;border-radius:100% 0 100% 0;}
+.elemental-hit--geo .elemental-hit-particle {width:13px;height:13px;clip-path:polygon(30% 0,95% 22%,80% 90%,20% 100%,0 45%);}
+.elemental-hit--dendro .elemental-hit-particle {width:11px;height:19px;transform-origin:50% 100%;border-radius:0 90% 0 90%;}
+@keyframes elemental-hit-wave {
+  0%{opacity:0;translate:-50% -50%;scale:.3;}
+  22%{opacity:.94;scale:.85;}
+  100%{opacity:0;translate:-50% -50%;scale:1.85;}
+}
+@keyframes elemental-hit-spark {
+  0%{opacity:0;transform:rotate(var(--angle)) translateY(0) scale(.4);}
+  24%{opacity:1;}
+  100%{opacity:0;transform:rotate(var(--angle)) translateY(calc(-1 * var(--distance))) scale(.25);}
+}
+@media(prefers-reduced-motion:reduce){
+  .elemental-hit-ring,.elemental-hit-particle{animation:none;}
+  .elemental-hit-ring{opacity:.55;translate:-50% -50%;}
+  .elemental-hit-particle{display:none;}
+}
+
 /* Combat readability: lunge on declaration, impact on the affected card,
    and an HP/shield delta at the exact recorded resolution step. */
 .game--animating .follower-wrapper.battle-attacker .field-card {
