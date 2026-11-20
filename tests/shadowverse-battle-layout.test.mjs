@@ -57,3 +57,17 @@ test('blank battlefield dismisses expanded hand without intercepting interactive
   assert.match(app, /setExpandedHandIndex\(null\)/)
   assert.match(app, /onPointerDown=\{event => startHandDrag\(event, index\)\}/)
 })
+
+
+test('compact hand is left of ability controls and both hand modes keep stats above screen bottom', () => {
+  const override = css.split('/* Keep the entire hand (including attack/health) inside the viewport.')[1]
+  assert.ok(override, 'Expected final layout override')
+  assert.match(override, /not\(\.game--hand-open\) > \.hand/)
+  assert.match(override, /right:clamp\(205px,13vw,255px\)/)
+  assert.match(override, /bottom:14px/)
+  assert.match(override, /game--hand-open > \.hand/)
+  assert.match(override, /bottom:18px/)
+  assert.match(override, /\.hand-card \.hand-card-stats/)
+  assert.match(override, /margin-top:auto/)
+  assert.match(override, /box-sizing:border-box/)
+})
