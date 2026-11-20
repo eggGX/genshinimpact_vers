@@ -14,7 +14,7 @@ test('hand drag uses pointer capture with a movement threshold and does not trig
   assert.match(app, /onPointerDown=\{event => startHandDrag\(event, index\)\}/)
   assert.match(app, /onPointerUp=\{event => finishHandDrag\(event\)\}/)
   assert.match(app, /onPointerCancel=\{event => finishHandDrag\(event, true\)\}/)
-  assert.match(app, /if \(!suppressHandDragClick\.current\) handlePlayCard\(index\)/)
+  assert.match(app, /if \(suppressHandDragClick\.current\) return/)
 })
 
 test('hand release plays only within own field; click still uses existing play handler', () => {
