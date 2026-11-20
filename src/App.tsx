@@ -516,6 +516,8 @@ function App({ online }: { online?: {
   >(null)
   const [selectedAttackerId, setSelectedAttackerId] =
     useState<string | null>(null)
+  const [abilityFocusId, setAbilityFocusId] = useState<string | null>(null)
+  const [expandedHandIndex, setExpandedHandIndex] = useState<number | null>(null)
   const dragPointer = useRef<{
     pointerId: number; attackerId: string; startX: number; startY: number; moved: boolean
   } | null>(null)
@@ -570,11 +572,14 @@ function App({ online }: { online?: {
   const selectedAttacker = currentPlayer.field.find(
     f => f.instanceId === selectedAttackerId
   )
+  const abilityFocus = currentPlayer.field.find(f => f.instanceId === abilityFocusId)
+  const abilityFocusCard = abilityFocus ? getCard(abilityFocus.cardId) : undefined
 
   const resetSelection = () => {
     setSelectedAttackerId(null)
     setSelectedHandIndex(null)
     setSelectedAbility(null)
+    setExpandedHandIndex(null)
   }
 
   const handleReset = () => {
@@ -621,6 +626,7 @@ function App({ online }: { online?: {
   // In particular, fanfare targets are chosen by a subsequent click, not by
   // dropping the card onto a follower or leader.
   const handlePlayCard = (handIndex: number, fromDrag = false) => {
+    setExpandedHandIndex(null)
     if (!onlineCanAct) return
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
@@ -959,7 +965,10 @@ function App({ online }: { online?: {
           damagedFollowers.get(follower.instanceId)?.kind === 'damage' ? 'battle-damaged' : '',
           attackingFollowerId === follower.instanceId ? 'battle-attacker' : '',
           follower.aura.length ? 'follower-has-aura' : ''].join(' ')}
-        onMouseEnter={() => setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })}
+        onMouseEnter={() => {
+          setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })
+          if (!isOpponent) setAbilityFocusId(follower.instanceId)
+        }}
         onMouseLeave={() => setInspectedCard(null)}>
       {hitElements.has(follower.instanceId) && <span className={`elemental-hit elemental-hit--${hitElements.get(follower.instanceId)}`} aria-hidden="true">
         {Array.from({ length: 7 }, (_, i) => <i key={i} className="elemental-hit-particle" />)}
@@ -1017,10 +1026,9 @@ function App({ online }: { online?: {
         }}
       >
         {card && <CardArtwork cardId={card.id} name={card.name} className="card-artwork--field" />}
-        <strong>
+        <strong className="battle-field-card-name">
           {card?.name ?? '不明なカード'}
         </strong>
-        {card && <ElementIcon element={card.element} size="xs" />}
         <span className="field-keywords" aria-label="カード状態">
           {follower.keywords.includes('storm') && <span title="疾走" className="keyword-pill">疾</span>}
           {follower.keywords.includes('rush_only') && <span title="突進" className="keyword-pill">突</span>}
@@ -1105,29 +1113,6 @@ function App({ online }: { online?: {
 
         <small className="follower-ready">{isOpponent ? 'ENEMY' : canAttack ? 'READY' : 'WAIT'}</small>
       </button>
-      {!isOpponent && (card?.elementalSkill || card?.elementalBurst) && (
-        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-          {card.elementalSkill && (
-            <button type="button"
-              disabled={!onlineCanAct || !canUseAbility(game, follower.instanceId, 'skill')}
-              onClick={() => handleUseAbility(follower, 'skill')}
-              title={card.elementalSkill.name}>
-              スキル PP{card.elementalSkill.ppCost ?? 0}
-              {card.id === 'C023'
-                ? ` ${follower.skillUsesThisTurn ?? (follower.skillUsed ? 1 : 0)}/3回`
-                : follower.skillUsed ? ' 済' : ''}
-            </button>
-          )}
-          {card.elementalBurst && (
-            <button type="button"
-              disabled={!onlineCanAct || !canUseAbility(game, follower.instanceId, 'burst')}
-              onClick={() => handleUseAbility(follower, 'burst')}
-              title={card.elementalBurst.name}>
-              爆発 EN{card.elementalBurst.energyCost ?? 0}
-            </button>
-          )}
-        </div>
-      )}
       </div>
     )
   }
@@ -1193,9 +1178,6 @@ function App({ online }: { online?: {
                 `card-element--${card?.element ?? 'none'}`,
                 `card-rarity--${card?.rarity ?? 'bronze'}`].join(' ')}>
                 <CardArtwork cardId={amulet.cardId} name={card?.name ?? amulet.cardId} className="card-artwork--field" />
-                <strong>{card?.name ?? amulet.cardId}</strong>
-                <ElementIcon element={card?.element ?? 'none'} size="xs" />
-                <span className="amulet-type">アミュレット</span>
                 <span className="amulet-countdown">残り {amulet.turnsRemaining} ターン</span>
               </div>
             </div>
@@ -1721,6 +1703,29 @@ function App({ online }: { online?: {
         </button>
       </section>
 
+      <aside className="battle-ability-rail" aria-label="元素能力の操作">
+        <div className="battle-ability-rail-title">元素能力</div>
+        <div className="battle-ability-rail-source">{abilityFocusCard?.name ?? '自分のフォロワーを選択'}</div>
+        <button type="button" className="battle-ability-rail-button"
+          disabled={!abilityFocus || !abilityFocusCard?.elementalSkill || !onlineCanAct ||
+            !canUseAbility(game, abilityFocus.instanceId, 'skill')}
+          title={abilityFocusCard?.elementalSkill?.name ?? '元素スキル'}
+          onClick={() => { if (abilityFocus) handleUseAbility(abilityFocus, 'skill') }}>
+          <span>元素スキル</span>
+          <small>{abilityFocusCard?.elementalSkill
+            ? `PP ${abilityFocusCard.elementalSkill.ppCost ?? 0}` : '—'}</small>
+        </button>
+        <button type="button" className="battle-ability-rail-button battle-ability-rail-button--burst"
+          disabled={!abilityFocus || !abilityFocusCard?.elementalBurst || !onlineCanAct ||
+            !canUseAbility(game, abilityFocus.instanceId, 'burst')}
+          title={abilityFocusCard?.elementalBurst?.name ?? '元素爆発'}
+          onClick={() => { if (abilityFocus) handleUseAbility(abilityFocus, 'burst') }}>
+          <span>元素爆発</span>
+          <small>{abilityFocusCard?.elementalBurst
+            ? `EN ${abilityFocusCard.elementalBurst.energyCost ?? 0}` : '—'}</small>
+        </button>
+      </aside>
+
       <div className="battle-message" role="status" aria-live="polite"><span className="battle-message-icon">✧</span>
         {winner
           ? 'ゲーム終了'
@@ -1782,6 +1787,7 @@ function App({ online }: { online?: {
                 `card-element--${card.element}`,
                 `card-rarity--${card.rarity}`,
                 selected ? 'selected-card' : '',
+                expandedHandIndex === index ? 'hand-card--expanded' : '',
               ].filter(Boolean).join(' ')}
               key={`${cardId}-${index}`}
               disabled={!playable}
@@ -1795,7 +1801,13 @@ function App({ online }: { online?: {
               onFocus={() => setInspectedCard({ kind: 'hand', cardId })}
               onBlur={() => setInspectedCard(null)}
               onClick={() => {
-                if (!suppressHandDragClick.current) handlePlayCard(index)
+                if (suppressHandDragClick.current) return
+                if (expandedHandIndex !== index) {
+                  setExpandedHandIndex(index)
+                  setInspectedCard({ kind: 'hand', cardId })
+                } else {
+                  handlePlayCard(index)
+                }
               }}
             >
               <span className="card-cost">
