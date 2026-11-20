@@ -2297,3 +2297,23 @@
 @media(max-width:760px){
   .game--battle-fit .amulet-countdown {right:-4px;bottom:-4px;width:22px;height:22px;font-size:20px;}
 }
+
+
+/* Ability icons sit slightly BELOW the portrait, leaving card artwork visible.
+   The centered amulet emblem stays clear of its right-hand countdown badge. */
+.game--battle-fit .field-card > .follower-emblems,
+.game--battle-fit .amulet-card > .follower-emblems {
+  position:absolute;
+  left:50%;
+  right:auto;
+  top:auto;
+  bottom:-22px;
+  transform:translateX(-50%);
+  z-index:11;
+}
+@media(max-width:760px) {
+  .game--battle-fit .field-card > .follower-emblems,
+  .game--battle-fit .amulet-card > .follower-emblems {
+    bottom:-18px;
+  }
+}
