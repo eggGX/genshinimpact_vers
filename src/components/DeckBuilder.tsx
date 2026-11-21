@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CardArtwork } from './CardArtwork'
-import { getCardAbilityText } from '../data/cardAbilityText'
+import { BattleCardTooltip } from './BattleCardTooltip'
 import { ElementIcon } from './ElementIcon'
 import { productionCards } from '../data/productionCards'
 import {
@@ -28,6 +28,16 @@ interface Props {
 export function DeckBuilder({title,deck,onChange,onBack}:Props) {
   const [search,setSearch] = useState('')
   const [elementFilter,setElementFilter] = useState('all')
+  const [hoveredCardId,setHoveredCardId] = useState<string | null>(null)
+  const [tooltipPosition,setTooltipPosition] = useState({left:0,top:0})
+  const showCardTooltip = (id:string,x:number,y:number) => {
+    setHoveredCardId(id)
+    const width=380
+    setTooltipPosition({
+      left: x+width+18 <= window.innerWidth ? x+18 : Math.max(8,x-width-18),
+      top: Math.max(8,Math.min(y-90,window.innerHeight-510)),
+    })
+  }
   const counts = new Map<string,number>()
   for(const id of deck.cards)counts.set(id,(counts.get(id)??0)+1)
   const errors = validateDeck(deck)
@@ -102,30 +112,34 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
             </select>
           </label>
         </div>
+        <p className="deck-pool-guide">カードをクリックして追加 ／ 右クリックで1枚外す ／ マウスを合わせて能力確認</p>
         <div className="deck-card-pool">
           {available.map(card=>{
-            const abilityText = getCardAbilityText(card)
             const count=counts.get(card.id)??0
             const enabled=deck.cards.length<DECK_SIZE&&count<MAX_CARD_COPIES
-            return <div key={card.id} className="deck-card-row">
-              <CardArtwork cardId={card.id} name={card.name} className="card-artwork--list" />
-              <div className="deck-card-details">
-                <strong>{card.cost}PP {card.name}</strong>
-                <small className="deck-card-meta"><ElementIcon element={card.element} size="xs" withLabel /> ・{rarityNames[card.rarity]}・{cardTypeNames[card.type]}</small>
-                <span className="deck-card-description">{abilityText.basic || '基本効果なし'}</span>
-                {(card.elementalSkill || card.elementalBurst) && <span className="deck-card-ability-badges">
-                  {card.elementalSkill && <span title={abilityText.skill || card.elementalSkill.name}>スキル · {card.elementalSkill.name}</span>}
-                  {card.elementalBurst && <span title={abilityText.burst || card.elementalBurst.name}>爆発 · {card.elementalBurst.name}</span>}
-                </span>}
-              </div>
-              <div className="deck-copy-buttons">
-                <span>{count} / 3</span>
-                <button type="button" disabled={!enabled} onClick={()=>add(card.id)}
-                  aria-label={card.name+'を1枚追加'}>＋</button>
-              </div>
-            </div>
+            return <button key={card.id} type="button"
+              className={['deck-card-tile',`deck-card-tile--${card.rarity}`,count>0?'deck-card-tile--included':''].filter(Boolean).join(' ')}
+              disabled={!enabled && count===0}
+              aria-label={`${card.name}：採用${count}枚、左クリックで追加、右クリックで削除`}
+              title={undefined}
+              onClick={()=>add(card.id)}
+              onContextMenu={event=>{event.preventDefault();remove(card.id)}}
+              onMouseEnter={event=>showCardTooltip(card.id,event.clientX,event.clientY)}
+              onMouseLeave={()=>setHoveredCardId(null)}
+              onFocus={()=>setHoveredCardId(card.id)}
+              onBlur={()=>setHoveredCardId(null)}>
+              <span className="deck-tile-cost">{card.cost}</span>
+              <span className="deck-tile-count">{count}</span>
+              <span className="deck-tile-art">
+                <CardArtwork cardId={card.id} name={card.name} className="card-artwork--deck" />
+              </span>
+              <span className="deck-tile-name">{card.name}</span>
+              {card.type==='follower'
+                ? <span className="deck-tile-stats"><b>{card.attack}</b><b>{card.health}</b></span>
+                : <span className="deck-tile-kind">{cardTypeNames[card.type]}</span>}
+            </button>
           })}
-          {available.length===0&&<p>該当するカードはありません。</p>}
+          {available.length===0&&<p className="deck-pool-empty">該当するカードはありません。</p>}
         </div>
       </section>
 
@@ -152,5 +166,9 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
         <button type="button" className="deck-builder-back" onClick={onBack}>デッキ選択に戻る</button>
       </section>
     </div>
+    {hoveredCardId && getDeckCard(hoveredCardId) && <div className="deck-hover-tooltip"
+      style={{left:tooltipPosition.left,top:tooltipPosition.top}}>
+      <BattleCardTooltip card={getDeckCard(hoveredCardId)!} ownerLabel="カード候補" />
+    </div>}
   </main>
 }
