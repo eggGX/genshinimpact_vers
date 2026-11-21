@@ -275,6 +275,7 @@ function App({ online }: { online?: {
   const drawFlightSerial = useRef(0)
   const drawFlightTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   const previousDrawState = useRef<Array<{id:string; deckSize:number; hand:string[]} > | null>(null)
+  const animatedDrawTransitions = useRef<Set<string>>(new Set())
 
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
@@ -346,6 +347,9 @@ function App({ online }: { online?: {
     setPlayedCardNotice(null)
     setMulliganReveal(null)
     setGame(createInitialGameState(decks))
+    animatedDrawTransitions.current.clear()
+    previousDrawState.current=null
+    setDrawFlights([])
     setLocalBattleLog([])
     setBattleLogOpen(false)
     setBattleLogTab('log')
@@ -448,6 +452,16 @@ function App({ online }: { online?: {
         gained.length,player.hand.length-before.hand.length,
         likelyReplacement?1:0))
       if(drawn<=0)continue
+      // Playback may temporarily rewind the visible board to an earlier frame,
+      // then revisit the same draw. Never animate that same transition twice.
+      const transitionKey=[player.id,shownGame.turn,before.deckSize,player.deckSize,
+        before.hand.join(','),player.hand.join(',')].join('|')
+      if(animatedDrawTransitions.current.has(transitionKey))continue
+      animatedDrawTransitions.current.add(transitionKey)
+      if(animatedDrawTransitions.current.size>400) {
+        const oldest=animatedDrawTransitions.current.values().next().value
+        if(oldest) animatedDrawTransitions.current.delete(oldest)
+      }
       const isSelf=player.id===selfId
       const source=battleScreenRef.current?.querySelector<HTMLElement>(
         isSelf?'[data-draw-source="self"]':'[data-draw-source="opponent"]')
@@ -720,6 +734,9 @@ function App({ online }: { online?: {
 
   const handleReset = () => {
     skipPlayback()
+    animatedDrawTransitions.current.clear()
+    previousDrawState.current=null
+    setDrawFlights([])
     setGame(createInitialGameState(decks))
     setLocalBattleLog([])
     setBattleLogOpen(false)
