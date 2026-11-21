@@ -994,6 +994,7 @@ function App({ online }: { online?: {
     const lastWord = !keywords.includes('no_last_word') && (
       keywords.includes('lastword') ||
       keywords.includes('last_word') ||
+      keywords.some(keyword => /(?:^on_destroy(?:_|$)|_on_destroy(?:_|$))/.test(keyword)) ||
       card?.effects?.some(effect => effect.trigger === 'on_destroy') ||
       description.includes('【ラストワード】')
     )
@@ -1007,7 +1008,7 @@ function App({ online }: { online?: {
     const grantedTriggers = keywords.some(keyword =>
       keyword === 'raincutter_on_attack' ||
       keyword === 'attack_heal_2' ||
-      /(?:^on_attack(?:_|$)|_on_attack(?:_|$)|^on_turn_(?:start|end)(?:_|$)|_on_turn_(?:start|end)(?:_|$)|^on_destroy(?:_|$)|_on_destroy(?:_|$))/.test(keyword)
+      /(?:^on_attack(?:_|$)|_on_attack(?:_|$)|^on_turn_(?:start|end)(?:_|$)|_on_turn_(?:start|end)(?:_|$))/.test(keyword)
     )
     const triggered = grantedTriggers ||
       Boolean(card?.effects?.some(effect =>
