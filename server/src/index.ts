@@ -45,7 +45,15 @@ if (!getApps().length) initializeApp({ credential: adminCredential() })
 const db = getFirestore()
 const auth = getAuth()
 const port = Number(process.env.PORT || 8080)
-const origin = process.env.ALLOWED_ORIGIN || 'https://genshincard-25028.web.app'
+// Accept only explicitly trusted frontend origins. Local Vite is used for
+// friend-match testing; production Hosting remains independently allowed.
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGIN || 'https://genshincard-25028.web.app,http://localhost:5173')
+    .split(',').map(value => value.trim()).filter(Boolean),
+)
+function allowedOrigin(requestOrigin: string | undefined): string | null {
+  return requestOrigin && allowedOrigins.has(requestOrigin) ? requestOrigin : null
+}
 const projectId = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT
 if (!projectId) console.warn('Using Firebase Admin default project configuration')
 const codePattern = /^[A-HJ-NP-Z2-9]{8}$/
@@ -59,11 +67,15 @@ type Room = {
 }
 type Stored = { state: GameState; revision: number; mulliganReady?: MulliganFlags; history?: RecordedOnlineEvent[]; hostUid?: string; guestUid?: string }
 
-function json(res: import('node:http').ServerResponse, status: number, data: unknown) {
+function json(
+  res: import('node:http').ServerResponse, status: number, data: unknown,
+  requestOrigin?: string,
+) {
+  const permitted = allowedOrigin(requestOrigin)
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
-    'Access-Control-Allow-Origin': origin,
+    ...(permitted ? { 'Access-Control-Allow-Origin': permitted } : {}),
     'Vary': 'Origin',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -315,10 +327,14 @@ async function submitAction(
 
 createServer(async (req, res) => {
   const requestOrigin = req.headers.origin
-  if (requestOrigin && requestOrigin !== origin) {
+  if (requestOrigin && !allowedOrigin(requestOrigin)) {
     json(res, 403, { error: '許可されていない接続元です' }); return
   }
-  if (req.method === 'OPTIONS') { json(res, 204, null); return }
+  // Apply the selected origin to every response, including errors and preflight.
+  res.setHeader('Vary', 'Origin')
+  const permittedOrigin = allowedOrigin(requestOrigin)
+  if (permittedOrigin) res.setHeader('Access-Control-Allow-Origin', permittedOrigin)
+  if (req.method === 'OPTIONS') { json(res, 204, null, requestOrigin); return }
   const pathname = new URL(req.url || '/', 'http://localhost').pathname
   if (req.method === 'GET' && pathname === '/health') {
     json(res, 200, { ok: true }); return
