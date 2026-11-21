@@ -73,15 +73,29 @@ const address = import.meta.env.VITE_MATCH_SERVER_URL?.trim().replace(/\/$/, '')
 export function isMatchServerConfigured(): boolean {
   return Boolean(address && /^https:\/\//.test(address))
 }
+/** Begin waking the Render Free service while users are still in the lobby,
+ * rather than waiting for their first match-state request. No auth needed. */
+export function warmOnlineMatchServer(): void {
+  if (!isMatchServerConfigured()) return
+  void fetch(`${address}/health`, { cache: 'no-store' }).catch(() => {
+    // Prewarm is best-effort; the real request will surface any error.
+  })
+}
+
 async function requestMatch(code: string, method: 'GET' | 'POST', endpoint: 'state' | 'mulligan' | 'action', body?: object): Promise<OnlineMatchView> {
   if (!isMatchServerConfigured()) throw new Error('対戦サーバーがまだ設定されていません。')
   const token = await getFriendMatchIdToken()
-  const response = await fetch(`${address}/rooms/${encodeURIComponent(code)}/${endpoint}`, {
-    method,
-    headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-    cache: 'no-store',
-  })
+  let response: Response
+  try {
+    response = await fetch(`${address}/rooms/${encodeURIComponent(code)}/${endpoint}`, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+      cache: 'no-store',
+    })
+  } catch (error) {
+    throw new Error('対戦サーバーに接続できません。Renderの稼働状況とALLOWED_ORIGIN（localhost:5173の許可）を確認してください。', { cause: error })
+  }
   const payload: unknown = await response.json()
   if (!response.ok) {
     const message = payload && typeof payload === 'object' && 'error' in payload
