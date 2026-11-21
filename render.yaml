@@ -13,6 +13,6 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: ALLOWED_ORIGIN
-        value: https://genshincard-25028.web.app
+        value: "https://genshincard-25028.web.app,http://localhost:5173"
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
