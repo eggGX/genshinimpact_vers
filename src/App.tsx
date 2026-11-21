@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -272,6 +272,11 @@ function App({ online }: { online?: {
   const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice, attackerId?: string } | null>(null)
   const [playedCardNotice, setPlayedCardNotice] = useState<BattleNotice | null>(null)
   const [drawFlights, setDrawFlights] = useState<DrawFlight[]>([])
+  const [enteringPieces, setEnteringPieces] = useState<Set<string>>(new Set())
+  const previousBoardPieces = useRef<Map<string, Set<string>> | null>(null)
+  const animatedBoardPieces = useRef<Set<string>>(new Set())
+  const boardEntranceTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+
   const drawFlightSerial = useRef(0)
   const drawFlightTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   const previousDrawState = useRef<Array<{id:string; deckSize:number; hand:string[]} > | null>(null)
@@ -350,6 +355,9 @@ function App({ online }: { online?: {
     animatedDrawTransitions.current.clear()
     previousDrawState.current=null
     setDrawFlights([])
+    setEnteringPieces(new Set())
+    previousBoardPieces.current=null
+    animatedBoardPieces.current.clear()
     setLocalBattleLog([])
     setBattleLogOpen(false)
     setBattleLogTab('log')
@@ -418,6 +426,40 @@ function App({ online }: { online?: {
     if (online && onlineCanAct) online.onAction(action)
   }
   const shownGame = playback ? playback.frames[playback.index].state : game
+  // Detect newly summoned followers and newly installed amulets from actual
+  // board snapshots, not from the click handler. This covers effects and both
+  // local and online play without changing game-state timing.
+  useLayoutEffect(() => {
+    const next = new Map(shownGame.players.map(player=>[
+      player.id,
+      new Set([...player.field.map(f=>f.instanceId),
+        ...(player.amulets??[]).map(a=>a.instanceId)]),
+    ] as const))
+    const previous=previousBoardPieces.current
+    previousBoardPieces.current=next
+    if(!previous || shownGame.phase==='mulligan') return
+    const fresh:string[]=[]
+    for(const [ownerId,ids] of next) {
+      const old=previous.get(ownerId)??new Set<string>()
+      for(const id of ids) {
+        const key=ownerId+':'+id
+        if(!old.has(id)&&!animatedBoardPieces.current.has(key)) {
+          fresh.push(key)
+          animatedBoardPieces.current.add(key)
+        }
+      }
+    }
+    if(fresh.length===0)return
+    setEnteringPieces(current=>new Set([...current,...fresh]))
+    const timer=window.setTimeout(()=>{
+      const leaving=new Set(fresh)
+      setEnteringPieces(current=>new Set([...current].filter(id=>!leaving.has(id))))
+      boardEntranceTimers.current=boardEntranceTimers.current.filter(item=>item!==timer)
+    },720)
+    boardEntranceTimers.current.push(timer)
+  },[shownGame])
+  useEffect(()=>()=>boardEntranceTimers.current.forEach(clearTimeout),[])
+
   // Draws are detected from actual deck/hand state transitions, so both normal
   // turn draws and card-effect draws are represented without touching the rules.
   useEffect(() => {
@@ -483,14 +525,14 @@ function App({ online }: { online?: {
         dy:endY-startY,
         midX:window.innerWidth*.50-startX+(index-(drawn-1)/2)*28,
         midY:window.innerHeight*.47-startY,
-        delay:index*220,
+        delay:index*(isSelf?220:115),
       }))
       setDrawFlights(current=>[...current,...flights].slice(-18))
       const timer=setTimeout(()=>{
         const ids=new Set(flights.map(flight=>flight.id))
         setDrawFlights(current=>current.filter(flight=>!ids.has(flight.id)))
         drawFlightTimers.current=drawFlightTimers.current.filter(item=>item!==timer)
-      },1700+Math.max(0,flights.length-1)*220)
+      },(isSelf?1700:810)+Math.max(0,flights.length-1)*(isSelf?220:115))
       drawFlightTimers.current.push(timer)
     }
   },[shownGame,online?.match.seat])
@@ -737,6 +779,9 @@ function App({ online }: { online?: {
     animatedDrawTransitions.current.clear()
     previousDrawState.current=null
     setDrawFlights([])
+    setEnteringPieces(new Set())
+    previousBoardPieces.current=null
+    animatedBoardPieces.current.clear()
     setGame(createInitialGameState(decks))
     setLocalBattleLog([])
     setBattleLogOpen(false)
@@ -1154,7 +1199,10 @@ function App({ online }: { online?: {
           highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : '',
           damagedFollowers.get(follower.instanceId)?.kind === 'damage' ? 'battle-damaged' : '',
           attackingFollowerId === follower.instanceId ? 'battle-attacker' : '',
-          follower.aura.length ? 'follower-has-aura' : ''].join(' ')}
+          follower.aura.length ? 'follower-has-aura' : '',
+          enteringPieces.has((isOpponent?opponent.id:currentPlayer.id)+':'+follower.instanceId)
+            ? (isOpponent?'field-entering field-entering--opponent':'field-entering field-entering--self') : '',
+          ].filter(Boolean).join(' ')}
         onMouseEnter={() => {
           setInspectedCard({ kind: 'follower', instanceId: follower.instanceId })
           if (!isOpponent) setAbilityFocusId(follower.instanceId)
@@ -1294,7 +1342,11 @@ function App({ online }: { online?: {
           })}
           {amulets.map(amulet => {
             const card = getCard(amulet.cardId)
-            return <div className="follower-wrapper" key={amulet.instanceId}
+            return <div className={[
+              'follower-wrapper',
+              enteringPieces.has(player.id+':'+amulet.instanceId)
+                ? (isOpponent?'field-entering field-entering--opponent':'field-entering field-entering--self') : '',
+            ].filter(Boolean).join(' ')} key={amulet.instanceId}
               onMouseEnter={() => setInspectedCard({ kind: 'amulet', instanceId: amulet.instanceId })}
               onMouseLeave={() => setInspectedCard(null)}>
               <div className={['field-card','amulet-card',
@@ -1638,7 +1690,8 @@ function App({ online }: { online?: {
         </div>
       </div>}
       {drawFlights.length>0&&<div className="battle-draw-layer" aria-hidden="true">
-        {drawFlights.map(flight=><div key={flight.id} className="battle-draw-flight"
+        {drawFlights.map(flight=><div key={flight.id}
+          className={flight.isSelf?'battle-draw-flight':'battle-draw-flight battle-draw-flight--opponent'}
           style={{
             left:flight.x,top:flight.y,
             '--draw-dx':`${flight.dx}px`,
