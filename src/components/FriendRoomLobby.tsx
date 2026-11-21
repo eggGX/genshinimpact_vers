@@ -80,18 +80,25 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
   useEffect(() => {
     if (room?.status !== 'playing' || !isMatchServerConfigured()) return
     let active = true
+    let inFlight = false
     const refresh = async () => {
+      // Don't launch overlapping polls if Render/Firestore takes longer than
+      // expected. Render the battle UI only when the revision has changed.
+      if (inFlight) return
+      inFlight = true
       try {
         const latest = await fetchOnlineMatch(room.code)
         if (!active) return
-        setOnlineMatch(previous => previous && previous.revision > latest.revision ? previous : latest)
+        setOnlineMatch(previous => previous && previous.revision >= latest.revision ? previous : latest)
         setMatchError('')
       } catch (error) {
         if (active) setMatchError(error instanceof Error ? error.message : '対戦状態を確認できません')
+      } finally {
+        inFlight = false
       }
     }
     void refresh()
-    const timer = window.setInterval(() => { void refresh() }, 2500)
+    const timer = window.setInterval(() => { void refresh() }, 1500)
     return () => { active = false; window.clearInterval(timer) }
   }, [room?.code, room?.status])
 
@@ -101,7 +108,7 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
     setMatchError('')
     try {
       const next = await submitOnlineAction(room.code, onlineMatch.revision, action)
-      setOnlineMatch(previous => previous && previous.revision > next.revision ? previous : next)
+      setOnlineMatch(previous => previous && previous.revision >= next.revision ? previous : next)
     } catch (error) {
       setMatchError(error instanceof Error ? error.message : '操作を送信できませんでした')
       // A stale revision must be refreshed before the next action.
