@@ -454,7 +454,7 @@ function App({ online }: { online?: {
       boardEntranceTimers.current=boardEntranceTimers.current.filter(item=>item!==timer)
     },1050)
     boardEntranceTimers.current.push(timer)
-  },[shownGame])
+  },[localGame,online?.match.revision,playback?.frames,playback?.index])
   useEffect(()=>()=>boardEntranceTimers.current.forEach(clearTimeout),[])
 
   // Draws are detected from actual deck/hand state transitions, so both normal
@@ -1653,7 +1653,9 @@ function App({ online }: { online?: {
           <h2>マリガン結果</h2>
           <p>あなたの確定した手札</p>
           <MulliganSwapCards reveal={mulliganReveal} />
-          <p className="mulligan-result-note">まもなく対戦が始まります</p>
+          <p className="mulligan-result-note">
+            {online.match.phase === 'mulligan' ? '相手のマリガン確定を待っています' : 'まもなく対戦が始まります'}
+          </p>
         </div>
       </div>}
       {online?.match.phase === 'mulligan' && !mulliganReveal && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
