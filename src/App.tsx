@@ -279,14 +279,13 @@ function App({ online }: { online?: {
 
   const drawFlightSerial = useRef(0)
   const drawFlightTimers = useRef<ReturnType<typeof setTimeout>[]>([])
-  const previousDrawState = useRef<Array<{id:string; deckSize:number; hand:string[]} > | null>(null)
+  const previousDrawState = useRef<Array<{id:string; deckSize:number; hand:string[]; phase:GameState['phase']} > | null>(null)
   const animatedDrawTransitions = useRef<Set<string>>(new Set())
 
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
   const [mulliganReveal, setMulliganReveal] = useState<MulliganReveal | null>(null)
-  const previousOnlinePhase = useRef(online?.match.phase ?? null)
   const onlineMulliganDraft = useRef<{ originalHand: string[]; replacedIndices: number[] } | null>(null)
   const lastAnnouncedTurn = useRef<string | null>(null)
   const lastOnlineRevision = useRef<number | null>(null)
@@ -377,24 +376,22 @@ function App({ online }: { online?: {
       projectOnlinePlayer(online.match.players[1], online.match.seat === 1),
     ],
   } : localGame
-  // Reveal only the local seat's completed online mulligan when both players are ready.
-  // Online state is already authoritative; no extra draw or gameplay action is performed.
+  // Show each seat's own confirmed mulligan as soon as the server accepts it.
+  // The host may confirm first and remain in the mulligan phase while waiting
+  // for the guest, so detecting only mulligan -> main skips the host's result.
   useEffect(() => {
     if (!online) return
-    const previousPhase = previousOnlinePhase.current
-    previousOnlinePhase.current = online.match.phase
-    if (previousPhase !== 'mulligan' || online.match.phase !== 'main') return
-    const self = online.match.players[online.match.seat]
-    const finalHand = [...(self.hand ?? [])]
     const draft = onlineMulliganDraft.current
+    if (!draft || !online.match.mulliganReady[online.match.seat]) return
+    const self = online.match.players[online.match.seat]
     setMulliganReveal({
       playerName: self.name,
-      originalHand: draft?.originalHand ?? finalHand,
-      hand: finalHand,
-      replacedIndices: draft?.replacedIndices ?? [],
+      originalHand: draft.originalHand,
+      hand: [...(self.hand ?? [])],
+      replacedIndices: draft.replacedIndices,
     })
     onlineMulliganDraft.current = null
-  }, [online?.match.phase, online?.match.seat])
+  }, [online?.match.revision, online?.match.seat])
 
   useEffect(() => {
     if (!mulliganReveal) return
@@ -463,13 +460,18 @@ function App({ online }: { online?: {
   // Draws are detected from actual deck/hand state transitions, so both normal
   // turn draws and card-effect draws are represented without touching the rules.
   useEffect(() => {
-    const next = shownGame.players.map(player=>({
+    // Compare authoritative committed states once per action, rather than
+    // every intermediate playback frame. This groups a two-card spell draw
+    // into one reveal and prevents replayed snapshots from drawing again.
+    const next = game.players.map(player=>({
       id:player.id, deckSize:player.deck.length, hand:[...player.hand],
+      phase:game.phase,
     }))
     const previous = previousDrawState.current
     previousDrawState.current=next
-    if (!previous || shownGame.phase==='mulligan') return
-    const selfId=online ? shownGame.players[online.match.seat].id : shownGame.players[0].id
+    if (!previous || game.phase==='mulligan' ||
+      previous.some(player=>player.phase==='mulligan')) return
+    const selfId=online ? game.players[online.match.seat].id : game.players[0].id
     for(const player of next) {
       const before=previous.find(item=>item.id===player.id)
       if(!before) continue
@@ -499,7 +501,7 @@ function App({ online }: { online?: {
       // The destination of a draw uniquely identifies the animation in the
       // current turn. In particular, don't replay it when presentation swaps
       // between an intermediate snapshot and the final authoritative state.
-      const transitionKey=[player.id,shownGame.turn,player.deckSize,
+      const transitionKey=[player.id,game.turn,player.deckSize,
         player.hand.join(',')].join('|')
       if(animatedDrawTransitions.current.has(transitionKey))continue
       animatedDrawTransitions.current.add(transitionKey)
@@ -541,7 +543,7 @@ function App({ online }: { online?: {
       },(isSelf?1700:810)+Math.max(0,flights.length-1)*(isSelf?220:115))
       drawFlightTimers.current.push(timer)
     }
-  },[shownGame,online?.match.seat])
+  },[localGame,online?.match.revision,online?.match.seat])
   useEffect(()=>()=>{drawFlightTimers.current.forEach(clearTimeout)},[])
 
   // The opponent can complete several actions between polls. Queue every
@@ -1654,7 +1656,7 @@ function App({ online }: { online?: {
           <p className="mulligan-result-note">まもなく対戦が始まります</p>
         </div>
       </div>}
-      {online?.match.phase === 'mulligan' && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
+      {online?.match.phase === 'mulligan' && !mulliganReveal && <div className="online-mulligan-overlay" role="dialog" aria-modal="true" aria-label="マリガン">
         <div className="online-mulligan-dialog">
           <h2>{currentPlayer.name} のマリガン</h2>
           <p>両プレイヤーが対戦画面で同時にマリガンします。</p>
