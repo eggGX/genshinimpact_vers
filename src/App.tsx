@@ -329,9 +329,9 @@ function App({ online }: { online?: {
         }
         return { ...previous, index: previous.index + 1 }
       })
-    }, playbackDelay)
+    }, online ? Math.min(playbackDelay, 300) : playbackDelay)
     return () => window.clearTimeout(timer)
-  }, [playback, playbackDelay])
+  }, [playback, playbackDelay, online?.match.seat])
 
   useEffect(() => {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)) } catch { /* storage may be disabled */ }
