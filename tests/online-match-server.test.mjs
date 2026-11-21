@@ -165,3 +165,10 @@ test('battle API accepts only explicitly configured Hosting and local Vite origi
   assert.match(backend, /'Access-Control-Allow-Origin': permitted/)
   assert.match(render, /https:\/\/genshincard-25028\.web\.app,http:\/\/localhost:5173/)
 })
+
+test('friend lobby wakes the match server before match creation', () => {
+  assert.match(frontend, /export function warmOnlineMatchServer\(\)/)
+  assert.match(frontend, /fetch\(\`\$\{address\}\/health\`/)
+  assert.match(lobby, /useEffect\(\(\) => \{ warmOnlineMatchServer\(\) \}, \[\]\)/)
+  assert.match(frontend, /対戦サーバーに接続できません/)
+})
