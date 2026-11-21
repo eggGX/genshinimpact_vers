@@ -137,7 +137,8 @@ test('online action history is privacy projected per viewer before transmission'
   assert.match(recorder, /actionTitle\(state, action\)/)
   assert.match(frontend, /onlinePlaybackQueue\.current\.push\(\.\.\.remaining\)/)
   assert.match(frontend, /online\.match\.history \?\? \[\]/)
-  assert.match(frontend, /対戦行動履歴/)
+  assert.match(frontend, /aria-label="バトルログ"/)
+  assert.match(frontend, /className="battle-log-tabs"/)
 })
 
 test('turn transition banner distinguishes own and opponent on the shared battle screen', () => {
