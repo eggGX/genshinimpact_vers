@@ -281,9 +281,8 @@ async function submitAction(
     let guestUid = stored.guestUid
     let seat: 0 | 1
     if (hostUid && guestUid) {
-      seat = uid === hostUid ? 0 : uid === guestUid ? 1 : (() => {
-        throw new Error('このルームの参加者ではありません')
-      })()
+      if (uid !== hostUid && uid !== guestUid) throw new Error('このルームの参加者ではありません')
+      seat = uid === hostUid ? 0 : 1
     } else {
       const roomSnap = await tx.get(roomRef)
       if (!roomSnap.exists) throw new Error('対戦が見つかりません')
