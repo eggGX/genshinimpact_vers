@@ -18,7 +18,7 @@ test('desktop duel uses the viewport instead of fixed-height panels', () => {
 test('field followers show portraits stats keywords and auras instead of printed skill controls', () => {
   assert.match(app, /title=\{card\?\.name \?\? '不明なカード'\}/)
   assert.match(app, /className="follower-stats"/)
-  assert.match(app, /followerEmblems\(follower\)/)
+  assert.match(app, /followerEmblems\(follower\.cardId, follower\.keywords\)/)
   assert.match(app, /className="follower-aura-icons"/)
   assert.match(css, /\.game--battle-fit \.field-card \.battle-field-card-name/)
   assert.match(css, /\.game--battle-fit \.field-card \.card-artwork/)
