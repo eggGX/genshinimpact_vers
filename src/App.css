@@ -2735,3 +2735,10 @@
   .game--battle-fit .battle-draw-flight,
   .game--battle-fit .battle-draw-card {animation-duration:.01ms;}
 }
+
+/* Reserve the newly drawn slot while the deck-to-hand card is in flight. */
+.game--battle-fit .hand-card.draw-pending,
+.game--battle-fit .battle-opponent-card-back.draw-pending {
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
