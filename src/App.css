@@ -2725,10 +2725,8 @@
 @keyframes battle-draw-travel {
   0% {opacity:0;transform:translate3d(0,0,0) scale(.65) rotate(-13deg);}
   7% {opacity:1;}
-  27% {opacity:1;transform:translate3d(var(--draw-mid-x),var(--draw-mid-y),0) scale(1.7) rotate(-2deg);}
-  42%,64% {opacity:1;transform:translate3d(var(--draw-mid-x),var(--draw-mid-y),0) scale(2.22) rotate(0);}
-  77% {opacity:1;transform:translate3d(var(--draw-mid-x),var(--draw-mid-y),0) scale(1.84) rotate(2deg);}
-  95% {opacity:1;}
+  42%,70% {opacity:1;transform:translate3d(var(--draw-mid-x),var(--draw-mid-y),0) scale(2.18) rotate(0);}
+  94% {opacity:1;}
   100% {opacity:0;transform:translate3d(var(--draw-dx),var(--draw-dy),0) scale(.70) rotate(0);}
 }
 @keyframes battle-draw-flip {
