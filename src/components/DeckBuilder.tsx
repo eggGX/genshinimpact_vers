@@ -13,9 +13,6 @@ const names: Record<PlayableElement,string> = {
   pyro:'炎', hydro:'水', cryo:'氷', electro:'雷',
   anemo:'風', geo:'岩', dendro:'草',
 }
-const rarityNames = {
-  bronze:'ブロンズ',silver:'シルバー',gold:'ゴールド',legendary:'レジェンド',
-}
 const cardTypeNames = { follower:'フォロワー', spell:'スペル', amulet:'アミュレット' }
 
 interface Props {
@@ -121,12 +118,14 @@ export function DeckBuilder({title,deck,onChange,onBack}:Props) {
               className={['deck-card-tile',`deck-card-tile--${card.rarity}`,count>0?'deck-card-tile--included':''].filter(Boolean).join(' ')}
               disabled={!enabled && count===0}
               aria-label={`${card.name}：採用${count}枚、左クリックで追加、右クリックで削除`}
-              title={undefined}
               onClick={()=>add(card.id)}
               onContextMenu={event=>{event.preventDefault();remove(card.id)}}
               onMouseEnter={event=>showCardTooltip(card.id,event.clientX,event.clientY)}
               onMouseLeave={()=>setHoveredCardId(null)}
-              onFocus={()=>setHoveredCardId(card.id)}
+              onFocus={event=>{
+                const rect=event.currentTarget.getBoundingClientRect()
+                showCardTooltip(card.id,rect.right,rect.top+80)
+              }}
               onBlur={()=>setHoveredCardId(null)}>
               <span className="deck-tile-cost">{card.cost}</span>
               <span className="deck-tile-count">{count}</span>
