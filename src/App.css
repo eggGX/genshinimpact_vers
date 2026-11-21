@@ -2824,3 +2824,38 @@
   .game--battle-fit .follower-wrapper.field-entering::after,
   .game--battle-fit .battle-draw-flight--opponent {animation:none;}
 }
+
+
+/* Make an amulet's entry unmistakable: larger rise and a brief gold-blue flash.
+   Applied only on its first appearance; the actual board slot remains stable. */
+.game--battle-fit .follower-wrapper.field-entering:has(> .amulet-card) {
+  animation:field-amulet-appear .86s cubic-bezier(.2,.72,.28,1) both;
+  transform-origin:50% 85%;
+}
+.game--battle-fit .follower-wrapper.field-entering--opponent:has(> .amulet-card) {
+  animation-name:field-amulet-appear-opponent;
+}
+.game--battle-fit .follower-wrapper.field-entering > .amulet-card {
+  animation:field-amulet-glow .86s ease-out both;
+}
+@keyframes field-amulet-appear {
+  0% {opacity:0;transform:translateY(58px) scale(.58) rotate(-5deg);}
+  44% {opacity:1;transform:translateY(-17px) scale(1.12) rotate(1deg);}
+  72% {transform:translateY(4px) scale(.98) rotate(0);}
+  100% {opacity:1;transform:translateY(0) scale(1) rotate(0);}
+}
+@keyframes field-amulet-appear-opponent {
+  0% {opacity:0;transform:translateY(-58px) scale(.58) rotate(5deg);}
+  44% {opacity:1;transform:translateY(17px) scale(1.12) rotate(-1deg);}
+  72% {transform:translateY(-4px) scale(.98) rotate(0);}
+  100% {opacity:1;transform:translateY(0) scale(1) rotate(0);}
+}
+@keyframes field-amulet-glow {
+  0% {filter:brightness(1.6);box-shadow:0 0 5px #fff1b3;}
+  40% {filter:brightness(1.3);box-shadow:0 0 0 4px #e7c87baa,0 0 40px 15px #77d9ffad;}
+  100% {filter:brightness(1);box-shadow:0 0 0 2px #3b3025,0 7px 16px #000b;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game--battle-fit .follower-wrapper.field-entering:has(> .amulet-card),
+  .game--battle-fit .follower-wrapper.field-entering > .amulet-card {animation:none;}
+}
