@@ -272,12 +272,27 @@ async function submitAction(
   const roomRef = db.collection('friendRooms').doc(code)
   const matchRef = getMatchRef(code)
   return db.runTransaction(async tx => {
-    const [roomSnap, matchSnap] = await Promise.all([tx.get(roomRef), tx.get(matchRef)])
-    if (!roomSnap.exists || !matchSnap.exists) throw new Error('対戦が見つかりません')
-    const room = roomSnap.data() as Room
-    const seat = getSeat(room, uid)
-    if (room.status !== 'playing') throw new Error('このルームは対戦中ではありません')
+    const matchSnap = await tx.get(matchRef)
+    if (!matchSnap.exists) throw new Error('対戦が見つかりません')
     const stored = matchSnap.data() as Stored
+    // Match participant UIDs are immutable once the room is playing.
+    // Read the room only for old records which lack those UIDs.
+    let hostUid = stored.hostUid
+    let guestUid = stored.guestUid
+    let seat: 0 | 1
+    if (hostUid && guestUid) {
+      seat = uid === hostUid ? 0 : uid === guestUid ? 1 : (() => {
+        throw new Error('このルームの参加者ではありません')
+      })()
+    } else {
+      const roomSnap = await tx.get(roomRef)
+      if (!roomSnap.exists) throw new Error('対戦が見つかりません')
+      const room = roomSnap.data() as Room
+      if (room.status !== 'playing') throw new Error('このルームは対戦中ではありません')
+      seat = getSeat(room, uid)
+      hostUid = room.hostUid
+      guestUid = room.guestUid
+    }
     if (stored.revision !== revision) throw new Error('対戦状態が更新されています。再読み込みしてください')
     if (stored.state.phase !== 'main') throw new Error('現在はカード操作できません')
     if (stored.state.winnerId !== null) throw new Error('対戦は終了しています')
@@ -292,7 +307,7 @@ async function submitAction(
       // Four recent actions are enough for animation catch-up while keeping
       // Firestore transaction documents and match polls compact.
       history: [...(stored.history ?? []), event].slice(-4),
-      hostUid: room.hostUid, guestUid: room.guestUid,
+      hostUid, guestUid,
     }
     tx.update(matchRef, result)
     return { stored: result, seat }
