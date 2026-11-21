@@ -36,6 +36,39 @@ import { isGuarded } from './game/neutralRules'
 import type { OnlineMatchView, OnlinePlayerView, OnlinePresentationEvent, OnlinePresentationSnapshot } from './online/matchClient'
 import type { OnlineAction } from '../server/src/matchActions'
 
+type BattleHistoryEvent = {
+  id: string
+  turn: number
+  actorId: string
+  title: string
+  playedCardId?: string
+  before: GameState
+  after: GameState
+  frames: PresentationFrame[]
+}
+
+type HistoryCardEntry = { id: string; cardId: string; ownerId: string; turn: number }
+
+function historyDestroyedCards(event: BattleHistoryEvent): HistoryCardEntry[] {
+  const steps = [event.before, ...event.frames.map(frame => frame.state), event.after]
+  const seen = new Set<string>()
+  const result: HistoryCardEntry[] = []
+  for (let i=1;i<steps.length;i++) {
+    const before=steps[i-1], after=steps[i]
+    for (const player of before.players) {
+      const next = after.players.find(p=>p.id===player.id)
+      if (!next) continue
+      const alive = new Set([...next.field.map(f=>f.instanceId),...(next.amulets??[]).map(a=>a.instanceId)])
+      for (const piece of [...player.field, ...(player.amulets??[])]) {
+        if (alive.has(piece.instanceId) || seen.has(piece.instanceId)) continue
+        seen.add(piece.instanceId)
+        result.push({id:event.id+'-'+piece.instanceId,cardId:piece.cardId,ownerId:player.id,turn:event.turn})
+      }
+    }
+  }
+  return result
+}
+
 type BattleNotice = {
   key: string
   cardId: string
@@ -295,6 +328,9 @@ function App({ online }: { online?: {
     setPlayedCardNotice(null)
     setMulliganReveal(null)
     setGame(createInitialGameState(decks))
+    setLocalBattleLog([])
+    setBattleLogOpen(false)
+    setBattleLogTab('log')
     setMatchStarted(true)
     setMulliganSelection([])
     resetSelection()
@@ -488,7 +524,14 @@ function App({ online }: { online?: {
     const last = captureFrame(next, label)
     const frames = compactPresentationFrames(game, last.presentationFrames ?? [])
     setGame(withoutPresentation(last))
-    setLocalBattleLog(previous => [...previous, ...frames.map(frame => frame.label)].slice(-100))
+    setLocalBattleLog(previous => [...previous, {
+      id:`local-${Date.now()}-${Math.random()}`,
+      turn:game.turn, actorId:game.currentPlayerId,
+      title:label,
+      ...(playedCardId && /プレイ/.test(label) ? {playedCardId} : {}),
+      before:withoutPresentation(game),after:withoutPresentation(last),
+      frames,
+    }].slice(-150))
     if (frames.length > 0) {
       playbackLock.current = true
       setPlayback({
@@ -521,7 +564,9 @@ function App({ online }: { online?: {
   const [expandedHandIndex, setExpandedHandIndex] = useState<number | null>(null)
   const [handOpen, setHandOpen] = useState(false)
   const [battleLogOpen, setBattleLogOpen] = useState(false)
-  const [localBattleLog, setLocalBattleLog] = useState<string[]>([])
+  const [localBattleLog, setLocalBattleLog] = useState<BattleHistoryEvent[]>([])
+  const [battleLogTab, setBattleLogTab] = useState<'log' | 'play' | 'destroy' | 'details'>('log')
+  const [battleLogSide, setBattleLogSide] = useState<'self' | 'opponent'>('self')
   const dragPointer = useRef<{
     pointerId: number; attackerId: string; startX: number; startY: number; moved: boolean
   } | null>(null)
@@ -1342,6 +1387,29 @@ function App({ online }: { online?: {
     )
   }
 
+  const battleHistorySelfId=online?game.players[online.match.seat].id:game.players[0].id
+  const battleHistoryEvents: BattleHistoryEvent[]=online
+    ? (online.match.history??[]).map(event=>{
+      const frames=event.frames.map(frame=>({
+        label:frame.label,
+        state:projectOnlineSnapshot(frame.state,online.match.seat),
+      }))
+      const first=frames[0]?.state??game
+      const last=frames[frames.length-1]?.state??first
+      return {
+        id:`online-${event.revision}`,
+        turn:first.turn,actorId:event.actorId,title:event.title,
+        playedCardId:event.playedCardId,
+        before:first,after:last,frames,
+      }
+    })
+    : localBattleLog
+  const battlePlayedCards:HistoryCardEntry[]=battleHistoryEvents.flatMap(event=>
+    event.playedCardId && getCard(event.playedCardId)
+      ? [{id:event.id,cardId:event.playedCardId,ownerId:event.actorId,turn:event.turn}]
+      : [])
+  const battleDestroyedCards:HistoryCardEntry[]=battleHistoryEvents.flatMap(historyDestroyedCards)
+
   return (
     <div ref={battleScreenRef}
       className={['game','game--battle','game--battle-fit',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
@@ -1494,38 +1562,106 @@ function App({ online }: { online?: {
           onClick={() => setBattleLogOpen(previous => !previous)}>
           <span aria-hidden="true">☷</span><small>LOG</small>
         </button>
-        {battleLogOpen && <section id="battle-log-panel" className="battle-log-panel"
-          aria-label="対戦ログ">
-          <div className="battle-log-header">
-            <strong>対戦ログ</strong>
-            <button type="button" onClick={() => setBattleLogOpen(false)} aria-label="ログを閉じる">×</button>
-          </div>
-          <ol className="battle-log-entries">
-            {(online
-              ? [...(online.match.history ?? [])].reverse().map(event => ({key: String(event.revision), title: event.title}))
-              : [...localBattleLog].reverse().map((title, index) => ({key: String(index), title}))
-            ).map(entry => <li key={entry.key}>{entry.title}</li>)}
-            {(online ? (online.match.history?.length ?? 0) === 0 : localBattleLog.length === 0) &&
-              <li>まだ行動履歴はありません</li>}
-          </ol>
-          {playback && <div className="battle-playback" role="status" aria-live="polite">
-            <div className="battle-playback-heading"><span className="battle-playback-icon">✦</span>
-              <span>戦闘演出 {playback.index + 1} / {playback.frames.length}</span>
-            </div>
-            <strong className="battle-playback-description">{playback.frames[playback.index].label}</strong>
-            <div className="battle-playback-controls">
-              <label>再生速度
-                <select value={playbackDelay} onChange={e => setPlaybackDelay(Number(e.target.value) as 450 | 900 | 1500)}>
-                  <option value={1500}>ゆっくり</option>
-                  <option value={900}>標準</option>
-                  <option value={450}>速い</option>
-                </select>
-              </label>
-              <button type="button" onClick={skipPlayback}>演出をスキップ</button>
-            </div>
-          </div>}
-        </section>}
       </div>
+      {battleLogOpen && <div className="battle-log-backdrop"
+        onMouseDown={event=>{if(event.target===event.currentTarget)setBattleLogOpen(false)}}>
+        <section id="battle-log-panel" className="battle-log-dialog" role="dialog"
+          aria-modal="true" aria-label="バトルログ">
+          <div className="battle-log-dialog-head">
+            <h2>バトルログ</h2>
+            <button type="button" className="battle-log-close"
+              aria-label="ログを閉じる" onClick={()=>setBattleLogOpen(false)}>×</button>
+          </div>
+          <nav className="battle-log-tabs" aria-label="ログの種類">
+            {([['log','ログ'],['play','プレイ'],['destroy','破壊'],['details','詳細情報']] as const).map(([key,label])=>
+              <button key={key} type="button" aria-pressed={battleLogTab===key}
+                className={battleLogTab===key?'active':''}
+                onClick={()=>setBattleLogTab(key)}>{label}</button>)}
+          </nav>
+          {(battleLogTab==='play'||battleLogTab==='destroy')&&
+            <nav className="battle-log-side-tabs" aria-label="プレイヤーの切り替え">
+              <button type="button" aria-pressed={battleLogSide==='self'}
+                className={battleLogSide==='self'?'active':''}
+                onClick={()=>setBattleLogSide('self')}>
+                自分の{battleLogTab==='play'?'プレイした':'破壊された'}カード
+              </button>
+              <button type="button" aria-pressed={battleLogSide==='opponent'}
+                className={battleLogSide==='opponent'?'active':''}
+                onClick={()=>setBattleLogSide('opponent')}>
+                相手の{battleLogTab==='play'?'プレイした':'破壊された'}カード
+              </button>
+            </nav>}
+          <div className="battle-log-dialog-scroll">
+            {battleLogTab==='log' && <div className="battle-log-timeline">
+              {battleHistoryEvents.length===0&&<p className="battle-log-empty">まだ行動履歴はありません。</p>}
+              {[...battleHistoryEvents].reverse().map(event=><div key={event.id}
+                className={`battle-log-event ${event.actorId===battleHistorySelfId?'battle-log-event--self':'battle-log-event--enemy'}`}>
+                <div className="battle-log-event-meta">
+                  <span>ROUND {event.turn}</span>
+                  <span>{event.actorId===battleHistorySelfId?'自分':'相手'}</span>
+                </div>
+                <div className="battle-log-event-text">
+                  <span>{event.title}</span>
+                  {event.playedCardId&&getCard(event.playedCardId)&&
+                    <CardArtwork cardId={event.playedCardId} name={getCard(event.playedCardId)!.name}/>}
+                </div>
+                {event.frames.length>0&&<div className="battle-log-event-details">
+                  {event.frames.map((frame,i)=><div key={i}>{frame.label}</div>)}
+                </div>}
+              </div>)}
+            </div>}
+            {(battleLogTab==='play'||battleLogTab==='destroy')&&
+              <div className="battle-log-card-groups">
+                {(() => {
+                  const ownId=battleHistorySelfId
+                  const wanted=battleLogSide==='self'?ownId:game.players.find(p=>p.id!==ownId)?.id
+                  const list=(battleLogTab==='play'?battlePlayedCards:battleDestroyedCards)
+                    .filter(entry=>entry.ownerId===wanted&&getCard(entry.cardId))
+                  const costs=[...new Set(list.map(entry=>getCard(entry.cardId)!.cost))].sort((a,b)=>a-b)
+                  if(list.length===0)return <p className="battle-log-empty">該当するカードはありません。</p>
+                  return costs.map(cost=><section key={cost} className="battle-log-cost-group">
+                    <h3>COST {cost}</h3>
+                    {[...new Set(list.filter(entry=>getCard(entry.cardId)?.cost===cost).map(entry=>entry.cardId))]
+                      .map(cardId=>{
+                        const card=getCard(cardId)!
+                        const count=list.filter(entry=>entry.cardId===cardId).length
+                        return <div className={`battle-log-card-row ${battleLogSide==='self'?'battle-log-card-row--self':'battle-log-card-row--enemy'}`}
+                          key={cardId}>
+                          <span>{card.name}</span>
+                          <CardArtwork cardId={card.id} name={card.name}/>
+                          <b>×{count}</b>
+                        </div>
+                      })}
+                  </section>)
+                })()}
+              </div>}
+            {battleLogTab==='details'&&<div className="battle-log-details">
+              {game.players.map(player=><section key={player.id}>
+                <h3>{player.id===battleHistorySelfId?'自分':'相手'} — {player.name}</h3>
+                <div><span>リーダー体力</span><strong>{player.leaderHealth} / {player.leaderMaxHealth}</strong></div>
+                <div><span>残りデッキ</span><strong>{player.deck.length}枚</strong></div>
+                <div><span>手札</span><strong>{player.hand.length}枚</strong></div>
+                <div><span>墓場</span><strong>{player.graveyard.length}枚</strong></div>
+                <div><span>場のフォロワー</span><strong>{player.field.length}体</strong></div>
+                <div><span>アミュレット</span><strong>{player.amulets?.length??0}枚</strong></div>
+                <div><span>PP</span><strong>{player.pp} / {player.maxPp}</strong></div>
+                <div><span>元素エネルギー</span><strong>{player.energy} / 5</strong></div>
+              </section>)}
+            </div>}
+          </div>
+          {playback&&<div className="battle-log-playback">
+            <span>演出 {playback.index+1}/{playback.frames.length}</span>
+            <label>再生速度
+              <select value={playbackDelay} onChange={e=>setPlaybackDelay(Number(e.target.value) as 450|900|1500)}>
+                <option value={1500}>ゆっくり</option>
+                <option value={900}>標準</option>
+                <option value={450}>速い</option>
+              </select>
+            </label>
+            <button type="button" onClick={skipPlayback}>スキップ</button>
+          </div>}
+        </section>
+      </div>}
       {winner && (
         <div className="winner-banner">
           {winner.name} の勝利！
