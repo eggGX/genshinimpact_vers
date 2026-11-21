@@ -77,6 +77,8 @@ type DrawFlight = {
   y: number
   dx: number
   dy: number
+  midX: number
+  midY: number
   delay: number
 }
 
@@ -425,7 +427,26 @@ function App({ online }: { online?: {
     for(const player of next) {
       const before=previous.find(item=>item.id===player.id)
       if(!before) continue
-      const drawn=Math.min(before.deckSize-player.deckSize,player.hand.length-before.hand.length)
+      const deckDecrease=before.deckSize-player.deckSize
+      if(deckDecrease<=0)continue
+      // A spell or crest can draw and consume another hand card in the same
+      // resolution. A net hand-count change would miss that draw entirely.
+      const remaining=new Map<string,number>()
+      for(const cardId of before.hand)remaining.set(cardId,(remaining.get(cardId)??0)+1)
+      const gained:string[]=[]
+      for(const cardId of player.hand) {
+        const count=remaining.get(cardId)??0
+        if(count>0)remaining.set(cardId,count-1)
+        else gained.push(cardId)
+      }
+      // Identical replacement cards are indistinguishable from the old copy.
+      // When the deck decreased but the hand stayed the same size, still
+      // animate the replacement without exposing any unseen opponent cards.
+      const likelyReplacement=player.hand.length>0 &&
+        player.hand.length>=before.hand.length && gained.length===0
+      const drawn=Math.min(deckDecrease,Math.max(0,
+        gained.length,player.hand.length-before.hand.length,
+        likelyReplacement?1:0))
       if(drawn<=0)continue
       const isSelf=player.id===selfId
       const source=battleScreenRef.current?.querySelector<HTMLElement>(
@@ -439,21 +460,23 @@ function App({ online }: { online?: {
       const startY=from.top+from.height/2
       const endX=to.left+to.width*(isSelf ? 0.7 : 0.72)
       const endY=to.top+to.height*.42
-      const cards=player.hand.slice(-drawn)
+      const cards=gained.length>0?gained.slice(-drawn):player.hand.slice(-drawn)
       const flights=Array.from({length:Math.min(drawn,9)},(_,index)=>({
         id:++drawFlightSerial.current,
         cardId:isSelf&&getCard(cards[index])?cards[index]:undefined,
         isSelf,x:startX,y:startY,
         dx:endX-startX+(index-(drawn-1)/2)*16,
         dy:endY-startY,
-        delay:index*125,
+        midX:window.innerWidth*.50-startX+(index-(drawn-1)/2)*28,
+        midY:window.innerHeight*.47-startY,
+        delay:index*220,
       }))
       setDrawFlights(current=>[...current,...flights].slice(-18))
       const timer=setTimeout(()=>{
         const ids=new Set(flights.map(flight=>flight.id))
         setDrawFlights(current=>current.filter(flight=>!ids.has(flight.id)))
         drawFlightTimers.current=drawFlightTimers.current.filter(item=>item!==timer)
-      },1000+Math.max(0,flights.length-1)*125)
+      },1700+Math.max(0,flights.length-1)*220)
       drawFlightTimers.current.push(timer)
     }
   },[shownGame,online?.match.seat])
@@ -1603,12 +1626,15 @@ function App({ online }: { online?: {
             left:flight.x,top:flight.y,
             '--draw-dx':`${flight.dx}px`,
             '--draw-dy':`${flight.dy}px`,
+            '--draw-mid-x':`${flight.midX}px`,
+            '--draw-mid-y':`${flight.midY}px`,
             animationDelay:`${flight.delay}ms`,
           } as CSSProperties}>
           <div className="battle-draw-card">
             <div className="battle-draw-card-back"><span>✦</span></div>
             {flight.cardId&&<div className="battle-draw-card-front">
               <CardArtwork cardId={flight.cardId} name={getCard(flight.cardId)?.name??''} />
+              <div className="battle-draw-card-name">{getCard(flight.cardId)?.name}</div>
             </div>}
           </div>
         </div>)}
