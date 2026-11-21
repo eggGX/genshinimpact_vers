@@ -2877,5 +2877,4 @@
 .mulligan-swap--out,
 .mulligan-swap--in {
   will-change:transform,opacity;
-  backface-visibility:hidden;
 }
