@@ -2859,3 +2859,23 @@
   .game--battle-fit .follower-wrapper.field-entering:has(> .amulet-card),
   .game--battle-fit .follower-wrapper.field-entering > .amulet-card {animation:none;}
 }
+
+
+/* Online battle visual performance: drag follows the compositor rather than
+   changing left/top (which forces document layout on every pointer move). */
+.hand-drag-ghost,
+.attack-drag-ghost {
+  left:0;
+  top:0;
+  will-change:transform;
+  contain:layout style paint;
+}
+/* The enlarged draw and swapped mulligan cards are short-lived, independent
+   layers. Promote only the active animation, not every board card. */
+.game--battle-fit .battle-draw-flight,
+.game--battle-fit .battle-draw-card,
+.mulligan-swap--out,
+.mulligan-swap--in {
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
