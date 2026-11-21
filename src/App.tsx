@@ -499,7 +499,7 @@ function App({ online }: { online?: {
       // The destination of a draw uniquely identifies the animation in the
       // current turn. In particular, don't replay it when presentation swaps
       // between an intermediate snapshot and the final authoritative state.
-      const transitionKey=[player.id,shownGame.turn,player.deck.length,
+      const transitionKey=[player.id,shownGame.turn,player.deckSize,
         player.hand.join(',')].join('|')
       if(animatedDrawTransitions.current.has(transitionKey))continue
       animatedDrawTransitions.current.add(transitionKey)
