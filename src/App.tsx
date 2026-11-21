@@ -755,14 +755,12 @@ function App({ online }: { online?: {
     const latest=handDragLatest.current
     const ghost=handDragGhostRef.current
     if(latest&&ghost){
-      ghost.style.left=latest.x+'px'
-      ghost.style.top=latest.y+'px'
+      ghost.style.transform=`translate3d(${latest.x}px,${latest.y}px,0) translate(-50%,-75%)`
     }
     const attackLatest=attackDragLatest.current
     const attackGhost=attackDragGhostRef.current
     if(attackLatest&&attackGhost){
-      attackGhost.style.left=attackLatest.x+'px'
-      attackGhost.style.top=attackLatest.y+'px'
+      attackGhost.style.transform=`translate3d(${attackLatest.x}px,${attackLatest.y}px,0) translate(-50%,-75%)`
     }
   },[handDrag?.overField,attackDrag?.target])
 
@@ -928,8 +926,7 @@ function App({ online }: { online?: {
     handDragLatest.current={x,y,overField}
     const ghost=handDragGhostRef.current
     if(ghost) {
-      ghost.style.left=x+'px'
-      ghost.style.top=y+'px'
+      ghost.style.transform=`translate3d(${x}px,${y}px,0) translate(-50%,-75%)`
       const label=ghost.querySelector<HTMLElement>('[data-drag-label]')
       if(label)label.textContent=overField?'離してプレイ':'自分の場へドラッグ'
     }
@@ -1013,7 +1010,7 @@ function App({ online }: { online?: {
     const target=dragTargetAt(x,y,pointer.attackerId)
     attackDragLatest.current={x,y,target}
     const ghost=attackDragGhostRef.current
-    if(ghost){ghost.style.left=x+'px';ghost.style.top=y+'px'}
+    if(ghost)ghost.style.transform=`translate3d(${x}px,${y}px,0) translate(-50%,-75%)`
     // Target highlighting changes only when the hovered target changes.
     setAttackDrag(previous => previous && previous.target===target
       ? previous : {attackerId:pointer.attackerId,x,y,target})
@@ -1645,14 +1642,14 @@ function App({ online }: { online?: {
       </div>}
       {handDrag && getCard(currentPlayer.hand[handDrag.handIndex] ?? '') &&
         <div ref={handDragGhostRef} className="hand-drag-ghost" aria-hidden="true"
-          style={{ left: handDrag.x, top: handDrag.y }}>
+          style={{ transform:`translate3d(${handDrag.x}px,${handDrag.y}px,0) translate(-50%,-75%)` }}>
           <CardArtwork cardId={currentPlayer.hand[handDrag.handIndex]}
             name={getCard(currentPlayer.hand[handDrag.handIndex])?.name ?? ''} />
           <span data-drag-label>{handDrag.overField ? '離してプレイ' : '自分の場へドラッグ'}</span>
         </div>}
       {attackDrag && getCard(currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)?.cardId ?? '') &&
         <div ref={attackDragGhostRef} className="attack-drag-ghost" aria-hidden="true"
-          style={{ left: attackDrag.x, top: attackDrag.y }}>
+          style={{ transform:`translate3d(${attackDrag.x}px,${attackDrag.y}px,0) translate(-50%,-75%)` }}>
           <CardArtwork
             cardId={currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)!.cardId}
             name={getCard(currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)!.cardId)?.name ?? ''} />
