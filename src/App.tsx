@@ -512,7 +512,9 @@ function App({ online }: { online?: {
         const oldest=animatedDrawTransitions.current.values().next().value
         if(oldest) animatedDrawTransitions.current.delete(oldest)
       }
-      const isSelf=player.id===selfId
+      // Both seats are controlled locally; a locally drawn card is always
+      // visible. Only the remote opponent's cards must remain face-down.
+      const isSelf=!online || player.id===selfId
       const source=battleScreenRef.current?.querySelector<HTMLElement>(
         isSelf?'[data-draw-source="self"]':'[data-draw-source="opponent"]')
       const target=battleScreenRef.current?.querySelector<HTMLElement>(
@@ -795,6 +797,13 @@ function App({ online }: { online?: {
   )
   const abilityFocus = currentPlayer.field.find(f => f.instanceId === abilityFocusId)
   const abilityFocusCard = abilityFocus ? getCard(abilityFocus.cardId) : undefined
+  // Keep the card responsible for target selection visible while a fanfare,
+  // spell, or activated skill is waiting for a board target.
+  const targetingCardId = selectedHandIndex !== null
+    ? currentPlayer.hand[selectedHandIndex]
+    : selectedAbility ? currentPlayer.field.find(f => f.instanceId === selectedAbility.followerId)?.cardId
+    : undefined
+  const targetingCard = targetingCardId ? getCard(targetingCardId) : undefined
 
   const resetSelection = () => {
     setSelectedAttackerId(null)
@@ -1945,6 +1954,11 @@ function App({ online }: { online?: {
             <img src={`${import.meta.env.BASE_URL}images/travelers/${opponent.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
           <span className="leader-caption">{opponent.name}</span>
+          <span className="leader-shield-badge" aria-label={`リーダーシールド：通常 ${opponent.leaderShield?.normal ?? 0}、結晶 ${opponent.leaderShield?.crystallize ?? 0}`} title={`通常 ${opponent.leaderShield?.normal ?? 0} / 結晶 ${opponent.leaderShield?.crystallize ?? 0}`}>
+            <span className="leader-shield-icon" aria-hidden="true">⬡</span>
+            <strong>{(opponent.leaderShield?.normal ?? 0)+(opponent.leaderShield?.crystallize ?? 0)}</strong>
+            <small>{(opponent.leaderShield?.crystallize ?? 0)>0 ? `通${opponent.leaderShield?.normal ?? 0}・結${opponent.leaderShield?.crystallize ?? 0}` : 'SHIELD'}</small>
+          </span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{opponent.leaderHealth}</strong><small>/{opponent.leaderMaxHealth}</small></span>
         </button>
 
@@ -2019,6 +2033,11 @@ function App({ online }: { online?: {
             <img src={`${import.meta.env.BASE_URL}images/travelers/${currentPlayer.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
           <span className="leader-caption">{currentPlayer.name}</span>
+          <span className="leader-shield-badge" aria-label={`リーダーシールド：通常 ${currentPlayer.leaderShield?.normal ?? 0}、結晶 ${currentPlayer.leaderShield?.crystallize ?? 0}`} title={`通常 ${currentPlayer.leaderShield?.normal ?? 0} / 結晶 ${currentPlayer.leaderShield?.crystallize ?? 0}`}>
+            <span className="leader-shield-icon" aria-hidden="true">⬡</span>
+            <strong>{(currentPlayer.leaderShield?.normal ?? 0)+(currentPlayer.leaderShield?.crystallize ?? 0)}</strong>
+            <small>{(currentPlayer.leaderShield?.crystallize ?? 0)>0 ? `通${currentPlayer.leaderShield?.normal ?? 0}・結${currentPlayer.leaderShield?.crystallize ?? 0}` : 'SHIELD'}</small>
+          </span>
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
         </div>
 
@@ -2086,6 +2105,15 @@ function App({ online }: { online?: {
             ? `EN ${abilityFocusCard.elementalBurst.energyCost ?? 0}` : '—'}</small>
         </button>
       </aside>
+
+      {targetingCard && <aside className="battle-targeting-card" aria-label={`対象選択中：${targetingCard.name}`}>
+        <span className="battle-targeting-card-label">対象選択中</span>
+        <div className="battle-targeting-card-art">
+          <CardArtwork cardId={targetingCard.id} name={targetingCard.name} />
+        </div>
+        <strong>{targetingCard.name}</strong>
+        <small>{selectedAbility ? '元素スキル・爆発' : targetingCard.type === 'spell' ? 'スペル' : 'ファンファーレ'}</small>
+      </aside>}
 
       <div className="battle-message" role="status" aria-live="polite"><span className="battle-message-icon">✧</span>
         {winner
