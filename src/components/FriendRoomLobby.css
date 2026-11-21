@@ -72,3 +72,16 @@
     width:calc(50% - 12px);min-width:120px;max-width:168px;
   }
 }
+
+.friend-copy-confirmation {
+  display:inline-flex;
+  align-items:center;
+  margin-left:10px;
+  padding:5px 9px;
+  border:1px solid #80c8a5;
+  border-radius:7px;
+  background:#163d31;
+  color:#cdfce0;
+  font-size:12px;
+  font-weight:700;
+}
