@@ -132,7 +132,7 @@ test('online action history is privacy projected per viewer before transmission'
   assert.match(backend, /state: projectFrameState\(frame\.state, seat\)/)
   assert.match(backend, /players: projectPlayers\(state, seat\)/)
   assert.match(backend, /index === seat \? \{ hand: player\.hand \} : \{\}/)
-  assert.match(backend, /history: \[\.\.\.\(stored\.history \?\? \[\]\), event\]\.slice\(-5\)/)
+  assert.match(backend, /history: \[\.\.\.\(stored\.history \?\? \[\]\), event\]\.slice\(-4\)/)
   assert.match(recorder, /compactPresentationFrames\(state, captured\.presentationFrames \?\? \[\]\)/)
   assert.match(recorder, /actionTitle\(state, action\)/)
   assert.match(frontend, /onlinePlaybackQueue\.current\.push\(\.\.\.remaining\)/)
