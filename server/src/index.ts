@@ -276,7 +276,9 @@ async function submitAction(
       state: next,
       revision: stored.revision + 1,
       mulliganReady: stored.mulliganReady,
-      history: [...(stored.history ?? []), event].slice(-5),
+      // Four recent actions are enough for animation catch-up while keeping
+      // Firestore transaction documents and match polls compact.
+      history: [...(stored.history ?? []), event].slice(-4),
       hostUid: room.hostUid, guestUid: room.guestUid,
     }
     tx.update(matchRef, result)
