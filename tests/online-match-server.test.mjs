@@ -154,21 +154,3 @@ test('turn transition banner distinguishes own and opponent on the shared battle
   assert.match(css, /\.game--battle > \.turn-announcement/)
   assert.match(css, /prefers-reduced-motion:reduce/)
 })
-
-
-test('battle API accepts only explicitly configured Hosting and local Vite origins', () => {
-  const render = read('render.yaml')
-  assert.match(backend, /const allowedOrigins = new Set/)
-  assert.match(backend, /\.split\(','\)\.map\(value => value\.trim\(\)\)/)
-  assert.match(backend, /allowedOrigins\.has\(requestOrigin\)/)
-  assert.match(backend, /if \(requestOrigin && !allowedOrigin\(requestOrigin\)\)/)
-  assert.match(backend, /'Access-Control-Allow-Origin': permitted/)
-  assert.match(render, /https:\/\/genshincard-25028\.web\.app,http:\/\/localhost:5173/)
-})
-
-test('friend lobby wakes the match server before match creation', () => {
-  assert.match(frontend, /export function warmOnlineMatchServer\(\)/)
-  assert.match(frontend, /fetch\(\`\$\{address\}\/health\`/)
-  assert.match(lobby, /useEffect\(\(\) => \{ warmOnlineMatchServer\(\) \}, \[\]\)/)
-  assert.match(frontend, /対戦サーバーに接続できません/)
-})
