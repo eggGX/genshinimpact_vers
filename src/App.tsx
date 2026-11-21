@@ -1,5 +1,5 @@
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -366,7 +366,9 @@ function App({ online }: { online?: {
   }
   const [localGame, setGame] = useState(createInitialGameState)
   // Online and local games share exactly the same battle scene.
-  const game: GameState = online ? {
+  // A hand hover or pointer drag must not recreate both online player
+  // projections. They contain new hand/field arrays and are costly to rebuild.
+  const game: GameState = useMemo(() => online ? {
     turn: online.match.turn,
     phase: online.match.phase,
     currentPlayerId: online.match.currentPlayerId,
@@ -375,7 +377,7 @@ function App({ online }: { online?: {
       projectOnlinePlayer(online.match.players[0], online.match.seat === 0),
       projectOnlinePlayer(online.match.players[1], online.match.seat === 1),
     ],
-  } : localGame
+  } : localGame, [online?.match, online?.match.seat, localGame])
   // Show each seat's own confirmed mulligan as soon as the server accepts it.
   // The host may confirm first and remain in the mulligan phase while waiting
   // for the guest, so detecting only mulligan -> main skips the host's result.
@@ -734,6 +736,12 @@ function App({ online }: { online?: {
   const [handDrag, setHandDrag] = useState<{
     handIndex: number; x: number; y: number; overField: boolean
   } | null>(null)
+  // Keep pointer movements outside React's render cycle. A single drag can
+  // otherwise rerender the entire battle scene dozens of times per second.
+  const handDragGhostRef = useRef<HTMLDivElement>(null)
+  const attackDragGhostRef = useRef<HTMLDivElement>(null)
+  const handDragLatest = useRef<{x:number;y:number;overField:boolean}|null>(null)
+  const attackDragLatest = useRef<{x:number;y:number;target:string|null}|null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{
     followerId: string
     kind: AbilityKind
@@ -742,6 +750,21 @@ function App({ online }: { online?: {
   const [mulliganSelection, setMulliganSelection] =
     useState<number[]>([])
   const [onlineMulliganSelection, setOnlineMulliganSelection] = useState<number[]>([])
+
+  useLayoutEffect(() => {
+    const latest=handDragLatest.current
+    const ghost=handDragGhostRef.current
+    if(latest&&ghost){
+      ghost.style.left=latest.x+'px'
+      ghost.style.top=latest.y+'px'
+    }
+    const attackLatest=attackDragLatest.current
+    const attackGhost=attackDragGhostRef.current
+    if(attackLatest&&attackGhost){
+      attackGhost.style.left=attackLatest.x+'px'
+      attackGhost.style.top=attackLatest.y+'px'
+    }
+  },[handDrag?.overField,attackDrag?.target])
 
   const currentPlayer = online
     ? shownGame.players[online.match.seat]
@@ -900,16 +923,26 @@ function App({ online }: { online?: {
     if (!pointer.moved &&
         Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 10) return
     pointer.moved = true
-    setHandDrag({
-      handIndex: pointer.handIndex, x: event.clientX, y: event.clientY,
-      overField: handOverOwnField(event.clientX, event.clientY),
-    })
+    const x=event.clientX, y=event.clientY
+    const overField=handOverOwnField(x,y)
+    handDragLatest.current={x,y,overField}
+    const ghost=handDragGhostRef.current
+    if(ghost) {
+      ghost.style.left=x+'px'
+      ghost.style.top=y+'px'
+      const label=ghost.querySelector<HTMLElement>('[data-drag-label]')
+      if(label)label.textContent=overField?'離してプレイ':'自分の場へドラッグ'
+    }
+    // Only entering or leaving the valid field changes the React scene.
+    setHandDrag(previous => previous && previous.overField===overField
+      ? previous : {handIndex:pointer.handIndex,x,y,overField})
   }
 
   const finishHandDrag = (event: ReactPointerEvent<HTMLButtonElement>, cancelled = false) => {
     const pointer = handDragPointer.current
     if (!pointer || pointer.pointerId !== event.pointerId) return
     handDragPointer.current = null
+    handDragLatest.current=null
     setHandDrag(null)
     if (!pointer.moved) return
     suppressHandDragClick.current = true
@@ -976,16 +1009,21 @@ function App({ online }: { online?: {
     if (!pointer.moved &&
         Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 10) return
     pointer.moved = true
-    setAttackDrag({
-      attackerId: pointer.attackerId, x: event.clientX, y: event.clientY,
-      target: dragTargetAt(event.clientX, event.clientY, pointer.attackerId),
-    })
+    const x=event.clientX,y=event.clientY
+    const target=dragTargetAt(x,y,pointer.attackerId)
+    attackDragLatest.current={x,y,target}
+    const ghost=attackDragGhostRef.current
+    if(ghost){ghost.style.left=x+'px';ghost.style.top=y+'px'}
+    // Target highlighting changes only when the hovered target changes.
+    setAttackDrag(previous => previous && previous.target===target
+      ? previous : {attackerId:pointer.attackerId,x,y,target})
   }
 
   const finishAttackDrag = (event: ReactPointerEvent<HTMLButtonElement>, cancelled = false) => {
     const pointer = dragPointer.current
     if (!pointer || pointer.pointerId !== event.pointerId) return
     dragPointer.current = null
+    attackDragLatest.current=null
     setAttackDrag(null)
     if (!pointer.moved) return
     // Pointer release may synthesize a click; never also select the attacker.
@@ -1606,14 +1644,14 @@ function App({ online }: { online?: {
         </div>
       </div>}
       {handDrag && getCard(currentPlayer.hand[handDrag.handIndex] ?? '') &&
-        <div className="hand-drag-ghost" aria-hidden="true"
+        <div ref={handDragGhostRef} className="hand-drag-ghost" aria-hidden="true"
           style={{ left: handDrag.x, top: handDrag.y }}>
           <CardArtwork cardId={currentPlayer.hand[handDrag.handIndex]}
             name={getCard(currentPlayer.hand[handDrag.handIndex])?.name ?? ''} />
-          <span>{handDrag.overField ? '離してプレイ' : '自分の場へドラッグ'}</span>
+          <span data-drag-label>{handDrag.overField ? '離してプレイ' : '自分の場へドラッグ'}</span>
         </div>}
       {attackDrag && getCard(currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)?.cardId ?? '') &&
-        <div className="attack-drag-ghost" aria-hidden="true"
+        <div ref={attackDragGhostRef} className="attack-drag-ghost" aria-hidden="true"
           style={{ left: attackDrag.x, top: attackDrag.y }}>
           <CardArtwork
             cardId={currentPlayer.field.find(f => f.instanceId === attackDrag.attackerId)!.cardId}
