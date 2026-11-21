@@ -2763,3 +2763,64 @@
   visibility:hidden !important;
   pointer-events:none !important;
 }
+
+
+/* Opponent draws: a quick unrevealed card-back flight, without center zoom. */
+.game--battle-fit .battle-draw-flight--opponent {
+  animation-name:battle-draw-opponent-travel;
+  animation-duration:.72s;
+}
+.game--battle-fit .battle-draw-flight--opponent .battle-draw-card {
+  animation:none;
+  transform:none;
+}
+@keyframes battle-draw-opponent-travel {
+  0% {opacity:0;transform:translate3d(0,0,0) scale(.72) rotate(-7deg);}
+  14% {opacity:1;}
+  85% {opacity:1;}
+  100% {opacity:0;transform:translate3d(var(--draw-dx),var(--draw-dy),0) scale(.85) rotate(0);}
+}
+
+/* Newly played/summoned field units settle into their board slots.
+   No interactive elements or combat targeting are blocked. */
+.game--battle-fit .follower-wrapper.field-entering {
+  animation:field-card-arrive-self .64s cubic-bezier(.19,.85,.28,1) both;
+  transform-origin:center bottom;
+}
+.game--battle-fit .follower-wrapper.field-entering--opponent {
+  animation-name:field-card-arrive-opponent;
+  transform-origin:center top;
+}
+.game--battle-fit .follower-wrapper.field-entering::after {
+  content:'';
+  position:absolute;
+  z-index:-1;
+  left:10%;
+  right:10%;
+  top:17%;
+  bottom:8%;
+  pointer-events:none;
+  border-radius:50%;
+  box-shadow:0 0 21px 8px rgba(249,209,129,.42);
+  animation:field-arrival-glow .64s ease-out both;
+}
+@keyframes field-card-arrive-self {
+  0% {opacity:.25;transform:translateY(42px) scale(.66) rotate(-5deg);filter:brightness(1.55);}
+  55% {opacity:1;transform:translateY(-9px) scale(1.07) rotate(1deg);filter:brightness(1.25);}
+  100% {opacity:1;transform:translateY(0) scale(1) rotate(0);filter:brightness(1);}
+}
+@keyframes field-card-arrive-opponent {
+  0% {opacity:.25;transform:translateY(-42px) scale(.66) rotate(5deg);filter:brightness(1.55);}
+  55% {opacity:1;transform:translateY(9px) scale(1.07) rotate(-1deg);filter:brightness(1.25);}
+  100% {opacity:1;transform:translateY(0) scale(1) rotate(0);filter:brightness(1);}
+}
+@keyframes field-arrival-glow {
+  0%,30% {opacity:0;transform:scale(.65);}
+  55% {opacity:1;transform:scale(1.1);}
+  100% {opacity:0;transform:scale(1.5);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game--battle-fit .follower-wrapper.field-entering,
+  .game--battle-fit .follower-wrapper.field-entering::after,
+  .game--battle-fit .battle-draw-flight--opponent {animation:none;}
+}
