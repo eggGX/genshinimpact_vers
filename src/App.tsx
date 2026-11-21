@@ -402,7 +402,8 @@ function App({ online }: { online?: {
   // Detect transitions from actual game state, not from polling frequency.
   // A new turn also includes the first turn immediately after both mulligans.
   useEffect(() => {
-    if (game.phase !== 'main' || game.winnerId !== null || mulliganReveal) return
+    if (game.phase !== 'main' || game.winnerId !== null || mulliganReveal ||
+        (online && onlineMulliganDraft.current !== null)) return
     const turnKey = `${game.turn}:${game.currentPlayerId}`
     if (lastAnnouncedTurn.current === turnKey) return
     lastAnnouncedTurn.current = turnKey
