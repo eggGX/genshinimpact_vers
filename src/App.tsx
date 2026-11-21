@@ -69,6 +69,17 @@ function historyDestroyedCards(event: BattleHistoryEvent): HistoryCardEntry[] {
   return result
 }
 
+type DrawFlight = {
+  id: number
+  cardId?: string
+  isSelf: boolean
+  x: number
+  y: number
+  dx: number
+  dy: number
+  delay: number
+}
+
 type BattleNotice = {
   key: string
   cardId: string
@@ -258,6 +269,11 @@ function App({ online }: { online?: {
   const [matchStarted, setMatchStarted] = useState(false)
   const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice, attackerId?: string } | null>(null)
   const [playedCardNotice, setPlayedCardNotice] = useState<BattleNotice | null>(null)
+  const [drawFlights, setDrawFlights] = useState<DrawFlight[]>([])
+  const drawFlightSerial = useRef(0)
+  const drawFlightTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const previousDrawState = useRef<Array<{id:string; deckSize:number; hand:string[]} > | null>(null)
+
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
@@ -396,6 +412,53 @@ function App({ online }: { online?: {
     if (online && onlineCanAct) online.onAction(action)
   }
   const shownGame = playback ? playback.frames[playback.index].state : game
+  // Draws are detected from actual deck/hand state transitions, so both normal
+  // turn draws and card-effect draws are represented without touching the rules.
+  useEffect(() => {
+    const next = shownGame.players.map(player=>({
+      id:player.id, deckSize:player.deck.length, hand:[...player.hand],
+    }))
+    const previous = previousDrawState.current
+    previousDrawState.current=next
+    if (!previous || shownGame.phase==='mulligan') return
+    const selfId=online ? shownGame.players[online.match.seat].id : shownGame.players[0].id
+    for(const player of next) {
+      const before=previous.find(item=>item.id===player.id)
+      if(!before) continue
+      const drawn=Math.min(before.deckSize-player.deckSize,player.hand.length-before.hand.length)
+      if(drawn<=0)continue
+      const isSelf=player.id===selfId
+      const source=battleScreenRef.current?.querySelector<HTMLElement>(
+        isSelf?'[data-draw-source="self"]':'[data-draw-source="opponent"]')
+      const target=battleScreenRef.current?.querySelector<HTMLElement>(
+        isSelf?'.hand-cards':'.battle-opponent-hand')
+      if(!source||!target)continue
+      const from=source.getBoundingClientRect()
+      const to=target.getBoundingClientRect()
+      const startX=from.left+from.width/2
+      const startY=from.top+from.height/2
+      const endX=to.left+to.width*(isSelf?.7:.72)
+      const endY=to.top+to.height*.42
+      const cards=player.hand.slice(-drawn)
+      const flights=Array.from({length:Math.min(drawn,9)},(_,index)=>({
+        id:++drawFlightSerial.current,
+        cardId:isSelf&&getCard(cards[index])?cards[index]:undefined,
+        isSelf,x:startX,y:startY,
+        dx:endX-startX+(index-(drawn-1)/2)*16,
+        dy:endY-startY,
+        delay:index*125,
+      }))
+      setDrawFlights(current=>[...current,...flights].slice(-18))
+      const timer=setTimeout(()=>{
+        const ids=new Set(flights.map(flight=>flight.id))
+        setDrawFlights(current=>current.filter(flight=>!ids.has(flight.id)))
+        drawFlightTimers.current=drawFlightTimers.current.filter(item=>item!==timer)
+      },1000+Math.max(0,flights.length-1)*125)
+      drawFlightTimers.current.push(timer)
+    }
+  },[shownGame,online?.match.seat])
+  useEffect(()=>()=>{drawFlightTimers.current.forEach(clearTimeout)},[])
+
   // The opponent can complete several actions between polls. Queue every
   // retained server event by revision and replay it with the local animation UI.
   useEffect(() => {
@@ -1526,6 +1589,22 @@ function App({ online }: { online?: {
           </div>}
         </div>
       </div>}
+      {drawFlights.length>0&&<div className="battle-draw-layer" aria-hidden="true">
+        {drawFlights.map(flight=><div key={flight.id} className="battle-draw-flight"
+          style={{
+            left:flight.x,top:flight.y,
+            ['--draw-dx' as string]:`${flight.dx}px`,
+            ['--draw-dy' as string]:`${flight.dy}px`,
+            animationDelay:`${flight.delay}ms`,
+          }}>
+          <div className="battle-draw-card">
+            <div className="battle-draw-card-back"><span>✦</span></div>
+            {flight.cardId&&<div className="battle-draw-card-front">
+              <CardArtwork cardId={flight.cardId} name={getCard(flight.cardId)?.name??''} />
+            </div>}
+          </div>
+        </div>)}
+      </div>}
       <div className="battle-opponent-hand" aria-label={`相手の手札 ${opponent.hand.length}枚`}>
         {opponent.hand.map((_, index) => <span key={index} className="battle-opponent-card-back" aria-hidden="true">✦</span>)}
       </div>
@@ -1733,7 +1812,7 @@ function App({ online }: { online?: {
           <div className="resource-head energy-head"><span className="resource-caption">ELEMENTAL ENERGY</span><strong>{opponent.energy}<small> / 5</small></strong></div>
           <div className="energy-gems">{Array.from({length:5},(_,i)=><span key={i} className={i<opponent.energy?'energy-gem active':'energy-gem'}/>)}</div>
         </div>
-        <div className="player-counts"><span>山札 <strong>{opponent.deck.length}</strong></span><span>手札 <strong>{opponent.hand.length}</strong></span><span>墓場 <strong>{opponent.graveyard.length}</strong></span></div>
+        <div className="player-counts"><span data-draw-source="opponent">山札 <strong>{opponent.deck.length}</strong></span><span>手札 <strong>{opponent.hand.length}</strong></span><span>墓場 <strong>{opponent.graveyard.length}</strong></span></div>
         <div className="player-effects">
         <CrestIcons crests={opponent.crests} ownerName={opponent.name} placement="below" />
         {(opponent.bondOfLife ?? 0) > 0 && <div>命の契約：{opponent.bondOfLife}</div>}
@@ -1807,7 +1886,7 @@ function App({ online }: { online?: {
           <div className="resource-head energy-head"><span className="resource-caption">ELEMENTAL ENERGY</span><strong>{currentPlayer.energy}<small> / 5</small></strong></div>
           <div className="energy-gems">{Array.from({length:5},(_,i)=><span key={i} className={i<currentPlayer.energy?'energy-gem active':'energy-gem'}/>)}</div>
         </div>
-        <div className="player-counts"><span>山札 <strong>{currentPlayer.deck.length}</strong></span><span>手札 <strong>{currentPlayer.hand.length}</strong></span><span>墓場 <strong>{currentPlayer.graveyard.length}</strong></span></div>
+        <div className="player-counts"><span data-draw-source="self">山札 <strong>{currentPlayer.deck.length}</strong></span><span>手札 <strong>{currentPlayer.hand.length}</strong></span><span>墓場 <strong>{currentPlayer.graveyard.length}</strong></span></div>
         <div className="player-effects">
         <CrestIcons crests={currentPlayer.crests} ownerName={currentPlayer.name} placement="above" />
         {(currentPlayer.bondOfLife ?? 0) > 0 && <div>命の契約：{currentPlayer.bondOfLife}</div>}
