@@ -215,6 +215,19 @@ async function ensureMatch(code: string, uid: string): Promise<{ stored: Stored;
     return { stored, seat }
   })
 }
+/** Existing matches use immutable participant UIDs, so a read-only poll
+ * needs only one document read rather than a Firestore transaction.
+ * Keep the transaction path for initial creation and legacy records. */
+async function readMatch(code: string, uid: string): Promise<{ stored: Stored; seat: 0 | 1 }> {
+  const snapshot = await getMatchRef(code).get()
+  if (!snapshot.exists) return ensureMatch(code, uid)
+  const stored = snapshot.data() as Stored
+  if (!stored.hostUid || !stored.guestUid) return ensureMatch(code, uid)
+  const seat = uid === stored.hostUid ? 0 : uid === stored.guestUid ? 1 : null
+  if (seat === null) throw new Error('このルームの参加者ではありません')
+  return { stored, seat }
+}
+
 async function submitMulligan(
   code: string, uid: string, indices: unknown, revision: unknown,
 ): Promise<{ stored: Stored; seat: 0 | 1 }> {
@@ -306,7 +319,7 @@ createServer(async (req, res) => {
     const user = await auth.verifyIdToken(bearer[1], true)
     let output: { stored: Stored; seat: 0 | 1 }
     if (req.method === 'GET' && match[2] === 'state') {
-      output = await ensureMatch(match[1], user.uid)
+      output = await readMatch(match[1], user.uid)
     } else if (req.method === 'POST' && match[2] === 'mulligan') {
       const data = await readJson(req)
       if (!data || typeof data !== 'object') throw new Error('不正なリクエスト')
