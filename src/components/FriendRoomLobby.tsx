@@ -36,6 +36,21 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
   const [pollError, setPollError] = useState(false)
   const [onlineMatch, setOnlineMatch] = useState<OnlineMatchView | null>(null)
   const [matchError, setMatchError] = useState('')
+  const [codeCopied, setCodeCopied] = useState(false)
+  useEffect(() => {
+    if (!codeCopied) return
+    const timer = window.setTimeout(() => setCodeCopied(false), 2200)
+    return () => window.clearTimeout(timer)
+  }, [codeCopied])
+  async function copyRoomCode(code: string) {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCodeCopied(true)
+    } catch {
+      setCodeCopied(false)
+      setError('コードをコピーできませんでした。ブラウザのクリップボード権限を確認してください。')
+    }
+  }
   const deckErrors = validateDeck(deck)
   const myReady = role === 'host' ? room?.hostReady : room?.guestReady
 
@@ -233,7 +248,8 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
         <span className="friend-lobby-subtitle">{role === 'host' ? 'ルーム作成者' : 'ゲスト'}</span>
         <h3>ルームコード</h3>
         <div className="friend-code-display">{room.code}</div>
-        <button type="button" onClick={() => void navigator.clipboard.writeText(room.code)}>コードをコピー</button>
+        <button type="button" onClick={() => void copyRoomCode(room.code)}>{codeCopied ? 'コピーしました ✓' : 'コードをコピー'}</button>
+        {codeCopied && <span className="friend-copy-confirmation" role="status" aria-live="polite">コピーしました</span>}
         <div className="friend-room-players">
           <span>空（ホスト） <strong>{room.hostReady ? '準備完了' : '準備待ち'}</strong></span>
           <span>蛍（ゲスト） <strong>{!room.guestUid ? '参加待ち' : room.guestReady ? '準備完了' : '準備待ち'}</strong></span>
