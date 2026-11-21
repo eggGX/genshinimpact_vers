@@ -496,8 +496,11 @@ function App({ online }: { online?: {
       if(drawn<=0)continue
       // Playback may temporarily rewind the visible board to an earlier frame,
       // then revisit the same draw. Never animate that same transition twice.
-      const transitionKey=[player.id,shownGame.turn,before.deckSize,player.deckSize,
-        before.hand.join(','),player.hand.join(',')].join('|')
+      // The destination of a draw uniquely identifies the animation in the
+      // current turn. In particular, don't replay it when presentation swaps
+      // between an intermediate snapshot and the final authoritative state.
+      const transitionKey=[player.id,shownGame.turn,player.deck.length,
+        player.hand.join(',')].join('|')
       if(animatedDrawTransitions.current.has(transitionKey))continue
       animatedDrawTransitions.current.add(transitionKey)
       if(animatedDrawTransitions.current.size>400) {
@@ -523,7 +526,10 @@ function App({ online }: { online?: {
         isSelf,x:startX,y:startY,
         dx:endX-startX+(index-(drawn-1)/2)*16,
         dy:endY-startY,
-        midX:window.innerWidth*.50-startX+(index-(drawn-1)/2)*28,
+        // Spacing is measured AFTER the center zoom: each 70px card becomes
+        // roughly 153px wide. Keep multiple revealed cards side by side.
+        midX:window.innerWidth*.50-startX+
+          (index-(Math.min(drawn,9)-1)/2)*Math.min(174,(window.innerWidth-90)/Math.max(1,Math.min(drawn,9))),
         midY:window.innerHeight*.47-startY,
         delay:index*(isSelf?220:115),
       }))
