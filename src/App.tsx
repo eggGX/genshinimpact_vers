@@ -1958,7 +1958,7 @@ function App({ online }: { online?: {
             <span className="leader-shield-icon" aria-hidden="true">⬡</span>
             <strong>{(opponent.leaderShield?.normal ?? 0)+(opponent.leaderShield?.crystallize ?? 0)}</strong>
             <small>{(opponent.leaderShield?.crystallize ?? 0)>0 ? `通${opponent.leaderShield?.normal ?? 0}・結${opponent.leaderShield?.crystallize ?? 0}` : 'SHIELD'}</small>
-          </span}
+          </span>}
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{opponent.leaderHealth}</strong><small>/{opponent.leaderMaxHealth}</small></span>
         </button>
 
@@ -2037,7 +2037,7 @@ function App({ online }: { online?: {
             <span className="leader-shield-icon" aria-hidden="true">⬡</span>
             <strong>{(currentPlayer.leaderShield?.normal ?? 0)+(currentPlayer.leaderShield?.crystallize ?? 0)}</strong>
             <small>{(currentPlayer.leaderShield?.crystallize ?? 0)>0 ? `通${currentPlayer.leaderShield?.normal ?? 0}・結${currentPlayer.leaderShield?.crystallize ?? 0}` : 'SHIELD'}</small>
-          </span}
+          </span>}
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
         </div>
 
