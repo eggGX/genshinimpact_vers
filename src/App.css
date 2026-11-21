@@ -2424,3 +2424,230 @@
 @media(prefers-reduced-motion:reduce) {
   .game--battle-fit .stealth-mist-cloud {animation:none;will-change:auto;}
 }
+
+
+/* Shadowverse-inspired battle history: open as a focused modal, leave the small
+   left LOG shortcut visible only when the dialog is closed. */
+.game--battle-fit > .battle-log-backdrop {
+  position:fixed;
+  z-index:100;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(12px,4vh,36px) 16px;
+  box-sizing:border-box;
+  background:rgba(2,8,16,.67);
+  backdrop-filter:blur(3px);
+}
+.game--battle-fit .battle-log-dialog {
+  display:flex;
+  flex-direction:column;
+  box-sizing:border-box;
+  width:min(810px,95vw);
+  max-height:90dvh;
+  min-height:min(580px,80dvh);
+  padding:0 22px 20px;
+  border:3px double #bac4d1;
+  border-radius:7px;
+  color:#f8edda;
+  background:
+    linear-gradient(155deg,rgba(61,77,98,.96),rgba(27,38,59,.98) 28%,rgba(34,43,59,.98) 80%);
+  box-shadow:0 0 0 4px #111d2ce0,0 26px 60px #000c,inset 0 0 35px #cedbff16;
+}
+.game--battle-fit .battle-log-dialog-head {
+  flex:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  min-height:57px;
+  margin:0 -22px 16px;
+  border-bottom:2px solid #90a6c6;
+  background:linear-gradient(90deg,#263954bc,#53667dba,#263954bc);
+}
+.game--battle-fit .battle-log-dialog-head h2 {
+  margin:0;
+  font-size:clamp(19px,2.2vw,27px);
+  letter-spacing:.12em;
+  color:#f5dfa5;
+  text-shadow:0 2px 5px #000;
+}
+.game--battle-fit .battle-log-dialog-head .battle-log-close {
+  position:absolute;
+  right:12px;top:4px;
+  min-width:47px;
+  height:44px;
+  padding:0;
+  color:#fff0c2;
+  border:0;
+  background:none;
+  font:700 42px/1 Georgia,serif;
+  text-shadow:2px 3px #081220;
+  cursor:pointer;
+}
+.game--battle-fit .battle-log-tabs {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px;
+  margin-bottom:13px;
+}
+.game--battle-fit .battle-log-tabs button {
+  padding:10px 4px;
+  border:2px ridge #6387a3;
+  border-radius:4px;
+  background:linear-gradient(#173b57,#0a233a);
+  color:#e2ebf2;
+  font:bold clamp(12px,1.7vw,19px)/1.3 'Noto Sans JP',sans-serif;
+  text-shadow:0 2px 4px #000;
+  cursor:pointer;
+}
+.game--battle-fit .battle-log-tabs button.active,
+.game--battle-fit .battle-log-side-tabs button.active {
+  border-color:#6fcfff;
+  background:linear-gradient(#2d8cc5,#16668d);
+  color:white;
+  box-shadow:inset 0 0 12px #b6edff6b,0 2px 6px #0007;
+}
+.game--battle-fit .battle-log-side-tabs {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px;
+  margin-bottom:10px;
+}
+.game--battle-fit .battle-log-side-tabs button {
+  min-width:0;
+  padding:10px 5px;
+  border:0;
+  border-bottom:2px solid #7ba3bb;
+  background:#162b40a6;
+  color:#e0e4e8;
+  font:bold clamp(11px,1.4vw,15px)/1.3 'Noto Sans JP',sans-serif;
+  cursor:pointer;
+}
+.game--battle-fit .battle-log-dialog-scroll {
+  flex:1 1 auto;
+  min-height:0;
+  padding:14px 18px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  border:1px solid #8497b1;
+  background:linear-gradient(160deg,#283444ee,#202b3ae8);
+}
+.game--battle-fit .battle-log-empty {text-align:center;color:#c1cad2;padding:24px 6px;}
+.game--battle-fit .battle-log-timeline {display:flex;flex-direction:column;gap:10px;}
+.game--battle-fit .battle-log-event {
+  border-radius:5px;
+  padding:7px 10px 9px;
+  border-left:4px solid #53b5ed;
+  background:linear-gradient(90deg,#152c46e8,#233a518c);
+}
+.game--battle-fit .battle-log-event--enemy {
+  border-left-color:#ee777c;
+  background:linear-gradient(90deg,#43222bec,#3a2b368c);
+}
+.game--battle-fit .battle-log-event-meta {
+  display:flex;
+  justify-content:space-between;
+  color:#b4daef;
+  font-size:10px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+.game--battle-fit .battle-log-event--enemy .battle-log-event-meta {color:#f5b0b6;}
+.game--battle-fit .battle-log-event-text {display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;}
+.game--battle-fit .battle-log-event-text .card-artwork {
+  flex:none;
+  width:53px;
+  height:46px;
+  object-fit:cover;
+  aspect-ratio:auto;
+}
+.game--battle-fit .battle-log-event-details {
+  border-top:1px solid #a9b9ca40;
+  padding-top:5px;
+  margin-top:6px;
+  color:#cdd8dd;
+  font-size:11px;
+  line-height:1.65;
+}
+.game--battle-fit .battle-log-cost-group {margin-bottom:20px;}
+.game--battle-fit .battle-log-cost-group h3 {
+  text-align:center;
+  color:#f0daaa;
+  font:700 23px/1.4 Georgia,serif;
+  margin:3px 0 12px;
+  border-bottom:1px solid #92856f8c;
+  padding-bottom:6px;
+}
+.game--battle-fit .battle-log-card-row {
+  display:flex;
+  align-items:center;
+  min-height:60px;
+  gap:10px;
+  margin:8px 16px;
+  padding:4px 9px 4px 16px;
+  border:2px solid #48b7e8;
+  color:#fff3e2;
+  background:linear-gradient(90deg,#112943,#172f48 64%,#36526b);
+  font-size:15px;
+  font-weight:700;
+  clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%);
+}
+.game--battle-fit .battle-log-card-row--enemy {
+  border-color:#dc6a77;
+  background:linear-gradient(90deg,#3a1c27,#36242e 65%,#67414a);
+}
+.game--battle-fit .battle-log-card-row>span {flex:1;min-width:0;overflow-wrap:anywhere;}
+.game--battle-fit .battle-log-card-row .card-artwork {
+  width:82px;
+  height:50px;
+  flex:none;
+  object-fit:cover;
+  aspect-ratio:auto;
+  border-radius:0;
+}
+.game--battle-fit .battle-log-card-row>b {flex:none;font-size:19px;white-space:nowrap;}
+.game--battle-fit .battle-log-details {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;}
+.game--battle-fit .battle-log-details>section {
+  min-width:0;
+  border:1px solid #a9a47d;
+  background:#12283ca6;
+  border-radius:8px;
+  padding:12px;
+}
+.game--battle-fit .battle-log-details h3 {margin:0 0 12px;color:#ffdc98;}
+.game--battle-fit .battle-log-details section>div {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:7px;
+  border-top:1px solid #71839456;
+  padding:8px 0;
+  font-size:12px;
+}
+.game--battle-fit .battle-log-details section>div strong {color:#fce4b3;}
+.game--battle-fit .battle-log-playback {
+  flex:none;
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  align-items:center;
+  padding-top:10px;
+  font-size:11px;
+  color:#f4deb1;
+}
+.game--battle-fit .battle-log-playback label {display:flex;align-items:center;gap:5px;}
+.game--battle-fit .battle-log-playback select,
+.game--battle-fit .battle-log-playback button {
+  border:1px solid #c2a269;border-radius:6px;
+  background:#233b4c;color:#f6e6c6;padding:5px 8px;cursor:pointer;
+}
+@media(max-width:600px) {
+  .game--battle-fit .battle-log-dialog {padding:0 10px 12px;min-height:min(480px,80dvh);}
+  .game--battle-fit .battle-log-dialog-head {margin:0 -10px 10px;}
+  .game--battle-fit .battle-log-dialog-scroll {padding:9px 6px;}
+  .game--battle-fit .battle-log-card-row {margin:6px 2px;font-size:12px;padding-left:13px;}
+  .game--battle-fit .battle-log-card-row .card-artwork {width:55px;}
+  .game--battle-fit .battle-log-details {grid-template-columns:1fr;}
+}
