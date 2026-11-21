@@ -455,7 +455,7 @@ function App({ online }: { online?: {
       const leaving=new Set(fresh)
       setEnteringPieces(current=>new Set([...current].filter(id=>!leaving.has(id))))
       boardEntranceTimers.current=boardEntranceTimers.current.filter(item=>item!==timer)
-    },720)
+    },1050)
     boardEntranceTimers.current.push(timer)
   },[shownGame])
   useEffect(()=>()=>boardEntranceTimers.current.forEach(clearTimeout),[])
