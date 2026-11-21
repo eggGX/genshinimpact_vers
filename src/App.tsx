@@ -1559,7 +1559,7 @@ function App({ online }: { online?: {
   }
 
   const battleHistorySelfId=online?game.players[online.match.seat].id:game.players[0].id
-  const battleHistoryEvents: BattleHistoryEvent[]=online
+  const battleHistoryEvents: BattleHistoryEvent[]=!battleLogOpen ? [] : online
     ? (online.match.history??[]).map(event=>{
       const frames=event.frames.map(frame=>({
         label:frame.label,
