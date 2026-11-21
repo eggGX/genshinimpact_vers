@@ -1002,9 +1002,16 @@ function App({ online }: { online?: {
       keywords.includes('lethal') ||
       keywords.includes('必殺') ||
       description.includes('【必殺】')
-    // These passives work independently of skills, bursts and fanfare.
-    const triggered = card?.effects?.some(effect =>
-      effect.trigger === 'turn_start' || effect.trigger === 'turn_end') ||
+    // Check live keywords as well as the printed card description: buffs granted
+    // by other cards do not rewrite the original card's description.
+    const grantedTriggers = keywords.some(keyword =>
+      keyword === 'raincutter_on_attack' ||
+      keyword === 'attack_heal_2' ||
+      /(?:^on_attack(?:_|$)|_on_attack(?:_|$)|^on_turn_(?:start|end)(?:_|$)|_on_turn_(?:start|end)(?:_|$)|^on_destroy(?:_|$)|_on_destroy(?:_|$))/.test(keyword)
+    )
+    const triggered = grantedTriggers ||
+      Boolean(card?.effects?.some(effect =>
+        effect.trigger === 'turn_start' || effect.trigger === 'turn_end')) ||
       /(?:ターン開始時|ターン終了時|攻撃時|交戦時|自分のターン開始時|自分のターン終了時|相手のターン開始時|相手のターン終了時|攻撃するたび|攻撃したとき|攻撃されるたび|反応を起こすたび|元素反応を起こすたび|シールドを獲得するたび)/.test(description)
     const emblems: Array<{key:string; label:string; content: ReactNode}> = []
     if (lastWord) emblems.push({key:'lastword',label:'ラストワード',content:
