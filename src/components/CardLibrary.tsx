@@ -30,12 +30,18 @@ const LibraryEntry = memo(function LibraryEntry({
     className={selected ? 'library-entry selected' : 'library-entry'}
     onClick={() => onSelect(card.id)}>
     <span className="library-card-element">コスト {card.cost} <ElementIcon element={card.element} size="xs" withLabel /></span>
-    <strong>{card.name}</strong>
-    <span>{RARITY_LABELS[card.rarity]}</span>
-    <CardArtwork cardId={card.id} name={card.name} className="card-artwork--library" />
-    {card.type === 'follower' && <span>{card.attack} / {card.health}</span>}
-    <small>{card.token ? 'トークン（デッキ不可）' : '正式'}</small>
-    {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
+    <strong className="library-card-name" title={card.name}>{card.name}</strong>
+    <span className="library-card-rarity">{RARITY_LABELS[card.rarity]}</span>
+    <span className="library-card-artwork-slot">
+      <CardArtwork cardId={card.id} name={card.name} className="card-artwork--library" />
+    </span>
+    <span className="library-card-stats">
+      {card.type === 'follower' ? `${card.attack} / ${card.health}` : card.type === 'spell' ? 'スペル' : 'アミュレット'}
+    </span>
+    <span className="library-card-status">
+      {card.token && <small>トークン（デッキ不可）</small>}
+      {card.implementationStatus === 'data_only' && <small>能力未実装・対戦使用不可</small>}
+    </span>
   </button>
 })
 
