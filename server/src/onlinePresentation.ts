@@ -56,10 +56,12 @@ export function recordOnlineAction(state: GameState, action: OnlineAction, revis
   const next = withoutPresentation(traced)
   const captured = captureFrame(traced, title)
   const compact = compactPresentationFrames(state, captured.presentationFrames ?? [])
-  // Firestore match documents are size limited. Preserve start/end, plus up
-  // to 12 representative resolution frames, and only 5 recent events.
-  const selected = compact.length <= 12 ? compact :
-    Array.from({length:12},(_,i)=>compact[Math.round(i * (compact.length - 1)/11)])
+  // Trim snapshots before storing them in Firestore. Each snapshot contains
+  // both players' field, hand and deck, so keeping 12 per action makes every
+  // transaction and polling response increasingly expensive. Preserve the
+  // final authoritative state and sample at most four visual effect frames.
+  const selected = compact.length <= 4 ? compact :
+    Array.from({length:4},(_,i)=>compact[Math.round(i * (compact.length - 1)/3)])
   return {
     next,
     event: {
