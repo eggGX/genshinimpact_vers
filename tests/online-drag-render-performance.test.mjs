@@ -11,7 +11,7 @@ test('online match projection is memoized during UI-only rerenders',()=>{
 test('hand drag pointer movement updates ghost directly and rerenders only on drop-zone transitions',()=>{
   const code=app.split('const moveHandDrag = ')[1]?.split('const finishHandDrag = ')[0]??''
   assert.match(code,/handDragGhostRef\.current/)
-  assert.match(code,/ghost\.style\.left/)
+  assert.match(code,/ghost\.style\.transform/)
   assert.match(code,/previous\.overField===overField/)
   assert.match(app,/ref=\{handDragGhostRef\}/)
 })
@@ -19,7 +19,7 @@ test('hand drag pointer movement updates ghost directly and rerenders only on dr
 test('attack drag pointer movement rerenders only when the hovered target changes',()=>{
   const code=app.split('const moveAttackDrag = ')[1]?.split('const finishAttackDrag = ')[0]??''
   assert.match(code,/attackDragGhostRef\.current/)
-  assert.match(code,/ghost\.style\.top/)
+  assert.match(code,/ghost\.style\.transform/)
   assert.match(code,/previous\.target===target/)
   assert.match(app,/ref=\{attackDragGhostRef\}/)
 })
