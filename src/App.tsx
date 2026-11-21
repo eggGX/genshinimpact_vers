@@ -1954,11 +1954,11 @@ function App({ online }: { online?: {
             <img src={`${import.meta.env.BASE_URL}images/travelers/${opponent.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
           <span className="leader-caption">{opponent.name}</span>
-          <span className="leader-shield-badge" aria-label={`リーダーシールド：通常 ${opponent.leaderShield?.normal ?? 0}、結晶 ${opponent.leaderShield?.crystallize ?? 0}`} title={`通常 ${opponent.leaderShield?.normal ?? 0} / 結晶 ${opponent.leaderShield?.crystallize ?? 0}`}>
+          {(((opponent.leaderShield?.normal ?? 0)+(opponent.leaderShield?.crystallize ?? 0))>0) && <span className="leader-shield-badge" aria-label={`リーダーシールド：通常 ${opponent.leaderShield?.normal ?? 0}、結晶 ${opponent.leaderShield?.crystallize ?? 0}`} title={`通常 ${opponent.leaderShield?.normal ?? 0} / 結晶 ${opponent.leaderShield?.crystallize ?? 0}`}>
             <span className="leader-shield-icon" aria-hidden="true">⬡</span>
             <strong>{(opponent.leaderShield?.normal ?? 0)+(opponent.leaderShield?.crystallize ?? 0)}</strong>
             <small>{(opponent.leaderShield?.crystallize ?? 0)>0 ? `通${opponent.leaderShield?.normal ?? 0}・結${opponent.leaderShield?.crystallize ?? 0}` : 'SHIELD'}</small>
-          </span>
+          </span}
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{opponent.leaderHealth}</strong><small>/{opponent.leaderMaxHealth}</small></span>
         </button>
 
@@ -2033,11 +2033,11 @@ function App({ online }: { online?: {
             <img src={`${import.meta.env.BASE_URL}images/travelers/${currentPlayer.id === 'player1' ? 'aether-icon.webp' : 'lumine-icon.webp'}`} alt="" draggable={false} />
           </span>
           <span className="leader-caption">{currentPlayer.name}</span>
-          <span className="leader-shield-badge" aria-label={`リーダーシールド：通常 ${currentPlayer.leaderShield?.normal ?? 0}、結晶 ${currentPlayer.leaderShield?.crystallize ?? 0}`} title={`通常 ${currentPlayer.leaderShield?.normal ?? 0} / 結晶 ${currentPlayer.leaderShield?.crystallize ?? 0}`}>
+          {(((currentPlayer.leaderShield?.normal ?? 0)+(currentPlayer.leaderShield?.crystallize ?? 0))>0) && <span className="leader-shield-badge" aria-label={`リーダーシールド：通常 ${currentPlayer.leaderShield?.normal ?? 0}、結晶 ${currentPlayer.leaderShield?.crystallize ?? 0}`} title={`通常 ${currentPlayer.leaderShield?.normal ?? 0} / 結晶 ${currentPlayer.leaderShield?.crystallize ?? 0}`}>
             <span className="leader-shield-icon" aria-hidden="true">⬡</span>
             <strong>{(currentPlayer.leaderShield?.normal ?? 0)+(currentPlayer.leaderShield?.crystallize ?? 0)}</strong>
             <small>{(currentPlayer.leaderShield?.crystallize ?? 0)>0 ? `通${currentPlayer.leaderShield?.normal ?? 0}・結${currentPlayer.leaderShield?.crystallize ?? 0}` : 'SHIELD'}</small>
-          </span>
+          </span}
           <span className="leader-health"><span className="leader-health-icon">♥</span><strong>{currentPlayer.leaderHealth}</strong><small>/{currentPlayer.leaderMaxHealth}</small></span>
         </div>
 
