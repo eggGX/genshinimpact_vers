@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -437,7 +437,7 @@ function App({ online }: { online?: {
       const to=target.getBoundingClientRect()
       const startX=from.left+from.width/2
       const startY=from.top+from.height/2
-      const endX=to.left+to.width*(isSelf?.7:.72)
+      const endX=to.left+to.width*(isSelf ? 0.7 : 0.72)
       const endY=to.top+to.height*.42
       const cards=player.hand.slice(-drawn)
       const flights=Array.from({length:Math.min(drawn,9)},(_,index)=>({
@@ -1593,10 +1593,10 @@ function App({ online }: { online?: {
         {drawFlights.map(flight=><div key={flight.id} className="battle-draw-flight"
           style={{
             left:flight.x,top:flight.y,
-            ['--draw-dx' as string]:`${flight.dx}px`,
-            ['--draw-dy' as string]:`${flight.dy}px`,
+            '--draw-dx':`${flight.dx}px`,
+            '--draw-dy':`${flight.dy}px`,
             animationDelay:`${flight.delay}ms`,
-          }}>
+          } as CSSProperties}>
           <div className="battle-draw-card">
             <div className="battle-draw-card-back"><span>✦</span></div>
             {flight.cardId&&<div className="battle-draw-card-front">
