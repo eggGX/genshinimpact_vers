@@ -8,7 +8,7 @@ import { validateDeck, type DeckDefinition } from '../data/deckRules'
 import { ElementIcon } from './ElementIcon'
 import { SavedDeckPicker } from './SavedDeckPicker'
 import type { SavedDeck } from '../data/savedDecks'
-import { fetchOnlineMatch, isMatchServerConfigured, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
+import { fetchOnlineMatch, isMatchServerConfigured, warmOnlineMatchServer, submitOnlineMulligan, submitOnlineAction, type OnlineMatchView } from '../online/matchClient'
 import type { OnlineAction } from '../../server/src/matchActions'
 import './FriendRoomLobby.css'
 
@@ -38,6 +38,10 @@ export function FriendRoomLobby({ onBack, deck, onEditDeck, savedDecks, onSelect
   const [matchError, setMatchError] = useState('')
   const deckErrors = validateDeck(deck)
   const myReady = role === 'host' ? room?.hostReady : room?.guestReady
+
+  // Start Render's cold boot as soon as the lobby opens. This request does
+  // not create a match, change readiness, or reveal any private state.
+  useEffect(() => { warmOnlineMatchServer() }, [])
 
   // Restore the room after refresh, but only for its authenticated participant.
   useEffect(() => {
