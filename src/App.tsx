@@ -1606,7 +1606,10 @@ function App({ online }: { online?: {
         </div>)}
       </div>}
       <div className="battle-opponent-hand" aria-label={`相手の手札 ${opponent.hand.length}枚`}>
-        {opponent.hand.map((_, index) => <span key={index} className="battle-opponent-card-back" aria-hidden="true">✦</span>)}
+        {opponent.hand.map((_, index) => <span key={index}
+          className={['battle-opponent-card-back',
+            index >= opponent.hand.length-drawFlights.filter(flight=>!flight.isSelf).length ? 'draw-pending' : '',
+          ].filter(Boolean).join(' ')} aria-hidden="true">✦</span>)}
       </div>
       <header className="game-header game-header--battle">
         <div className="game-brand"><span className="brand-crest">✦</span><span><strong>原神カードゲーム</strong><small>ELEMENTAL DUEL</small></span></div>
@@ -1997,6 +2000,7 @@ function App({ online }: { online?: {
                 selected ? 'selected-card' : '',
                 expandedHandIndex === index ? 'hand-card--expanded' : '',
                 !playable ? 'hand-card--unplayable' : '',
+                index >= currentPlayer.hand.length-drawFlights.filter(flight=>flight.isSelf).length ? 'draw-pending' : '',
               ].filter(Boolean).join(' ')}
               key={`${cardId}-${index}`}
               aria-disabled={!playable}
