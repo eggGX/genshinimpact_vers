@@ -76,3 +76,165 @@
 
 .deck-card-ability-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
 .deck-card-ability-badges>span{font-size:10px;line-height:1.4;color:#f0dfbb;background:#203e48;border:1px solid #b39b67a8;border-radius:6px;padding:3px 6px;}
+
+
+/* Visual deck builder: consistent portrait cards inspired by a collectible-card grid. */
+.deck-builder {max-width:none;}
+.deck-builder-header,.deck-element-section,.deck-builder-columns {max-width:1400px;}
+.deck-builder-columns {
+  grid-template-columns:minmax(0,3.4fr) minmax(250px,1fr);
+  gap:16px;
+}
+.deck-pool,.deck-selected {min-width:0;}
+.deck-pool {padding:14px;}
+.deck-pool-guide {font-size:11px;color:#d9c99c;margin:0 0 10px;}
+.deck-card-pool {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(114px,1fr));
+  align-content:start;
+  align-items:stretch;
+  gap:13px 10px;
+  max-height:68dvh;
+  overflow-y:auto;
+  padding:6px 7px 12px;
+  scrollbar-gutter:stable;
+}
+.deck-builder .deck-card-tile {
+  --tile-edge:#a98759;
+  position:relative;
+  box-sizing:border-box;
+  min-width:0;
+  height:226px;
+  padding:5px 5px 7px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  gap:3px;
+  overflow:visible;
+  border:2px solid var(--tile-edge);
+  border-radius:7px;
+  background:linear-gradient(160deg,#19304e,#0c1534);
+  box-shadow:inset 0 0 0 2px #0e172f,0 4px 9px #000b;
+  cursor:pointer;
+  color:#f6edda;
+  transition:border-color .16s,transform .16s,box-shadow .16s;
+}
+.deck-builder .deck-card-tile--bronze {--tile-edge:#bc8054;}
+.deck-builder .deck-card-tile--silver {--tile-edge:#9fbdc7;}
+.deck-builder .deck-card-tile--gold {--tile-edge:#e0b65d;}
+.deck-builder .deck-card-tile--legendary {--tile-edge:#d6aaed;}
+.deck-builder .deck-card-tile--included {box-shadow:inset 0 0 0 2px #1a3544,0 0 12px #edcf7960;}
+.deck-builder .deck-card-tile:hover:not(:disabled),
+.deck-builder .deck-card-tile:focus-visible {
+  transform:translateY(-4px);
+  border-color:#ffe3a4;
+  background:linear-gradient(160deg,#264363,#141d42);
+  box-shadow:inset 0 0 0 2px #29425a,0 0 17px #f0ce7b70,0 8px 17px #000a;
+}
+.deck-builder .deck-card-tile:disabled {opacity:.55;}
+.deck-tile-art {
+  display:block;
+  width:100%;
+  height:155px;
+  min-height:0;
+  overflow:hidden;
+  border-radius:4px;
+  background:linear-gradient(145deg,#273b52,#141d33);
+}
+.deck-builder .deck-tile-art .card-artwork {
+  width:100%;
+  height:100%;
+  max-height:none;
+  aspect-ratio:auto;
+  object-fit:cover;
+  border-radius:3px;
+}
+.deck-tile-name {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+  min-width:0;
+  min-height:30px;
+  max-height:30px;
+  font-size:10px;
+  line-height:15px;
+  font-weight:800;
+  text-align:center;
+  overflow-wrap:anywhere;
+  text-shadow:0 1px 4px #000;
+}
+.deck-tile-cost,.deck-tile-count {
+  position:absolute;
+  z-index:2;
+  top:-4px;
+  display:grid;
+  place-items:center;
+  height:26px;
+  min-width:26px;
+  padding:0 3px;
+  box-sizing:border-box;
+  font:bold 16px/1 'Cinzel',serif;
+  color:#fff8dd;
+  border:2px solid #eed088;
+  background:radial-gradient(circle at 30% 25%,#85d88a,#236837 76%);
+  box-shadow:0 2px 5px #000a;
+}
+.deck-tile-cost {left:-5px;border-radius:50%;}
+.deck-tile-count {
+  right:-5px;
+  border-color:#c6ae7b;
+  border-radius:5px;
+  background:linear-gradient(145deg,#263644,#070d1b);
+  font-size:14px;
+}
+.deck-tile-stats {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:auto;
+  color:white;
+}
+.deck-tile-stats b {
+  display:grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  border:1px solid #c8a66a;
+  border-radius:5px;
+  background:#2b668c;
+  font:bold 13px 'Cinzel',serif;
+}
+.deck-tile-stats b:last-child {background:#9b434a;}
+.deck-tile-kind {font-size:10px;color:#e9d4a1;text-align:center;margin-top:auto;line-height:22px;}
+.deck-pool-empty {grid-column:1/-1;}
+.deck-selected {padding:14px;}
+.deck-selected-list {max-height:60dvh;}
+.deck-selected-row {font-size:12px;gap:4px;}
+.deck-hover-tooltip {
+  position:fixed;
+  z-index:140;
+  pointer-events:none;
+  width:380px;
+  max-width:calc(100vw - 16px);
+}
+.deck-hover-tooltip .battle-card-tooltip {
+  position:static;
+  width:100%;
+  max-height:min(490px,calc(100dvh - 16px));
+  overflow-y:auto;
+  padding:11px 13px;
+  box-shadow:0 12px 32px #000d;
+}
+@media(max-width:900px) {
+  .deck-builder-columns {grid-template-columns:1fr;}
+  .deck-selected-list {max-height:300px;}
+}
+@media(max-width:600px) {
+  .deck-card-pool {grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:9px;}
+  .deck-builder .deck-card-tile {height:208px;padding:4px;}
+  .deck-tile-art {height:140px;}
+  .deck-hover-tooltip {display:none;}
+}
