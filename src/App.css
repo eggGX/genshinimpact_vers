@@ -2243,6 +2243,32 @@
   color:#fff2c8;
 }
 .follower-emblem-flag {font-size:15px;line-height:1;}
+
+/* The flagged automatic ability is resolving in the current presentation
+   frame. Override emblem cycling so the correct icon is visible and flashes. */
+.game--battle-fit .follower-emblems .follower-emblem--trigger-active {
+  position:relative;
+  z-index:9;
+  opacity:1!important;
+  color:#fffefa;
+  border-color:#fff3ab;
+  animation:flag-trigger-pulse .75s ease-out 1 both!important;
+}
+@keyframes flag-trigger-pulse {
+  0% {opacity:1;filter:brightness(1);box-shadow:0 0 0 0 #fff8b000,0 2px 5px #000b;}
+  22% {opacity:1;filter:brightness(2.3);box-shadow:0 0 7px 3px #ffe18bcc,0 0 23px 9px #eebd5488,inset 0 0 8px #fff6bd;}
+  58% {opacity:1;filter:brightness(1.9);box-shadow:0 0 10px 5px #ffe7a4cc,0 0 27px 11px #ffcd5980,inset 0 0 7px #fff6bd;}
+  100% {opacity:1;filter:brightness(1.25);box-shadow:0 0 4px 2px #ffe8a966,0 0 13px 5px #eebd5444;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game--battle-fit .follower-emblems .follower-emblem--trigger-active {
+    animation:none!important;
+    opacity:1!important;
+    filter:brightness(1.6);
+    box-shadow:0 0 9px 4px #ffe19bba;
+  }
+}
+
 .follower-emblems .follower-emblem--rotating {
   opacity:0;
   animation-timing-function:linear;
