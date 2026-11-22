@@ -262,6 +262,9 @@ function resolveDeaths(state: GameState): GameState {
     }) as [Player, Player]
 
     result = { ...result, players }
+    // Show all simultaneous deaths before resolving their Last Words.
+    // This is presentation-only; the actual removal order is unchanged.
+    result = captureFrame(result, '通常攻撃などによるフォロワー破壊')
 
     for (const { ownerId, follower } of destroyed) {
       if (result.winnerId !== null) break
@@ -284,6 +287,8 @@ function resolveDeaths(state: GameState): GameState {
       result = electroDestroy(result, ownerId, follower)
       result = resolveAnemoDestroy(result, ownerId, follower)
       result = dendroDestroy(result, ownerId, follower)
+      // Keep each Last Word distinct, including chained damage and destruction.
+      result = captureFrame(result, `${card?.name ?? follower.cardId}：ラストワード解決`)
     }
 
     if (result.winnerId !== null) break
@@ -803,7 +808,9 @@ export function attackFollower(
     ),
   }
 
-  let result = { ...buffed, players }
+  // Record simultaneous combat damage while both followers still occupy the field.
+  // Death and Last Word animations must follow in subsequent frames.
+  let result = captureFrame({ ...buffed, players }, '通常攻撃：双方のダメージ')
   result = resolveReactionConsequence(
     result, enemyIndex, targetId, toDefender.reaction, toDefender.reactedElement, index
   )
