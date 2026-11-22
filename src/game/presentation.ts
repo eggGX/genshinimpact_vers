@@ -4,6 +4,8 @@ import { getCard } from '../data/cardRegistry'
 export interface PresentationFrame {
   label: string
   state: Omit<GameState, 'presentationFrames'>
+  /** Optional public on-board target for rendering a cinematic effect. */
+  effectTarget?: string
 }
 
 /** A trace is opt-in. The engine remains synchronous, deterministic for any fixed RNG. */
@@ -19,13 +21,13 @@ export function withoutPresentation(state: GameState): GameState {
 }
 
 /** Store immutable snapshots *after* each individual resolution, not just the final board. */
-export function captureFrame(state: GameState, label: string): GameState {
+export function captureFrame(state: GameState, label: string, effectTarget?: string): GameState {
   if (!state.presentationFrames) return state
   const snapshot = withoutPresentation(state)
   const players = structuredClone(snapshot.players) as [Player, Player]
   return {
     ...state,
-    presentationFrames: [...state.presentationFrames, { label, state: { ...snapshot, players } }],
+    presentationFrames: [...state.presentationFrames, { label, state: { ...snapshot, players }, ...(effectTarget ? { effectTarget } : {}) }],
   }
 }
 
@@ -126,7 +128,7 @@ export function compactPresentationFrames(
     // An elemental reaction can be visually meaningful even when its damage
     // was recorded in an earlier frame or it only changes a transient effect.
     // Keep actual reaction cues so the renderer can play them in order.
-    if (changes.length > 0 || frame.label.startsWith('元素反応：')) {
+    if (changes.length > 0 || frame.label.includes('元素反応：')) {
       result.push({ ...frame, label: changes.length > 0
         ? `${frame.label}：${changes.join(' ／ ')}` : frame.label })
     }
