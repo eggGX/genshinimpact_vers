@@ -24,7 +24,6 @@ import './App.css'
 import { CardLibrary } from './components/CardLibrary'
 import { CardArtwork } from './components/CardArtwork'
 import { PixiBattleOverlay } from './pixi/PixiBattleOverlay'
-import { PixiCardFlowOverlay } from './pixi/PixiCardFlowOverlay'
 import { BattleCardTooltip } from './components/BattleCardTooltip'
 import { ElementIcon } from './components/ElementIcon'
 import { CrestIcons } from './components/CrestIcons'
@@ -1521,7 +1520,6 @@ function App({ online }: { online?: {
   // mulligan (or the first turn). The opponent's hand is never revealed online.
   if (!online && mulliganReveal) {
     return <div className="game">
-      {new URLSearchParams(window.location.search).has('pixi-overlay') && <PixiCardFlowOverlay drawActive={false} mulliganActive />}
       <main className="mulligan-result-scene" role="status" aria-live="polite">
         <h2>{mulliganReveal.playerName} のマリガン結果</h2>
         <p>確定した手札</p>
@@ -1661,7 +1659,6 @@ function App({ online }: { online?: {
         }
       }}>
       {new URLSearchParams(window.location.search).has('pixi-overlay') && <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} frameDuration={online ? Math.min(playbackDelay, 300) : playbackDelay} summoningKeys={enteringPieces} />}
-      {new URLSearchParams(window.location.search).has('pixi-overlay') && (drawFlights.length > 0 || Boolean(mulliganReveal)) && <PixiCardFlowOverlay drawActive={drawFlights.length > 0} mulliganActive={Boolean(mulliganReveal)} />}
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
