@@ -356,7 +356,7 @@ function resolveTurnEffects(
       result = dendroGoldTurnEnd(result, playerId, sourceId, resolveDeaths)
       result = resolveDeaths(result)
     }
-    result = captureFrame(result, `${card?.name ?? source.cardId}：${trigger === 'turn_end' ? 'ターン終了時効果' : 'ターン開始時効果'}`)
+    result = captureFrame(result, `${card?.name ?? source.cardId}：${trigger === 'turn_end' ? 'ターン終了時効果' : 'ターン開始時効果'}`, undefined, sourceId)
   }
 
   return result
