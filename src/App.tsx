@@ -20,6 +20,7 @@ import {
 import type { ElementType, Follower, GameState, Player } from './game/types'
 import { beginPresentation, captureFrame, compactPresentationFrames, withoutPresentation, type PresentationFrame } from './game/presentation'
 import type { AbilityKind } from './game/engine'
+import { nextCpuAction, type CpuAction } from './game/cpuOpponent'
 import './App.css'
 import { CardArtwork } from './components/CardArtwork'
 import { BattleCardTooltip } from './components/BattleCardTooltip'
@@ -290,6 +291,8 @@ function App({ online }: { online?: {
 
   const [playbackDelay, setPlaybackDelay] = useState<450 | 900 | 1500>(900)
   const playbackLock = useRef(false)
+  const cpuTurnActions = useRef(0)
+  const cpuLastTurn = useRef<string | null>(null)
   const [turnAnnouncement, setTurnAnnouncement] = useState<{ id: string; own: boolean; playerName: string } | null>(null)
   const [mulliganReveal, setMulliganReveal] = useState<MulliganReveal | null>(null)
   const onlineMulliganDraft = useRef<{ originalHand: string[]; replacedIndices: number[] } | null>(null)
@@ -367,6 +370,8 @@ function App({ online }: { online?: {
   const beginMatch = () => {
     if (decks.some(deck => validateDeck(deck).length > 0)) return
     playbackLock.current = false
+    cpuTurnActions.current = 0
+    cpuLastTurn.current = null
     setPlayback(null)
     setPlayedCardNotice(null)
     setMulliganReveal(null)
@@ -426,7 +431,24 @@ function App({ online }: { online?: {
     return () => window.clearTimeout(timer)
   }, [mulliganReveal])
 
-  const onlineCanAct = !online || (online.match.phase === 'main' &&
+  // The human chooses their opening hand; CPU confirms its mulligan quietly.
+  useEffect(() => {
+    if (online || !matchStarted || localGame.phase !== 'mulligan' ||
+        localGame.currentPlayerId !== 'player2') return
+    const timer = window.setTimeout(() => {
+      setGame(previous => {
+        if (previous.phase !== 'mulligan' || previous.currentPlayerId !== 'player2') return previous
+        const replace = previous.players[1].hand.flatMap((id,index) =>
+          (getCard(id)?.cost ?? 0) >= 5 ? [index] : [])
+        return confirmMulligan(previous,replace)
+      })
+    }, 450)
+    return () => window.clearTimeout(timer)
+  }, [online,matchStarted,localGame.phase,localGame.currentPlayerId])
+
+  const onlineCanAct = !online ? (game.phase === 'main' && game.currentPlayerId === 'player1' &&
+    game.winnerId === null && !playbackLock.current && !playback &&
+    !turnAnnouncement && drawFlights.length === 0) : (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
     !online.pending && !online.match.winnerId && !playbackLock.current && !playback)
   const onlineSend = (action: OnlineAction) => {
@@ -760,6 +782,65 @@ function App({ online }: { online?: {
     }
   }
 
+  // CPU acts only after the previous presentation and turn banner are finished.
+  // Each action resolves once on a traced game state; engine rules stay authoritative.
+  useEffect(() => {
+    if (online || !matchStarted || localGame.phase !== 'main' ||
+        localGame.currentPlayerId !== 'player2' || localGame.winnerId !== null ||
+        playback || playbackLock.current || turnAnnouncement || mulliganReveal ||
+        drawFlights.length > 0) return
+    const turnKey = `${localGame.turn}:${localGame.currentPlayerId}`
+    if (completedTurnAnnouncement.current !== turnKey) return
+    const timer = window.setTimeout(() => {
+      if (playbackLock.current) return
+      const key = `${localGame.turn}:${localGame.currentPlayerId}`
+      if (cpuLastTurn.current !== key) {
+        cpuLastTurn.current = key
+        cpuTurnActions.current = 0
+      }
+      const traced = beginPresentation(localGame)
+      const picked = nextCpuAction(traced,cpuTurnActions.current)
+      if (!picked) return
+      const action: CpuAction = picked.action
+      const label = action.type === 'play'
+        ? `CPU：${getCard(action.cardId)?.name ?? 'カード'} をプレイ`
+        : action.type === 'ability'
+          ? `CPU：${getCard(action.cardId)?.name ?? 'フォロワー'} の${action.kind === 'skill' ? '元素スキル' : '元素爆発'}`
+          : action.type === 'attackFollower' ? 'CPU：フォロワー攻撃'
+          : action.type === 'attackLeader' ? 'CPU：リーダー攻撃'
+          : 'CPU：ターン終了'
+      const last = captureFrame(picked.result,label)
+      const frames = compactPresentationFrames(localGame,last.presentationFrames ?? [])
+      const finalState = withoutPresentation(last)
+      cpuTurnActions.current += 1
+      setGame(finalState)
+      setLocalBattleLog(previous => [...previous,{
+        id:`cpu-${Date.now()}-${cpuTurnActions.current}`,
+        turn:localGame.turn,actorId:'player2',title:label,
+        ...(action.type === 'play' ? {playedCardId:action.cardId} : {}),
+        before:withoutPresentation(localGame),after:finalState,frames,
+      }].slice(-150))
+      if (frames.length) {
+        playbackLock.current = true
+        setPlayback({
+          frames:[{label:label+'：効果を解決中',state:withoutPresentation(localGame)},...frames],
+          index:0,
+          ...(action.type === 'attackFollower' || action.type === 'attackLeader'
+            ? {attackerId:action.attackerId} : {}),
+          ...(action.type === 'attackFollower' ? {attackTargetId:action.targetId}
+            : action.type === 'attackLeader' ? {attackTargetId:'leader'} : {}),
+          ...(action.type === 'play' || action.type === 'ability'
+            ? {playedCard:{
+                key:`cpu-${Date.now()}-${cpuTurnActions.current}`,
+                cardId:action.cardId,actorId:'player2',
+                ...(action.type === 'ability' ? {abilityKind:action.kind} : {}),
+              }} : {}),
+        })
+      }
+    },650)
+    return () => window.clearTimeout(timer)
+  },[online,matchStarted,localGame,playback,turnAnnouncement,mulliganReveal,drawFlights.length])
+
   const skipPlayback = () => {
     playbackLock.current = false
     onlinePlaybackQueue.current = []
@@ -823,10 +904,10 @@ function App({ online }: { online?: {
 
   const currentPlayer = online
     ? shownGame.players[online.match.seat]
-    : shownGame.players.find(p => p.id === shownGame.currentPlayerId)!
+    : shownGame.players[0]
   const opponent = online
     ? shownGame.players[1-online.match.seat]
-    : shownGame.players.find(p => p.id !== shownGame.currentPlayerId)!
+    : shownGame.players[1]
   const winner = shownGame.players.find(
     p => p.id === shownGame.winnerId
   )
@@ -870,6 +951,8 @@ function App({ online }: { online?: {
 
   const handleReset = () => {
     skipPlayback()
+    cpuTurnActions.current = 0
+    cpuLastTurn.current = null
     animatedDrawTransitions.current.clear()
     previousDrawState.current=null
     previousDrawTurn.current=null
@@ -899,7 +982,7 @@ function App({ online }: { online?: {
   }
 
   const handleConfirmMulligan = () => {
-    if (localGame.phase !== 'mulligan') return
+    if (localGame.phase !== 'mulligan' || localGame.currentPlayerId !== 'player1') return
     const player = localGame.players.find(p => p.id === localGame.currentPlayerId)
     if (!player) return
     const result = confirmMulligan(localGame, [...mulliganSelection])
@@ -916,6 +999,7 @@ function App({ online }: { online?: {
   }
 
   const handleEndTurn = () => {
+    if (!onlineCanAct) return
     if (online) onlineSend({type:'endTurn'})
     else animateAction(previous => endTurn(previous), 'ターン終了')
     resetSelection()
