@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Application, Graphics, Text, type Ticker } from 'pixi.js'
 import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
-import { spawnCardAttack, type AttackCue } from './attackFx'
 
 type ElementFx = 'pyro' | 'hydro' | 'cryo' | 'electro' | 'anemo' | 'geo' | 'dendro'
 const ELEMENT_COLORS: Record<ElementFx, { main: number; light: number }> = {
@@ -165,7 +164,7 @@ function spawnImpact(
  * Non-interactive overlay using the existing battle damage and elemental cues.
  * Game logic and the React/CSS animations are intentionally unchanged.
  */
-export function PixiBattleOverlay({ cue, attack }: { cue: { label: string; effectTarget?: string } | null; attack: AttackCue | null }) {
+export function PixiBattleOverlay({ cue }: { cue: { label: string; effectTarget?: string } | null }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const activeEffects = useRef<Array<() => void>>([])
@@ -211,47 +210,6 @@ export function PixiBattleOverlay({ cue, attack }: { cue: { label: string; effec
       if (ready) app.destroy({ removeView: true }, { children: true })
     }
   }, [])
-
-  useEffect(() => {
-    if (!attack) return
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const request = window.requestAnimationFrame(() => {
-      const app = appRef.current
-      const host = containerRef.current
-      const battle = host?.parentElement
-      if (!app || !host || !battle) return
-      const elements = Array.from(battle.querySelectorAll<HTMLElement>('[data-pixi-id]'))
-      const source = elements.find(node => node.dataset.pixiId === attack.attackerId)
-      const target = elements.find(node => node.dataset.pixiId === attack.targetId)
-      if (!source || !target) return
-      const canvasBounds = host.getBoundingClientRect()
-      const from = source.getBoundingClientRect()
-      const to = target.getBoundingClientRect()
-      if (!from.width || !from.height || !to.width || !to.height) return
-      const fieldCard = source.querySelector<HTMLElement>('.field-card')
-      const artwork = fieldCard?.querySelector<HTMLImageElement>('img.card-artwork') ?? null
-      const cardName = fieldCard?.querySelector<HTMLElement>('.battle-field-card-name, strong')?.textContent?.trim() ?? ''
-      const stop = spawnCardAttack(app, {
-        x: from.left + from.width / 2 - canvasBounds.left,
-        y: from.top + from.height / 2 - canvasBounds.top,
-      }, {
-        x: to.left + to.width / 2 - canvasBounds.left,
-        y: to.top + to.height / 2 - canvasBounds.top,
-      }, attack.duration, attack.attackerSurvives, {
-        image: artwork,
-        name: cardName,
-        attack: fieldCard?.querySelector<HTMLElement>('.stat-attack')?.textContent?.trim() ?? '',
-        health: fieldCard?.querySelector<HTMLElement>('.stat-health')?.textContent?.trim() ?? '',
-      }, finished => {
-        activeEffects.current = activeEffects.current.filter(item => item !== finished)
-        if (!activeEffects.current.length) app.ticker.stop()
-      })
-      activeEffects.current.push(stop)
-    })
-    return () => window.cancelAnimationFrame(request)
-    // The frame object remains stable during the attack; ordinary rerenders
-    // must not launch duplicate trails.
-  }, [attack?.key])
 
   useEffect(() => {
     if (!cue) {
