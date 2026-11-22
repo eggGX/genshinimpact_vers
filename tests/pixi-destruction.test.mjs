@@ -16,6 +16,13 @@ test('destroyed followers leave the authoritative field before Last Words resolv
   assert.ok(remove >= 0 && deathFrame > remove && lastWord > deathFrame)
 })
 
+test('Pixi battle effects are mounted automatically on the normal duel screen', () => {
+  assert.match(app, /<PixiBattleOverlay cue=\{playback && playback\.index > 0/)
+  assert.doesNotMatch(app, /has\('pixi-overlay'\)/)
+  assert.match(overlay, /pixi-battle-overlay--ready/)
+  assert.match(css, /:has\(> \.pixi-battle-overlay--ready\)/)
+})
+
 test('Pixi destruction targets only the transient non-interactive death ghost', () => {
   assert.match(app, /className="follower-wrapper battle-destroying"/)
   assert.match(app, /style=\{\{ animationDuration: `\$\{playbackDelay\}ms` \}\}/)
