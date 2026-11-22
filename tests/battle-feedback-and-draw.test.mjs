@@ -58,9 +58,9 @@ test('draw artwork is eagerly decoded, while regular catalogue artwork stays laz
 test('blank battlefield clicks cancel preparation without intercepting valid target clicks', () => {
   assert.match(app, /const isBlank = !target\.closest\(/)
   assert.match(app, /selectedHandIndex !== null \|\| selectedAbility !== null/)
-  assert.match(app, /if \(isBlank && \(selectedHandIndex !== null \|\| selectedAbility !== null\)\) \{/)
+  assert.match(app, /if \(isBlank && \(selectedHandIndex !== null \|\| selectedAbility !== null \|\| selectedAttackerId !== null\)\) \{/)
   assert.match(app, /\[data-attack-drop\]/)
-  assert.match(app, /setSelectedHandIndex\(null\)\s+setSelectedAbility\(null\)/)
+  assert.match(app, /setSelectedAttackerId\(null\)\s+setSelectedHandIndex\(null\)\s+setSelectedAbility\(null\)/)
 })
 
 test('preparation preview takes precedence over card hover details', () => {
