@@ -52,3 +52,42 @@ test('CPU draw cards are hidden but player draws remain face-up', () => {
   assert.match(app, /const isSelf=player\.id===selfId/)
   assert.match(app, /cardId:isSelf&&getCard\(cards\[index\]\)\?cards\[index\]:undefined/)
 })
+
+import { after } from 'node:test'
+import { createServer } from 'vite'
+
+const vite = await createServer({
+  server: { middlewareMode: true, hmr: false },
+  appType: 'custom',
+  logLevel: 'error',
+})
+after(async () => { await vite.close() })
+const gameEngine = await vite.ssrLoadModule('/src/game/engine.ts')
+const cpuEngine = await vite.ssrLoadModule('/src/game/cpuOpponent.ts')
+
+test('practice CPU can make legal moves and finish its own turn', () => {
+  let state = gameEngine.createInitialGameState()
+  state = gameEngine.confirmMulligan(state,[])
+  state = gameEngine.confirmMulligan(state,[])
+  state = gameEngine.endTurn(state)
+  assert.equal(state.currentPlayerId,'player2')
+  let actions = 0
+  for (; actions < 30 && state.currentPlayerId === 'player2' &&
+      state.winnerId === null; actions++) {
+    const choice = cpuEngine.nextCpuAction(state,actions)
+    assert.ok(choice,'CPU needs to select an action')
+    assert.notStrictEqual(choice.result,state,'CPU should only apply accepted actions')
+    state = choice.result
+  }
+  assert.ok(actions > 0)
+  assert.ok(state.currentPlayerId !== 'player2' || state.winnerId !== null,
+    'CPU must not stall with an unfinished turn')
+})
+
+test('practice CPU does not act on human turns or during mulligan', () => {
+  const initial = gameEngine.createInitialGameState()
+  assert.equal(cpuEngine.nextCpuAction(initial,0),null)
+  const started = gameEngine.confirmMulligan(gameEngine.confirmMulligan(initial,[]),[])
+  assert.equal(started.currentPlayerId,'player1')
+  assert.equal(cpuEngine.nextCpuAction(started,0),null)
+})
