@@ -123,8 +123,12 @@ export function compactPresentationFrames(
   const result: PresentationFrame[] = []
   for (const frame of frames) {
     const changes = describePresentationChange(previous, frame.state)
-    if (changes.length > 0) {
-      result.push({ ...frame, label: `${frame.label}：${changes.join(' ／ ')}` })
+    // An elemental reaction can be visually meaningful even when its damage
+    // was recorded in an earlier frame or it only changes a transient effect.
+    // Keep actual reaction cues so the renderer can play them in order.
+    if (changes.length > 0 || frame.label.startsWith('元素反応：')) {
+      result.push({ ...frame, label: changes.length > 0
+        ? `${frame.label}：${changes.join(' ／ ')}` : frame.label })
     }
     previous = frame.state
   }
