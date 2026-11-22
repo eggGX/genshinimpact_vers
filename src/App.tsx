@@ -530,7 +530,7 @@ function App({ online }: { online?: {
       const leaving=new Set(fresh)
       setEnteringPieces(current=>new Set([...current].filter(id=>!leaving.has(id))))
       boardEntranceTimers.current=boardEntranceTimers.current.filter(item=>item!==timer)
-    },1050)
+    },720)
     boardEntranceTimers.current.push(timer)
   },[localGame,online?.match.revision,playback?.frames,playback?.index])
   useEffect(()=>()=>boardEntranceTimers.current.forEach(clearTimeout),[])
@@ -1441,9 +1441,7 @@ function App({ online }: { online?: {
           : false)
 
     return (
-      <div key={highlightedFollowers.has(follower.instanceId)
-        ? `${follower.instanceId}-hit-${playback?.index}`
-        : follower.instanceId}
+      <div key={follower.instanceId}
         data-pixi-id={follower.instanceId}
         data-pixi-summon-key={(isOpponent ? opponent.id : currentPlayer.id)+':'+follower.instanceId}
         className={['follower-wrapper',
