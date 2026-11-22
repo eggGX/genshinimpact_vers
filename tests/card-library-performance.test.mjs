@@ -25,8 +25,8 @@ test('catalogue filters reset incremental grid but detail navigation remains ove
 })
 
 test('card images decode asynchronously and offscreen catalogue entries avoid rendering work', () => {
-  assert.match(art, /loading="lazy"/)
-  assert.match(art, /decoding="async"/)
+  assert.match(art, /loading=\{priority \? ["']eager["'] : ["']lazy["']\}/)
+  assert.match(art, /decoding=\{priority \? ["']sync["'] : ["']async["']\}/)
   assert.match(css, /content-visibility:\s*auto/)
   assert.match(css, /contain-intrinsic-size:\s*auto 310px/)
 })
