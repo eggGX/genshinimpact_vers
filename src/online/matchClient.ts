@@ -55,7 +55,7 @@ export interface OnlinePresentationEvent {
   playedCardId?: string
   abilityCardId?: string
   abilityKind?: 'skill' | 'burst'
-  frames: Array<{ label: string; state: OnlinePresentationSnapshot }>
+  frames: Array<{ label: string; state: OnlinePresentationSnapshot; triggerSourceId?: string }>
 }
 export interface OnlineMatchView {
   revision: number
