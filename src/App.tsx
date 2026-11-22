@@ -270,7 +270,7 @@ function App({ online }: { online?: {
   const [decks, setDecks] = useState<BothDecks>(loadDecks)
   const [editingPlayer, setEditingPlayer] = useState<0 | 1 | null>(null)
   const [matchStarted, setMatchStarted] = useState(false)
-  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice, attackerId?: string } | null>(null)
+  const [playback, setPlayback] = useState<{ frames: PresentationFrame[], index: number, playedCard?: BattleNotice, attackerId?: string, attackTargetId?: string } | null>(null)
   const [playedCardNotice, setPlayedCardNotice] = useState<BattleNotice | null>(null)
   const [drawFlights, setDrawFlights] = useState<DrawFlight[]>([])
   const [enteringPieces, setEnteringPieces] = useState<Set<string>>(new Set())
@@ -631,7 +631,7 @@ function App({ online }: { online?: {
     })
     const targetId = isLeader
       ? enemyBefore.id
-      : changedFollower?.instanceId ?? enemyBefore.field[0]?.instanceId
+      : playback.attackTargetId ?? changedFollower?.instanceId ?? enemyBefore.field[0]?.instanceId
     return targetId ? {
       key: playback.frames[0], attackerId: attackingFollowerId,
       targetId, duration: online ? 260 : Math.min(playbackDelay * 0.75, 650),
@@ -697,7 +697,7 @@ function App({ online }: { online?: {
     }
   }
 
-  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string, abilityKind?: AbilityKind, attackerId?: string) => {
+  const animateAction = (action: (state: GameState) => GameState, label: string, playedCardId?: string, abilityKind?: AbilityKind, attackerId?: string, attackTargetId?: string) => {
     if (online || playbackLock.current) return
     const traced = beginPresentation(game)
     const next = action(traced)
@@ -722,6 +722,7 @@ function App({ online }: { online?: {
         ],
         index: 0,
         ...(attackerId ? { attackerId } : {}),
+        ...(attackTargetId ? { attackTargetId } : {}),
         ...(playedCardId ? { playedCard: {
           key: `local-${Date.now()}-${Math.random()}`, cardId: playedCardId,
           actorId: game.currentPlayerId,
@@ -1071,10 +1072,10 @@ function App({ online }: { online?: {
     if (!target) return
     if (target === 'leader') {
       if (online) onlineSend({ type: 'attackLeader', attackerId: pointer.attackerId })
-      else animateAction(previous => attackLeader(previous, pointer.attackerId), 'リーダー攻撃', undefined, undefined, pointer.attackerId)
+      else animateAction(previous => attackLeader(previous, pointer.attackerId), 'リーダー攻撃', undefined, undefined, pointer.attackerId, 'leader')
     } else {
       if (online) onlineSend({ type: 'attackFollower', attackerId: pointer.attackerId, targetId: target })
-      else animateAction(previous => attackFollower(previous, pointer.attackerId, target), 'フォロワー攻撃', undefined, undefined, pointer.attackerId)
+      else animateAction(previous => attackFollower(previous, pointer.attackerId, target), 'フォロワー攻撃', undefined, undefined, pointer.attackerId, target)
     }
     resetSelection()
   }
@@ -1138,7 +1139,7 @@ function App({ online }: { online?: {
     if (online) onlineSend({type:'attackFollower',attackerId,targetId})
     else animateAction(previous =>
       attackFollower(previous, attackerId, targetId)
-    , 'フォロワー攻撃', undefined, undefined, attackerId)
+    , 'フォロワー攻撃', undefined, undefined, attackerId, targetId)
     resetSelection()
   }
 
@@ -1150,7 +1151,7 @@ function App({ online }: { online?: {
     if (online) onlineSend({type:'attackLeader',attackerId})
     else animateAction(previous =>
       attackLeader(previous, attackerId)
-    , 'リーダー攻撃', undefined, undefined, attackerId)
+    , 'リーダー攻撃', undefined, undefined, attackerId, 'leader')
     resetSelection()
   }
 
