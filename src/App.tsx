@@ -402,24 +402,6 @@ function App({ online }: { online?: {
     return () => window.clearTimeout(timer)
   }, [mulliganReveal])
 
-  // Detect transitions from actual game state, not from polling frequency.
-  // A new turn also includes the first turn immediately after both mulligans.
-  useEffect(() => {
-    if (game.phase !== 'main' || game.winnerId !== null || mulliganReveal ||
-        (online && onlineMulliganDraft.current !== null)) return
-    const turnKey = `${game.turn}:${game.currentPlayerId}`
-    if (lastAnnouncedTurn.current === turnKey) return
-    lastAnnouncedTurn.current = turnKey
-    const seatId = online ? online.match.players[online.match.seat].id : 'player1'
-    const playerName = game.players.find(p => p.id === game.currentPlayerId)?.name ?? ''
-    setTurnAnnouncement({ id: turnKey, own: game.currentPlayerId === seatId, playerName })
-  }, [game.phase, game.turn, game.currentPlayerId, game.winnerId, online?.match.seat, mulliganReveal])
-  // Separate dismissal effect also works under React StrictMode's effect replay.
-  useEffect(() => {
-    if (!turnAnnouncement) return
-    const timer = window.setTimeout(() => setTurnAnnouncement(null), 1800)
-    return () => window.clearTimeout(timer)
-  }, [turnAnnouncement])
   const onlineCanAct = !online || (online.match.phase === 'main' &&
     online.match.currentPlayerId === online.match.players[online.match.seat].id &&
     !online.pending && !online.match.winnerId && !playbackLock.current && !playback)
@@ -427,6 +409,25 @@ function App({ online }: { online?: {
     if (online && onlineCanAct) online.onAction(action)
   }
   const shownGame = playback ? playback.frames[playback.index].state : game
+  // Announce only the turn visible in the presentation playback.
+  // An authoritative endTurn action may have already finished the next turn's
+  // draw, while the player is still watching the previous turn's Last Words.
+  useEffect(() => {
+    if (shownGame.phase !== 'main' || shownGame.winnerId !== null || mulliganReveal ||
+        (online && onlineMulliganDraft.current !== null)) return
+    const turnKey = `${shownGame.turn}:${shownGame.currentPlayerId}`
+    if (lastAnnouncedTurn.current === turnKey) return
+    lastAnnouncedTurn.current = turnKey
+    const seatId = online ? online.match.players[online.match.seat].id : 'player1'
+    const playerName = shownGame.players.find(p => p.id === shownGame.currentPlayerId)?.name ?? ''
+    setTurnAnnouncement({ id: turnKey, own: shownGame.currentPlayerId === seatId, playerName })
+  }, [shownGame.phase, shownGame.turn, shownGame.currentPlayerId,
+      shownGame.winnerId, online?.match.seat, mulliganReveal])
+  useEffect(() => {
+    if (!turnAnnouncement) return
+    const timer = window.setTimeout(() => setTurnAnnouncement(null), 1800)
+    return () => window.clearTimeout(timer)
+  }, [turnAnnouncement])
   // Detect newly summoned followers and newly installed amulets from actual
   // board snapshots, not from the click handler. This covers effects and both
   // local and online play without changing game-state timing.
