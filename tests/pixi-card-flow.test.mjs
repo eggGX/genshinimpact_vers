@@ -44,3 +44,20 @@ test('new-turn draw waits for banner dismissal while card-effect draws play imme
   assert.match(app, /startDrawFlights\(entry\.flights, entry\.isSelf\)/)
   assert.match(app, /drawFlights\.length > 0/)
 })
+
+test('drawn cards stay hidden through pending banner, flight, and commit render', () => {
+  assert.match(app, /function unrevealedDrawPositions\(/)
+  assert.match(app, /beforeHand:before\.hand/)
+  assert.match(app, /beforeDeckSize:before\.deckSize/)
+  assert.match(app, /pendingTurnDrawFlights\.current\.flatMap\(entry => entry\.flights\)/)
+  assert.match(app, /previousDrawState\.current\?\.find\(entry=>entry\.id===player\.id\)/)
+  assert.match(app, /hiddenOwnDraws\.has\(index\) \? 'draw-pending'/)
+  assert.match(app, /hiddenOpponentDraws\.has\(index\) \? 'draw-pending'/)
+  assert.match(css, /\.hand-card\.draw-pending,[\s\S]*?visibility:hidden !important/)
+})
+
+test('a damaged summoned follower keeps its DOM identity during effect playback', () => {
+  assert.match(app, /<div key=\{follower\.instanceId\}/)
+  assert.doesNotMatch(app, /follower\.instanceId\}-hit-\$\{playback\?\.index\}/)
+  assert.match(app, /\},720\)\s*boardEntranceTimers\.current\.push/)
+})
