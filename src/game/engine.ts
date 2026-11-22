@@ -756,7 +756,7 @@ export function attackFollower(
         attacksThisTurn: (f.attacksThisTurn ?? (f.hasAttacked ? 1 : 0)) + 1 } : f) }
     return { ...swept, players }
   }
-  const buffed = dendroAttack(geoAttack(
+  let buffed = dendroAttack(geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
     advancedElectroAttack(
@@ -775,6 +775,9 @@ export function attackFollower(
     ), owner.id, attackerId
     ), owner.id, attackerId
   ), owner.id, attackerId)
+  // Snapshot a real pre-damage change caused by attack-triggered abilities.
+  // A normal attack with no such change is discarded during compaction.
+  buffed = captureFrame(buffed, '攻撃時能力', undefined, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const attackDamage = effectiveAttack(buffed, owner.id, boostedAttacker)
@@ -863,7 +866,7 @@ export function attackLeader(
   }
   const triggered = raincutterAttackLeader(dendroLegendaryAttack(declared, owner.id, attackerId, resolveDeaths), owner.id, attackerId)
   if (triggered.winnerId !== null || !triggered.players[index].field.some(f=>f.instanceId===attackerId&&f.health>0)) return triggered
-  const buffed = dendroAttack(geoAttack(
+  let buffed = dendroAttack(geoAttack(
     advancedAnemoAttack(
     resolveAnemoAttack(
     advancedElectroAttack(
@@ -882,6 +885,9 @@ export function attackLeader(
     ), owner.id, attackerId
     ), owner.id, attackerId
   ), owner.id, attackerId)
+  // Snapshot a real pre-damage change caused by attack-triggered abilities.
+  // A normal attack with no such change is discarded during compaction.
+  buffed = captureFrame(buffed, '攻撃時能力', undefined, attackerId)
   const boostedOwner = buffed.players[index]
   const boostedAttacker = boostedOwner.field.find(f => f.instanceId === attackerId)!
   const leaderResolved = resolveDeaths(resolveLeaderElementalHit(
