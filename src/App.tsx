@@ -590,9 +590,9 @@ function App({ online }: { online?: {
         const oldest=animatedDrawTransitions.current.values().next().value
         if(oldest) animatedDrawTransitions.current.delete(oldest)
       }
-      // Both seats are controlled locally; a locally drawn card is always
-      // visible. Only the remote opponent's cards must remain face-down.
-      const isSelf=!online || player.id===selfId
+      // CPU and online opponent draws stay face-down; only the human's own
+      // drawn cards are revealed.
+      const isSelf=player.id===selfId
       const source=battleScreenRef.current?.querySelector<HTMLElement>(
         isSelf?'[data-draw-source="self"]':'[data-draw-source="opponent"]')
       const target=battleScreenRef.current?.querySelector<HTMLElement>(
