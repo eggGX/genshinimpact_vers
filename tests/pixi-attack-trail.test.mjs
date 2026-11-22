@@ -8,7 +8,7 @@ const overlay = read('src/pixi/PixiBattleOverlay.tsx')
 const trail = read('src/pixi/attackFx.ts')
 const css = read('src/App.css')
 
-test('attack trail reuses existing battle playback and never replaces legal combat', () => {
+test('Pixi card attack reuses existing battle playback and never changes combat', () => {
   assert.match(app, /const pixiAttackCue = \(\(\) => \{/)
   assert.match(app, /playback\.index !== 0/)
   assert.match(app, /attackTargetId\?: string/)
@@ -23,11 +23,15 @@ test('exact clicked and dragged targets are passed to local Pixi attack cue', ()
   assert.ok(app.includes("attackerId, 'leader')"))
 })
 
-test('Pixi attack trail is pointer transparent and respects reduced motion', () => {
-  assert.match(overlay, /spawnAttackTrail\(/)
+test('Pixi card duplicate is pointer transparent and respects reduced motion', () => {
+  assert.match(overlay, /spawnCardAttack\(/)
+  assert.match(overlay, /img\.card-artwork/)
+  assert.match(trail, /Texture\.from\(card\.image\)/)
+  assert.match(trail, /attackerSurvives/)
+  assert.match(app, /game--pixi-overlay/)
   assert.match(overlay, /attack\?\.key/)
   assert.match(overlay, /prefers-reduced-motion: reduce/)
   assert.match(overlay, /pointerEvents: 'none'/)
   assert.match(trail, /app\.ticker\.remove\(tick\)/)
-  assert.match(trail, /graphic\.destroy\(\)/)
+  assert.match(trail, /root\.destroy\(\{ children: true \}\)/)
 })
