@@ -37,11 +37,11 @@ export function electroDestroy(
   state: GameState, ownerId: string, destroyed: Follower
 ): GameState {
   if (state.winnerId !== null) return state
-  if (destroyed.cardId === 'C057') return electroHitRandom(state, ownerId, 2)
+  if (destroyed.cardId === 'C057') return captureFrame(electroHitRandom(state, ownerId, 2), 'グルグル雷キノコン：ラストワード・雷元素2ダメージ')
   if (destroyed.cardId !== 'C059') return state
   const enemy = state.players.find(p => p.id !== ownerId)
   if (!enemy) return state
-  return resolveLeaderElementalHit(state, state.players.findIndex(p => p.id === enemy.id), 2, 'electro')
+  return captureFrame(resolveLeaderElementalHit(state, state.players.findIndex(p => p.id === enemy.id), 2, 'electro'), '雷フライム：ラストワード・雷元素2ダメージ')
 }
 
 /** C060 spell summons Oz after resolving its selected damage, if space remains. */
