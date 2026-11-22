@@ -2981,3 +2981,11 @@
   backface-visibility:visible;
   -webkit-backface-visibility:visible;
 }
+
+/* Pixi overlay owns the attack motion; keep the original field card stationary
+   for input/position tracking. Non-Pixi battles retain the CSS lunge. */
+.game--pixi-overlay.game--animating .follower-wrapper.battle-attacker .field-card {
+  animation:none;
+  transform:none;
+  filter:none;
+}
