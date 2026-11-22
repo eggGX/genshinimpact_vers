@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Application, Graphics, Text, type Ticker } from 'pixi.js'
 import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
 import { spawnDestructionBurst } from './destructionFx'
@@ -169,6 +169,7 @@ function spawnImpact(
 export function PixiBattleOverlay({ cue, frameDuration, summoningKeys }: { cue: { label: string; effectTarget?: string } | null; frameDuration: number; summoningKeys: ReadonlySet<string> }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
+  const [appReady, setAppReady] = useState(false)
   const activeEffects = useRef<Array<() => void>>([])
   const previousImpact = useRef<{ x: number; y: number; radius: number } | null>(null)
   const playedSummons = useRef<Set<string>>(new Set())
@@ -200,6 +201,7 @@ export function PixiBattleOverlay({ cue, frameDuration, summoningKeys }: { cue: 
         container.appendChild(app.canvas)
         appRef.current = app
         app.ticker.stop()
+        setAppReady(true)
       } catch (error) {
         if (!cancelled) console.warn('PixiJS overlay could not initialize:', error)
       }
@@ -245,7 +247,7 @@ export function PixiBattleOverlay({ cue, frameDuration, summoningKeys }: { cue: 
       }
     })
     return () => window.cancelAnimationFrame(request)
-  }, [summoningKeys])
+  }, [summoningKeys, appReady])
 
   useEffect(() => {
     if (!cue) {
