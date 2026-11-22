@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Application, Graphics, Text, type Ticker } from 'pixi.js'
 import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
+import { spawnDestructionBurst } from './destructionFx'
 
 type ElementFx = 'pyro' | 'hydro' | 'cryo' | 'electro' | 'anemo' | 'geo' | 'dendro'
 const ELEMENT_COLORS: Record<ElementFx, { main: number; light: number }> = {
@@ -164,7 +165,7 @@ function spawnImpact(
  * Non-interactive overlay using the existing battle damage and elemental cues.
  * Game logic and the React/CSS animations are intentionally unchanged.
  */
-export function PixiBattleOverlay({ cue }: { cue: { label: string; effectTarget?: string } | null }) {
+export function PixiBattleOverlay({ cue, frameDuration }: { cue: { label: string; effectTarget?: string } | null; frameDuration: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const activeEffects = useRef<Array<() => void>>([])
@@ -228,6 +229,26 @@ export function PixiBattleOverlay({ cue }: { cue: { label: string; effectTarget?
         '.follower-wrapper.battle-destroying, .leader.leader-damaged, .leader.leader-hit',
       )
       const bounds = host.getBoundingClientRect()
+      // The destroyed card remains as a non-interactive visual ghost for this
+      // playback frame only. Use its real on-screen bounds for the fragments.
+      const dyingCards = battle.querySelectorAll<HTMLElement>(
+        '.follower-wrapper.battle-destroying',
+      )
+      dyingCards.forEach(target => {
+        if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+        const rect = target.getBoundingClientRect()
+        if (!rect.width || !rect.height) return
+        const stop = spawnDestructionBurst(app,
+          rect.left + rect.width / 2 - bounds.left,
+          rect.top + rect.height / 2 - bounds.top,
+          rect.width, rect.height,
+          Math.min(frameDuration * 0.85, 780),
+          finished => {
+            activeEffects.current = activeEffects.current.filter(item => item !== finished)
+            if (!activeEffects.current.length) app.ticker.stop()
+          })
+        activeEffects.current.push(stop)
+      })
       const getPosition = (target: HTMLElement) => {
         const rect = target.getBoundingClientRect()
         if (!rect.width || !rect.height) return null
@@ -284,7 +305,7 @@ export function PixiBattleOverlay({ cue }: { cue: { label: string; effectTarget?
       })
     })
     return () => window.cancelAnimationFrame(request)
-  }, [cue])
+  }, [cue, frameDuration])
 
   return (
     <div
