@@ -280,6 +280,8 @@ function App({ online }: { online?: {
 
   const drawFlightSerial = useRef(0)
   const drawFlightTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const previousDrawTurn = useRef<string | null>(null)
+  const pendingTurnDrawFlights = useRef<Array<{ flights: DrawFlight[]; isSelf: boolean; turnKey: string }>>([])
   const previousDrawState = useRef<Array<{id:string; deckSize:number; hand:string[]; phase:GameState['phase']} > | null>(null)
   const animatedDrawTransitions = useRef<Set<string>>(new Set())
 
@@ -305,6 +307,19 @@ function App({ online }: { online?: {
 
   useEffect(() => {
     if (!playback) return
+    // Pause on the first frame of the next turn. All previous turn-end and
+    // Last Word frames have already played; now finish the banner, then draw.
+    const currentFrame = playback.frames[playback.index]
+    const priorFrame = playback.frames[playback.index - 1]
+    const atTurnBoundary = Boolean(priorFrame &&
+      (currentFrame.state.turn !== priorFrame.state.turn ||
+       currentFrame.state.currentPlayerId !== priorFrame.state.currentPlayerId))
+    const shownTurnKey = `${currentFrame.state.turn}:${currentFrame.state.currentPlayerId}`
+    if (atTurnBoundary && (
+      turnAnnouncement?.id === shownTurnKey ||
+      pendingTurnDrawFlights.current.some(entry => entry.turnKey === shownTurnKey) ||
+      drawFlights.length > 0
+    )) return
     const timer = window.setTimeout(() => {
       setPlayback(previous => {
         if (!previous) return null
@@ -332,7 +347,7 @@ function App({ online }: { online?: {
       })
     }, online ? Math.min(playbackDelay, 300) : playbackDelay)
     return () => window.clearTimeout(timer)
-  }, [playback, playbackDelay, online?.match.seat])
+  }, [playback, playbackDelay, online?.match.seat, turnAnnouncement?.id, drawFlights.length])
 
   useEffect(() => {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)) } catch { /* storage may be disabled */ }
@@ -354,6 +369,8 @@ function App({ online }: { online?: {
     setGame(createInitialGameState(decks))
     animatedDrawTransitions.current.clear()
     previousDrawState.current=null
+    previousDrawTurn.current=null
+    pendingTurnDrawFlights.current=[]
     setDrawFlights([])
     setEnteringPieces(new Set())
     previousBoardPieces.current=null
