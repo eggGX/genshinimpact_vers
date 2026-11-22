@@ -8,8 +8,8 @@ const css = read('src/App.css')
 const lobby = read('src/components/FriendRoomLobby.tsx')
 const lobbyCss = read('src/components/FriendRoomLobby.css')
 
-test('local draws reveal cards for both player seats; online opponent stays private', () => {
-  assert.match(app, /const isSelf=!online \|\| player\.id===selfId/)
+test('only the human sees drawn cards; both CPU and online opponents stay private', () => {
+  assert.match(app, /const isSelf=player\.id===selfId/)
   assert.match(app, /cardId:isSelf&&getCard\(cards\[index\]\)\?cards\[index\]:undefined/)
   assert.match(css, /@keyframes battle-draw-flip/)
 })
