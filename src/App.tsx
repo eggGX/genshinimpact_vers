@@ -1595,7 +1595,7 @@ function App({ online }: { online?: {
   }
 
   if (!online && editingPlayer !== null) {
-    return <Suspense fallback={<div role="status">デッキ編集を読み込み中…</div>}><DeckBuilder title={editingPlayer === 0 ? '空（自分）' : '蛍（相手）'}
+    return <Suspense fallback={<div role="status">デッキ編集を読み込み中…</div>}><DeckBuilder title={editingPlayer === 0 ? '空（自分）' : '蛍（CPU）'}
       deck={decks[editingPlayer]} onChange={deck => updateDeck(editingPlayer, deck)}
       onBack={() => setEditingPlayer(null)} /></Suspense>
   }
