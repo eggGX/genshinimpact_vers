@@ -1650,7 +1650,7 @@ function App({ online }: { online?: {
         </div>
         <button type="button" className="end-turn deck-start"
           disabled={errors.some(items => items.length > 0)} onClick={beginMatch}>
-          この2つのデッキでローカル対戦開始
+          この2つのデッキでCPU対戦開始
         </button>
         <button type="button" className="friend-match-entry" onClick={() => setShowFriendLobby(true)}>
           フレンド対戦（ルーム作成・参加）
@@ -2075,7 +2075,7 @@ function App({ online }: { online?: {
 
       <section className="player opponent">
         <div className="player-side-label">
-          <span className="side-label-dot" /> OPPONENT <strong>{opponent.name}</strong>
+          <span className="side-label-dot" /> OPPONENT <strong>{opponent.name}</strong>{!online && <small> CPU</small>}
 
         </div>
         <button
