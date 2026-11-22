@@ -75,6 +75,8 @@ function historyDestroyedCards(event: BattleHistoryEvent): HistoryCardEntry[] {
 }
 
 type DrawFlight = {
+  beforeHand: string[]
+  beforeDeckSize: number
   id: number
   cardId?: string
   isSelf: boolean
@@ -85,6 +87,28 @@ type DrawFlight = {
   midX: number
   midY: number
   delay: number
+}
+
+/** Delay only hand presentation; engine state remains fully committed. */
+function unrevealedDrawPositions(
+  visibleHand: readonly string[], visibleDeckSize: number,
+  beforeHand: readonly string[], beforeDeckSize: number, drawCount: number,
+): Set<number> {
+  const unrevealed = Math.min(drawCount,Math.max(0,beforeDeckSize-visibleDeckSize))
+  if (!unrevealed) return new Set()
+  const oldCounts = new Map<string,number>()
+  beforeHand.forEach(id=>oldCounts.set(id,(oldCounts.get(id)??0)+1))
+  const added: number[] = []
+  visibleHand.forEach((id,index)=>{
+    const count=oldCounts.get(id)??0
+    if(count>0)oldCounts.set(id,count-1)
+    else added.push(index)
+  })
+  // Drawing an identical replacement after consuming another copy can leave
+  // the multiset unchanged; in this case the rules append the drawn card.
+  if (!added.length && visibleHand.length >= beforeHand.length)
+    return new Set(visibleHand.map((_,index)=>index).slice(-unrevealed))
+  return new Set(added.slice(0,unrevealed))
 }
 
 type BattleNotice = {
@@ -607,6 +631,8 @@ function App({ online }: { online?: {
       const cards=gained.length>0?gained.slice(-drawn):player.hand.slice(-drawn)
       const flights=Array.from({length:Math.min(drawn,9)},(_,index)=>({
         id:++drawFlightSerial.current,
+        beforeHand:before.hand,
+        beforeDeckSize:before.deckSize,
         cardId:isSelf&&getCard(cards[index])?cards[index]:undefined,
         isSelf,x:startX,y:startY,
         dx:endX-startX+(index-(drawn-1)/2)*16,
@@ -911,6 +937,29 @@ function App({ online }: { online?: {
   const winner = shownGame.players.find(
     p => p.id === shownGame.winnerId
   )
+  // Hold incoming hand slots through the turn banner and draw animation.
+  // The pre-effect snapshot also covers the render before useEffect detects
+  // a new draw, preventing a one-frame flash of the next card.
+  const heldDrawFlights = [
+    ...pendingTurnDrawFlights.current.flatMap(entry => entry.flights),
+    ...drawFlights,
+  ]
+  const hiddenDrawSlots = (player: Player): Set<number> => {
+    const isSelf = player.id === (online ? game.players[online.match.seat].id : 'player1')
+    const flights = heldDrawFlights.filter(flight=>flight.isSelf===isSelf)
+    const first = flights[0]
+    if (first) return unrevealedDrawPositions(
+      player.hand,player.deck.length,first.beforeHand,first.beforeDeckSize,flights.length)
+    const before = previousDrawState.current?.find(entry=>entry.id===player.id)
+    const committed = game.players.find(entry=>entry.id===player.id)
+    if (!before || !committed || game.phase!=='main' ||
+        committed.deck.length>=before.deckSize) return new Set()
+    return unrevealedDrawPositions(
+      player.hand,player.deck.length,before.hand,before.deckSize,
+      before.deckSize-committed.deck.length)
+  }
+  const hiddenOwnDraws = hiddenDrawSlots(currentPlayer)
+  const hiddenOpponentDraws = hiddenDrawSlots(opponent)
 
   const inspectFollower = inspectedCard?.kind === 'follower'
     ? shownGame.players.flatMap(p => p.field).find(f => f.instanceId === inspectedCard.instanceId)
@@ -1931,7 +1980,7 @@ function App({ online }: { online?: {
       <div className="battle-opponent-hand" aria-label={`相手の手札 ${opponent.hand.length}枚`}>
         {opponent.hand.map((_, index) => <span key={index}
           className={['battle-opponent-card-back',
-            index >= opponent.hand.length-drawFlights.filter(flight=>!flight.isSelf).length ? 'draw-pending' : '',
+            hiddenOpponentDraws.has(index) ? 'draw-pending' : '',
           ].filter(Boolean).join(' ')} aria-hidden="true">✦</span>)}
       </div>
       <header className="game-header game-header--battle">
@@ -2343,7 +2392,7 @@ function App({ online }: { online?: {
                 selected ? 'selected-card' : '',
                 expandedHandIndex === index ? 'hand-card--expanded' : '',
                 !playable ? 'hand-card--unplayable' : '',
-                index >= currentPlayer.hand.length-drawFlights.filter(flight=>flight.isSelf).length ? 'draw-pending' : '',
+                hiddenOwnDraws.has(index) ? 'draw-pending' : '',
               ].filter(Boolean).join(' ')}
               key={`${cardId}-${index}`}
               aria-disabled={!playable}
