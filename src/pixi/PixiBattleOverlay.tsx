@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Application, Graphics, Text, type Ticker } from 'pixi.js'
 import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
 import { spawnDestructionBurst } from './destructionFx'
+import { spawnSummonBurst } from './summonFx'
 
 type ElementFx = 'pyro' | 'hydro' | 'cryo' | 'electro' | 'anemo' | 'geo' | 'dendro'
 const ELEMENT_COLORS: Record<ElementFx, { main: number; light: number }> = {
@@ -165,11 +166,12 @@ function spawnImpact(
  * Non-interactive overlay using the existing battle damage and elemental cues.
  * Game logic and the React/CSS animations are intentionally unchanged.
  */
-export function PixiBattleOverlay({ cue, frameDuration }: { cue: { label: string; effectTarget?: string } | null; frameDuration: number }) {
+export function PixiBattleOverlay({ cue, frameDuration, summoningKeys }: { cue: { label: string; effectTarget?: string } | null; frameDuration: number; summoningKeys: ReadonlySet<string> }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const activeEffects = useRef<Array<() => void>>([])
   const previousImpact = useRef<{ x: number; y: number; radius: number } | null>(null)
+  const playedSummons = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     const container = containerRef.current
@@ -211,6 +213,39 @@ export function PixiBattleOverlay({ cue, frameDuration }: { cue: { label: string
       if (ready) app.destroy({ removeView: true }, { children: true })
     }
   }, [])
+
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const pending = [...summoningKeys].filter(key => !playedSummons.current.has(key))
+    if (!pending.length) return
+    const request = window.requestAnimationFrame(() => {
+      const app = appRef.current
+      const host = containerRef.current
+      const battle = host?.parentElement
+      if (!app || !host || !battle) return
+      const bounds = host.getBoundingClientRect()
+      const followers = Array.from(battle.querySelectorAll<HTMLElement>(
+        '.follower-wrapper.field-entering[data-pixi-summon-key]',
+      ))
+      for (const key of pending) {
+        const follower = followers.find(node => node.dataset.pixiSummonKey === key)
+        if (!follower) continue
+        const rect = follower.getBoundingClientRect()
+        if (!rect.width || !rect.height) continue
+        playedSummons.current.add(key)
+        const stop = spawnSummonBurst(app,
+          rect.left + rect.width / 2 - bounds.left,
+          rect.top + rect.height / 2 - bounds.top,
+          rect.width, rect.height,
+          finished => {
+            activeEffects.current = activeEffects.current.filter(item => item !== finished)
+            if (!activeEffects.current.length) app.ticker.stop()
+          })
+        activeEffects.current.push(stop)
+      }
+    })
+    return () => window.cancelAnimationFrame(request)
+  }, [summoningKeys])
 
   useEffect(() => {
     if (!cue) {
