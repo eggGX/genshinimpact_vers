@@ -482,7 +482,7 @@ export function resolveReactionConsequence(
 ): GameState {
   const resolved = resolveReactionConsequenceCore(state, affectedOwnerIndex,
     affectedInstanceId, reaction, reactedElement, sourceOwnerIndex, allowOroronTrigger)
-  return reaction ? captureFrame(resolved, `元素反応：${reactionLabels[reaction]}`) : resolved
+  return reaction ? captureFrame(resolved, `元素反応：${reactionLabels[reaction]}`, affectedInstanceId) : resolved
 }
 
 /** Shared leader elemental hit path for attacks and card effects.
@@ -561,5 +561,5 @@ export function resolveLeaderElementalHit(
     next = { ...next, players: updated }
   }
 
-  return captureFrame(next, `リーダーの元素反応：${reactionLabels[hit.reaction]}`)
+  return captureFrame(next, `リーダーの元素反応：${reactionLabels[hit.reaction]}`, target.id)
 }
