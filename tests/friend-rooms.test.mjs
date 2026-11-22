@@ -8,8 +8,8 @@ const lobby = read('src/components/FriendRoomLobby.tsx')
 const transport = read('src/online/firebaseRooms.ts')
 const rules = read('firestore.rules')
 
-test('friend rooms do not replace local match entry', () => {
-  assert.match(app, /この2つのデッキでローカル対戦開始/)
+test('friend rooms remain available alongside CPU practice mode', () => {
+  assert.match(app, /この2つのデッキでCPU対戦開始/)
   assert.match(app, /<FriendRoomLobby onBack=/)
   assert.match(app, /フレンド対戦（ルーム作成・参加）/)
 })
