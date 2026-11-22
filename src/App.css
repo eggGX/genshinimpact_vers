@@ -2982,3 +2982,25 @@
   -webkit-backface-visibility:visible;
 }
 
+
+/* PixiJS destruction: the actual DOM follower stays in the board only as a
+   temporary, non-interactive ghost. Pixi renders the light fragments above it.
+   CSS-only battles keep their original destruction animation unchanged. */
+.game--battle:has(> .pixi-battle-overlay) .follower-wrapper.battle-destroying {
+  animation-name:battle-pixi-card-fade;
+}
+.game--battle:has(> .pixi-battle-overlay) .battle-destroying .battle-destruction-flash {
+  display:none;
+}
+@keyframes battle-pixi-card-fade {
+  0% {opacity:1;transform:scale(1);filter:brightness(1);}
+  25% {opacity:.95;transform:scale(1.025);filter:brightness(1.18);}
+  65% {opacity:.3;transform:translateY(-5px) scale(.97);filter:brightness(1);}
+  100% {opacity:0;transform:translateY(-12px) scale(.94);filter:brightness(1);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game--battle:has(> .pixi-battle-overlay) .follower-wrapper.battle-destroying {
+    animation:none;
+    opacity:.45;
+  }
+}
