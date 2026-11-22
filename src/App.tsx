@@ -634,7 +634,9 @@ function App({ online }: { online?: {
       : playback.attackTargetId ?? changedFollower?.instanceId ?? enemyBefore.field[0]?.instanceId
     return targetId ? {
       key: playback.frames[0], attackerId: attackingFollowerId,
-      targetId, duration: online ? 260 : Math.min(playbackDelay * 0.75, 650),
+      targetId, duration: online ? 260 : Math.min(playbackDelay * 0.8, 770),
+      attackerSurvives: last.players.some(player =>
+        player.field.some(follower => follower.instanceId === attackingFollowerId && follower.health > 0)),
     } : null
   })()
   // Keep a visual copy of a follower only during the frame in which it dies.
@@ -1659,7 +1661,7 @@ function App({ online }: { online?: {
 
   return (
     <div ref={battleScreenRef}
-      className={['game','game--battle','game--battle-fit',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
+      className={['game','game--battle','game--battle-fit',new URLSearchParams(window.location.search).has('pixi-overlay') ? 'game--pixi-overlay' : '',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
       onClick={event => {
         const target = event.target
         if (!(target instanceof Element)) return
