@@ -1755,10 +1755,10 @@ function App({ online }: { online?: {
             '--draw-mid-y':`${flight.midY}px`,
             animationDelay:`${flight.delay}ms`,
           } as CSSProperties}>
-          <div className="battle-draw-card">
-            <div className="battle-draw-card-back"><span>✦</span></div>
-            {flight.cardId&&<div className="battle-draw-card-front">
-              <CardArtwork cardId={flight.cardId} name={getCard(flight.cardId)?.name??''} />
+          <div className={flight.isSelf && flight.cardId ? 'battle-draw-card battle-draw-card--revealed' : 'battle-draw-card'}>
+            {!(flight.isSelf && flight.cardId) && <div className="battle-draw-card-back"><span>✦</span></div>}
+            {flight.isSelf && flight.cardId && <div className="battle-draw-card-front">
+              <CardArtwork cardId={flight.cardId} name={getCard(flight.cardId)?.name??''} priority />
               <div className="battle-draw-card-name">{getCard(flight.cardId)?.name}</div>
             </div>}
           </div>
