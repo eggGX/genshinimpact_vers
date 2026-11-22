@@ -1252,6 +1252,7 @@ function App({ online }: { online?: {
       <div key={highlightedFollowers.has(follower.instanceId)
         ? `${follower.instanceId}-hit-${playback?.index}`
         : follower.instanceId}
+        data-pixi-id={follower.instanceId}
         className={['follower-wrapper',
           highlightedFollowers.has(follower.instanceId) ? 'battle-hit' : '',
           damagedFollowers.get(follower.instanceId)?.kind === 'damage' ? 'battle-damaged' : '',
@@ -1380,7 +1381,7 @@ function App({ online }: { online?: {
                   playback.attackerId, playback.playedCard?.cardId)
               : null
             return <div key={`${follower.instanceId}-destroy-${playback?.index}`}
-              className="follower-wrapper battle-destroying" aria-hidden="true"
+              className="follower-wrapper battle-destroying" data-pixi-id={follower.instanceId} aria-hidden="true"
               style={{ animationDuration: `${playbackDelay}ms` }}>
               {element && <span className={`elemental-hit elemental-hit--${element}`}>
                 {Array.from({ length: 7 }, (_, i) => <i key={i} className="elemental-hit-particle" />)}
@@ -1942,6 +1943,7 @@ function App({ online }: { online?: {
               canDragAttackLeader(f)) ? 'drag-attack-target' : '',
             attackDrag?.target === 'leader' ? 'drag-attack-hover' : '',
           ].filter(Boolean).join(' ')}
+          data-pixi-id={opponent.id}
           data-attack-drop="leader"
           disabled={
             (!selectedAttacker && !attackDrag) || !onlineCanAct ||
@@ -2029,7 +2031,7 @@ function App({ online }: { online?: {
           <span className="side-label-dot" /> YOU <strong>{currentPlayer.name}</strong>
 
         </div>
-        <div key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
+        <div data-pixi-id={currentPlayer.id} key={highlightedLeaders.has(currentPlayer.id) ? `self-hit-${playback?.index}` : 'self-leader'}
           className={['leader', highlightedLeaders.has(currentPlayer.id) ? 'leader-hit' : '', damagedLeaders.get(currentPlayer.id)?.kind === 'damage' ? 'leader-damaged' : ''].filter(Boolean).join(' ')}>
           {(currentPlayer.leaderAura?.length ?? 0) > 0 && <span className="leader-aura-status" aria-label={`リーダー元素付着：${currentPlayer.leaderAura?.map(a => a.element).join('、')}`}>
             {currentPlayer.leaderAura?.map((a, i) =>
