@@ -89,7 +89,7 @@ function buildBoard(stage: Container) {
   stage.addChild(background)
 
   label(stage, 'GENSHIN CARD GAME', 108, 48, 21, 0xf0d6a4, 0, 'bold')
-  label(stage, 'PIX IJS 盤面レイアウト試作  ・  操作不可', 1332, 49, 14, MUTED, 1)
+  label(stage, 'PixiJS 盤面レイアウト試作  ・  操作不可', 1332, 49, 14, MUTED, 1)
   panel(stage, 626, 28, 188, 42, 0x142a38, 12)
   label(stage, 'TURN 05', 720, 49, 22, 0xf4d6a1, 0.5, 'bold')
 
