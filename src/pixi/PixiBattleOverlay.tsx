@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Application, Graphics, type Ticker } from 'pixi.js'
+import { Application, Graphics, Text, type Ticker } from 'pixi.js'
 import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
 
 type ElementFx = 'pyro' | 'hydro' | 'cryo' | 'electro' | 'anemo' | 'geo' | 'dendro'
@@ -101,6 +101,15 @@ function spawnImpact(
 ): () => void {
   const graphics = new Graphics()
   app.stage.addChild(graphics)
+  const reactionTitle = reaction ? new Text({ text: reaction, style: {
+    fontFamily: 'Noto Sans JP, sans-serif', fontSize: 35,
+    fill: 0xfff2ce, fontWeight: 'bold', stroke: { color: 0x172331, width: 5 },
+  } }) : null
+  if (reactionTitle) {
+    reactionTitle.anchor.set(0.5)
+    reactionTitle.position.set(x, y - 37)
+    app.stage.addChild(reactionTitle)
+  }
   const colors = element ? ELEMENT_COLORS[element] : { main: 0xffd68a, light: 0xffffff }
   let elapsed = 0
   let stopped = false
@@ -111,6 +120,7 @@ function spawnImpact(
     stopped = true
     app.ticker.remove(tick)
     graphics.destroy()
+    reactionTitle?.destroy()
     onEnd(stop)
   }
   const tick = (ticker: Ticker) => {
@@ -118,6 +128,10 @@ function spawnImpact(
     const progress = Math.min(1, elapsed / duration)
     const fade = (1 - progress) ** 1.35
     graphics.clear()
+    if (reactionTitle) {
+      reactionTitle.alpha = Math.min(1, progress * 8) * Math.min(1, (1 - progress) * 3)
+      reactionTitle.position.y = y - 37 - 32 * progress
+    }
     if (reaction) {
       drawReactionBurst(graphics, reaction, x, y, radius, progress)
       if (progress >= 1) stop()
@@ -150,7 +164,7 @@ function spawnImpact(
  * Non-interactive overlay using the existing battle damage and elemental cues.
  * Game logic and the React/CSS animations are intentionally unchanged.
  */
-export function PixiBattleOverlay({ cue }: { cue: { label: string } | null }) {
+export function PixiBattleOverlay({ cue }: { cue: { label: string; effectTarget?: string } | null }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const activeEffects = useRef<Array<() => void>>([])
@@ -214,6 +228,47 @@ export function PixiBattleOverlay({ cue }: { cue: { label: string } | null }) {
         '.follower-wrapper.battle-destroying, .leader.leader-damaged, .leader.leader-hit',
       )
       const bounds = host.getBoundingClientRect()
+      const getPosition = (target: HTMLElement) => {
+        const rect = target.getBoundingClientRect()
+        if (!rect.width || !rect.height) return null
+        return {
+          x: rect.left + rect.width / 2 - bounds.left,
+          y: rect.top + rect.height / 2 - bounds.top,
+          radius: Math.max(42, Math.min(115, rect.width * 0.75)),
+        }
+      }
+      const play = (position: { x: number; y: number; radius: number },
+        element: ElementFx | null, kind: ReactionFx | null) => {
+        previousImpact.current = position
+        const stop = spawnImpact(app, position.x, position.y, position.radius, element, finished => {
+          activeEffects.current = activeEffects.current.filter(item => item !== finished)
+          if (!activeEffects.current.length) app.ticker.stop()
+        }, kind)
+        activeEffects.current.push(stop)
+      }
+
+      if (reaction) {
+        // The game engine supplies the exact public instance ID for this reaction.
+        // Do not rely on damage highlight classes: freezing, crystallize, etc.
+        // may not change HP and therefore have no damage highlight.
+        const exactTarget = cue.effectTarget
+          ? Array.from(battle.querySelectorAll<HTMLElement>('[data-pixi-id]'))
+            .find(node => node.dataset.pixiId === cue.effectTarget)
+          : undefined
+        const highlighted = Array.from(targets).find(node =>
+          node.querySelector('.elemental-hit') || node.classList.contains('battle-damaged'))
+        const position = (exactTarget && getPosition(exactTarget)) ||
+          (highlighted && getPosition(highlighted)) ||
+          previousImpact.current ||
+          (() => {
+            // Last resort for older online frames without effectTarget metadata.
+            const field = battle.querySelector<HTMLElement>('.field')
+            return field ? getPosition(field) : null
+          })()
+        if (position) play(position, null, reaction)
+        return
+      }
+
       let count = 0
       targets.forEach(target => {
         if (count >= 12) return
@@ -221,32 +276,12 @@ export function PixiBattleOverlay({ cue }: { cue: { label: string } | null }) {
         const hasDamage = target.classList.contains('battle-damaged') ||
           target.classList.contains('battle-destroying') ||
           target.querySelector('.battle-float-number--damage, .battle-float-number--shield')
-        // Do not render generic rings for non-damage changes, such as a new aura.
         if (!hasDamage && !elementalMarker) return
-        const rect = target.getBoundingClientRect()
-        if (!rect.width || !rect.height) return
+        const position = getPosition(target)
+        if (!position) return
         count += 1
-        const x = rect.left + rect.width / 2 - bounds.left
-        const y = rect.top + rect.height / 2 - bounds.top
-        const element = detectedElement(target)
-        const radius = Math.max(38, Math.min(105, rect.width * 0.7))
-        previousImpact.current = { x, y, radius }
-        const stop = spawnImpact(app, x, y, radius, element, finished => {
-          activeEffects.current = activeEffects.current.filter(item => item !== finished)
-          if (!activeEffects.current.length) app.ticker.stop()
-        }, reaction)
-        activeEffects.current.push(stop)
+        play(position, detectedElement(target), null)
       })
-      // Some reactions change only keywords/aura or their damage was shown in
-      // the previous snapshot. Reuse the preceding hit location in that case.
-      if (reaction && count === 0 && previousImpact.current) {
-        const { x, y, radius } = previousImpact.current
-        const stop = spawnImpact(app, x, y, radius, null, finished => {
-          activeEffects.current = activeEffects.current.filter(item => item !== finished)
-          if (!activeEffects.current.length) app.ticker.stop()
-        }, reaction)
-        activeEffects.current.push(stop)
-      }
     })
     return () => window.cancelAnimationFrame(request)
   }, [cue])
