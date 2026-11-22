@@ -23,6 +23,7 @@ import type { AbilityKind } from './game/engine'
 import './App.css'
 import { CardLibrary } from './components/CardLibrary'
 import { CardArtwork } from './components/CardArtwork'
+import { PixiBattleOverlay } from './pixi/PixiBattleOverlay'
 import { BattleCardTooltip } from './components/BattleCardTooltip'
 import { ElementIcon } from './components/ElementIcon'
 import { CrestIcons } from './components/CrestIcons'
@@ -1654,6 +1655,7 @@ function App({ online }: { online?: {
           setInspectedCard(null)
         }
       }}>
+      {new URLSearchParams(window.location.search).has('pixi-overlay') && <PixiBattleOverlay />}
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
