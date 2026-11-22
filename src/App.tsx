@@ -612,33 +612,6 @@ function App({ online }: { online?: {
       attackingFollowerId = playback.attackerId ?? source?.instanceId ?? null
     }
   }
-  // Presentation-only cue for a PixiJS attack trail. The source remains a
-  // normal DOM card, and combat/target legality still use the existing engine.
-  const pixiAttackCue = (() => {
-    if (!playback || playback.index !== 0 || !attackingFollowerId ||
-        !/攻撃/.test(playback.frames[0].label)) return null
-    const first = playback.frames[0].state
-    const last = playback.frames[playback.frames.length - 1].state
-    const enemyBefore = first.players.find(p => p.id !== first.currentPlayerId)
-    const enemyAfter = last.players.find(p => p.id === enemyBefore?.id)
-    if (!enemyBefore || !enemyAfter) return null
-    const isLeader = /リーダー攻撃|リーダーに攻撃/.test(playback.frames[0].label)
-    const changedFollower = enemyBefore.field.find(f => {
-      const after = enemyAfter.field.find(next => next.instanceId === f.instanceId)
-      return !after || after.health !== f.health ||
-        after.shield.normal !== f.shield.normal ||
-        after.shield.crystallize !== f.shield.crystallize
-    })
-    const targetId = isLeader
-      ? enemyBefore.id
-      : playback.attackTargetId ?? changedFollower?.instanceId ?? enemyBefore.field[0]?.instanceId
-    return targetId ? {
-      key: playback.frames[0], attackerId: attackingFollowerId,
-      targetId, duration: online ? 260 : Math.min(playbackDelay * 0.8, 770),
-      attackerSurvives: last.players.some(player =>
-        player.field.some(follower => follower.instanceId === attackingFollowerId && follower.health > 0)),
-    } : null
-  })()
   // Keep a visual copy of a follower only during the frame in which it dies.
   // The underlying game state and all targets already reflect the destruction.
   const deathPreviousFields = new Map<string, Follower[]>()
@@ -1661,7 +1634,7 @@ function App({ online }: { online?: {
 
   return (
     <div ref={battleScreenRef}
-      className={['game','game--battle','game--battle-fit',new URLSearchParams(window.location.search).has('pixi-overlay') ? 'game--pixi-overlay' : '',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
+      className={['game','game--battle','game--battle-fit',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
       onClick={event => {
         const target = event.target
         if (!(target instanceof Element)) return
@@ -1684,7 +1657,7 @@ function App({ online }: { online?: {
           setInspectedCard(null)
         }
       }}>
-      {new URLSearchParams(window.location.search).has('pixi-overlay') && <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} attack={pixiAttackCue} />}
+      {new URLSearchParams(window.location.search).has('pixi-overlay') && <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} />}
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
