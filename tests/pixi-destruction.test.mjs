@@ -28,7 +28,7 @@ test('Pixi destruction targets only the transient non-interactive death ghost', 
 
 test('CSS-only destruction survives and Pixi dissolution is selectively enabled', () => {
   assert.match(css, /@keyframes battle-destruction-exit/)
-  assert.match(css, /:has\(> \.pixi-battle-overlay\)/)
+  assert.match(css, /:has\(> \.pixi-battle-overlay--ready\)/)
   assert.match(css, /@keyframes battle-pixi-card-fade/)
   assert.match(css, /\.battle-destruction-flash \{\s*display:none/)
   assert.match(effect, /app\.ticker\.remove\(tick\)/)
