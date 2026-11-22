@@ -347,7 +347,7 @@ export function PixiBattleOverlay({ cue, frameDuration, summoningKeys }: { cue: 
   return (
     <div
       aria-hidden="true"
-      className="pixi-battle-overlay"
+      className={appReady ? "pixi-battle-overlay pixi-battle-overlay--ready" : "pixi-battle-overlay"}
       ref={containerRef}
       style={{
         position: 'absolute',

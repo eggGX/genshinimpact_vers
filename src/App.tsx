@@ -1713,7 +1713,7 @@ function App({ online }: { online?: {
           setInspectedCard(null)
         }
       }}>
-      {new URLSearchParams(window.location.search).has('pixi-overlay') && <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} frameDuration={online ? Math.min(playbackDelay, 300) : playbackDelay} summoningKeys={enteringPieces} />}
+      <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} frameDuration={online ? Math.min(playbackDelay, 300) : playbackDelay} summoningKeys={enteringPieces} />
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
