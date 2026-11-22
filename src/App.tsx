@@ -479,6 +479,29 @@ function App({ online }: { online?: {
   },[localGame,online?.match.revision,playback?.frames,playback?.index])
   useEffect(()=>()=>boardEntranceTimers.current.forEach(clearTimeout),[])
 
+  const startDrawFlights = (flights: DrawFlight[], isSelf: boolean) => {
+    if (!flights.length) return
+    setDrawFlights(current => [...current, ...flights].slice(-18))
+    const timer = window.setTimeout(() => {
+      const ids = new Set(flights.map(flight => flight.id))
+      setDrawFlights(current => current.filter(flight => !ids.has(flight.id)))
+      drawFlightTimers.current = drawFlightTimers.current.filter(item => item !== timer)
+    }, (isSelf ? 1700 : 810) + Math.max(0, flights.length - 1) * (isSelf ? 220 : 115))
+    drawFlightTimers.current.push(timer)
+  }
+
+  // A normal start-of-turn draw waits until the visible turn banner is gone.
+  // Other effect-driven draws retain their existing timing.
+  useEffect(() => {
+    if (turnAnnouncement) return
+    const turnKey = `${shownGame.turn}:${shownGame.currentPlayerId}`
+    if (lastAnnouncedTurn.current !== turnKey) return
+    const ready = pendingTurnDrawFlights.current.filter(entry => entry.turnKey === turnKey)
+    if (!ready.length) return
+    pendingTurnDrawFlights.current = pendingTurnDrawFlights.current.filter(entry => entry.turnKey !== turnKey)
+    ready.forEach(entry => startDrawFlights(entry.flights, entry.isSelf))
+  }, [turnAnnouncement, shownGame.turn, shownGame.currentPlayerId, playback?.index])
+
   // Draws are detected from actual deck/hand state transitions, so both normal
   // turn draws and card-effect draws are represented without touching the rules.
   useEffect(() => {
@@ -491,6 +514,10 @@ function App({ online }: { online?: {
     }))
     const previous = previousDrawState.current
     previousDrawState.current=next
+    const newTurnKey = `${game.turn}:${game.currentPlayerId}`
+    const isNewTurn = previousDrawTurn.current !== null &&
+      previousDrawTurn.current !== newTurnKey
+    previousDrawTurn.current = newTurnKey
     if (!previous || game.phase==='mulligan' ||
       previous.some(player=>player.phase==='mulligan')) return
     const selfId=online ? game.players[online.match.seat].id : game.players[0].id
@@ -559,13 +586,11 @@ function App({ online }: { online?: {
         midY:window.innerHeight*.47-startY,
         delay:index*(isSelf?220:115),
       }))
-      setDrawFlights(current=>[...current,...flights].slice(-18))
-      const timer=setTimeout(()=>{
-        const ids=new Set(flights.map(flight=>flight.id))
-        setDrawFlights(current=>current.filter(flight=>!ids.has(flight.id)))
-        drawFlightTimers.current=drawFlightTimers.current.filter(item=>item!==timer)
-      },(isSelf?1700:810)+Math.max(0,flights.length-1)*(isSelf?220:115))
-      drawFlightTimers.current.push(timer)
+      if (isNewTurn) {
+        pendingTurnDrawFlights.current.push({ flights, isSelf, turnKey: newTurnKey })
+      } else {
+        startDrawFlights(flights, isSelf)
+      }
     }
   },[localGame,online?.match.revision,online?.match.seat])
   useEffect(()=>()=>{drawFlightTimers.current.forEach(clearTimeout)},[])
