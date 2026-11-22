@@ -37,3 +37,19 @@ test('copy feedback reports success only after clipboard promise resolves', () =
   assert.match(lobby, /setCodeCopied\(false\), 2200/)
   assert.match(lobbyCss, /\.friend-copy-confirmation/)
 })
+
+
+test('own online draws reveal the front directly, without relying on the GPU flip', () => {
+  assert.match(app, /flight\.isSelf && flight\.cardId \? 'battle-draw-card battle-draw-card--revealed'/)
+  assert.match(app, /\{!\(flight\.isSelf && flight\.cardId\) && <div className="battle-draw-card-back"/)
+  assert.match(app, /\{flight\.isSelf && flight\.cardId && <div className="battle-draw-card-front"/)
+  assert.match(app, /<CardArtwork cardId=\{flight\.cardId\}[^>]*priority/)
+  assert.match(css, /\.game--battle-fit \.battle-draw-card--revealed \{[\s\S]*?animation:none/)
+  assert.match(css, /\.game--battle-fit \.battle-draw-card--revealed \.battle-draw-card-front \{[\s\S]*?transform:none/)
+})
+
+test('draw artwork is eagerly decoded, while regular catalogue artwork stays lazy', () => {
+  const artwork = read('src/components/CardArtwork.tsx')
+  assert.match(artwork, /loading=\{priority \? "eager" : "lazy"\}/)
+  assert.match(artwork, /decoding=\{priority \? "sync" : "async"\}/)
+})
