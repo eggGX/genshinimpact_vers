@@ -1836,7 +1836,10 @@ function App({ online }: { online?: {
           'button, a, input, select, textarea, [role="button"], [role="dialog"], ' +
           '.follower-wrapper, [data-attack-drop], .battle-targeting-card'
         )
-        if (isBlank && (selectedHandIndex !== null || selectedAbility !== null)) {
+        if (isBlank && (selectedHandIndex !== null || selectedAbility !== null || selectedAttackerId !== null)) {
+          // Clicking an empty board area also cancels a click-selected attack.
+          // Actual follower/leader targets and drag attacks are handled elsewhere.
+          setSelectedAttackerId(null)
           setSelectedHandIndex(null)
           setSelectedAbility(null)
           setExpandedHandIndex(null)
