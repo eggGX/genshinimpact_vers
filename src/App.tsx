@@ -291,6 +291,7 @@ function App({ online }: { online?: {
   const [mulliganReveal, setMulliganReveal] = useState<MulliganReveal | null>(null)
   const onlineMulliganDraft = useRef<{ originalHand: string[]; replacedIndices: number[] } | null>(null)
   const lastAnnouncedTurn = useRef<string | null>(null)
+  const completedTurnAnnouncement = useRef<string | null>(null)
   const lastOnlineRevision = useRef<number | null>(null)
   const onlinePlaybackQueue = useRef<OnlinePresentationEvent[]>([])
 
@@ -371,6 +372,7 @@ function App({ online }: { online?: {
     previousDrawState.current=null
     previousDrawTurn.current=null
     pendingTurnDrawFlights.current=[]
+    completedTurnAnnouncement.current=null
     setDrawFlights([])
     setEnteringPieces(new Set())
     previousBoardPieces.current=null
@@ -442,7 +444,10 @@ function App({ online }: { online?: {
       shownGame.winnerId, online?.match.seat, mulliganReveal])
   useEffect(() => {
     if (!turnAnnouncement) return
-    const timer = window.setTimeout(() => setTurnAnnouncement(null), 1800)
+    const timer = window.setTimeout(() => {
+      completedTurnAnnouncement.current = turnAnnouncement.id
+      setTurnAnnouncement(null)
+    }, 1800)
     return () => window.clearTimeout(timer)
   }, [turnAnnouncement])
   // Detect newly summoned followers and newly installed amulets from actual
@@ -495,7 +500,7 @@ function App({ online }: { online?: {
   useEffect(() => {
     if (turnAnnouncement) return
     const turnKey = `${shownGame.turn}:${shownGame.currentPlayerId}`
-    if (lastAnnouncedTurn.current !== turnKey) return
+    if (completedTurnAnnouncement.current !== turnKey) return
     const ready = pendingTurnDrawFlights.current.filter(entry => entry.turnKey === turnKey)
     if (!ready.length) return
     pendingTurnDrawFlights.current = pendingTurnDrawFlights.current.filter(entry => entry.turnKey !== turnKey)
