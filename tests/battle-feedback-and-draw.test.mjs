@@ -53,3 +53,18 @@ test('draw artwork is eagerly decoded, while regular catalogue artwork stays laz
   assert.match(artwork, /loading=\{priority \? "eager" : "lazy"\}/)
   assert.match(artwork, /decoding=\{priority \? "sync" : "async"\}/)
 })
+
+
+test('blank battlefield clicks cancel preparation without intercepting valid target clicks', () => {
+  assert.match(app, /const isBlank = !target\.closest\(/)
+  assert.match(app, /selectedHandIndex !== null \|\| selectedAbility !== null/)
+  assert.match(app, /if \(isBlank && \(selectedHandIndex !== null \|\| selectedAbility !== null\)\) \{/)
+  assert.match(app, /\[data-attack-drop\]/)
+  assert.match(app, /setSelectedHandIndex\(null\)\s+setSelectedAbility\(null\)/)
+})
+
+test('preparation preview takes precedence over card hover details', () => {
+  assert.match(app, /!targetingCard && inspectCard && <BattleCardTooltip/)
+  assert.match(app, /setSelectedAbility\(\{ followerId: follower\.instanceId, kind \}\)[\s\S]*?setInspectedCard\(null\)/)
+  assert.match(app, /fromDrag \? handIndex : previous === handIndex \? null : handIndex[\s\S]*?setInspectedCard\(null\)/)
+})
