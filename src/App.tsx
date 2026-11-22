@@ -1,5 +1,5 @@
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   attackFollower,
   attackLeader,
@@ -21,21 +21,24 @@ import type { ElementType, Follower, GameState, Player } from './game/types'
 import { beginPresentation, captureFrame, compactPresentationFrames, withoutPresentation, type PresentationFrame } from './game/presentation'
 import type { AbilityKind } from './game/engine'
 import './App.css'
-import { CardLibrary } from './components/CardLibrary'
 import { CardArtwork } from './components/CardArtwork'
-import { PixiBattleOverlay } from './pixi/PixiBattleOverlay'
 import { BattleCardTooltip } from './components/BattleCardTooltip'
 import { ElementIcon } from './components/ElementIcon'
 import { CrestIcons } from './components/CrestIcons'
-import { DeckBuilder } from './components/DeckBuilder'
-import { DeckManager } from './components/DeckManager'
 import { SavedDeckPicker } from './components/SavedDeckPicker'
 import { loadSavedDecks, persistSavedDecks, type SavedDeck } from './data/savedDecks'
-import { FriendRoomLobby } from './components/FriendRoomLobby'
 import { createStarterDeck, validateDeck, type DeckDefinition } from './data/deckRules'
 import { isGuarded } from './game/neutralRules'
 import type { OnlineMatchView, OnlinePlayerView, OnlinePresentationEvent, OnlinePresentationSnapshot } from './online/matchClient'
 import type { OnlineAction } from '../server/src/matchActions'
+
+/** Heavy screens and PixiJS load only when actually displayed. */
+const CardLibrary = lazy(() => import('./components/CardLibrary').then(module => ({ default: module.CardLibrary })))
+const DeckBuilder = lazy(() => import('./components/DeckBuilder').then(module => ({ default: module.DeckBuilder })))
+const DeckManager = lazy(() => import('./components/DeckManager').then(module => ({ default: module.DeckManager })))
+const FriendRoomLobby = lazy(() => import('./components/FriendRoomLobby').then(module => ({ default: module.FriendRoomLobby })))
+const PixiBattleOverlay = lazy(() => import('./pixi/PixiBattleOverlay').then(module => ({ default: module.PixiBattleOverlay })))
+
 
 type BattleHistoryEvent = {
   id: string
@@ -1478,12 +1481,12 @@ function App({ online }: { online?: {
   }
 
   if (showCardLibrary) {
-    return <CardLibrary onBack={() => setShowCardLibrary(false)} />
+    return <Suspense fallback={<div role="status">カード一覧を読み込み中…</div>}><CardLibrary onBack={() => setShowCardLibrary(false)} /></Suspense>
   }
 
   if (!online && showDeckManager && !matchStarted) {
-    return <DeckManager savedDecks={savedDecks} onChange={setSavedDecks}
-      onBack={() => setShowDeckManager(false)} />
+    return <Suspense fallback={<div role="status">デッキ管理を読み込み中…</div>}><DeckManager savedDecks={savedDecks} onChange={setSavedDecks}
+      onBack={() => setShowDeckManager(false)} /></Suspense>
   }
 
   // Keep the online lobby mounted while the deck editor is open.
@@ -1491,24 +1494,26 @@ function App({ online }: { online?: {
   if (!online && showFriendLobby && !matchStarted) {
     return <>
       <div style={{ display: editingPlayer !== null ? 'none' : undefined }}>
+        <Suspense fallback={<div role="status">フレンド対戦を読み込み中…</div>}>
         <FriendRoomLobby onBack={() => setShowFriendLobby(false)}
           deck={decks[0]} onEditDeck={() => setEditingPlayer(0)}
           savedDecks={savedDecks} onSelectSavedDeck={deck => updateDeck(0, deck)}
           renderOnlineBattle={(match, pending, onAction, onMulligan, onLeave) => <App online={{match,pending,onAction,onMulligan,onLeave}} />} />
+        </Suspense>
       </div>
-      {editingPlayer !== null && <DeckBuilder
+      {editingPlayer !== null && <Suspense fallback={<div role="status">デッキ編集を読み込み中…</div>}><DeckBuilder
         title="フレンド対戦：自分のデッキ"
         deck={decks[editingPlayer]}
         onChange={deck => updateDeck(editingPlayer, deck)}
         onBack={() => setEditingPlayer(null)}
-      />}
+      /></Suspense>}
     </>
   }
 
   if (!online && editingPlayer !== null) {
-    return <DeckBuilder title={editingPlayer === 0 ? '空（自分）' : '蛍（相手）'}
+    return <Suspense fallback={<div role="status">デッキ編集を読み込み中…</div>}><DeckBuilder title={editingPlayer === 0 ? '空（自分）' : '蛍（相手）'}
       deck={decks[editingPlayer]} onChange={deck => updateDeck(editingPlayer, deck)}
-      onBack={() => setEditingPlayer(null)} />
+      onBack={() => setEditingPlayer(null)} /></Suspense>
   }
 
   if (!online && !matchStarted) {
@@ -1713,7 +1718,9 @@ function App({ online }: { online?: {
           setInspectedCard(null)
         }
       }}>
-      <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} frameDuration={online ? Math.min(playbackDelay, 300) : playbackDelay} summoningKeys={enteringPieces} />
+      <Suspense fallback={null}>
+        <PixiBattleOverlay cue={playback && playback.index > 0 ? playback.frames[playback.index] : null} frameDuration={online ? Math.min(playbackDelay, 300) : playbackDelay} summoningKeys={enteringPieces} />
+      </Suspense>
       {turnAnnouncement && <div key={turnAnnouncement.id} className={`turn-announcement turn-announcement--${turnAnnouncement.own ? 'own' : 'opponent'}`}
         role="status" aria-live="polite" aria-atomic="true">
         <div className="turn-announcement-panel">
