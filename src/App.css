@@ -3004,3 +3004,9 @@
     opacity:.45;
   }
 }
+
+/* Pixi summoning replaces the CSS glow, but retains the accessible and
+   pointer-safe React card entrance and the CSS-only fallback. */
+.game--battle:has(> .pixi-battle-overlay) .follower-wrapper.field-entering[data-pixi-summon-key]::after {
+  display:none;
+}
