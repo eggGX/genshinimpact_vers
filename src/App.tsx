@@ -895,6 +895,8 @@ function App({ online }: { online?: {
         fromDrag ? handIndex : previous === handIndex ? null : handIndex
       )
       setSelectedAttackerId(null)
+      // A hovered card's detail must not cover the preparation preview.
+      setInspectedCard(null)
       return
     }
 
@@ -968,6 +970,7 @@ function App({ online }: { online?: {
       setSelectedAbility({ followerId: follower.instanceId, kind })
       setSelectedAttackerId(null)
       setSelectedHandIndex(null)
+      setInspectedCard(null)
       return
     }
     if (online) onlineSend({type:'ability',followerId:follower.instanceId,kind})
@@ -1630,12 +1633,22 @@ function App({ online }: { online?: {
     <div ref={battleScreenRef}
       className={['game','game--battle','game--battle-fit',handOpen ? 'game--hand-open' : '',playback ? 'game--animating' : ''].filter(Boolean).join(' ')}
       onClick={event => {
-        if (!handOpen) return
         const target = event.target
         if (!(target instanceof Element)) return
-        // A blank part of the battlefield dismisses the hand. Cards, buttons
-        // and leader interaction must retain their existing click behaviour.
-        if (target.closest('.field') && !target.closest('.follower-wrapper, button, [data-attack-drop]')) {
+        // Blank-space clicks cancel a pending fanfare/spell/ability target.
+        // Interactive controls, followers and leader targets must still work.
+        const isBlank = !target.closest(
+          'button, a, input, select, textarea, [role="button"], [role="dialog"], ' +
+          '.follower-wrapper, [data-attack-drop], .battle-targeting-card'
+        )
+        if (isBlank && (selectedHandIndex !== null || selectedAbility !== null)) {
+          setSelectedHandIndex(null)
+          setSelectedAbility(null)
+          setExpandedHandIndex(null)
+          setInspectedCard(null)
+        }
+        // Preserve the existing blank-field click behaviour for the hand.
+        if (handOpen && isBlank && target.closest('.field')) {
           setHandOpen(false)
           setExpandedHandIndex(null)
           setInspectedCard(null)
@@ -2228,7 +2241,7 @@ function App({ online }: { online?: {
         })}
         </div>
       </footer>
-      {inspectCard && <BattleCardTooltip card={inspectCard} follower={inspectFollower}
+      {!targetingCard && inspectCard && <BattleCardTooltip card={inspectCard} follower={inspectFollower}
         amulet={inspectAmulet} ownerLabel={inspectOwner} />}
     </div>
   )
