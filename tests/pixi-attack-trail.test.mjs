@@ -5,33 +5,20 @@ import { readFileSync } from 'node:fs'
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8')
 const app = read('src/App.tsx')
 const overlay = read('src/pixi/PixiBattleOverlay.tsx')
-const trail = read('src/pixi/attackFx.ts')
 const css = read('src/App.css')
 
-test('Pixi card attack reuses existing battle playback and never changes combat', () => {
-  assert.match(app, /const pixiAttackCue = \(\(\) => \{/)
-  assert.match(app, /playback\.index !== 0/)
-  assert.match(app, /attackTargetId\?: string/)
-  assert.match(app, /playback\.attackTargetId/)
-  assert.match(app, /attack=\{pixiAttackCue\}/)
-  assert.match(css, /battle-attack-lunge/)
+test('attacking cards only lift slightly in place and do not fly across the board', () => {
+  assert.match(css, /animation:battle-attack-lunge \.52s ease-out both/)
+  assert.match(css, /55% \{transform:translateY\(-13px\) scale\(1\.065\)/)
+  assert.doesNotMatch(css, /game--pixi-overlay\.game--animating/)
+  assert.doesNotMatch(app, /pixiAttackCue/)
+  assert.doesNotMatch(overlay, /spawnCardAttack|spawnAttackTrail|attack\?\.key/)
 })
 
-test('exact clicked and dragged targets are passed to local Pixi attack cue', () => {
-  assert.ok(app.includes("pointer.attackerId, target)"))
-  assert.ok(app.includes("attackerId, targetId)"))
-  assert.ok(app.includes("attackerId, 'leader')"))
-})
-
-test('Pixi card duplicate is pointer transparent and respects reduced motion', () => {
-  assert.match(overlay, /spawnCardAttack\(/)
-  assert.match(overlay, /img\.card-artwork/)
-  assert.match(trail, /Texture\.from\(card\.image\)/)
-  assert.match(trail, /attackerSurvives/)
-  assert.match(app, /game--pixi-overlay/)
-  assert.match(overlay, /attack\?\.key/)
-  assert.match(overlay, /prefers-reduced-motion: reduce/)
+test('Pixi overlay still renders elemental hits and reactions, without blocking input', () => {
+  assert.match(app, /<PixiBattleOverlay cue=\{/)
+  assert.match(overlay, /drawReactionBurst\(/)
+  assert.match(overlay, /reactionFromFrameLabel\(cue\.label\)/)
   assert.match(overlay, /pointerEvents: 'none'/)
-  assert.match(trail, /app\.ticker\.remove\(tick\)/)
-  assert.match(trail, /root\.destroy\(\{ children: true \}\)/)
+  assert.match(css, /battle-target-impact/)
 })
