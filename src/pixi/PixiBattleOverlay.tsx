@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Application, Graphics, Text, type Ticker } from 'pixi.js'
 import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
-import { spawnAttackTrail, type AttackCue } from './attackFx'
+import { spawnCardAttack, type AttackCue } from './attackFx'
 
 type ElementFx = 'pyro' | 'hydro' | 'cryo' | 'electro' | 'anemo' | 'geo' | 'dendro'
 const ELEMENT_COLORS: Record<ElementFx, { main: number; light: number }> = {
@@ -228,13 +228,21 @@ export function PixiBattleOverlay({ cue, attack }: { cue: { label: string; effec
       const from = source.getBoundingClientRect()
       const to = target.getBoundingClientRect()
       if (!from.width || !from.height || !to.width || !to.height) return
-      const stop = spawnAttackTrail(app, {
+      const fieldCard = source.querySelector<HTMLElement>('.field-card')
+      const artwork = fieldCard?.querySelector<HTMLImageElement>('img.card-artwork') ?? null
+      const cardName = fieldCard?.querySelector<HTMLElement>('.battle-field-card-name, strong')?.textContent?.trim() ?? ''
+      const stop = spawnCardAttack(app, {
         x: from.left + from.width / 2 - canvasBounds.left,
         y: from.top + from.height / 2 - canvasBounds.top,
       }, {
         x: to.left + to.width / 2 - canvasBounds.left,
         y: to.top + to.height / 2 - canvasBounds.top,
-      }, attack.duration, finished => {
+      }, attack.duration, attack.attackerSurvives, {
+        image: artwork,
+        name: cardName,
+        attack: fieldCard?.querySelector<HTMLElement>('.stat-attack')?.textContent?.trim() ?? '',
+        health: fieldCard?.querySelector<HTMLElement>('.stat-health')?.textContent?.trim() ?? '',
+      }, finished => {
         activeEffects.current = activeEffects.current.filter(item => item !== finished)
         if (!activeEffects.current.length) app.ticker.stop()
       })
