@@ -117,6 +117,7 @@ function projectState(stored: Stored, seat: 0 | 1) {
       ...(event.abilityCardId && event.abilityKind ? { abilityCardId: event.abilityCardId, abilityKind: event.abilityKind } : {}),
       frames: event.frames.map(frame => ({
         label: frame.label,
+        ...(frame.triggerSourceId ? {triggerSourceId:frame.triggerSourceId} : {}),
         state: projectFrameState(frame.state, seat),
       })),
     })),
