@@ -361,6 +361,7 @@ function App({ online }: { online?: {
               frames: nextEvent.frames.map(frame => ({
                 label: frame.label,
                 state: projectOnlineSnapshot(frame.state, online.match.seat),
+                ...(frame.triggerSourceId ? { triggerSourceId: frame.triggerSourceId } : {}),
               })),
               index: 0,
               ...((nextEvent.playedCardId || nextEvent.abilityCardId) ? { playedCard: {
@@ -680,6 +681,7 @@ function App({ online }: { online?: {
       frames: first.frames.map(frame => ({
         label: frame.label,
         state: projectOnlineSnapshot(frame.state, online.match.seat),
+        ...(frame.triggerSourceId ? { triggerSourceId: frame.triggerSourceId } : {}),
       })),
       index: 0,
       ...((first.playedCardId || first.abilityCardId) ? { playedCard: {
@@ -691,6 +693,11 @@ function App({ online }: { online?: {
     })
   }, [online?.match.revision, online?.match.history, online?.match.seat])
   // All cues are derived from recorded snapshots; animations never affect rules.
+  // Highlight only the source whose resolved automatic effect is being replayed.
+  // The engine marks the source on turn-trigger frames, not on every timer tick.
+  const activeTriggerSourceId = playback && playback.index > 0
+    ? playback.frames[playback.index].triggerSourceId
+    : undefined
   const highlightedFollowers = new Set<string>()
   const highlightedLeaders = new Set<string>()
   const damagedFollowers = new Map<string, { amount: number; kind: 'damage' | 'heal' | 'shield' }>()
@@ -1322,7 +1329,7 @@ function App({ online }: { online?: {
   }
 
   /** One rotating emblem slot for a follower's independent combat abilities. */
-  const followerEmblems = (cardId: string, keywords: readonly string[] = []) => {
+  const followerEmblems = (cardId: string, keywords: readonly string[] = [], triggerActive = false) => {
     const card = getCard(cardId)
     const description = card?.description ?? ''
     const lastWord = !keywords.includes('no_last_word') && (
@@ -1371,7 +1378,7 @@ function App({ online }: { online?: {
     if (emblems.length === 0) return null
     return <span className="follower-emblems" aria-label={emblems.map(emblem => emblem.label).join('、')}>
       {emblems.map((emblem, index) => <span key={emblem.key}
-        className={`follower-emblem follower-emblem--${emblem.key} ${emblems.length > 1 ? 'follower-emblem--rotating follower-emblem--count-' + emblems.length : ''}`}
+        className={`follower-emblem follower-emblem--${emblem.key} ${emblem.key === 'triggered' && triggerActive ? 'follower-emblem--trigger-active' : ''} ${emblems.length > 1 ? 'follower-emblem--rotating follower-emblem--count-' + emblems.length : ''}`}
         style={emblems.length > 1 ? {
           animationDelay: `${index * 2}s`,
           animationDuration: `${emblems.length * 2}s`,
@@ -1532,7 +1539,7 @@ function App({ online }: { online?: {
         </span>
 
         <span className="follower-stats"><b className="stat-attack">{follower.attack}</b><b className="stat-health">{follower.health}</b></span>
-        {followerEmblems(follower.cardId, follower.keywords)}
+        {followerEmblems(follower.cardId, follower.keywords, activeTriggerSourceId === follower.instanceId)}
 
       </button>
       </div>
@@ -1807,6 +1814,7 @@ function App({ online }: { online?: {
       const frames=event.frames.map(frame=>({
         label:frame.label,
         state:projectOnlineSnapshot(frame.state,online.match.seat),
+        ...(frame.triggerSourceId ? {triggerSourceId:frame.triggerSourceId} : {}),
       }))
       const first=frames[0]?.state??game
       const last=frames[frames.length-1]?.state??first
