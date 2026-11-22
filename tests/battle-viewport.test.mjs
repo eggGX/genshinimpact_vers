@@ -52,7 +52,7 @@ test('destroyed followers linger for an impact frame and then dissolve without r
   assert.match(app, /currentById\.get\(before\.instanceId\) \?\? before/)
   assert.match(app, /dying: !currentById\.has\(before\.instanceId\)/)
   assert.match(app, /if \(!dying\) return renderFollower\(follower, isOpponent\)/)
-  assert.match(app, /className="follower-wrapper battle-destroying" aria-hidden="true"/)
+  assert.match(app, /className="follower-wrapper battle-destroying" data-pixi-id=\{follower\.instanceId\} aria-hidden="true"/)
   assert.match(app, /animationDuration: \`\$\{playbackDelay\}ms\`/)
   assert.match(app, /className="battle-destruction-flash"/)
   assert.match(css, /@keyframes battle-destruction-impact/)
