@@ -4,32 +4,42 @@ import { readFileSync } from 'node:fs'
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8')
 const app = read('src/App.tsx')
-const fx = read('src/pixi/PixiCardFlowOverlay.tsx')
 const css = read('src/App.css')
+const engine = read('src/game/engine.ts')
 
-test('existing CSS card draw and mulligan exchange are preserved', () => {
+test('unwanted draw and mulligan particles are removed without changing card travel', () => {
+  assert.doesNotMatch(app, /PixiCardFlowOverlay/)
   assert.match(css, /@keyframes battle-draw-travel/)
   assert.match(css, /@keyframes battle-draw-flip/)
-  assert.match(css, /@keyframes mulligan-card-out/)
   assert.match(css, /@keyframes mulligan-card-in/)
+  assert.match(css, /@keyframes mulligan-card-out/)
   assert.match(app, /drawFlights\.map\(flight=>/)
-  assert.match(app, /<MulliganSwapCards reveal=\{mulliganReveal\}/)
 })
 
-test('Pixi HUD accents are optional and do not change card or input content', () => {
-  assert.match(app, /has\('pixi-overlay'\) && \(drawFlights\.length > 0/)
-  assert.match(app, /<PixiCardFlowOverlay drawActive=\{drawFlights\.length > 0\} mulliganActive=\{Boolean\(mulliganReveal\)\}/)
-  assert.match(app, /<PixiCardFlowOverlay drawActive=\{false\} mulliganActive/)
-  assert.match(fx, /pointerEvents: 'none'/)
-  assert.match(fx, /aria-hidden="true"/)
-  assert.match(fx, /prefers-reduced-motion: reduce/)
+test('turn-end effects resolve before the engine switches player and draws', () => {
+  const turn = engine.slice(engine.indexOf('export function endTurn('))
+  const endEffects = turn.indexOf("'turn_end'")
+  const burnAndCores = turn.indexOf('草原核：ターン終了時')
+  const nextPlayer = turn.indexOf('result.turn + 1')
+  const draw = turn.indexOf('次のプレイヤーがカードをドロー')
+  assert.ok(endEffects >= 0 && burnAndCores > endEffects)
+  assert.ok(nextPlayer > burnAndCores && draw > nextPlayer)
 })
 
-test('Pixi HUD reads card positions only, not concealed opponent hands', () => {
-  assert.match(fx, /\.battle-draw-layer \.battle-draw-flight/)
-  assert.match(fx, /\.mulligan-result-cards \.mulligan-swap--in/)
-  assert.match(fx, /getBoundingClientRect\(\)/)
-  assert.doesNotMatch(fx, /cardId|opponent\.hand|currentPlayer\.hand/)
-  assert.match(fx, /app\.ticker\.remove\(tick\)/)
-  assert.match(fx, /app\.destroy\(/)
+test('turn announcement follows the presented turn, not the final committed turn', () => {
+  assert.match(app, /const shownGame = playback \? playback\.frames\[playback\.index\]\.state : game/)
+  assert.match(app, /const turnKey = `\$\{shownGame\.turn\}:\$\{shownGame\.currentPlayerId\}`/)
+  assert.match(app, /shownGame\.players\.find/)
+  assert.match(app, /atTurnBoundary/)
+  assert.match(app, /turnAnnouncement\?\.id === shownTurnKey/)
+})
+
+test('new-turn draw waits for banner dismissal while card-effect draws play immediately', () => {
+  assert.match(app, /if \(turnAnnouncement\) return/)
+  assert.match(app, /pendingTurnDrawFlights\.current\.push/)
+  assert.match(app, /lastAnnouncedTurn\.current !== turnKey/)
+  assert.match(app, /pendingTurnDrawFlights\.current\.some/)
+  assert.match(app, /startDrawFlights\(flights, isSelf\)/)
+  assert.match(app, /startDrawFlights\(entry\.flights, entry\.isSelf\)/)
+  assert.match(app, /drawFlights\.length > 0/)
 })
