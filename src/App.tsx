@@ -373,6 +373,8 @@ function App({ online }: { online?: {
     previousDrawTurn.current=null
     pendingTurnDrawFlights.current=[]
     completedTurnAnnouncement.current=null
+    lastAnnouncedTurn.current=null
+    setTurnAnnouncement(null)
     setDrawFlights([])
     setEnteringPieces(new Set())
     previousBoardPieces.current=null
@@ -867,6 +869,11 @@ function App({ online }: { online?: {
     skipPlayback()
     animatedDrawTransitions.current.clear()
     previousDrawState.current=null
+    previousDrawTurn.current=null
+    pendingTurnDrawFlights.current=[]
+    completedTurnAnnouncement.current=null
+    lastAnnouncedTurn.current=null
+    setTurnAnnouncement(null)
     setDrawFlights([])
     setEnteringPieces(new Set())
     previousBoardPieces.current=null
