@@ -2964,3 +2964,20 @@
 }
 /* A local match has two human-controlled seats, so both must reveal a
    newly drawn card. Do not force opponent-style no-flip for local turns. */
+
+
+/* Revealed draws (including Paimon's Bargains) are intentionally front-facing.
+   A 3D flip can leave the back visible during the middle zoom in some
+   browser/GPU combinations. The opponent still uses its card-back flight. */
+.game--battle-fit .battle-draw-card--revealed {
+  animation:none;
+  transform:none;
+  transform-style:flat;
+}
+.game--battle-fit .battle-draw-card--revealed .battle-draw-card-front {
+  position:absolute;
+  inset:2px;
+  transform:none;
+  backface-visibility:visible;
+  -webkit-backface-visibility:visible;
+}
