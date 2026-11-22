@@ -6,6 +6,8 @@ export interface PresentationFrame {
   state: Omit<GameState, 'presentationFrames'>
   /** Optional public on-board target for rendering a cinematic effect. */
   effectTarget?: string
+  /** Source of a confirmed automatic ability activation (presentation only). */
+  triggerSourceId?: string
 }
 
 /** A trace is opt-in. The engine remains synchronous, deterministic for any fixed RNG. */
@@ -21,13 +23,13 @@ export function withoutPresentation(state: GameState): GameState {
 }
 
 /** Store immutable snapshots *after* each individual resolution, not just the final board. */
-export function captureFrame(state: GameState, label: string, effectTarget?: string): GameState {
+export function captureFrame(state: GameState, label: string, effectTarget?: string, triggerSourceId?: string): GameState {
   if (!state.presentationFrames) return state
   const snapshot = withoutPresentation(state)
   const players = structuredClone(snapshot.players) as [Player, Player]
   return {
     ...state,
-    presentationFrames: [...state.presentationFrames, { label, state: { ...snapshot, players }, ...(effectTarget ? { effectTarget } : {}) }],
+    presentationFrames: [...state.presentationFrames, { label, state: { ...snapshot, players }, ...(effectTarget ? { effectTarget } : {}), ...(triggerSourceId ? { triggerSourceId } : {}) }],
   }
 }
 
