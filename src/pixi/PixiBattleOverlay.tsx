@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Application, Graphics, type Ticker } from 'pixi.js'
+import { drawReactionBurst, reactionFromFrameLabel, type ReactionFx } from './reactionFx'
 
 type ElementFx = 'pyro' | 'hydro' | 'cryo' | 'electro' | 'anemo' | 'geo' | 'dendro'
 const ELEMENT_COLORS: Record<ElementFx, { main: number; light: number }> = {
@@ -96,6 +97,7 @@ function drawParticle(g: Graphics, element: ElementFx, x: number, y: number, siz
 function spawnImpact(
   app: Application, x: number, y: number, radius: number,
   element: ElementFx | null, onEnd: (stop: () => void) => void,
+  reaction: ReactionFx | null = null,
 ): () => void {
   const graphics = new Graphics()
   app.stage.addChild(graphics)
@@ -116,6 +118,11 @@ function spawnImpact(
     const progress = Math.min(1, elapsed / duration)
     const fade = (1 - progress) ** 1.35
     graphics.clear()
+    if (reaction) {
+      drawReactionBurst(graphics, reaction, x, y, radius, progress)
+      if (progress >= 1) stop()
+      return
+    }
     graphics.circle(x, y, 9 + progress * radius)
       .stroke({ color: colors.main, alpha: 0.87 * fade, width: 5 * fade + 0.5 })
     graphics.circle(x, y, 6 + progress * radius * 0.58)
@@ -143,10 +150,11 @@ function spawnImpact(
  * Non-interactive overlay using the existing battle damage and elemental cues.
  * Game logic and the React/CSS animations are intentionally unchanged.
  */
-export function PixiBattleOverlay({ cue }: { cue: object | null }) {
+export function PixiBattleOverlay({ cue }: { cue: { label: string } | null }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const activeEffects = useRef<Array<() => void>>([])
+  const previousImpact = useRef<{ x: number; y: number; radius: number } | null>(null)
 
   useEffect(() => {
     const container = containerRef.current
@@ -190,7 +198,11 @@ export function PixiBattleOverlay({ cue }: { cue: object | null }) {
   }, [])
 
   useEffect(() => {
-    if (!cue) return
+    if (!cue) {
+      previousImpact.current = null
+      return
+    }
+    const reaction = reactionFromFrameLabel(cue.label)
     const request = window.requestAnimationFrame(() => {
       const app = appRef.current
       const host = containerRef.current
@@ -218,12 +230,23 @@ export function PixiBattleOverlay({ cue }: { cue: object | null }) {
         const y = rect.top + rect.height / 2 - bounds.top
         const element = detectedElement(target)
         const radius = Math.max(38, Math.min(105, rect.width * 0.7))
+        previousImpact.current = { x, y, radius }
         const stop = spawnImpact(app, x, y, radius, element, finished => {
           activeEffects.current = activeEffects.current.filter(item => item !== finished)
           if (!activeEffects.current.length) app.ticker.stop()
-        })
+        }, reaction)
         activeEffects.current.push(stop)
       })
+      // Some reactions change only keywords/aura or their damage was shown in
+      // the previous snapshot. Reuse the preceding hit location in that case.
+      if (reaction && count === 0 && previousImpact.current) {
+        const { x, y, radius } = previousImpact.current
+        const stop = spawnImpact(app, x, y, radius, null, finished => {
+          activeEffects.current = activeEffects.current.filter(item => item !== finished)
+          if (!activeEffects.current.length) app.ticker.stop()
+        }, reaction)
+        activeEffects.current.push(stop)
+      }
     })
     return () => window.cancelAnimationFrame(request)
   }, [cue])
