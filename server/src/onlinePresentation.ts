@@ -6,6 +6,7 @@ import { applyOnlineAction, type OnlineAction } from './matchActions.ts'
 export interface RecordedOnlineFrame {
   label: string
   state: GameState
+  triggerSourceId?: string
 }
 export interface RecordedOnlineEvent {
   revision: number
@@ -72,7 +73,8 @@ export function recordOnlineAction(state: GameState, action: OnlineAction, revis
       ...(abilityCardId && action.type === 'ability' ? { abilityCardId, abilityKind: action.kind } : {}),
       frames: [
         { label: `${title}：効果を解決中`, state: withoutPresentation(state) },
-        ...selected.map(frame => ({label:frame.label,state:frame.state})),
+        ...selected.map(frame => ({label:frame.label,state:frame.state,
+          ...(frame.triggerSourceId ? {triggerSourceId:frame.triggerSourceId} : {})})),
       ],
     },
   }
