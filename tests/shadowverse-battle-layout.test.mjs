@@ -52,7 +52,8 @@ test('hand defaults to compact right dock and expands only after a hand click', 
 })
 
 test('blank battlefield dismisses expanded hand without intercepting interactive cards', () => {
-  assert.match(app, /target\.closest\('\.field'\) && !target\.closest\('\.follower-wrapper, button, \[data-attack-drop\]'\)/)
+  assert.match(app, /if \(handOpen && isBlank && target\.closest\('\.field'\)\)/)
+  assert.match(app, /const isBlank = !target\.closest\(/)
   assert.match(app, /setHandOpen\(false\)/)
   assert.match(app, /setExpandedHandIndex\(null\)/)
   assert.match(app, /onPointerDown=\{event => startHandDrag\(event, index\)\}/)
