@@ -37,7 +37,8 @@ test('turn announcement follows the presented turn, not the final committed turn
 test('new-turn draw waits for banner dismissal while card-effect draws play immediately', () => {
   assert.match(app, /if \(turnAnnouncement\) return/)
   assert.match(app, /pendingTurnDrawFlights\.current\.push/)
-  assert.match(app, /lastAnnouncedTurn\.current !== turnKey/)
+  assert.match(app, /completedTurnAnnouncement\.current !== turnKey/)
+  assert.match(app, /completedTurnAnnouncement\.current = turnAnnouncement\.id/)
   assert.match(app, /pendingTurnDrawFlights\.current\.some/)
   assert.match(app, /startDrawFlights\(flights, isSelf\)/)
   assert.match(app, /startDrawFlights\(entry\.flights, entry\.isSelf\)/)
