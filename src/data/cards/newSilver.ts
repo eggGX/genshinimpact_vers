@@ -15,7 +15,7 @@ export const newSilverCards: Card[] = [
   {
     id: 'C117',
     implementationStatus: 'playable',
-    name: '反魂の歌',
+    name: '反魂の詩',
     type: 'spell',
     rarity: 'silver',
     element: 'pyro',
