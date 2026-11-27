@@ -515,14 +515,14 @@ test('オーラのフォロワーは通常攻撃対象には選べる', () => {
   assert.equal(next.players[1].field[0].health, 4)
 })
 
-test('カード登録台帳は正式123枚・トークン25種を含む',async()=>{
+test('カード登録台帳は正式124枚・トークン26種を含む',async()=>{
   const { getCard,getAllCards,cardRegistry }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
-  assert.equal(productionCards.length,123)
-  assert.equal(productionTokens.length,25)
-  assert.equal(cardRegistry.size,148)
-  assert.equal(getAllCards().length,148)
+  assert.equal(productionCards.length,124)
+  assert.equal(productionTokens.length,26)
+  assert.equal(cardRegistry.size,150)
+  assert.equal(getAllCards().length,150)
   for(const card of [...productionCards,...productionTokens])
     assert.equal(getCard(card.id)?.name,card.name)
   assert.equal(getCard('card-does-not-exist'),undefined)
@@ -549,15 +549,15 @@ test('正式カードとトークンの登録元だけを使用する', async()=
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
   const { getAllCards }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(productionCards.length,123)
-  assert.equal(productionTokens.length,25)
+  assert.equal(productionCards.length,124)
+  assert.equal(productionTokens.length,26)
   assert.equal(getAllCards().length,productionCards.length+productionTokens.length)
 })
 
 test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () => {
   const { ELEMENT_ORDER, RARITY_ORDER, PLANNED_CARD_COUNTS, PLANNED_TOTAL } =
     await vite.ssrLoadModule('/src/data/cardValidation.ts')
-  assert.equal(PLANNED_TOTAL, 123)
+  assert.equal(PLANNED_TOTAL, 124)
   assert.equal(ELEMENT_ORDER.length, 8)
   assert.equal(RARITY_ORDER.length, 4)
   assert.deepEqual(PLANNED_CARD_COUNTS.none, {
@@ -565,7 +565,7 @@ test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () 
   })
   for (const element of ELEMENT_ORDER.filter(e => e !== 'none')) {
     assert.deepEqual(PLANNED_CARD_COUNTS[element], {
-      bronze: 4, silver: 5, gold: 4, legendary: 3,
+      bronze: 4, silver: 5, gold: 4, legendary: element === 'hydro' ? 4 : 3,
     })
   }
 })
@@ -575,8 +575,8 @@ test('正式70枚登録時はエラーなし・予定45枚が不足と判定', a
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 123)
-  assert.equal(report.plannedTotal, 123)
+  assert.equal(report.total, 124)
+  assert.equal(report.plannedTotal, 124)
   assert.equal(report.slots.length, 32)
   assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 0)
   assert.equal(report.ready, true)
@@ -675,8 +675,8 @@ test('無元素・炎・水の登録数は100/115で残り15枚', async () => {
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 123)
-  assert.equal(report.plannedTotal, 123)
+  assert.equal(report.total, 124)
+  assert.equal(report.plannedTotal, 124)
   assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),0)
   assert.equal(report.slots.filter(s => s.element === 'none').every(s => s.remaining === 0),true)
   assert.equal(report.ready,true)
@@ -926,7 +926,7 @@ test('炎元素15枚に水15枚を加え正式カードは100/115、残り15枚'
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const result=validateProductionCards(productionCards)
-  assert.equal(result.total,123)
+  assert.equal(result.total,124)
   assert.equal(result.slots.filter(s=>s.element==='pyro').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(result.slots.reduce((n,s)=>n+s.remaining,0),0)
   assert.deepEqual(result.errors,[])
@@ -1779,7 +1779,7 @@ test('STEP30 構築済み水元素15枚と正式登録総数を照合',async()=>
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,123)
+  assert.equal(report.total,124)
   assert.equal(report.slots.filter(s=>s.element==='hydro').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(report.ready,true)
@@ -2242,7 +2242,7 @@ test('STEP32 旧実装に加え雷・風15枚登録済み・残り30枚',async()
   const { validateProductionCards }=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const result=validateProductionCards(productionCards)
   assert.deepEqual(result.errors,[])
-  assert.equal(result.total,123)
+  assert.equal(result.total,124)
   assert.equal(result.slots.filter(x=>x.element==='cryo').reduce((n,x)=>n+x.remaining,0),0)
   assert.equal(result.slots.reduce((n,x)=>n+x.remaining,0),0)
 })
@@ -2670,7 +2670,7 @@ test('STEP34 正式85/115、雷15枚の予定枠充足、残り30枚',async()=>{
   const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const validation=validateProductionCards(productionCards)
   assert.deepEqual(validation.errors,[])
-  assert.equal(validation.total,123)
+  assert.equal(validation.total,124)
   assert.equal(validation.slots.filter(s=>s.element==='electro').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(validation.slots.reduce((n,s)=>n+s.remaining,0),0)
 })
@@ -3151,7 +3151,7 @@ test('STEP36 登録は100/115・風元素15枚の枠を充足・残り15枚',asy
   const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,123)
+  assert.equal(report.total,124)
   assert.equal(report.slots.filter(s=>s.element==='anemo').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),0)
 })
@@ -3706,7 +3706,7 @@ test('STEP38 正式100/115・岩15枚の枠を充足・残り15枚',async()=>{
   const {validateProductionCards}=await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report=validateProductionCards(productionCards)
   assert.deepEqual(report.errors,[])
-  assert.equal(report.total,123)
+  assert.equal(report.total,124)
   assert.equal(report.slots.filter(s=>s.element==='geo').reduce((n,s)=>n+s.remaining,0),0)
   assert.equal(report.slots.reduce((n,s)=>n+s.remaining,0),0)
 })
@@ -4099,7 +4099,7 @@ test('STEP40 草元素15枚は原本どおりB4/S4/G4/L3の構成', async()=>{
     ...Array(4).fill('bronze'),...Array(4).fill('silver'),
     ...Array(4).fill('gold'),...Array(3).fill('legendary')])
   const report=validateProductionCards(productionCards)
-  assert.equal(report.total,123)
+  assert.equal(report.total,124)
   assert.deepEqual(report.errors,[])
   assert.equal(report.ready,true)
 })
@@ -4401,10 +4401,10 @@ test('テスト用カードデータは正式台帳から完全削除されて�
   const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const {productionTokens}=await vite.ssrLoadModule('/src/data/productionTokens.ts')
   const registry=getAllCards()
-  assert.equal(productionCards.length,123)
-  assert.equal(productionTokens.length,25)
-  assert.equal(registry.length,148)
-  assert.equal(getDeckCardPool().length,123)
+  assert.equal(productionCards.length,124)
+  assert.equal(productionTokens.length,26)
+  assert.equal(registry.length,150)
+  assert.equal(getDeckCardPool().length,124)
   assert.ok(registry.every(card=>!card.id.startsWith('test-')))
   assert.equal(getCard('test-elemental-caster'),undefined)
   for(let i=0;i<30;i++){
@@ -4582,7 +4582,7 @@ test('カード詳細：カード一覧の正式カード・トークンを個�
   const { CardDetail } = await vite.ssrLoadModule('/src/components/CardDetail.tsx')
   const { getAllCards } = await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const cards = getAllCards()
-  assert.equal(cards.length, 148)
+  assert.equal(cards.length, 150)
   for (const [index, card] of cards.entries()) {
     const markup = renderToStaticMarkup(React.createElement(CardDetail, {
       card, onClose: () => {}, position: index + 1, total: cards.length,
@@ -4607,7 +4607,7 @@ test('カード詳細：画像未登録のカードでも内容が表示され�
   // Use an unregistered artwork ID to exercise the fallback independently of new art assets.
   const card = { ...getCard('C013'), id: 'test-missing-artwork' }
   const html = renderToStaticMarkup(React.createElement(CardDetail, {
-    card, onClose: () => {}, position: 1, total: 148,
+    card, onClose: () => {}, position: 1, total: 150,
   }))
   assert.match(html,/イラスト未登録/)
   assert.match(html,/ドドコ/)
