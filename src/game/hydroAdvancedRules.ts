@@ -426,7 +426,7 @@ export function resolveHydroPermanentsTurnEnd(
     result = resolveDeaths(resolveLeaderElementalHit(result, index, 0, 'hydro', 1 - index))
   }
   result = updatePlayer(result, ownerId, p => ({
-    ...p, crests: (p.crests ?? []).filter(c => c.turnsRemaining > 0),
+    ...p, crests: (p.crests ?? []).filter(c => c.turnsRemaining !== 0),
   }))
 
   const amuletIds = (result.players[index].amulets ?? [])
