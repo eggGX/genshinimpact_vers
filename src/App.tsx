@@ -1421,7 +1421,7 @@ function App({ online }: { online?: {
       : undefined
     const isFriendlyTarget = !isOpponent &&
       ((selectedHandIndex !== null &&
-        ['C021', 'C044', 'C066', 'C081', 'C030'].includes(friendlyPlayId ?? '') &&
+        ['C021', 'C044', 'C066', 'C081', 'C030', 'C116'].includes(friendlyPlayId ?? '') &&
         (friendlyPlayId !== 'C066' || card?.element === 'electro') &&
         (friendlyPlayId !== 'C081' || card?.element === 'anemo')) ||
        (selectedAbility?.kind === 'skill' && friendlySkillId === 'C066' &&
