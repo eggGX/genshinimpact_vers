@@ -108,7 +108,17 @@ export function cpuCandidates(state: GameState): CpuAction[] {
       choices.push({action:{type:'play',handIndex,targetId,cardId:card.id},
         score:base + bonus})
     }
-    if (card.id === 'C116') {
+    if (card.id === 'C123') {
+      // Copy a different card from the original hand, not the spell itself.
+      owner.hand.forEach((id, index) => {
+        if (index === handIndex || !getCard(id)) return
+        const chosen = getCard(id)!
+        const quality = chosen.type === 'follower'
+          ? (chosen.attack ?? 0) + (chosen.health ?? 0) * .6
+          : 0
+        append(`hand:${index}`, chosen.cost * .6 + quality * .25)
+      })
+    } else if (card.id === 'C116') {
       const targets = [
         ...owner.field.filter(f=>f.health>0).map(f=>({f,ally:true})),
         ...enemies.map(f=>({f,ally:false})),
