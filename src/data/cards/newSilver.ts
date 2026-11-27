@@ -54,4 +54,14 @@ export const newSilverCards: Card[] = [
     cost: 2,
     description: '自分の元素エネルギーを2獲得する。',
   },
+  {
+    id: 'C121',
+    implementationStatus: 'playable',
+    name: '風の翼',
+    type: 'spell',
+    rarity: 'silver',
+    element: 'anemo',
+    cost: 2,
+    description: '自分の場のフォロワー1枚を選ぶ。それは「守護を無視して攻撃できる」をもつ。',
+  },
 ]
