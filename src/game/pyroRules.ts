@@ -171,7 +171,7 @@ export function resolvePyroTurnEnd(
   }
   return updateOwner(result, ownerId, p => ({
     ...p,
-    crests: (p.crests ?? []).filter(c => c.turnsRemaining > 0),
+    crests: (p.crests ?? []).filter(c => c.turnsRemaining !== 0),
   }))
 }
 
