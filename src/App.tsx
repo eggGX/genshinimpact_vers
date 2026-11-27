@@ -1373,12 +1373,14 @@ function App({ online }: { online?: {
     const grantedTriggers = keywords.some(keyword =>
       keyword === 'raincutter_on_attack' ||
       keyword === 'attack_heal_2' ||
+      keyword === 'nilou_engage_hydro' ||
       /(?:^on_attack(?:_|$)|_on_attack(?:_|$)|^on_turn_(?:start|end)(?:_|$)|_on_turn_(?:start|end)(?:_|$))/.test(keyword)
     )
     const triggered = grantedTriggers ||
       Boolean(card?.effects?.some(effect =>
         effect.trigger === 'turn_start' || effect.trigger === 'turn_end')) ||
-      /(?:ターン開始時|ターン終了時|攻撃時|交戦時|自分のターン開始時|自分のターン終了時|相手のターン開始時|相手のターン終了時|攻撃するたび|攻撃したとき|攻撃されるたび|反応を起こすたび|元素反応を起こすたび|シールドを獲得するたび)/.test(description)
+      (cardId !== 'C124' &&
+      /(?:ターン開始時|ターン終了時|攻撃時|交戦時|自分のターン開始時|自分のターン終了時|相手のターン開始時|相手のターン終了時|攻撃するたび|攻撃したとき|攻撃されるたび|反応を起こすたび|元素反応を起こすたび|シールドを獲得するたび)/.test(description))
     const emblems: Array<{key:string; label:string; content: ReactNode}> = []
     if (lastWord) emblems.push({key:'lastword',label:'ラストワード',content:
       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
