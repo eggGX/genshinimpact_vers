@@ -207,6 +207,7 @@ export function canPlayCard(
   // C030 must have a living allied follower to receive its on-attack effect.
   if (card.id === 'C030' && !owner.field.some(f => f.health > 0)) return false
   if ((card.id === 'C117' || card.id === 'C121') && !owner.field.some(f => f.health > 0)) return false
+  if (card.id === 'C123' && owner.hand.length < 2) return false
   if (card.id === 'C116' &&
       !owner.field.some(f => f.health > 0) &&
       !enemy.field.some(f => f.health > 0 &&
@@ -389,7 +390,14 @@ export function playCard(
   const cardId = player.hand[handIndex]
   const card = getCard(cardId)!
 
-  if (card.id === 'C116') {
+  if (card.id === 'C123') {
+    // Hand indices refer to the original hand, before the spell is consumed.
+    // The spell itself is not eligible to be copied.
+    const match = /^hand:(\\d+)$/.exec(targetId ?? '')
+    const choiceIndex = match ? Number(match[1]) : -1
+    if (choiceIndex < 0 || choiceIndex >= player.hand.length ||
+        choiceIndex === handIndex || !getCard(player.hand[choiceIndex])) return state
+  } else if (card.id === 'C116') {
     const owned = player.field.some(f => f.instanceId === targetId && f.health > 0)
     const enemy = state.players[1 - index]
     const opposed = enemy.field.some(f => f.instanceId === targetId && f.health > 0 &&
@@ -456,7 +464,8 @@ export function playCard(
     next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
     next = advancedAnemoSpell(next, playerId, card.id, targetId)
     next = geoSpell(next, playerId, card.id, resolveDeaths, targetId)
-    next = dendroSpell(next, playerId, card.id)
+    next = dendroSpell(next, playerId, card.id,
+      card.id === 'C123' ? player.hand[Number(targetId!.slice(5))] : undefined)
     next = dendroSilverSpell(next, playerId, card.id, resolveDeaths)
     if (card.id === 'C030') next = grantRaincutter(next, playerId, targetId)
     return resolveDeaths(next)
