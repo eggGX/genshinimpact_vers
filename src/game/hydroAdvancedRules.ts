@@ -63,6 +63,79 @@ function hitAllHydro(
   return result
 }
 
+/** C118 chooses only among enemies with the greatest current attack.
+ * This random effect does not select a target, so stealth/aura do not block it.
+ * Deaths and existing Last Words go through the normal engine dispatcher. */
+function destroyCardinalTarget(
+  state: GameState, ownerId: string,
+  resolveDeaths: (state: GameState) => GameState,
+): GameState {
+  if (state.winnerId !== null) return state
+  const ownerIndex = state.players.findIndex(player => player.id === ownerId)
+  if (ownerIndex < 0) return state
+  const enemyIndex = 1 - ownerIndex
+  const enemy = state.players[enemyIndex]
+  const living = enemy.field.filter(follower => follower.health > 0)
+  if (!living.length) return state
+  const strongest = Math.max(...living.map(follower => follower.attack))
+  const candidates = living.filter(follower => follower.attack === strongest)
+  const victim = candidates[Math.floor(Math.random() * candidates.length)]
+  const players = [...state.players] as [Player, Player]
+  players[enemyIndex] = {
+    ...enemy,
+    field: enemy.field.map(follower => follower.instanceId === victim.instanceId
+      ? { ...follower, health: 0 } : follower),
+  }
+  return resolveDeaths({ ...state, players })
+}
+
+/** Fanfare first places the amulet, then destroys the highest-attack enemy. */
+export function resolveCardinalPlay(
+  state: GameState, ownerId: string,
+  resolveDeaths: (state: GameState) => GameState,
+): GameState {
+  if (state.winnerId !== null) return state
+  const placed = updatePlayer(state, ownerId, player => ({
+    ...player,
+    amulets: [...(player.amulets ?? []), {
+      instanceId: `cardinal-${nextHydroAmuletId++}`,
+      cardId: 'C118',
+      turnsRemaining: 2,
+    }],
+  }))
+  return destroyCardinalTarget(captureFrame(placed, '諭示裁定カーディナル：設置'), ownerId, resolveDeaths)
+}
+
+/** Countdown advances at the end of its owner's turn, including its play turn.
+ * On expiry the amulet leaves the board before its Last Word resolves. */
+export function resolveCardinalTurnEnd(
+  state: GameState, ownerId: string,
+  resolveDeaths: (state: GameState) => GameState,
+): GameState {
+  const ids = (state.players.find(player => player.id === ownerId)?.amulets ?? [])
+    .filter(amulet => amulet.cardId === 'C118')
+    .map(amulet => amulet.instanceId)
+  let result = state
+  for (const id of ids) {
+    if (result.winnerId !== null) break
+    const owner = result.players.find(player => player.id === ownerId)
+    const amulet = owner?.amulets?.find(item => item.instanceId === id)
+    if (!amulet) continue
+    const expires = amulet.turnsRemaining <= 1
+    result = updatePlayer(result, ownerId, player => ({
+      ...player,
+      amulets: (player.amulets ?? []).flatMap(item => item.instanceId !== id
+        ? [item]
+        : expires ? [] : [{ ...item, turnsRemaining: item.turnsRemaining - 1 }]),
+    }))
+    if (expires) {
+      result = captureFrame(result, '諭示裁定カーディナル：カウントダウン終了')
+      result = destroyCardinalTarget(result, ownerId, resolveDeaths)
+    }
+  }
+  return result
+}
+
 /** C035 draws before the next action. C037 summons one device if space permits. */
 export function resolveHydroAdvancedPlay(
   state: GameState, ownerId: string, cardId: string
