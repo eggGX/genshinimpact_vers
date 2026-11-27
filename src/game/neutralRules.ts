@@ -152,6 +152,14 @@ export function resolveNeutralPlay(
   }
 }
 
+/** Last Word granted by C117. Each spell grants a separate copy trigger.
+ * Only the printed card is summoned, without any temporary buffs or grants. */
+export function resolveGrantedRevival(state: GameState, ownerId: string, follower: Follower): GameState {
+  const grants = follower.keywords.filter(keyword => keyword === 'revive_same_name_lastword').length
+  if (!grants || !getCard(follower.cardId) || getCard(follower.cardId)?.type !== 'follower') return state
+  return summonFollowers(state, ownerId, follower.cardId, grants)
+}
+
 /** A Wild Hunt death-spawn has no further last words. */
 export function resolveNeutralDestroy(
   state: GameState,
