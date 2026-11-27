@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,122)
-  assert.equal(getDeckCardPool().length,122)
+  assert.equal(productionCards.length,123)
+  assert.equal(getDeckCardPool().length,123)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -510,4 +510,74 @@ test('Golden House cannot be played without enough PP and does not require targe
   s.players[0].pp=3
   assert.equal(engine.canPlayCard(s,0),true)
   assert.equal(engine.playCard(s,'player1',0).players[0].hand.filter(x=>x==='token-mora').length,2)
+})
+
+test('C123 is the Dendro 2 PP silver that copies another card in hand', () => {
+  const card=engine.getCard('C123')
+  assert.equal(card.name,'夢境の力')
+  assert.deepEqual([card.type,card.element,card.rarity,card.cost],['spell','dendro','silver',2])
+  assert.equal(card.description,'自分の手札のカード1枚を選ぶ。それと同名のカード1枚を自分の手札に加える。')
+  assert.equal(getDeckCardPool().filter(c=>c.id==='C123').length,1)
+  assert.equal(validateProductionCards(productionCards).ready,true)
+})
+
+test('C123 copies a selected hand follower without consuming the original target', () => {
+  const s=startedGame()
+  s.players[0].hand=['C123','C001','C011']
+  s.players[0].pp=3
+  assert.equal(engine.canPlayCard(s,0),true)
+  const result=engine.playCard(s,'player1',0,'hand:2')
+  assert.equal(result.players[0].pp,1)
+  assert.deepEqual(result.players[0].hand,['C001','C011','C011'])
+  assert.ok(result.players[0].graveyard.includes('C123'))
+  assert.equal(result.players[0].deck.includes('C011'),s.players[0].deck.includes('C011'))
+})
+
+test('C123 supports different source positions, duplicate names, and tokens', () => {
+  const s=startedGame()
+  s.players[0].hand=['C001','C123','token-mora','C011']
+  s.players[0].pp=2
+  const result=engine.playCard(s,'player1',1,'hand:2')
+  assert.deepEqual(result.players[0].hand,['C001','token-mora','C011','token-mora'])
+  assert.equal(result.players[0].pp,0)
+})
+
+test('C123 rejects absent, malformed, enemy-like and self target indices before spending', () => {
+  const s=startedGame()
+  s.players[0].hand=['C123','C011']
+  s.players[0].pp=2
+  for(const target of [undefined,'hand:0','hand:2','hand:-1','hand:abc','enemy-id','hand:1.0']) {
+    assert.strictEqual(engine.playCard(s,'player1',0,target),s, String(target))
+  }
+  const alone=startedGame()
+  alone.players[0].hand=['C123']
+  alone.players[0].pp=2
+  assert.equal(engine.canPlayCard(alone,0),false)
+})
+
+test('C123 obeys hand cap nine after spending the spell', () => {
+  const s=startedGame()
+  s.players[0].hand=['C123',...Array(8).fill('C001')]
+  s.players[0].pp=2
+  const result=engine.playCard(s,'player1',0,'hand:8')
+  assert.equal(result.players[0].hand.length,9)
+  assert.equal(result.players[0].hand.filter(x=>x==='C001').length,9)
+})
+
+test('C123 fails when the player has insufficient PP', () => {
+  const s=startedGame()
+  s.players[0].hand=['C123','C001']
+  s.players[0].pp=1
+  assert.equal(engine.canPlayCard(s,0),false)
+  assert.strictEqual(engine.playCard(s,'player1',0,'hand:1'),s)
+})
+
+test('C123 UI offers hand target selection and CPU sends hand indices', async () => {
+  const app=readFileSync(new URL('../src/App.tsx',import.meta.url),'utf8')
+  const cpu=readFileSync(new URL('../src/game/cpuOpponent.ts',import.meta.url),'utf8')
+  assert.match(app,/currentPlayer\.hand\[selectedHandIndex\] === 'C123'/)
+  assert.match(app,/夢境の力：複製したい手札のカードを選択してください/)
+  assert.match(app,/targetId:`hand:${handIndex}`/)
+  assert.match(cpu,/card\.id === 'C123'/)
+  assert.match(cpu,/append\(`hand:${index}`/)
 })
