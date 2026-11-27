@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,117)
-  assert.equal(getDeckCardPool().length,117)
+  assert.equal(productionCards.length,118)
+  assert.equal(getDeckCardPool().length,118)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -177,4 +177,87 @@ test('C117 obeys five-card board cap when the granted Last Word summons', () => 
   const enchanted=engine.playCard(s,'player1',0,source.instanceId)
   const after=engine.attackFollower(enchanted,source.instanceId,other.instanceId)
   assert.equal(after.players[0].field.length,5)
+})
+
+test('C118 has the official Oratrice spelling, countdown and correct rarity', () => {
+  const card=engine.getCard('C118')
+  assert.equal(card.name,'諭示裁定カーディナル')
+  assert.deepEqual([card.type,card.element,card.rarity,card.cost],['amulet','hydro','silver',4])
+  assert.equal(card.description,
+    '【カウントダウン_2】\\n【ファンファーレ】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。\\n【ラストワード】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。')
+  assert.equal(getDeckCardPool().filter(c=>c.id==='C118').length,1)
+  assert.equal(validateProductionCards(productionCards).ready,true)
+})
+
+test('C118 fanfare destroys only a highest-attack enemy and leaves a countdown-2 amulet', () => {
+  const s=startedGame()
+  s.players[0].hand=['C118']
+  s.players[0].pp=4
+  const low=put(s,1,'C001')
+  low.attack=2
+  const high=put(s,1,'C011')
+  high.attack=8
+  const middle=put(s,1,'C001')
+  middle.attack=5
+  const result=engine.playCard(s,'player1',0)
+  assert.equal(result.players[0].pp,0)
+  assert.equal(result.players[0].amulets.length,1)
+  assert.equal(result.players[0].amulets[0].turnsRemaining,2)
+  assert.deepEqual(result.players[1].field.map(f=>f.instanceId),[low.instanceId,middle.instanceId])
+  assert.ok(result.players[1].graveyard.includes('C011'))
+})
+
+test('C118 does not randomly destroy an enemy below maximum attack when tied', () => {
+  const originalRandom=Math.random
+  try {
+    for(const pick of [0,0.999999]) {
+      Math.random=()=>pick
+      const s=startedGame()
+      s.players[0].hand=['C118']
+      s.players[0].pp=4
+      const a=put(s,1,'C001'); a.attack=8
+      const b=put(s,1,'C011'); b.attack=8
+      const c=put(s,1,'C001'); c.attack=3
+      const next=engine.playCard(s,'player1',0)
+      assert.equal(next.players[1].field.length,2)
+      assert.ok(next.players[1].field.some(f=>f.instanceId===c.instanceId))
+      const expected=pick===0 ? a.instanceId : b.instanceId
+      assert.ok(!next.players[1].field.some(f=>f.instanceId===expected))
+    }
+  } finally {
+    Math.random=originalRandom
+  }
+})
+
+test('C118 Last Word fires at countdown expiry and reevaluates highest attack', () => {
+  let s=startedGame()
+  s.players[0].hand=['C118']
+  s.players[0].pp=4
+  const first=put(s,1,'C001'); first.attack=8
+  const second=put(s,1,'C011'); second.attack=4
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[1].field.length,1)
+  assert.equal(s.players[1].field[0].instanceId,second.instanceId)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].amulets[0].turnsRemaining,1)
+  assert.equal(s.players[1].field.length,1)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  assert.equal((s.players[0].amulets??[]).length,0)
+  assert.equal(s.players[1].field.length,0)
+  assert.ok(s.players[1].graveyard.includes('C011'))
+})
+
+test('C118 is playable with an empty enemy field; its Fanfare and Last Word safely do nothing', () => {
+  let s=startedGame()
+  s.players[0].hand=['C118']
+  s.players[0].pp=4
+  assert.equal(engine.canPlayCard(s,0),true)
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[0].amulets.length,1)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].amulets.length,0)
+  assert.equal(s.players[1].field.length,0)
 })
