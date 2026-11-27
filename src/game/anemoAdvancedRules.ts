@@ -59,8 +59,17 @@ function randomOpponentHit(state: GameState, ownerId: string, value: number, dea
   return resolveLeaderElementalHit(state, state.players.findIndex(p=>p.id===foe.id), value, 'anemo')
 }
 
-export function advancedAnemoSpell(state: GameState, ownerId: string, cardId: string): GameState {
-  if (cardId !== 'C075' || state.winnerId !== null) return state
+export function advancedAnemoSpell(state: GameState, ownerId: string, cardId: string, targetId?: string): GameState {
+  if (state.winnerId !== null) return state
+  if (cardId === 'C121' && targetId) {
+    return edit(state, ownerId, player => ({
+      ...player,
+      field: player.field.map(follower => follower.instanceId === targetId && follower.health > 0
+        ? { ...follower, keywords: [...new Set([...follower.keywords, 'ignore_guard'])] }
+        : follower),
+    }))
+  }
+  if (cardId !== 'C075') return state
   return summonFollowers(state, ownerId, 'token-surprising-cat-box', 1)
 }
 export function advancedAnemoAmuletPlay(state: GameState, ownerId: string, cardId: string): GameState {
