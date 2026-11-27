@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,116)
-  assert.equal(getDeckCardPool().length,116)
+  assert.equal(productionCards.length,117)
+  assert.equal(getDeckCardPool().length,117)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -96,4 +96,85 @@ test('catalogue explicitly orders by element, rarity, then cost and stable ID', 
   assert.match(library,/RARITY_ORDER\.indexOf\(a\.rarity\) - RARITY_ORDER\.indexOf\(b\.rarity\)/)
   assert.match(library,/a\.cost - b\.cost/)
   assert.match(library,/a\.id\.localeCompare\(b\.id\)/)
+})
+
+test('C117 is a playable 2 PP pyro silver with normalized Last Word wording', () => {
+  const card = engine.getCard('C117')
+  assert.equal(card.name,'反魂の歌')
+  assert.equal(card.type,'spell')
+  assert.equal(card.rarity,'silver')
+  assert.equal(card.element,'pyro')
+  assert.equal(card.cost,2)
+  assert.equal(card.description,'自分の場のフォロワー1枚を選ぶ。それは「【ラストワード】これと同名のフォロワー1体を自分の場に出す。」をもつ。')
+  assert.equal(getDeckCardPool().filter(c=>c.id==='C117').length,1)
+})
+
+test('C117 cannot be used without a friendly target, never targets enemies, and spends 2 PP', () => {
+  const s=startedGame()
+  s.players[0].pp=2
+  s.players[0].hand=['C117']
+  const enemy=put(s,1,'C011')
+  assert.equal(engine.canPlayCard(s,0),false)
+  assert.strictEqual(engine.playCard(s,'player1',0,enemy.instanceId),s)
+  const own=put(s,0,'C011')
+  assert.equal(engine.canPlayCard(s,0),true)
+  assert.strictEqual(engine.playCard(s,'player1',0,enemy.instanceId),s)
+  assert.strictEqual(engine.playCard(s,'player1',0),s)
+  const next=engine.playCard(s,'player1',0,own.instanceId)
+  assert.equal(next.players[0].pp,0)
+  assert.deepEqual(next.players[0].hand,[])
+  assert.ok(next.players[0].graveyard.includes('C117'))
+  assert.ok(next.players[0].field[0].keywords.includes('revive_same_name_lastword'))
+})
+
+test('C117 grants a Last Word which revives a fresh same-name follower only after destruction', () => {
+  const s=startedGame()
+  s.players[0].pp=2
+  s.players[0].hand=['C117']
+  const attacker=put(s,0,'C011')
+  const target=put(s,1,'C012')
+  attacker.attack=1
+  attacker.health=1
+  attacker.maxHealth=1
+  target.attack=2
+  target.health=2
+  target.maxHealth=2
+  target.keywords=[]
+  const enchanted=engine.playCard(s,'player1',0,attacker.instanceId)
+  const result=engine.attackFollower(enchanted,attacker.instanceId,target.instanceId)
+  const revived=result.players[0].field.find(f=>f.cardId==='C011')
+  assert.ok(revived)
+  assert.notEqual(revived.instanceId,attacker.instanceId)
+  assert.equal(revived.attack,engine.getCard('C011').attack)
+  assert.equal(revived.health,engine.getCard('C011').health)
+  assert.equal(revived.hasAttacked,false)
+  assert.ok(!revived.keywords.includes('revive_same_name_lastword'))
+  assert.ok(result.players[0].graveyard.includes('C011'))
+})
+
+test('C117 does not copy its granted Last Word through transformation', () => {
+  const s=startedGame()
+  s.players[0].hand=['C117','C116']
+  s.players[0].pp=6
+  const source=put(s,0,'C011')
+  const empowered=engine.playCard(s,'player1',0,source.instanceId)
+  const transformed=engine.playCard(empowered,'player1',0,source.instanceId)
+  assert.equal(transformed.players[0].field[0].cardId,'C001')
+  assert.ok(!transformed.players[0].field[0].keywords.includes('revive_same_name_lastword'))
+})
+
+test('C117 obeys five-card board cap when the granted Last Word summons', () => {
+  const s=startedGame()
+  s.players[0].hand=['C117']
+  s.players[0].pp=2
+  const source=put(s,0,'C011')
+  source.health=1
+  source.attack=1
+  const other=put(s,1,'C012')
+  other.attack=3
+  other.health=4
+  for(let i=0;i<4;i++) put(s,0,'C001')
+  const enchanted=engine.playCard(s,'player1',0,source.instanceId)
+  const after=engine.attackFollower(enchanted,source.instanceId,other.instanceId)
+  assert.equal(after.players[0].field.length,5)
 })
