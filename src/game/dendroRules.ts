@@ -16,8 +16,15 @@ function edit(state: GameState, ownerId: string, change: (p: Player) => Player):
 }
 
 /** C102: tutor a Dendro card first; then perform a real draw, losing to deck-out. */
-export function dendroSpell(state: GameState, ownerId: string, cardId: string): GameState {
-  if (cardId !== 'C102' || state.winnerId !== null) return state
+export function dendroSpell(state: GameState, ownerId: string, cardId: string, copiedCardId?: string): GameState {
+  if (state.winnerId !== null) return state
+  if (cardId === 'C123' && copiedCardId) {
+    return edit(state, ownerId, player => ({
+      ...player,
+      hand: player.hand.length < 9 ? [...player.hand, copiedCardId] : player.hand,
+    }))
+  }
+  if (cardId !== 'C102') return state
   const ownerIndex = state.players.findIndex(p => p.id === ownerId)
   if (ownerIndex < 0) return state
   let result = edit(state, ownerId, p => {
