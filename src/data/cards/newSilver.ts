@@ -11,7 +11,8 @@ export const newSilverCards: Card[] = [
     element: 'none',
     cost: 4,
     description: '自分か相手の場のフォロワー1枚を選ぶ。それは「ヒルチャール」に変身する。',
-  },  {
+  },
+  {
     id: 'C117',
     implementationStatus: 'playable',
     name: '反魂の歌',
