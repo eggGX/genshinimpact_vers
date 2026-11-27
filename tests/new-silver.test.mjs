@@ -184,7 +184,7 @@ test('C118 has the official Oratrice spelling, countdown and correct rarity', ()
   assert.equal(card.name,'諭示裁定カーディナル')
   assert.deepEqual([card.type,card.element,card.rarity,card.cost],['amulet','hydro','silver',4])
   assert.equal(card.description,
-    '【カウントダウン_2】\\n【ファンファーレ】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。\\n【ラストワード】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。')
+    '【カウントダウン_2】\n【ファンファーレ】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。\n【ラストワード】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。')
   assert.equal(getDeckCardPool().filter(c=>c.id==='C118').length,1)
   assert.equal(validateProductionCards(productionCards).ready,true)
 })
