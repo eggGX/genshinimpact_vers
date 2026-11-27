@@ -8,6 +8,7 @@ import { anemoCards } from './cards/anemo'
 import { geoCards } from './cards/geo'
 import { dendroCards } from './cards/dendro'
 import { newSilverCards } from './cards/newSilver'
+import { newLegendaryCards } from './cards/newLegendary'
 
 /**
  * 正式カードの登録先。元素別ファイルに定義するだけでゲームに反映されます。
@@ -23,4 +24,5 @@ export const productionCards: Card[] = [
   ...geoCards,
   ...dendroCards,
   ...newSilverCards,
+  ...newLegendaryCards,
 ]
