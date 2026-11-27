@@ -190,6 +190,21 @@ export function geoSpell(
   resolveDeaths: (state: GameState) => GameState,
   targetId?: string
 ): GameState {
+  if (state.winnerId !== null) return state
+  if (cardId === 'C122') {
+    return update(state, ownerId, player => ({
+      ...player,
+      hand: [...player.hand,
+        ...Array(Math.min(2, Math.max(0, 9 - player.hand.length))).fill('token-mora')],
+    }))
+  }
+  if (cardId === 'token-mora') {
+    // Added usable PP is not a change to max PP. The rules permit PP above 10.
+    return update(state, ownerId, player => ({
+      ...player,
+      pp: player.pp + 1,
+    }))
+  }
   if (cardId === 'C091') {
     const ally = state.players.find(p => p.id === ownerId)?.field.find(f => f.instanceId === targetId && f.health > 0)
     if (!ally) return state
