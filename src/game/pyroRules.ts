@@ -66,6 +66,17 @@ export function resolvePyroSpell(
   if (ownerIndex < 0 || state.winnerId !== null) return state
   const enemyIndex = 1 - ownerIndex
 
+  if (cardId === 'C117' && targetId) {
+    // Grant one independent Last Word per application. The original follower
+    // keeps its existing keywords and printed abilities.
+    return updateOwner(state, ownerId, player => ({
+      ...player,
+      field: player.field.map(f => f.instanceId === targetId && f.health > 0
+        ? { ...f, keywords: [...f.keywords, 'revive_same_name_lastword'] }
+        : f),
+    }))
+  }
+
   if (cardId === 'C015') {
     let result = hitAllEnemyFollowers(state, ownerId, 1, resolveDeaths)
     if (result.winnerId !== null) return result
