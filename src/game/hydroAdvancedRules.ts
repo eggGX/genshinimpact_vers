@@ -149,14 +149,14 @@ export function resolveNilouEngage(
 }
 
 /** The core self-destructs in the normal death pass.
- * Its Last Word deals 2 non-elemental damage to its own leader. */
+ * Its Last Word deals 2 Dendro damage to its own leader. */
 export function resolveBountifulCoreDestroy(
   state: GameState, ownerId: string,
 ): GameState {
   if (state.winnerId !== null) return state
   const index = state.players.findIndex(p => p.id === ownerId)
   if (index < 0) return state
-  return resolveLeaderElementalHit(state, index, 2)
+  return resolveLeaderElementalHit(state, index, 2, 'dendro', index)
 }
 
 /** C118 chooses only among enemies with the greatest current attack.
