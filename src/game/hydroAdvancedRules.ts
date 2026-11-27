@@ -148,26 +148,15 @@ export function resolveNilouEngage(
   return result
 }
 
-/** The core's self-destruction is handled by the engine's normal death pass.
- * The Last Word randomly hits its owner or one of their living followers. */
+/** The core self-destructs in the normal death pass.
+ * Its Last Word deals 2 non-elemental damage to its own leader. */
 export function resolveBountifulCoreDestroy(
   state: GameState, ownerId: string,
 ): GameState {
   if (state.winnerId !== null) return state
   const index = state.players.findIndex(p => p.id === ownerId)
   if (index < 0) return state
-  const owner = state.players[index]
-  const living = owner.field.filter(f => f.health > 0)
-  const choice = Math.floor(Math.random() * (living.length + 1))
-  if (choice === 0) return resolveLeaderElementalHit(state, index, 3, 'dendro', index)
-  const target = living[choice - 1]
-  const outcome = resolveElementalDamage(target, 3, 'dendro')
-  const players = [...state.players] as [Player, Player]
-  players[index] = { ...owner, field: owner.field.map(f =>
-    f.instanceId === target.instanceId ? outcome.follower : f),
-  }
-  return resolveReactionConsequence({ ...state, players }, index, target.instanceId,
-    outcome.reaction, outcome.reactedElement, index)
+  return resolveLeaderElementalHit(state, index, 2)
 }
 
 /** C118 chooses only among enemies with the greatest current attack.
