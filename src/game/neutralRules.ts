@@ -72,9 +72,27 @@ function buffFollower(f: Follower, attack: number, health: number): Follower {
 export function resolveNeutralPlay(
   state: GameState,
   ownerId: string,
-  card: Card
+  card: Card,
+  targetId?: string
 ): GameState {
   switch (card.id) {
+    case 'C116': {
+      if (!targetId) return state
+      // Transformation is not destruction: no Last Words or graveyard entry.
+      // The replacement receives a new identity and fresh stats/attack history.
+      const owner = state.players.find(player => player.id === ownerId)
+      const opponent = state.players.find(player => player.id !== ownerId)
+      const eligible = Boolean(owner?.field.some(f => f.instanceId === targetId && f.health > 0)) ||
+        Boolean(opponent?.field.some(f => f.instanceId === targetId && f.health > 0 &&
+          !f.keywords.includes('aura') && !f.keywords.includes('stealth')))
+      if (!eligible) return state
+      const players = state.players.map(player => ({
+        ...player,
+        field: player.field.map(f => f.instanceId === targetId
+          ? createSummonedFollower('C001') : f),
+      })) as [Player, Player]
+      return { ...state, players }
+    }
     case 'C002':
       return editPlayer(state, ownerId, player => {
         const candidates = player.deck
