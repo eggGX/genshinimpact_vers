@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,118)
-  assert.equal(getDeckCardPool().length,118)
+  assert.equal(productionCards.length,119)
+  assert.equal(getDeckCardPool().length,119)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -260,4 +260,58 @@ test('C118 is playable with an empty enemy field; its Fanfare and Last Word safe
   s=engine.endTurn(s)
   assert.equal(s.players[0].amulets.length,0)
   assert.equal(s.players[1].field.length,0)
+})
+
+test('C119 is a three PP cryo silver countdown amulet with the agreed wording', () => {
+  const card=engine.getCard('C119')
+  assert.equal(card.name,'クルースニクの炉')
+  assert.deepEqual([card.type,card.element,card.rarity,card.cost],['amulet','cryo','silver',3])
+  assert.equal(card.description,'【カウントダウン_2】\n自分のターン終了時、自分の場のフォロワーすべてを+0/+2する。')
+  assert.equal(getDeckCardPool().filter(c=>c.id==='C119').length,1)
+  assert.equal(validateProductionCards(productionCards).ready,true)
+})
+
+test('C119 buffs existing followers and their max HP on the turn it is played', () => {
+  let s=startedGame()
+  s.players[0].hand=['C119']
+  s.players[0].pp=3
+  const a=put(s,0,'C001')
+  a.attack=2; a.health=2; a.maxHealth=4
+  const b=put(s,0,'C011')
+  b.attack=5; b.health=3; b.maxHealth=6
+  s=engine.playCard(s,'player1',0)
+  assert.equal(s.players[0].pp,0)
+  assert.equal(s.players[0].amulets.length,1)
+  assert.equal(s.players[0].amulets[0].turnsRemaining,2)
+  s=engine.endTurn(s)
+  assert.deepEqual(s.players[0].field.map(f=>[f.attack,f.health,f.maxHealth]),[[2,4,6],[5,5,8]])
+  assert.equal(s.players[0].amulets[0].turnsRemaining,1)
+})
+
+test('C119 triggers again on the second owner turn end, then disappears', () => {
+  let s=startedGame()
+  s.players[0].hand=['C119']
+  s.players[0].pp=3
+  const follower=put(s,0,'C001')
+  follower.attack=2; follower.health=2; follower.maxHealth=2
+  s=engine.playCard(s,'player1',0)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].field[0].attack,2)
+  assert.equal(s.players[0].field[0].health,6)
+  assert.equal(s.players[0].field[0].maxHealth,6)
+  assert.equal(s.players[0].amulets.length,0)
+})
+
+test('C119 does not buff the opposing field and is safe with an empty allied board', () => {
+  let s=startedGame()
+  s.players[0].hand=['C119']
+  s.players[0].pp=3
+  const foe=put(s,1,'C001')
+  foe.health=2;foe.maxHealth=2
+  s=engine.playCard(s,'player1',0)
+  s=engine.endTurn(s)
+  assert.equal(s.players[1].field[0].health,2)
+  assert.equal(s.players[0].amulets[0].turnsRemaining,1)
 })
