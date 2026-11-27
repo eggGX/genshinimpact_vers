@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,121)
-  assert.equal(getDeckCardPool().length,121)
+  assert.equal(productionCards.length,122)
+  assert.equal(getDeckCardPool().length,122)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -436,4 +436,78 @@ test('C121 does not stack duplicate ignore-guard keywords when applied twice', (
   s=engine.playCard(s,'player1',0,ally.instanceId)
   s=engine.playCard(s,'player1',0,ally.instanceId)
   assert.equal(s.players[0].field[0].keywords.filter(k=>k==='ignore_guard').length,1)
+})
+
+test('C122 黄金屋 is a 3 PP Geo silver that adds two Mora tokens to hand', () => {
+  const card=engine.getCard('C122')
+  assert.equal(card.name,'黄金屋')
+  assert.deepEqual([card.type,card.element,card.rarity,card.cost],['spell','geo','silver',3])
+  assert.equal(card.description,'「モラ」2枚を自分の手札に加える。')
+  const mora=engine.getCard('token-mora')
+  assert.deepEqual([mora.name,mora.type,mora.element,mora.cost,mora.token],['モラ','spell','geo',0,true])
+  assert.equal(mora.description,'自分のPPを+1する。')
+  assert.equal(getDeckCardPool().some(c=>c.id==='C122'),true)
+  assert.equal(getDeckCardPool().some(c=>c.id==='token-mora'),false)
+  assert.equal(validateProductionCards(productionCards).ready,true)
+})
+
+test('C122 adds 2 Mora after consuming Golden House and leaves original max PP unchanged', () => {
+  const s=startedGame()
+  s.players[0].hand=['C122','C001']
+  s.players[0].pp=4
+  s.players[0].maxPp=6
+  const result=engine.playCard(s,'player1',0)
+  assert.equal(result.players[0].pp,1)
+  assert.equal(result.players[0].maxPp,6)
+  assert.deepEqual(result.players[0].hand,['C001','token-mora','token-mora'])
+  assert.ok(result.players[0].graveyard.includes('C122'))
+  assert.equal(result.players[1].hand.includes('token-mora'),false)
+})
+
+test('C122 respects the nine-card hand limit when producing Mora', () => {
+  for(const [prior,expectedMora] of [[9,1],[8,2],[7,2]]) {
+    const s=startedGame()
+    s.players[0].hand=['C122',...Array(prior-1).fill('C001')]
+    s.players[0].pp=3
+    const result=engine.playCard(s,'player1',0)
+    assert.equal(result.players[0].hand.filter(id=>id==='token-mora').length,expectedMora)
+    assert.ok(result.players[0].hand.length<=9)
+  }
+})
+
+test('Mora is zero-cost, adds one current PP, and can be played repeatedly', () => {
+  const s=startedGame()
+  s.players[0].hand=['token-mora','token-mora']
+  s.players[0].pp=0
+  s.players[0].maxPp=3
+  assert.equal(engine.canPlayCard(s,0),true)
+  const one=engine.playCard(s,'player1',0)
+  assert.equal(one.players[0].pp,1)
+  assert.equal(one.players[0].maxPp,3)
+  assert.deepEqual(one.players[0].hand,['token-mora'])
+  const two=engine.playCard(one,'player1',0)
+  assert.equal(two.players[0].pp,2)
+  assert.equal(two.players[0].maxPp,3)
+  assert.equal(two.players[0].graveyard.filter(id=>id==='token-mora').length,2)
+})
+
+test('Mora follows the PP addition rule even when current PP is already ten', () => {
+  const s=startedGame()
+  s.players[0].hand=['token-mora']
+  s.players[0].pp=10
+  s.players[0].maxPp=10
+  const result=engine.playCard(s,'player1',0)
+  assert.equal(result.players[0].pp,11)
+  assert.equal(result.players[0].maxPp,10)
+})
+
+test('Golden House cannot be played without enough PP and does not require targets', () => {
+  const s=startedGame()
+  s.players[0].hand=['C122']
+  s.players[0].pp=2
+  assert.equal(engine.canPlayCard(s,0),false)
+  assert.strictEqual(engine.playCard(s,'player1',0),s)
+  s.players[0].pp=3
+  assert.equal(engine.canPlayCard(s,0),true)
+  assert.equal(engine.playCard(s,'player1',0).players[0].hand.filter(x=>x==='token-mora').length,2)
 })
