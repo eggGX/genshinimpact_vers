@@ -60,7 +60,7 @@ export function CrestIcons({ crests = [], ownerName, placement = 'below' }: Prop
         if (!entry) return <span key={`empty-${index}`}
           className="crest-empty-slot" aria-label={`空きクレスト枠 ${index + 1}`} />
         const { crest, card, name, key } = entry
-        const tooltip = `${name}：残り${crest.turnsRemaining}ターン`
+        const tooltip = crest.turnsRemaining < 0 ? `${name}：期限なし` : `${name}：残り${crest.turnsRemaining}ターン`
         return <button
           type="button"
           className={`crest-button${active?.key === key ? ' crest-button--selected' : ''}`}
@@ -74,13 +74,13 @@ export function CrestIcons({ crests = [], ownerName, placement = 'below' }: Prop
           onClick={() => setSelected(current => current === key ? null : key)}
         >
           <CrestEmblem id={crest.id} element={card?.element ?? 'none'} />
-          <span className="crest-turn-count" aria-hidden="true">{crest.turnsRemaining}</span>
+          <span className="crest-turn-count" aria-hidden="true">{crest.turnsRemaining < 0 ? '∞' : crest.turnsRemaining}</span>
         </button>
       })}
     </div>
     {active && <div className="crest-detail" role="status">
       <span className="crest-detail-name">{active.name}</span>
-      <span className="crest-detail-turns">残り{active.crest.turnsRemaining}ターン</span>
+      <span className="crest-detail-turns">{active.crest.turnsRemaining < 0 ? '期限なし' : `残り${active.crest.turnsRemaining}ターン`}</span>
       <p>{getCrestEffect(active.card?.description)}</p>
       {active.crest.id === 'C010' && <div className="crest-used-elements">
         発動済み：{active.crest.usedElements.length
