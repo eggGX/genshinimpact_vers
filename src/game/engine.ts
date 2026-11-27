@@ -22,7 +22,7 @@ import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, den
 import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
-import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd } from './neutralRules'
+import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd, resolveGrantedRevival } from './neutralRules'
 import { absorbDamage, restoreInherentAura, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 
 /** Resolve temporary elemental infusions before the card's printed normal attack element. */
@@ -172,7 +172,7 @@ export function confirmMulligan(
  */
 /** Targeted friendly fanfares select existing allies only, never the summoned follower. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030', 'C116'].includes(card.id)
+  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030', 'C116', 'C117'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
@@ -206,6 +206,7 @@ export function canPlayCard(
   if (owner.pp < card.cost) return false
   // C030 must have a living allied follower to receive its on-attack effect.
   if (card.id === 'C030' && !owner.field.some(f => f.health > 0)) return false
+  if (card.id === 'C117' && !owner.field.some(f => f.health > 0)) return false
   if (card.id === 'C116' &&
       !owner.field.some(f => f.health > 0) &&
       !enemy.field.some(f => f.health > 0 &&
@@ -291,6 +292,7 @@ function resolveDeaths(state: GameState): GameState {
       result = electroDestroy(result, ownerId, follower)
       result = resolveAnemoDestroy(result, ownerId, follower)
       result = dendroDestroy(result, ownerId, follower)
+      result = resolveGrantedRevival(result, ownerId, follower)
       // Keep each Last Word distinct, including chained damage and destruction.
       result = captureFrame(result, `${card?.name ?? follower.cardId}：ラストワード解決`)
     }
@@ -409,7 +411,7 @@ export function playCard(
     } else if (targetId) {
       return state
     }
-  } else if (card.id === 'C030') {
+  } else if (card.id === 'C030' || card.id === 'C117') {
     // The spell targets an existing ally only; 'self' is reserved for fanfares.
     if (!targetId || targetId === 'self' ||
         !player.field.some(f => f.instanceId === targetId && f.health > 0)) return state
