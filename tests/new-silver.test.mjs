@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,119)
-  assert.equal(getDeckCardPool().length,119)
+  assert.equal(productionCards.length,120)
+  assert.equal(getDeckCardPool().length,120)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -314,4 +314,41 @@ test('C119 does not buff the opposing field and is safe with an empty allied boa
   s=engine.endTurn(s)
   assert.equal(s.players[1].field[0].health,2)
   assert.equal(s.players[0].amulets[0].turnsRemaining,1)
+})
+
+test('C120 is the playable 2 PP electro silver energy spell with consistent wording', () => {
+  const card=engine.getCard('C120')
+  assert.equal(card.name,'一心浄土')
+  assert.deepEqual([card.type,card.element,card.rarity,card.cost],['spell','electro','silver',2])
+  assert.equal(card.description,'自分の元素エネルギーを2獲得する。')
+  assert.equal(getDeckCardPool().filter(c=>c.id==='C120').length,1)
+  assert.equal(validateProductionCards(productionCards).ready,true)
+})
+
+test('C120 grants two energy, clamps at five, and spends exactly 2 PP', () => {
+  for(const [starting,expected] of [[0,2],[3,5],[4,5],[5,5]]) {
+    const s=startedGame()
+    s.players[0].hand=['C120']
+    s.players[0].pp=3
+    s.players[0].energy=starting
+    s.players[1].energy=1
+    assert.equal(engine.canPlayCard(s,0),true)
+    const next=engine.playCard(s,'player1',0)
+    assert.equal(next.players[0].energy,expected)
+    assert.equal(next.players[0].pp,1)
+    assert.deepEqual(next.players[0].hand,[])
+    assert.ok(next.players[0].graveyard.includes('C120'))
+    assert.equal(next.players[1].energy,1)
+  }
+})
+
+test('C120 cannot be played without enough PP and requires no board target', () => {
+  const s=startedGame()
+  s.players[0].hand=['C120']
+  s.players[0].pp=1
+  assert.equal(engine.canPlayCard(s,0),false)
+  assert.strictEqual(engine.playCard(s,'player1',0),s)
+  s.players[0].pp=2
+  assert.equal(engine.canPlayCard(s,0),true)
+  assert.equal(engine.playCard(s,'player1',0).players[0].energy,2)
 })
