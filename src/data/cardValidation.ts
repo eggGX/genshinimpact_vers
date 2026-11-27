@@ -13,9 +13,9 @@ export const PLANNED_CARD_COUNTS: Record<ElementType, Record<Rarity, number>> = 
   electro: { bronze: 4, silver: 5, gold: 4, legendary: 3 },
   anemo:   { bronze: 4, silver: 5, gold: 4, legendary: 3 },
   geo:     { bronze: 4, silver: 5, gold: 4, legendary: 3 },
-  dendro:  { bronze: 4, silver: 4, gold: 4, legendary: 3 },
+  dendro:  { bronze: 4, silver: 5, gold: 4, legendary: 3 },
 }
-export const PLANNED_TOTAL = 122
+export const PLANNED_TOTAL = 123
 
 export interface CardSlotStatus {
   element: ElementType
