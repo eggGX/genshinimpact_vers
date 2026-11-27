@@ -1334,6 +1334,7 @@ function App({ online }: { online?: {
     const description = card?.description ?? ''
     const lastWord = !keywords.includes('no_last_word') && (
       keywords.includes('lastword') ||
+      keywords.includes('revive_same_name_lastword') ||
       keywords.includes('last_word') ||
       keywords.some(keyword => /(?:^on_destroy(?:_|$)|_on_destroy(?:_|$))/.test(keyword)) ||
       card?.effects?.some(effect => effect.trigger === 'on_destroy') ||
@@ -1421,7 +1422,7 @@ function App({ online }: { online?: {
       : undefined
     const isFriendlyTarget = !isOpponent &&
       ((selectedHandIndex !== null &&
-        ['C021', 'C044', 'C066', 'C081', 'C030', 'C116'].includes(friendlyPlayId ?? '') &&
+        ['C021', 'C044', 'C066', 'C081', 'C030', 'C116', 'C117'].includes(friendlyPlayId ?? '') &&
         (friendlyPlayId !== 'C066' || card?.element === 'electro') &&
         (friendlyPlayId !== 'C081' || card?.element === 'anemo')) ||
        (selectedAbility?.kind === 'skill' && friendlySkillId === 'C066' &&
