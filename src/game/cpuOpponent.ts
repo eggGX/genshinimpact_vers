@@ -72,7 +72,7 @@ export function cpuCandidates(state: GameState): CpuAction[] {
   const guard = isGuarded(enemy)
   for (const follower of owner.field) {
     if (!canFollowerAttack(follower)) continue
-    if ((!guard || follower.keywords.includes('plunge_attack')) &&
+    if ((!guard || follower.keywords.includes('plunge_attack') || follower.keywords.includes('ignore_guard')) &&
         (!follower.keywords.includes('rush_only') || follower.keywords.includes('storm'))) {
       choices.push({action:{ type:'attackLeader', attackerId:follower.instanceId },
         score: physicalDamage(follower) >= enemy.leaderHealth ? 10000 : 12 + follower.attack * 1.9})
@@ -117,6 +117,10 @@ export function cpuCandidates(state: GameState): CpuAction[] {
         ally ? -strength(f)*1.5 : targetPriority(f)*1.5))
     } else if (card.id === 'C117') {
       owner.field.filter(f=>f.health>0).forEach(f=>append(f.instanceId,strength(f)*.5))
+    } else if (card.id === 'C121') {
+      owner.field.filter(f=>f.health>0 && !f.keywords.includes('ignore_guard'))
+        .forEach(f=>append(f.instanceId,
+          isGuarded(enemy) ? 8 + strength(f)*.3 : -5))
     } else if (needsPlayTarget(card)) {
       if (enemies.length) {
         enemies.forEach(target => append(target.instanceId, targetPriority(target) * .4))
