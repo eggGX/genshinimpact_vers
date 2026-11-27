@@ -515,7 +515,7 @@ test('オーラのフォロワーは通常攻撃対象には選べる', () => {
   assert.equal(next.players[1].field[0].health, 4)
 })
 
-test('カード登録台帳は正式115枚・トークン24種だけを含む',async()=>{
+test('カード登録台帳は正式122枚・トークン25種を含む',async()=>{
   const { getCard,getAllCards,cardRegistry }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
