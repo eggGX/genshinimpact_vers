@@ -17,7 +17,13 @@ const RARITY_LABELS: Record<Rarity, string> = {
   bronze: 'ブロンズ', silver: 'シルバー', gold: 'ゴールド', legendary: 'レジェンド',
 }
 
-const ALL_CARDS = getAllCards()
+// Consistent catalogue order: element, rarity, cost ascending, then stable ID.
+const ALL_CARDS = getAllCards().sort((a,b) =>
+  ELEMENT_ORDER.indexOf(a.element) - ELEMENT_ORDER.indexOf(b.element) ||
+  RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) ||
+  a.cost - b.cost ||
+  a.id.localeCompare(b.id)
+)
 const ORIGIN_IDS = new Set(productionCards.map(card => card.id))
 const INITIAL_CARDS = 32
 const MORE_CARDS = 24
@@ -103,7 +109,7 @@ export function CardLibrary({ onBack }: { onBack: () => void }) {
       <header className="library-header">
         <div>
           <h1>カード一覧</h1>
-          <p>正式カード115枚とトークン24種を確認できます。</p>
+          <p>正式カード{productionCards.length}枚とトークン{ALL_CARDS.filter(card => card.token).length}種を確認できます。</p>
         </div>
         <button type="button" onClick={onBack}>対戦画面へ戻る</button>
       </header>
