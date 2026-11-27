@@ -100,7 +100,7 @@ test('catalogue explicitly orders by element, rarity, then cost and stable ID', 
 
 test('C117 is a playable 2 PP pyro silver with normalized Last Word wording', () => {
   const card = engine.getCard('C117')
-  assert.equal(card.name,'反魂の歌')
+  assert.equal(card.name,'反魂の詩')
   assert.equal(card.type,'spell')
   assert.equal(card.rarity,'silver')
   assert.equal(card.element,'pyro')
