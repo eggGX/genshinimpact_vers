@@ -19,7 +19,7 @@ import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advanc
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack, resolveKresnikFurnacePlay, resolveKresnikFurnaceTurnEnd } from './cryoAdvancedRules'
 
 import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd, dendroLegendarySkill, dendroLegendaryBurst, dendroLegendaryAttack, dendroLumidouceTurnEnd } from './dendroRules'
-import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack, resolveCardinalPlay, resolveCardinalTurnEnd } from './hydroAdvancedRules'
+import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack, resolveCardinalPlay, resolveCardinalTurnEnd, resolveNilouPlay, resolveNilouSkill, resolveNilouBurst, resolveNilouEngage, resolveBountifulCoreDestroy } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd, resolveGrantedRevival } from './neutralRules'
@@ -289,6 +289,7 @@ function resolveDeaths(state: GameState): GameState {
       result = resolveNeutralDestroy(result, ownerId, follower)
       result = resolvePyroDestroy(result, ownerId, follower)
       result = resolveHydroAdvancedDestroy(result, ownerId, follower)
+      if (follower.cardId === 'token-bountiful-core') result = resolveBountifulCoreDestroy(result, ownerId)
       result = cryoDestroy(result, ownerId, follower, resolveDeaths)
       result = electroDestroy(result, ownerId, follower)
       result = resolveAnemoDestroy(result, ownerId, follower)
@@ -539,6 +540,7 @@ export function playCard(
     result = resolveNeutralPlay(result, playerId, card)
     result = resolvePyroGoldPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = resolveHydroAdvancedPlay(result, playerId, card.id)
+    if (card.id === 'C124') result = resolveNilouPlay(result, playerId)
     result = resolveCryoPlay(result, playerId, card.id)
     result = cryoPlay(result, playerId, card.id, follower.instanceId, targetId)
     result = electroPlay(result, playerId, card.id)
@@ -677,6 +679,7 @@ export function activateAbility(
   }
   if (result.winnerId === null && kind === 'skill') {
     result = resolveHydroAdvancedSkill(result, owner.id, followerId, card.id)
+    if (card.id === 'C124') result = resolveNilouSkill(result, owner.id, followerId, resolveDeaths)
     result = cryoSkill(result, owner.id, card.id, followerId, targetId, resolveDeaths)
     result = advancedElectroSkill(result, owner.id, followerId, card.id, targetId, resolveDeaths)
     result = resolveAnemoSkill(result, owner.id, followerId, card.id)
@@ -689,6 +692,7 @@ export function activateAbility(
   if (result.winnerId === null && kind === 'burst') {
     if (card.id === 'C024') result = transformLyney(result, index, followerId)
     result = resolveHydroAdvancedBurst(result, owner.id, followerId, card.id, resolveDeaths)
+    if (card.id === 'C124') result = resolveNilouBurst(result, owner.id, resolveDeaths)
     result = cryoBurst(result, owner.id, card.id, resolveDeaths)
     result = advancedElectroBurst(result, owner.id, followerId, card.id, resolveDeaths)
     result = advancedAnemoBurst(result, owner.id, card.id, followerId, resolveDeaths)
@@ -751,6 +755,7 @@ export function attackFollower(
 
   state = geoEngage(state, owner.id, attackerId, targetId)
   state = catBoxEngage(state, owner.id, attackerId, targetId, resolveDeaths)
+  state = resolveNilouEngage(state, attackerId, targetId, resolveDeaths)
   if (state.winnerId !== null) return state
   owner = state.players[index]
   enemy = state.players[enemyIndex]
