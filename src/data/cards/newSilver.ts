@@ -22,4 +22,15 @@ export const newSilverCards: Card[] = [
     cost: 2,
     description: '自分の場のフォロワー1枚を選ぶ。それは「【ラストワード】これと同名のフォロワー1体を自分の場に出す。」をもつ。',
   },
+  {
+    id: 'C118',
+    implementationStatus: 'playable',
+    name: '諭示裁定カーディナル',
+    type: 'amulet',
+    rarity: 'silver',
+    element: 'hydro',
+    cost: 4,
+    region: ['フォンテーヌ'],
+    description: '【カウントダウン_2】\n【ファンファーレ】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。\n【ラストワード】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。',
+  },
 ]
