@@ -19,7 +19,7 @@ import { advancedElectroSpell, advancedElectroPlay, advancedElectroSkill, advanc
 import { cryoPlay, cryoSpell, cryoSkill, cryoBurst, cryoTurnEnd, cryoCrestsEnd, cryoDestroy, cryoAttack } from './cryoAdvancedRules'
 
 import { dendroSpell, dendroDestroy, dendroAmuletPlay, dendroAmuletsTurnEnd, dendroSilverSpell, dendroTokenTurnEnd, dendroColleiAmberTurnEnd, dendroPlay, dendroAttack, dendroGoldPlay, dendroGoldSkill, dendroGoldTurnEnd, dendroLegendarySkill, dendroLegendaryBurst, dendroLegendaryAttack, dendroLumidouceTurnEnd } from './dendroRules'
-import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack } from './hydroAdvancedRules'
+import { resolveHydroAdvancedPlay, resolveHydroAdvancedSkill, resolveHydroAdvancedBurst, resolveHydroAdvancedTurnEnd, resolveHydroPermanentsTurnEnd, resolveHydroAdvancedDestroy, resolveHydroAdvancedAttack, resolveCardinalPlay, resolveCardinalTurnEnd } from './hydroAdvancedRules'
 import { resolveDilucSkill, resolveDilucBurst, transformLyney, resolveLegendaryAttack, effectiveAttack, resolveLegendaryTurnStart } from './pyroLegendaryRules'
 import { resolvePyroDestroy, resolvePyroSpell, resolvePyroAmuletPlay, resolvePyroTurnEnd, resolvePyroAttackAfter, resolvePyroGoldPlay, resolvePyroGoldSkill, resolvePyroGoldTurnEnd } from './pyroRules'
 import { applyNeutralAttackBuff, isGuarded, resolveNeutralDestroy, resolveNeutralPlay, resolveNeutralTurnEnd, resolveGrantedRevival } from './neutralRules'
@@ -470,6 +470,7 @@ export function playCard(
       hand: player.hand.filter((_, i) => i !== handIndex),
     }
     const next = { ...state, players }
+    if (card.id === 'C118') return resolveCardinalPlay(next, playerId, resolveDeaths)
     if (card.id === 'C016') return resolvePyroAmuletPlay(next, playerId)
     if (card.id === 'C072') return resolveAnemoAmuletPlay(next, playerId, card.id)
     if (card.id === 'C076') return advancedAnemoAmuletPlay(next, playerId, card.id)
@@ -990,6 +991,7 @@ export function endTurn(state: GameState): GameState {
   if (result.winnerId !== null) return result
 
   result = resolveHydroPermanentsTurnEnd(result, currentId, resolveDeaths)
+  result = resolveCardinalTurnEnd(result, currentId, resolveDeaths)
   result = captureFrame(result, '水元素・アミュレットのターン終了時効果')
   if (result.winnerId !== null) return result
 
