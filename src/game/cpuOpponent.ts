@@ -108,7 +108,14 @@ export function cpuCandidates(state: GameState): CpuAction[] {
       choices.push({action:{type:'play',handIndex,targetId,cardId:card.id},
         score:base + bonus})
     }
-    if (needsPlayTarget(card)) {
+    if (card.id === 'C116') {
+      const targets = [
+        ...owner.field.filter(f=>f.health>0).map(f=>({f,ally:true})),
+        ...enemies.map(f=>({f,ally:false})),
+      ]
+      targets.forEach(({f,ally})=>append(f.instanceId,
+        ally ? -strength(f)*1.5 : targetPriority(f)*1.5))
+    } else if (needsPlayTarget(card)) {
       if (enemies.length) {
         enemies.forEach(target => append(target.instanceId, targetPriority(target) * .4))
       } else if (card.type !== 'spell') append()
