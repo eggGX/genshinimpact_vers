@@ -172,11 +172,11 @@ export function confirmMulligan(
  */
 /** Targeted friendly fanfares select existing allies only, never the summoned follower. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030'].includes(card.id)
+  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030', 'C116'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
-  return card.id === 'C018' || (card.effects ?? []).some(
+  return card.id === 'C018' || card.id === 'C116' || (card.effects ?? []).some(
     effect =>
       effect.trigger === 'on_play' &&
       effect.target === 'selected_enemy_follower'
@@ -206,12 +206,16 @@ export function canPlayCard(
   if (owner.pp < card.cost) return false
   // C030 must have a living allied follower to receive its on-attack effect.
   if (card.id === 'C030' && !owner.field.some(f => f.health > 0)) return false
+  if (card.id === 'C116' &&
+      !owner.field.some(f => f.health > 0) &&
+      !enemy.field.some(f => f.health > 0 &&
+        !f.keywords.includes('aura') && !f.keywords.includes('stealth'))) return false
   if (card.type !== 'spell' && owner.field.length + (owner.amulets?.length ?? 0) >= MAX_FIELD_SIZE) return false
 
   // Targetless fanfares are optional: the follower can still enter the field.
   // Spells whose main effect requires an enemy target remain unplayable without one.
   if (
-    card.type === 'spell' && needsPlayTarget(card) &&
+    card.type === 'spell' && card.id !== 'C116' && needsPlayTarget(card) &&
     !enemy.field.some(f => f.health > 0 && !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
   ) {
     return false
@@ -383,7 +387,13 @@ export function playCard(
   const cardId = player.hand[handIndex]
   const card = getCard(cardId)!
 
-  if (card.id === 'C066' || card.id === 'C081') {
+  if (card.id === 'C116') {
+    const owned = player.field.some(f => f.instanceId === targetId && f.health > 0)
+    const enemy = state.players[1 - index]
+    const opposed = enemy.field.some(f => f.instanceId === targetId && f.health > 0 &&
+      !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
+    if (!targetId || (!owned && !opposed)) return state
+  } else if (card.id === 'C066' || card.id === 'C081') {
     const choices = player.field.filter(f => f.health > 0 &&
       getCard(f.cardId)?.element === (card.id === 'C081' ? 'anemo' : 'electro'))
     if (choices.length && (!targetId ||
@@ -409,7 +419,7 @@ export function playCard(
     return state
   }
 
-  if (needsPlayTarget(card)) {
+  if (needsPlayTarget(card) && card.id !== 'C116') {
     const enemy = state.players[1 - index]
     const validTargets = enemy.field.filter(f => f.health > 0 &&
       !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
@@ -435,7 +445,7 @@ export function playCard(
     next = resolveEffects(next, playerId, card.effects ?? [], 'on_play',
       targetId, undefined, resolveDeaths)
     if (next.winnerId !== null) return next
-    next = resolveNeutralPlay(next, playerId, card)
+    next = resolveNeutralPlay(next, playerId, card, targetId)
     if (next.winnerId !== null) return next
     next = resolvePyroSpell(next, playerId, card.id, targetId, resolveDeaths)
     next = resolveHydroSpell(next, playerId, card.id)
