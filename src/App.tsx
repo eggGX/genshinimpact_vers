@@ -1066,8 +1066,21 @@ function App({ online }: { online?: {
   // dropping the card onto a follower or leader.
   const handlePlayCard = (handIndex: number, fromDrag = false) => {
     setExpandedHandIndex(null)
-    setHandOpen(false)
     if (!onlineCanAct) return
+    if (selectedHandIndex !== null && currentPlayer.hand[selectedHandIndex] === 'C123') {
+      if (selectedHandIndex === handIndex) {
+        resetSelection()
+        return
+      }
+      const sourceIndex = selectedHandIndex
+      if (online) onlineSend({type:'play',handIndex:sourceIndex,targetId:`hand:${handIndex}`})
+      else animateAction(previous =>
+        playCard(previous, previous.currentPlayerId, sourceIndex, `hand:${handIndex}`),
+        '夢境の力：手札のカードを複製', 'C123')
+      resetSelection()
+      return
+    }
+    setHandOpen(false)
     const card = getCard(currentPlayer.hand[handIndex])
     if (!card) return
 
@@ -1086,6 +1099,15 @@ function App({ online }: { online?: {
       return
     }
     if (!canPlayCard(game, handIndex)) return
+    if (card.id === 'C123') {
+      setSelectedHandIndex(handIndex)
+      setSelectedAttackerId(null)
+      setSelectedAbility(null)
+      setExpandedHandIndex(null)
+      setHandOpen(true)
+      setInspectedCard(null)
+      return
+    }
     const hasEnemyTarget = opponent.field.some(f => f.health > 0 &&
       !f.keywords.includes('aura') && !f.keywords.includes('stealth'))
     if (!noBuffAlly &&
@@ -1116,6 +1138,7 @@ function App({ online }: { online?: {
   const startHandDrag = (event: ReactPointerEvent<HTMLButtonElement>, handIndex: number) => {
     // Farka's hand-card selection is an ability cost, not a normal card play.
     if (!onlineCanAct || !canPlayCard(game, handIndex) ||
+        (selectedHandIndex !== null && currentPlayer.hand[selectedHandIndex] === 'C123') ||
         (selectedAbility?.kind === 'skill' &&
           currentPlayer.field.some(f => f.instanceId === selectedAbility.followerId && f.cardId === 'C083')) ||
         (event.pointerType === 'mouse' && event.button !== 0)) return
@@ -2352,7 +2375,9 @@ function App({ online }: { online?: {
               ? 'ディオナのスキル：2体目の相手フォロワーを選択してください'
               : '元素スキル・元素爆発の対象となる相手フォロワーを選択してください'
           : selectedHandIndex !== null
-            ? ['C021', 'C044', 'C066', 'C081', 'C030'].includes(currentPlayer.hand[selectedHandIndex])
+            ? currentPlayer.hand[selectedHandIndex] === 'C123'
+              ? '夢境の力：複製したい手札のカードを選択してください'
+              : ['C021', 'C044', 'C066', 'C081', 'C030'].includes(currentPlayer.hand[selectedHandIndex])
               ? currentPlayer.hand[selectedHandIndex] === 'C081'
                 ? 'ファルザン：他の味方風元素フォロワーを選択してください'
                 : currentPlayer.hand[selectedHandIndex] === 'C066'
@@ -2388,7 +2413,11 @@ function App({ online }: { online?: {
 
           const varkaChoice = selectedAbility?.kind === 'skill' &&
             currentPlayer.field.some(f => f.instanceId === selectedAbility.followerId && f.cardId === 'C083')
-          const playable = varkaChoice
+          const copyChoice = selectedHandIndex !== null &&
+            currentPlayer.hand[selectedHandIndex] === 'C123'
+          const playable = copyChoice
+            ? onlineCanAct
+            : varkaChoice
             ? ['pyro','hydro','cryo','electro'].includes(card.element)
             : onlineCanAct && canPlayCard(game, index)
           const selected = selectedHandIndex === index
@@ -2418,6 +2447,10 @@ function App({ online }: { online?: {
               onBlur={() => setInspectedCard(null)}
               onClick={() => {
                 if (suppressHandDragClick.current) return
+                if (copyChoice) {
+                  handlePlayCard(index)
+                  return
+                }
                 if (!handOpen) {
                   setHandOpen(true)
                   setExpandedHandIndex(null)
