@@ -1,4 +1,5 @@
 import { grantUniqueCrest } from './crestUtils'
+import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { addLeaderShield } from './leaderShield'
 import { grantShield, resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
@@ -160,6 +161,51 @@ export function cryoTurnEnd(
     return edit(result, ownerId, p => addLeaderShield(p, 1))
   }
   return state
+}
+
+let nextKresnikFurnaceId = 1
+
+/** C119: a two-turn countdown, ticking on each of its owner's turn ends.
+ * Buffs both current and maximum health; it still activates on its last tick. */
+export function resolveKresnikFurnacePlay(state: GameState, ownerId: string): GameState {
+  if (state.winnerId !== null) return state
+  return edit(state, ownerId, player => ({
+    ...player,
+    amulets: [...(player.amulets ?? []), {
+      instanceId: `kresnik-furnace-${nextKresnikFurnaceId++}`,
+      cardId: 'C119',
+      turnsRemaining: 2,
+    }],
+  }))
+}
+
+export function resolveKresnikFurnaceTurnEnd(state: GameState, ownerId: string): GameState {
+  if (state.winnerId !== null) return state
+  const ids = (state.players.find(player => player.id === ownerId)?.amulets ?? [])
+    .filter(amulet => amulet.cardId === 'C119')
+    .map(amulet => amulet.instanceId)
+  let result = state
+  for (const id of ids) {
+    if (result.winnerId !== null) break
+    const amulet = result.players.find(player => player.id === ownerId)?.amulets
+      ?.find(item => item.instanceId === id)
+    if (!amulet) continue
+    result = edit(result, ownerId, player => ({
+      ...player,
+      field: player.field.map(follower => follower.health > 0 ? {
+        ...follower,
+        health: follower.health + 2,
+        maxHealth: follower.maxHealth + 2,
+      } : follower),
+      amulets: (player.amulets ?? []).flatMap(item => item.instanceId !== id
+        ? [item]
+        : item.turnsRemaining <= 1 ? [] : [{
+          ...item, turnsRemaining: item.turnsRemaining - 1,
+        }]),
+    }))
+    result = captureFrame(result, 'クルースニクの炉：ターン終了時効果')
+  }
+  return result
 }
 
 export function cryoCrestsEnd(state: GameState, ownerId: string, deaths: DeathResolver): GameState {
