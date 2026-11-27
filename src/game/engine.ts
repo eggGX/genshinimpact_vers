@@ -393,7 +393,7 @@ export function playCard(
   if (card.id === 'C123') {
     // Hand indices refer to the original hand, before the spell is consumed.
     // The spell itself is not eligible to be copied.
-    const match = /^hand:(\\d+)$/.exec(targetId ?? '')
+    const match = /^hand:(\d+)$/.exec(targetId ?? '')
     const choiceIndex = match ? Number(match[1]) : -1
     if (choiceIndex < 0 || choiceIndex >= player.hand.length ||
         choiceIndex === handIndex || !getCard(player.hand[choiceIndex])) return state
