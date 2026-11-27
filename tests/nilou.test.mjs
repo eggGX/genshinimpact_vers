@@ -158,3 +158,32 @@ test('Nilou encounter applies Hydro 0 before the exchange of normal attack damag
     assert.equal(attacked.players[1].graveyard.includes('token-bountiful-core'),true)
   } finally {Math.random=oldRandom}
 })
+
+test('Nilou crest survives turn ends and remains after Nilou leaves the field', () => {
+  let s=playNilou()
+  s.players[0].field=[]
+  assert.equal(s.players[0].crests?.some(c=>c.id==='C124'),true)
+  s=engine.endTurn(s)
+  s=engine.endTurn(s)
+  assert.equal(s.players[0].crests?.find(c=>c.id==='C124')?.turnsRemaining,-1)
+})
+
+test('Bountiful Core Last Word deals three Dendro damage to an eligible own follower', () => {
+  const oldRandom=Math.random
+  try {
+    Math.random=()=>0.99
+    let s=playNilou()
+    s.players[0].pp=2
+    const nilou=s.players[0].field[0]
+    follower(s,1,'C001',{health:9,maxHealth:9,aura:[{element:'dendro'}]})
+    const ally=follower(s,1,'C001',{health:6,maxHealth:6})
+    // The three Hydro hits can choose between the two followers; set 0
+    // to select the first one, while choosing a follower for the core.
+    let n=0
+    Math.random=()=>{n++;return n===1?0:0.99}
+    s=engine.activateAbility(s,nilou.instanceId,'skill')
+    assert.equal(s.players[1].leaderHealth,20)
+    assert.ok(s.players[1].field.find(f=>f.instanceId===ally.instanceId)?.health <= 6)
+    assert.ok(s.players[1].graveyard.includes('token-bountiful-core'))
+  } finally {Math.random=oldRandom}
+})
