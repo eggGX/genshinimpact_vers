@@ -172,7 +172,7 @@ export function confirmMulligan(
  */
 /** Targeted friendly fanfares select existing allies only, never the summoned follower. */
 export function needsFriendlyPlayTarget(card: Card): boolean {
-  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030', 'C116', 'C117'].includes(card.id)
+  return ['C021', 'C044', 'C066', 'C081', 'C091', 'C030', 'C116', 'C117', 'C121'].includes(card.id)
 }
 
 export function needsPlayTarget(card: Card): boolean {
@@ -206,7 +206,7 @@ export function canPlayCard(
   if (owner.pp < card.cost) return false
   // C030 must have a living allied follower to receive its on-attack effect.
   if (card.id === 'C030' && !owner.field.some(f => f.health > 0)) return false
-  if (card.id === 'C117' && !owner.field.some(f => f.health > 0)) return false
+  if ((card.id === 'C117' || card.id === 'C121') && !owner.field.some(f => f.health > 0)) return false
   if (card.id === 'C116' &&
       !owner.field.some(f => f.health > 0) &&
       !enemy.field.some(f => f.health > 0 &&
@@ -411,7 +411,7 @@ export function playCard(
     } else if (targetId) {
       return state
     }
-  } else if (card.id === 'C030' || card.id === 'C117') {
+  } else if (card.id === 'C030' || card.id === 'C117' || card.id === 'C121') {
     // The spell targets an existing ally only; 'self' is reserved for fanfares.
     if (!targetId || targetId === 'self' ||
         !player.field.some(f => f.instanceId === targetId && f.health > 0)) return state
@@ -454,7 +454,7 @@ export function playCard(
     next = cryoSpell(next, playerId, card.id, resolveDeaths)
     next = electroSpell(next, playerId, card.id)
     next = advancedElectroSpell(next, playerId, card.id, resolveDeaths)
-    next = advancedAnemoSpell(next, playerId, card.id)
+    next = advancedAnemoSpell(next, playerId, card.id, targetId)
     next = geoSpell(next, playerId, card.id, resolveDeaths, targetId)
     next = dendroSpell(next, playerId, card.id)
     next = dendroSilverSpell(next, playerId, card.id, resolveDeaths)
@@ -865,7 +865,8 @@ export function attackLeader(
 
   if (!attacker || !canFollowerAttack(attacker) ||
       (attacker.keywords.includes('rush_only') && !attacker.keywords.includes('storm')) ||
-      (isGuarded(enemy) && !attacker.keywords.includes('plunge_attack'))) {
+      (isGuarded(enemy) && !attacker.keywords.includes('plunge_attack') &&
+        !attacker.keywords.includes('ignore_guard'))) {
     return state
   }
 
