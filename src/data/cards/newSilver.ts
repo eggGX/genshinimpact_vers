@@ -33,4 +33,15 @@ export const newSilverCards: Card[] = [
     region: ['フォンテーヌ'],
     description: '【カウントダウン_2】\n【ファンファーレ】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。\n【ラストワード】相手の場の攻撃力が最大のフォロワーからランダムに1枚を破壊する。',
   },
+  {
+    id: 'C119',
+    implementationStatus: 'playable',
+    name: 'クルースニクの炉',
+    type: 'amulet',
+    rarity: 'silver',
+    element: 'cryo',
+    cost: 3,
+    region: ['スネージナヤ'],
+    description: '【カウントダウン_2】\n自分のターン終了時、自分の場のフォロワーすべてを+0/+2する。',
+  },
 ]
