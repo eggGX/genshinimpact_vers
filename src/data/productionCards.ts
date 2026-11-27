@@ -7,10 +7,11 @@ import { electroCards } from './cards/electro'
 import { anemoCards } from './cards/anemo'
 import { geoCards } from './cards/geo'
 import { dendroCards } from './cards/dendro'
+import { newSilverCards } from './cards/newSilver'
 
 /**
  * 正式カードの登録先。元素別ファイルに定義するだけでゲームに反映されます。
- * 確定115枚の正式カードのみを登録。テスト専用カードは持ちません。
+ * 初期115枚を維持し、追加カードを末尾に登録。テスト専用カードは持ちません。
  */
 export const productionCards: Card[] = [
   ...neutralCards,
@@ -21,4 +22,5 @@ export const productionCards: Card[] = [
   ...anemoCards,
   ...geoCards,
   ...dendroCards,
+  ...newSilverCards,
 ]
