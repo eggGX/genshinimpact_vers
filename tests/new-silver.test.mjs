@@ -386,7 +386,7 @@ test('C121 bypasses Guard when attacking enemy followers, not combat readiness',
   s.players[0].hand=['C121']
   s.players[0].pp=2
   const ally=put(s,0,'C001')
-  ally.attack=2; ally.health=5; ally.maxHealth=5
+  ally.attack=2; ally.health=5; ally.maxHealth=5; ally.hasAttacked=false
   const guard=put(s,1,'C001',['guard'])
   guard.attack=1; guard.health=5; guard.maxHealth=5
   const enemy=put(s,1,'C011')
@@ -408,6 +408,7 @@ test('C121 bypasses Guard to attack leader, but does not grant Storm or Rush', (
   ally.attack=3
   ally.health=5
   ally.maxHealth=5
+  ally.hasAttacked=false
   put(s,1,'C001',['guard'])
   const blocked=engine.attackLeader(s,ally.instanceId)
   assert.strictEqual(blocked,s)
