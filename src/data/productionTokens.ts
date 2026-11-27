@@ -269,6 +269,6 @@ export const productionTokens: Card[] = [
     health: 1,
     token: true,
     keywords: ['cannot_attack'],
-    description: 'このフォロワーが場に出たとき、このフォロワーを破壊する。\n【ラストワード】自分のリーダーに2ダメージ。',
+    description: 'このフォロワーが場に出たとき、このフォロワーを破壊する。\n【ラストワード】自分のリーダーに草元素2ダメージ。',
   },
 ]
