@@ -2,6 +2,7 @@ import { grantUniqueCrest } from './crestUtils'
 import { captureFrame } from './presentation'
 import type { Follower, GameState, Player } from './types'
 import { summonFollowers } from './neutralRules'
+import { getCard } from '../data/cardRegistry'
 import { healLeader } from './leaderShield'
 import { resolveElementalDamage, resolveReactionConsequence, resolveLeaderElementalHit } from './elemental'
 
@@ -61,6 +62,112 @@ function hitAllHydro(
     result = resolveDeaths(result)
   }
   return result
+}
+
+/** C124: deck contents are checked at fanfare resolution, not at deck construction. */
+export function resolveNilouPlay(state: GameState, ownerId: string): GameState {
+  if (state.winnerId !== null) return state
+  const owner = state.players.find(p => p.id === ownerId)
+  if (!owner || !owner.deck.every(id => {
+    const element = getCard(id)?.element
+    return element === 'none' || element === 'hydro' || element === 'dendro'
+  })) return state
+  return updatePlayer(state, ownerId, p => ({
+    ...p,
+    crests: (p.crests ?? []).some(crest => crest.id === 'C124') ||
+      (p.crests ?? []).length >= 5
+      ? (p.crests ?? [])
+      : [...(p.crests ?? []), {
+        id: 'C124', turnsRemaining: -1, usedElements: [],
+      }],
+  }))
+}
+
+/** Each individual skill hit is immediately followed by death/Last Word resolution. */
+export function resolveNilouSkill(
+  state: GameState, ownerId: string, sourceId: string,
+  deaths: (state: GameState) => GameState,
+): GameState {
+  const index = state.players.findIndex(p => p.id === ownerId)
+  if (index < 0 || state.winnerId !== null) return state
+  let result = state
+  for (let n = 0; n < 3; n++) {
+    if (result.winnerId !== null) break
+    const candidates = result.players[1 - index].field.filter(f => f.health > 0)
+    if (!candidates.length) break
+    const target = candidates[Math.floor(Math.random() * candidates.length)]
+    result = deaths(hydroFollowerDamage(result, index, target.instanceId, 1))
+    result = captureFrame(result, '七域のダンス：水元素1ダメージ')
+  }
+  return updatePlayer(result, ownerId, p => ({
+    ...p,
+    field: p.field.map(f => f.instanceId === sourceId && f.health > 0
+      ? { ...f, keywords: [...new Set([...f.keywords, 'nilou_engage_hydro'])] } : f),
+  }))
+}
+
+/** Every follower present when the burst begins takes Hydro damage. */
+export function resolveNilouBurst(
+  state: GameState, ownerId: string,
+  deaths: (state: GameState) => GameState,
+): GameState {
+  if (state.winnerId !== null) return state
+  return hitAllHydro(state, ownerId, 2, deaths)
+}
+
+/** The granted encounter ability applies Hydro with 0 damage, allowing reactions.
+ * Resolve on the attacker's and then the defender's side for turn priority. */
+export function resolveNilouEngage(
+  state: GameState, attackerId: string, defenderId: string,
+  deaths: (state: GameState) => GameState,
+): GameState {
+  const activeIndex = state.players.findIndex(p => p.id === state.currentPlayerId)
+  if (activeIndex < 0 || state.winnerId !== null) return state
+  let result = state
+  for (const [sourceIndex, sourceId, targetId] of [
+    [activeIndex, attackerId, defenderId],
+    [1 - activeIndex, defenderId, attackerId],
+  ] as const) {
+    if (result.winnerId !== null) break
+    const source = result.players[sourceIndex].field.find(f => f.instanceId === sourceId && f.health > 0)
+    if (!source?.keywords.includes('nilou_engage_hydro')) continue
+    const affectedIndex = 1 - sourceIndex
+    const target = result.players[affectedIndex].field.find(f => f.instanceId === targetId && f.health > 0)
+    if (!target) continue
+    const outcome = resolveElementalDamage(target, 0, 'hydro')
+    const players = [...result.players] as [Player, Player]
+    const affected = players[affectedIndex]
+    players[affectedIndex] = { ...affected, field: affected.field.map(f =>
+      f.instanceId === targetId ? outcome.follower : f),
+    }
+    result = resolveReactionConsequence({ ...result, players },
+      affectedIndex, targetId, outcome.reaction, outcome.reactedElement, sourceIndex)
+    result = deaths(result)
+    result = captureFrame(result, 'ニィロウ：交戦時水元素付着')
+  }
+  return result
+}
+
+/** The core's self-destruction is handled by the engine's normal death pass.
+ * The Last Word randomly hits its owner or one of their living followers. */
+export function resolveBountifulCoreDestroy(
+  state: GameState, ownerId: string,
+): GameState {
+  if (state.winnerId !== null) return state
+  const index = state.players.findIndex(p => p.id === ownerId)
+  if (index < 0) return state
+  const owner = state.players[index]
+  const living = owner.field.filter(f => f.health > 0)
+  const choice = Math.floor(Math.random() * (living.length + 1))
+  if (choice === 0) return resolveLeaderElementalHit(state, index, 3, 'dendro', 1 - index)
+  const target = living[choice - 1]
+  const outcome = resolveElementalDamage(target, 3, 'dendro')
+  const players = [...state.players] as [Player, Player]
+  players[index] = { ...owner, field: owner.field.map(f =>
+    f.instanceId === target.instanceId ? outcome.follower : f),
+  }
+  return resolveReactionConsequence({ ...state, players }, index, target.instanceId,
+    outcome.reaction, outcome.reactedElement, 1 - index)
 }
 
 /** C118 chooses only among enemies with the greatest current attack.
