@@ -1332,14 +1332,14 @@ function App({ online }: { online?: {
   const followerEmblems = (cardId: string, keywords: readonly string[] = [], triggerActive = false) => {
     const card = getCard(cardId)
     const description = card?.description ?? ''
-    const lastWord = !keywords.includes('no_last_word') && (
+    const lastWord = keywords.includes('revive_same_name_lastword') ||
+      (!keywords.includes('no_last_word') && (
       keywords.includes('lastword') ||
-      keywords.includes('revive_same_name_lastword') ||
       keywords.includes('last_word') ||
       keywords.some(keyword => /(?:^on_destroy(?:_|$)|_on_destroy(?:_|$))/.test(keyword)) ||
       card?.effects?.some(effect => effect.trigger === 'on_destroy') ||
       description.includes('【ラストワード】')
-    )
+    ))
     const guard = keywords.includes('guard')
     const bane = keywords.includes('bane') ||
       keywords.includes('lethal') ||
