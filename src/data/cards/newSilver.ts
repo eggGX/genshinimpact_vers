@@ -64,4 +64,15 @@ export const newSilverCards: Card[] = [
     cost: 2,
     description: '自分の場のフォロワー1枚を選ぶ。それは「守護を無視して攻撃できる」をもつ。',
   },
+  {
+    id: 'C122',
+    implementationStatus: 'playable',
+    name: '黄金屋',
+    type: 'spell',
+    rarity: 'silver',
+    element: 'geo',
+    cost: 3,
+    region: ['璃月'],
+    description: '「モラ」2枚を自分の手札に加える。',
+  },
 ]
