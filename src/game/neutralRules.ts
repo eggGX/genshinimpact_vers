@@ -207,7 +207,7 @@ export function resolveNeutralTurnEnd(state: GameState, ownerId: string): GameSt
   // カウントダウン0でクレストは消滅する。
   return editPlayer(result, ownerId, player => ({
     ...player,
-    crests: (player.crests ?? []).filter(crest => crest.turnsRemaining > 0),
+    crests: (player.crests ?? []).filter(crest => crest.turnsRemaining !== 0),
   }))
 }
 
