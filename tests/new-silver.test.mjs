@@ -42,8 +42,8 @@ test('C116 is a registered, buildable 4 PP neutral silver; base cards retain IDs
   assert.equal(card.element, 'none')
   assert.equal(card.cost, 4)
   assert.match(card.description, /自分か相手の場のフォロワー1枚を選ぶ/)
-  assert.equal(productionCards.length,120)
-  assert.equal(getDeckCardPool().length,120)
+  assert.equal(productionCards.length,121)
+  assert.equal(getDeckCardPool().length,121)
   assert.equal(validateProductionCards(productionCards).ready,true)
   assert.equal(productionCards.filter(c => c.id === 'C001').length,1)
 })
@@ -351,4 +351,88 @@ test('C120 cannot be played without enough PP and requires no board target', () 
   s.players[0].pp=2
   assert.equal(engine.canPlayCard(s,0),true)
   assert.equal(engine.playCard(s,'player1',0).players[0].energy,2)
+})
+
+test('C121 is a buildable 2 PP Anemo silver spell with consistent wording', () => {
+  const card=engine.getCard('C121')
+  assert.equal(card.name,'風の翼')
+  assert.deepEqual([card.type,card.element,card.rarity,card.cost],['spell','anemo','silver',2])
+  assert.equal(card.description,'自分の場のフォロワー1枚を選ぶ。それは「守護を無視して攻撃できる」をもつ。')
+  assert.equal(getDeckCardPool().filter(c=>c.id==='C121').length,1)
+  assert.equal(validateProductionCards(productionCards).ready,true)
+})
+
+test('C121 requires a living allied follower; rejects enemy and absent targets', () => {
+  const s=startedGame()
+  s.players[0].hand=['C121']
+  s.players[0].pp=2
+  const enemy=put(s,1,'C001',['guard'])
+  assert.equal(engine.canPlayCard(s,0),false)
+  assert.strictEqual(engine.playCard(s,'player1',0,enemy.instanceId),s)
+  const ally=put(s,0,'C011')
+  assert.equal(engine.canPlayCard(s,0),true)
+  assert.strictEqual(engine.playCard(s,'player1',0,enemy.instanceId),s)
+  assert.strictEqual(engine.playCard(s,'player1',0),s)
+  const after=engine.playCard(s,'player1',0,ally.instanceId)
+  assert.equal(after.players[0].pp,0)
+  assert.deepEqual(after.players[0].hand,[])
+  assert.ok(after.players[0].graveyard.includes('C121'))
+  assert.ok(after.players[0].field[0].keywords.includes('ignore_guard'))
+  assert.equal(after.players[1].field[0].keywords.includes('ignore_guard'),false)
+})
+
+test('C121 bypasses Guard when attacking enemy followers, not combat readiness', () => {
+  let s=startedGame()
+  s.players[0].hand=['C121']
+  s.players[0].pp=2
+  const ally=put(s,0,'C001')
+  ally.attack=2; ally.health=5; ally.maxHealth=5
+  const guard=put(s,1,'C001',['guard'])
+  guard.attack=1; guard.health=5; guard.maxHealth=5
+  const enemy=put(s,1,'C011')
+  enemy.attack=1; enemy.health=5; enemy.maxHealth=5
+  const blocked=engine.attackFollower(s,ally.instanceId,enemy.instanceId)
+  assert.strictEqual(blocked,s)
+  s=engine.playCard(s,'player1',0,ally.instanceId)
+  const hit=engine.attackFollower(s,ally.instanceId,enemy.instanceId)
+  assert.equal(hit.players[1].field.find(f=>f.instanceId===enemy.instanceId)?.health,3)
+  assert.equal(hit.players[1].field.find(f=>f.instanceId===guard.instanceId)?.health,5)
+  assert.equal(hit.players[0].field[0].hasAttacked,true)
+})
+
+test('C121 bypasses Guard to attack leader, but does not grant Storm or Rush', () => {
+  let s=startedGame()
+  s.players[0].hand=['C121']
+  s.players[0].pp=2
+  const ally=put(s,0,'C001')
+  ally.attack=3
+  ally.health=5
+  ally.maxHealth=5
+  put(s,1,'C001',['guard'])
+  const blocked=engine.attackLeader(s,ally.instanceId)
+  assert.strictEqual(blocked,s)
+  s=engine.playCard(s,'player1',0,ally.instanceId)
+  const result=engine.attackLeader(s,ally.instanceId)
+  assert.equal(result.players[1].leaderHealth,17)
+
+  let unavailable=startedGame()
+  unavailable.players[0].hand=['C121']
+  unavailable.players[0].pp=2
+  const fresh=put(unavailable,0,'C001')
+  fresh.attack=3
+  fresh.canAttack=false
+  put(unavailable,1,'C001',['guard'])
+  unavailable=engine.playCard(unavailable,'player1',0,fresh.instanceId)
+  const notReady=engine.attackLeader(unavailable,fresh.instanceId)
+  assert.strictEqual(notReady,unavailable)
+})
+
+test('C121 does not stack duplicate ignore-guard keywords when applied twice', () => {
+  let s=startedGame()
+  s.players[0].hand=['C121','C121']
+  s.players[0].pp=4
+  const ally=put(s,0,'C001')
+  s=engine.playCard(s,'player1',0,ally.instanceId)
+  s=engine.playCard(s,'player1',0,ally.instanceId)
+  assert.equal(s.players[0].field[0].keywords.filter(k=>k==='ignore_guard').length,1)
 })
