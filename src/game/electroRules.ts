@@ -46,7 +46,14 @@ export function electroDestroy(
 
 /** C060 spell summons Oz after resolving its selected damage, if space remains. */
 export function electroSpell(state: GameState, ownerId: string, cardId: string): GameState {
-  if (state.winnerId !== null || cardId !== 'C060') return state
+  if (state.winnerId !== null) return state
+  if (cardId === 'C120') {
+    return updatePlayer(state, ownerId, player => ({
+      ...player,
+      energy: Math.min(5, player.energy + 2),
+    }))
+  }
+  if (cardId !== 'C060') return state
   return summonFollowers(state, ownerId, 'token-oz', 1)
 }
 
