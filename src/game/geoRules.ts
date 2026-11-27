@@ -351,7 +351,7 @@ export function geoNaviaCrestsTurnEnd(state: GameState, ownerId: string,
   if (result.winnerId !== null) return result
   return update(result, ownerId, p => ({ ...p, crests: (p.crests ?? []).map(c =>
     c.id === 'C099' ? { ...c, turnsRemaining: c.turnsRemaining - 1 } : c
-  ).filter(c => c.turnsRemaining > 0) }))
+  ).filter(c => c.turnsRemaining !== 0) }))
 }
 
 /** Chiori: Geo 3 AoE and one random Geo 2 strike per Tamoto. */
