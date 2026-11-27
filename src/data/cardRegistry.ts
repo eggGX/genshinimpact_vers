@@ -22,7 +22,7 @@ export function getCard(cardId: string): Card | undefined {
 
 /** Tokens and unimplemented formal cards can be resolved from the catalogue but never enter starting decks. */
 export function getDeckCardPool(): Card[] {
-  // Only the 115 official cards can enter normal decks.
+  // Every playable production card (including expansions) can enter normal decks.
   return productionCards.filter(card => !card.token && card.implementationStatus === 'playable')
 }
 
