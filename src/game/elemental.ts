@@ -73,6 +73,18 @@ export function createDendroCore(): Follower {
   }
 }
 
+/** Bountiful Core enters the enemy field, immediately self-destructs, then
+ * its Last Word is resolved by the shared resolveDeaths loop. */
+export function createBountifulCore(): Follower {
+  const core = createDendroCore()
+  return {
+    ...core,
+    instanceId: core.instanceId.replace('dendro-core-', 'bountiful-core-'),
+    cardId: 'token-bountiful-core',
+    health: 0,
+  }
+}
+
 export type ElementalReaction =
   | 'vaporize' | 'melt' | 'electro_charged' | 'overloaded' | 'frozen'
   | 'superconduct' | 'burning' | 'quicken' | 'swirl' | 'crystallize'
@@ -284,6 +296,16 @@ function resolveReactionConsequenceCore(
     const triggerIndex = sourceOwnerIndex ?? (1 - affectedOwnerIndex)
     const ownerIndex = 1 - triggerIndex
     const owner = players[ownerIndex]
+    // Nilou's crest replaces Bloom only on the crest holder's opponent's field.
+    // A full field prevents the temporary Core from entering or detonating.
+    const nilouCrest = players[triggerIndex].crests?.some(c => c.id === 'C124')
+    if (nilouCrest) {
+      if (owner.field.length + (owner.amulets?.length ?? 0) < 5) {
+        players[ownerIndex] = { ...owner,
+          field: [...owner.field, createBountifulCore()] }
+      }
+      return { ...state, players }
+    }
     const oldCore = owner.field.find(f => f.cardId === 'dendro-core')
     if (oldCore) {
       players[ownerIndex] = {
