@@ -143,7 +143,7 @@ export function resolveNilouEngage(
     result = resolveReactionConsequence({ ...result, players },
       affectedIndex, targetId, outcome.reaction, outcome.reactedElement, sourceIndex)
     result = deaths(result)
-    result = captureFrame(result, 'ニィロウ：交戦時水元素付着')
+    result = captureFrame(result, 'ニィロウ：交戦時水元素付着', undefined, sourceId)
   }
   return result
 }
