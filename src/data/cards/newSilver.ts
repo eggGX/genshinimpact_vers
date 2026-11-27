@@ -75,4 +75,14 @@ export const newSilverCards: Card[] = [
     region: ['璃月'],
     description: '「モラ」2枚を自分の手札に加える。',
   },
+  {
+    id: 'C123',
+    implementationStatus: 'playable',
+    name: '夢境の力',
+    type: 'spell',
+    rarity: 'silver',
+    element: 'dendro',
+    cost: 2,
+    description: '自分の手札のカード1枚を選ぶ。それと同名のカード1枚を自分の手札に加える。',
+  },
 ]
