@@ -248,4 +248,14 @@ export const productionTokens: Card[] = [
     keywords: ['cannot_attack'],
     description: '【攻撃不可】\nこのフォロワーが受けるダメージは0になる。\n自分のターン終了時、自分の場のランダムな他のフォロワー1体に2ダメージ。このフォロワーを+0/-1する。これをX回行う。Xはこのフォロワーの体力の値である。\n開花で相手の場に出る。\n再開花時、このフォロワーを+0/+1する。\n炎・雷で破壊され、それぞれ烈開花・超開花が発生する。',
   },
+  {
+    id: 'token-mora',
+    name: 'モラ',
+    type: 'spell',
+    rarity: 'bronze',
+    element: 'geo',
+    cost: 0,
+    token: true,
+    description: '自分のPPを+1する。',
+  },
 ]
