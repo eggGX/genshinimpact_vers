@@ -44,4 +44,14 @@ export const newSilverCards: Card[] = [
     region: ['スネージナヤ'],
     description: '【カウントダウン_2】\n自分のターン終了時、自分の場のフォロワーすべてを+0/+2する。',
   },
+  {
+    id: 'C120',
+    implementationStatus: 'playable',
+    name: '一心浄土',
+    type: 'spell',
+    rarity: 'silver',
+    element: 'electro',
+    cost: 2,
+    description: '自分の元素エネルギーを2獲得する。',
+  },
 ]
