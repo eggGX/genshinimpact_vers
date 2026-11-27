@@ -1188,7 +1188,7 @@ function App({ online }: { online?: {
 
   const canDragAttackLeader = (attacker: Follower): boolean =>
     !attacker.keywords.includes('rush_only') || attacker.keywords.includes('storm')
-      ? !isGuarded(opponent) || attacker.keywords.includes('plunge_attack')
+      ? !isGuarded(opponent) || attacker.keywords.includes('plunge_attack') || attacker.keywords.includes('ignore_guard')
       : false
 
   const dragTargetAt = (x: number, y: number, attackerId: string): string | null => {
@@ -1403,7 +1403,7 @@ function App({ online }: { online?: {
     // Normal followers can attack leaders too after summoning sickness has ended.
     const canAttackLeaderNow = canAttack &&
       (!follower.keywords.includes('rush_only') || follower.keywords.includes('storm')) &&
-      (!isGuarded(opponent) || follower.keywords.includes('plunge_attack'))
+      (!isGuarded(opponent) || follower.keywords.includes('plunge_attack') || follower.keywords.includes('ignore_guard'))
     const canAttackFollowerNow = canAttack && opponent.field.some(target =>
       target.health > 0 &&
       !target.keywords.includes('intimidate') &&
@@ -1422,7 +1422,7 @@ function App({ online }: { online?: {
       : undefined
     const isFriendlyTarget = !isOpponent &&
       ((selectedHandIndex !== null &&
-        ['C021', 'C044', 'C066', 'C081', 'C030', 'C116', 'C117'].includes(friendlyPlayId ?? '') &&
+        ['C021', 'C044', 'C066', 'C081', 'C030', 'C116', 'C117', 'C121'].includes(friendlyPlayId ?? '') &&
         (friendlyPlayId !== 'C066' || card?.element === 'electro') &&
         (friendlyPlayId !== 'C081' || card?.element === 'anemo')) ||
        (selectedAbility?.kind === 'skill' && friendlySkillId === 'C066' &&
@@ -1441,7 +1441,8 @@ function App({ online }: { online?: {
       game.winnerId === null &&
       (selectedAttacker === undefined || !isGuarded(opponent) ||
         follower.keywords.includes('guard') ||
-        selectedAttacker.keywords.includes('plunge_attack')) &&
+        selectedAttacker.keywords.includes('plunge_attack') ||
+        selectedAttacker.keywords.includes('ignore_guard')) &&
       (selectedAttacker !== undefined
         ? !follower.keywords.includes('intimidate') && !follower.keywords.includes('stealth')
         : selectedHandIndex !== null || selectedAbility !== null
