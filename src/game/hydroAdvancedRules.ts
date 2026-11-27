@@ -159,7 +159,7 @@ export function resolveBountifulCoreDestroy(
   const owner = state.players[index]
   const living = owner.field.filter(f => f.health > 0)
   const choice = Math.floor(Math.random() * (living.length + 1))
-  if (choice === 0) return resolveLeaderElementalHit(state, index, 3, 'dendro', 1 - index)
+  if (choice === 0) return resolveLeaderElementalHit(state, index, 3, 'dendro', index)
   const target = living[choice - 1]
   const outcome = resolveElementalDamage(target, 3, 'dendro')
   const players = [...state.players] as [Player, Player]
@@ -167,7 +167,7 @@ export function resolveBountifulCoreDestroy(
     f.instanceId === target.instanceId ? outcome.follower : f),
   }
   return resolveReactionConsequence({ ...state, players }, index, target.instanceId,
-    outcome.reaction, outcome.reactedElement, 1 - index)
+    outcome.reaction, outcome.reactedElement, index)
 }
 
 /** C118 chooses only among enemies with the greatest current attack.
