@@ -519,10 +519,10 @@ test('カード登録台帳は正式115枚・トークン24種だけを含む',a
   const { getCard,getAllCards,cardRegistry }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
-  assert.equal(productionCards.length,115)
+  assert.equal(productionCards.length,116)
   assert.equal(productionTokens.length,24)
-  assert.equal(cardRegistry.size,139)
-  assert.equal(getAllCards().length,139)
+  assert.equal(cardRegistry.size,140)
+  assert.equal(getAllCards().length,140)
   for(const card of [...productionCards,...productionTokens])
     assert.equal(getCard(card.id)?.name,card.name)
   assert.equal(getCard('card-does-not-exist'),undefined)
@@ -549,7 +549,7 @@ test('正式カードとトークンの登録元だけを使用する', async()=
   const { productionCards }=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const { productionTokens }=await vite.ssrLoadModule('/src/data/productionTokens.ts')
   const { getAllCards }=await vite.ssrLoadModule('/src/data/cardRegistry.ts')
-  assert.equal(productionCards.length,115)
+  assert.equal(productionCards.length,116)
   assert.equal(productionTokens.length,24)
   assert.equal(getAllCards().length,productionCards.length+productionTokens.length)
 })
@@ -557,11 +557,11 @@ test('正式カードとトークンの登録元だけを使用する', async()=
 test('正式115枚の枚数計画は無元素10枚と7元素各15枚', async () => {
   const { ELEMENT_ORDER, RARITY_ORDER, PLANNED_CARD_COUNTS, PLANNED_TOTAL } =
     await vite.ssrLoadModule('/src/data/cardValidation.ts')
-  assert.equal(PLANNED_TOTAL, 115)
+  assert.equal(PLANNED_TOTAL, 116)
   assert.equal(ELEMENT_ORDER.length, 8)
   assert.equal(RARITY_ORDER.length, 4)
   assert.deepEqual(PLANNED_CARD_COUNTS.none, {
-    bronze: 4, silver: 4, gold: 2, legendary: 0,
+    bronze: 4, silver: 5, gold: 2, legendary: 0,
   })
   for (const element of ELEMENT_ORDER.filter(e => e !== 'none')) {
     assert.deepEqual(PLANNED_CARD_COUNTS[element], {
@@ -575,8 +575,8 @@ test('正式70枚登録時はエラーなし・予定45枚が不足と判定', a
   const { productionCards } = await vite.ssrLoadModule('/src/data/productionCards.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 115)
-  assert.equal(report.plannedTotal, 115)
+  assert.equal(report.total, 116)
+  assert.equal(report.plannedTotal, 116)
   assert.equal(report.slots.length, 32)
   assert.equal(report.slots.reduce((n, slot) => n + slot.remaining, 0), 0)
   assert.equal(report.ready, true)
@@ -675,8 +675,8 @@ test('無元素・炎・水の登録数は100/115で残り15枚', async () => {
   const { validateProductionCards } = await vite.ssrLoadModule('/src/data/cardValidation.ts')
   const report = validateProductionCards(productionCards)
   assert.deepEqual(report.errors, [])
-  assert.equal(report.total, 115)
-  assert.equal(report.plannedTotal, 115)
+  assert.equal(report.total, 116)
+  assert.equal(report.plannedTotal, 116)
   assert.equal(report.slots.reduce((n,s) => n + s.remaining,0),0)
   assert.equal(report.slots.filter(s => s.element === 'none').every(s => s.remaining === 0),true)
   assert.equal(report.ready,true)
@@ -4401,10 +4401,10 @@ test('テスト用カードデータは正式台帳から完全削除されて�
   const {productionCards}=await vite.ssrLoadModule('/src/data/productionCards.ts')
   const {productionTokens}=await vite.ssrLoadModule('/src/data/productionTokens.ts')
   const registry=getAllCards()
-  assert.equal(productionCards.length,115)
+  assert.equal(productionCards.length,116)
   assert.equal(productionTokens.length,24)
-  assert.equal(registry.length,139)
-  assert.equal(getDeckCardPool().length,115)
+  assert.equal(registry.length,140)
+  assert.equal(getDeckCardPool().length,116)
   assert.ok(registry.every(card=>!card.id.startsWith('test-')))
   assert.equal(getCard('test-elemental-caster'),undefined)
   for(let i=0;i<30;i++){
