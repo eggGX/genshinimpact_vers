@@ -258,4 +258,17 @@ export const productionTokens: Card[] = [
     token: true,
     description: '自分のPPを+1する。',
   },
+  {
+    id: 'token-bountiful-core',
+    name: '豊穣の核',
+    type: 'follower',
+    rarity: 'bronze',
+    element: 'dendro',
+    cost: 0,
+    attack: 0,
+    health: 1,
+    token: true,
+    keywords: ['cannot_attack'],
+    description: 'このフォロワーが場に出たとき、このフォロワーを破壊する。\n【ラストワード】自分の場のランダムなフォロワー1体または自分のリーダーに草元素3ダメージ。',
+  },
 ]
