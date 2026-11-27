@@ -221,7 +221,7 @@ export function cryoCrestsEnd(state: GameState, ownerId: string, deaths: DeathRe
     result = edit(result, ownerId, p => ({
       ...p, crests: (p.crests ?? []).map(c => c === crest
         ? { ...c, turnsRemaining: c.turnsRemaining - 1 } : c)
-        .filter(c => c.turnsRemaining > 0),
+        .filter(c => c.turnsRemaining !== 0),
     }))
   }
   return result
