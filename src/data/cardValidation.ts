@@ -6,7 +6,7 @@ export const ELEMENT_ORDER: ElementType[] = [
 export const RARITY_ORDER: Rarity[] = ['bronze', 'silver', 'gold', 'legendary']
 
 export const PLANNED_CARD_COUNTS: Record<ElementType, Record<Rarity, number>> = {
-  none:    { bronze: 4, silver: 4, gold: 2, legendary: 0 },
+  none:    { bronze: 4, silver: 5, gold: 2, legendary: 0 },
   pyro:    { bronze: 4, silver: 4, gold: 4, legendary: 3 },
   hydro:   { bronze: 4, silver: 4, gold: 4, legendary: 3 },
   cryo:    { bronze: 4, silver: 4, gold: 4, legendary: 3 },
@@ -15,7 +15,7 @@ export const PLANNED_CARD_COUNTS: Record<ElementType, Record<Rarity, number>> = 
   geo:     { bronze: 4, silver: 4, gold: 4, legendary: 3 },
   dendro:  { bronze: 4, silver: 4, gold: 4, legendary: 3 },
 }
-export const PLANNED_TOTAL = 115
+export const PLANNED_TOTAL = 116
 
 export interface CardSlotStatus {
   element: ElementType
