@@ -17,6 +17,8 @@ export function filterCards(
     if (filters.element !== 'all' && card.element !== filters.element) return false
     if (filters.rarity !== 'all' && card.rarity !== filters.rarity) return false
     const formal = productionIds.has(card.id)
+    // Tokens are visible only when the Token filter is explicitly selected.
+    if (filters.origin !== 'token' && card.token) return false
     if (filters.origin === 'token' && !card.token) return false
     if (filters.origin === 'production' && !formal) return false
     return !query || card.name.toLocaleLowerCase().includes(query) ||
