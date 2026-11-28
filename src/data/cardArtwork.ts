@@ -10,6 +10,17 @@
  * Images are not distributed here until their source/license is confirmed.
  */
 export const cardArtwork: Readonly<Partial<Record<string, string>>> = {
+  'C116': '/card-art/C116.webp', // 荒野の呪い
+  'C117': '/card-art/C117.webp', // 反魂の詩
+  'C118': '/card-art/C118.webp', // 諭示裁定カーディナル
+  'C119': '/card-art/C119.webp', // クルースニクの炉
+  'C120': '/card-art/C120.webp', // 一心浄土
+  'C121': '/card-art/C121.webp', // 風の翼
+  'C122': '/card-art/C122.webp', // 黄金屋
+  'C123': '/card-art/C123.webp', // 夢境の力
+  'token-mora': '/card-art/token-mora.webp', // モラ
+  'C124': '/card-art/C124.webp', // ズバイルシアターの踊り子・ニィロウ
+  'token-bountiful-core': '/card-art/C125.webp', // 豊穣の核
   'token-cryo-itzpapa': '/card-art/token-cryo-itzpapa.webp', // イツパパ
   'token-oz': '/card-art/token-oz.webp', // オズ
   'token-sesshou-sakura': '/card-art/token-sesshou-sakura.webp', // 殺生櫻
